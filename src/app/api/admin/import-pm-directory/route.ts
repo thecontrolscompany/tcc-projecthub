@@ -139,7 +139,7 @@ export async function POST() {
       })
       .filter((user) =>
         Boolean(user.email) &&
-        user.userType === "member" &&
+        (user.userType === null || user.userType === "member") &&
         user.accountEnabled !== false &&
         hasPersonalName(user.first_name, user.last_name)
       );
