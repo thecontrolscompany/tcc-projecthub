@@ -110,6 +110,10 @@ const inputClassName =
 const textareaClassName =
   "w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none";
 
+type SortKey = "name" | "customer" | "contract_price";
+type SortDir = "asc" | "desc";
+type StatusFilter = "active" | "completed" | "all";
+
 export function AdminProjectsTab() {
   const supabase = createClient();
   const [projects, setProjects] = useState<ProjectRow[]>([]);
@@ -121,6 +125,10 @@ export function AdminProjectsTab() {
   const [editingProject, setEditingProject] = useState<ProjectRow | null>(null);
   const [jobNumberPreview, setJobNumberPreview] = useState("");
   const [formValues, setFormValues] = useState<ProjectFormValues>(EMPTY_PROJECT_FORM);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
+  const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("name");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   useEffect(() => {
     loadProjects();
@@ -360,6 +368,42 @@ export function AdminProjectsTab() {
   const fmt = (n: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(key); setSortDir("asc"); }
+  }
+
+  const visibleProjects = projects
+    .filter((p) => {
+      if (statusFilter === "active" && !p.is_active) return false;
+      if (statusFilter === "completed" && p.is_active) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        return (
+          p.name.toLowerCase().includes(q) ||
+          (p.customer?.name ?? "").toLowerCase().includes(q) ||
+          (p.pm_directory?.first_name ?? "").toLowerCase().includes(q) ||
+          (p.pm_directory?.email ?? "").toLowerCase().includes(q)
+        );
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      let av = "", bv = "";
+      if (sortKey === "name") { av = a.name; bv = b.name; }
+      else if (sortKey === "customer") { av = a.customer?.name ?? ""; bv = b.customer?.name ?? ""; }
+      else if (sortKey === "contract_price") {
+        const an = a.contract_price ?? a.estimated_income ?? 0;
+        const bn = b.contract_price ?? b.estimated_income ?? 0;
+        return sortDir === "asc" ? an - bn : bn - an;
+      }
+      return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+
+  const SortIcon = ({ col }: { col: SortKey }) =>
+    sortKey !== col ? <span className="ml-1 opacity-30">↕</span> :
+    sortDir === "asc" ? <span className="ml-1">↑</span> : <span className="ml-1">↓</span>;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -372,6 +416,33 @@ export function AdminProjectsTab() {
         </button>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex rounded-xl border border-border-default overflow-hidden text-sm">
+          {(["active", "completed", "all"] as StatusFilter[]).map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={[
+                "px-3 py-1.5 capitalize",
+                statusFilter === s
+                  ? "bg-brand-primary text-text-inverse font-semibold"
+                  : "text-text-secondary hover:bg-surface-overlay",
+              ].join(" ")}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+        <input
+          type="search"
+          placeholder="Search projects, customer, PM…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="rounded-xl border border-border-default bg-surface-overlay px-3 py-1.5 text-sm text-text-primary focus:border-brand-primary focus:outline-none w-64"
+        />
+        <span className="text-xs text-text-tertiary">{visibleProjects.length} project{visibleProjects.length !== 1 ? "s" : ""}</span>
+      </div>
+
       {loading ? (
         <div className="py-10 text-center text-text-tertiary">Loading...</div>
       ) : (
@@ -379,17 +450,17 @@ export function AdminProjectsTab() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border-default bg-surface-raised/80">
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Project</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Customer</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary cursor-pointer select-none hover:text-text-primary" onClick={() => toggleSort("name")}>Project <SortIcon col="name" /></th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary cursor-pointer select-none hover:text-text-primary" onClick={() => toggleSort("customer")}>Customer <SortIcon col="customer" /></th>
                 <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">PM</th>
-                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Contract</th>
+                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary cursor-pointer select-none hover:text-text-primary" onClick={() => toggleSort("contract_price")}>Contract <SortIcon col="contract_price" /></th>
                 <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
                 <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">B / P</th>
                 <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary"></th>
               </tr>
             </thead>
             <tbody>
-              {projects.map((p) => (
+              {visibleProjects.map((p) => (
                 <tr key={p.id} className="border-b border-border-default hover:bg-surface-raised">
                   <td className="px-3 py-2 font-medium text-text-primary">
                     {p.name}
