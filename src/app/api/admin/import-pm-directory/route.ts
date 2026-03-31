@@ -126,22 +126,28 @@ export async function POST() {
     const candidates = users
       .map((user) => {
         const email = normalizeEmail(user.mail) || normalizeEmail(user.userPrincipalName);
-        const firstName = user.givenName?.trim() || null;
-        const lastName = user.surname?.trim() || null;
+        let firstName = user.givenName?.trim() || null;
+        let lastName = user.surname?.trim() || null;
+
+        // User.ReadBasic.All doesn't return givenName/surname — fall back to displayName
+        if (!firstName && !lastName && user.displayName?.trim()) {
+          const parts = user.displayName.trim().split(/\s+/);
+          firstName = parts[0] ?? null;
+          lastName = parts.slice(1).join(" ") || null;
+        }
 
         return {
           email,
           first_name: firstName,
           last_name: lastName,
-          userType: user.userType?.trim().toLowerCase() ?? "",
+          userType: user.userType?.trim().toLowerCase() ?? null,
           accountEnabled: user.accountEnabled,
         };
       })
       .filter((user) =>
         Boolean(user.email) &&
         (user.userType === null || user.userType === "member") &&
-        user.accountEnabled !== false &&
-        hasPersonalName(user.first_name, user.last_name)
+        user.accountEnabled !== false
       );
 
     const uniqueCandidates = Array.from(
