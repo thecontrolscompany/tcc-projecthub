@@ -43,6 +43,7 @@ export default function AdminPage() {
             id: string;
             name: string;
             job_number?: string | null;
+            is_active?: boolean | null;
             customer?: { name: string } | Array<{ name: string }>;
             pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
           }
@@ -50,6 +51,7 @@ export default function AdminPage() {
             id: string;
             name: string;
             job_number?: string | null;
+            is_active?: boolean | null;
             customer?: { name: string } | Array<{ name: string }>;
             pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
           }>;
@@ -109,6 +111,7 @@ export default function AdminPage() {
             id,
             name,
             job_number,
+            is_active,
             customer:customers ( name ),
             pm:profiles ( email, full_name )
           )
@@ -117,7 +120,7 @@ export default function AdminPage() {
         .order("period_month");
 
       if (!error && data) {
-        const mapped = mapFallbackBillingRows(
+        const activePeriods = (
           data as Array<{
             id: string;
             period_month: string;
@@ -133,6 +136,7 @@ export default function AdminPage() {
                   id: string;
                   name: string;
                   job_number?: string | null;
+                  is_active?: boolean | null;
                   customer?: { name: string } | Array<{ name: string }>;
                   pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
                 }
@@ -140,11 +144,19 @@ export default function AdminPage() {
                   id: string;
                   name: string;
                   job_number?: string | null;
+                  is_active?: boolean | null;
                   customer?: { name: string } | Array<{ name: string }>;
                   pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
                 }>;
           }>
-        ).sort((a, b) => a.customer_name.localeCompare(b.customer_name));
+        ).filter((period) => {
+          const project = Array.isArray(period.project) ? period.project[0] : period.project;
+          return project?.is_active !== false;
+        });
+
+        const mapped = mapFallbackBillingRows(activePeriods)
+          .filter((row) => row.project_id !== "")
+          .sort((a, b) => a.customer_name.localeCompare(b.customer_name));
 
         setRows(mapped);
       } else {
@@ -166,15 +178,20 @@ export default function AdminPage() {
       const monthStr = format(periodMonth, "yyyy-MM-dd");
       const { data: currentPeriods } = await supabase
         .from("billing_periods")
-        .select("*")
+        .select("*, project:projects(is_active)")
         .eq("period_month", monthStr);
 
-      if (!currentPeriods?.length) {
+      const activePeriods = (currentPeriods ?? []).filter((period) => {
+        const project = Array.isArray(period.project) ? period.project[0] : period.project;
+        return project?.is_active !== false;
+      });
+
+      if (!activePeriods.length) {
         setActionStatus("No billing periods found for this month.");
         return;
       }
 
-      const nextRows = rollForwardRows(currentPeriods as BillingPeriod[]);
+      const nextRows = rollForwardRows(activePeriods as BillingPeriod[]);
       const { error } = await supabase.from("billing_periods").upsert(
         nextRows.map((r) => ({
           period_month: r.period_month,
