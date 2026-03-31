@@ -27,6 +27,7 @@ const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const [saveError, setSaveError] = useState<string | null>(null);
   const supabase = createClient();
 
   const updateRow = useCallback(
@@ -35,6 +36,7 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
       field: "pct_complete" | "prior_pct" | "prev_billed" | "actual_billed" | "estimated_income_snapshot" | "notes",
       value: number | string | null
     ) => {
+      const rowToUpdate = rows.find((row) => row.billing_period_id === billingPeriodId);
       const updated = rows.map((r) => {
         if (r.billing_period_id !== billingPeriodId) return r;
         const next = { ...r };
@@ -52,12 +54,22 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
         next.prev_billed_pct = next.estimated_income > 0 ? next.prev_billed / next.estimated_income : 0;
         return next;
       });
-      onRowsChange(updated);
 
-      await supabase
+      setSaveError(null);
+
+      const { error } = await supabase
         .from("billing_periods")
         .update({ [field]: value, updated_at: new Date().toISOString() })
         .eq("id", billingPeriodId);
+
+      if (error) {
+        setSaveError(
+          `Failed to save ${rowToUpdate?.project_name ?? "billing row"} - please try again.`
+        );
+        return;
+      }
+
+      onRowsChange(updated);
     },
     [rows, onRowsChange, supabase]
   );
@@ -196,6 +208,12 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
 
   return (
     <div className="space-y-3">
+      {saveError && (
+        <div className="rounded-xl border border-status-danger/30 bg-status-danger/10 px-4 py-2.5 text-sm text-status-danger">
+          {saveError}
+        </div>
+      )}
+
       <input
         value={globalFilter}
         onChange={(e) => setGlobalFilter(e.target.value)}

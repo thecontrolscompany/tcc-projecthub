@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { roleHome } from "@/lib/auth/role-routes";
 
 const INTERNAL_CONTACT_ROLES = new Set(["pm", "lead", "installer", "ops_manager"]);
 
@@ -59,11 +60,7 @@ export async function GET(request: Request) {
           }
         }
 
-        if (profile?.role === "admin") return NextResponse.redirect(`${origin}/admin`);
-        if (profile?.role === "pm" || profile?.role === "lead") return NextResponse.redirect(`${origin}/pm`);
-        if (profile?.role === "installer") return NextResponse.redirect(`${origin}/installer`);
-        if (profile?.role === "ops_manager") return NextResponse.redirect(`${origin}/ops`);
-        return NextResponse.redirect(`${origin}/customer`);
+        return NextResponse.redirect(`${origin}${roleHome(profile?.role)}`);
       }
 
       return NextResponse.redirect(`${origin}${next}`);

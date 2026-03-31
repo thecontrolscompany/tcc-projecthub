@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { roleHome } from "@/lib/auth/role-routes";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -30,14 +31,6 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const roleHome = (role?: string | null) => {
-    if (role === "admin") return "/admin";
-    if (role === "pm" || role === "lead") return "/pm";
-    if (role === "installer") return "/installer";
-    if (role === "ops_manager") return "/ops";
-    return "/customer";
-  };
-
   // Public routes that don't require auth
   const publicPaths = ["/login", "/auth/callback", "/auth/confirm"];
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));

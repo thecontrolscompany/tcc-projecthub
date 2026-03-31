@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { z } from "zod";
+
+const createUserSchema = z.object({
+  email: z.email("Email must be a valid email address."),
+  password: z.string().min(8, "Password must be at least 8 characters."),
+  fullName: z.string().trim().min(1, "Full name is required.").max(255, "Full name must be 255 characters or fewer."),
+  role: z.enum(["admin", "pm", "lead", "installer", "ops_manager", "customer"], {
+    error: "Role must be one of admin, pm, lead, installer, ops_manager, customer.",
+  }),
+});
 
 /**
  * POST /api/admin/create-user
@@ -31,11 +41,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Admin access required." }, { status: 403 });
   }
 
-  const { email, fullName, password, role } = await request.json();
-
-  if (!email || !password) {
-    return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
+  const parsed = createUserSchema.safeParse(await request.json());
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid request." }, { status: 400 });
   }
+
+  const { email, fullName, password, role } = parsed.data;
 
   // Use service role client to create user without email confirmation
   const adminClient = createAdminClient(
@@ -48,8 +59,8 @@ export async function POST(request: Request) {
     password,
     email_confirm: true,
     user_metadata: {
-      full_name: fullName ?? "",
-      role: role ?? "customer",
+      full_name: fullName,
+      role,
     },
   });
 
@@ -62,8 +73,8 @@ export async function POST(request: Request) {
     await adminClient.from("profiles").upsert({
       id: newUser.user.id,
       email,
-      full_name: fullName ?? "",
-      role: role ?? "customer",
+      full_name: fullName,
+      role,
     });
   }
 

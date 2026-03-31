@@ -4,7 +4,7 @@ import { AppShell } from "@/components/app-shell";
 export const dynamic = "force-dynamic";
 
 export default async function QuotesLayout({ children }: { children: React.ReactNode }) {
-  let role = "admin";
+  let role = "customer";
   let email = "";
   try {
     const supabase = await createClient();
@@ -17,9 +17,11 @@ export default async function QuotesLayout({ children }: { children: React.React
         .select("role, email")
         .eq("id", user.id)
         .single();
-      role = profile?.role ?? "admin";
+      role = profile?.role ?? "customer";
       email = profile?.email ?? "";
     }
-  } catch {}
+  } catch (error) {
+    console.error("Failed to load user session:", error);
+  }
   return <AppShell role={role} userEmail={email}>{children}</AppShell>;
 }
