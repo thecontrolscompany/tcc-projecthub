@@ -5,6 +5,9 @@
 Admins need to create new projects, edit existing project details, and mark projects
 as "Billed in Full" and "Paid in Full" — which moves them from Active to Completed.
 
+The New Project form is based on the company's Project Turnover Checklist document,
+which captures all fields needed at project kickoff.
+
 ## Read before starting
 
 - `src/app/admin/page.tsx` (Projects tab — where New Project button goes)
@@ -16,16 +19,27 @@ as "Billed in Full" and "Paid in Full" — which moves them from Active to Compl
 
 ## Part A — Database migration
 
-Create `supabase/migrations/004_project_status_fields.sql`:
+Create `supabase/migrations/004_project_fields.sql`:
 
 ```sql
 ALTER TABLE projects
   ADD COLUMN IF NOT EXISTS billed_in_full BOOLEAN DEFAULT false,
   ADD COLUMN IF NOT EXISTS paid_in_full BOOLEAN DEFAULT false,
-  ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
-
--- When both billed_in_full and paid_in_full are true, is_active becomes false
--- This is enforced in the UI, not as a DB trigger
+  ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS customer_poc TEXT,
+  ADD COLUMN IF NOT EXISTS customer_po_number TEXT,
+  ADD COLUMN IF NOT EXISTS site_address TEXT,
+  ADD COLUMN IF NOT EXISTS contract_price NUMERIC(12,2),
+  ADD COLUMN IF NOT EXISTS general_contractor TEXT,
+  ADD COLUMN IF NOT EXISTS mechanical_contractor TEXT,
+  ADD COLUMN IF NOT EXISTS electrical_contractor TEXT,
+  ADD COLUMN IF NOT EXISTS all_conduit_plenum BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS certified_payroll BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS buy_american BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS bond_required BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS special_requirements TEXT,
+  ADD COLUMN IF NOT EXISTS special_access TEXT,
+  ADD COLUMN IF NOT EXISTS notes TEXT;
 ```
 
 **Timothy must run this migration manually in Supabase SQL editor.**
@@ -41,6 +55,20 @@ In `src/types/database.ts`, add to the `Project` interface:
 billed_in_full: boolean;
 paid_in_full: boolean;
 completed_at: string | null;
+customer_poc: string | null;
+customer_po_number: string | null;
+site_address: string | null;
+contract_price: number | null;
+general_contractor: string | null;
+mechanical_contractor: string | null;
+electrical_contractor: string | null;
+all_conduit_plenum: boolean;
+certified_payroll: boolean;
+buy_american: boolean;
+bond_required: boolean;
+special_requirements: string | null;
+special_access: string | null;
+notes: string | null;
 ```
 
 ---
@@ -48,76 +76,83 @@ completed_at: string | null;
 ## Part C — New Project button and form (Admin Projects tab)
 
 In `src/app/admin/page.tsx`, on the Projects tab, add a **New Project** button
-in the top-right of the projects section. Clicking it opens a modal form.
+in the top-right. Clicking opens a modal form.
 
-### New Project form fields:
+### Form layout — two sections:
 
-**Required:**
-- Project Name (text input)
-- Customer (dropdown — populated from `customers` table, plus "Add new customer" option that reveals a text input)
-- Estimated Income (number input, currency formatted)
+#### Section 1: Project Info (required fields marked *)
+| Field | Type | Required |
+|-------|------|----------|
+| Project Name | text | Yes |
+| Customer | dropdown (from `customers` table) + "Add new" option | Yes |
+| Contract Price | currency number input | Yes |
+| Customer POC | text | No |
+| Customer PO Number | text | No |
+| Site Address | text | No |
+| General Contractor | text | No |
+| Mechanical Contractor | text | No |
+| Electrical Contractor | text | No |
+| Assigned PM | dropdown (from `pm_directory` table) | No |
+| Notes | textarea | No |
+| Special Requirements | textarea (conduit fill, 270 rule, below 10' rigid, etc.) | No |
+| Special Access | text (DBIDS, site-specific safety orientation, etc.) | No |
 
-**Optional:**
-- Notes (textarea)
+#### Section 2: Compliance checkboxes
+- All Conduit/Plenum
+- Certified Payroll
+- Buy American
+- Bond Required
 
-**Job number:**
-- Auto-assign the next sequential job number in format `YYYY-NNN`
-  where YYYY = current year and NNN = next available 3-digit number for that year.
-- Query: `SELECT job_number FROM projects WHERE job_number LIKE 'YYYY-%' ORDER BY job_number DESC LIMIT 1`
-  then increment the NNN portion.
-- Display the auto-assigned job number in the form as read-only so admin can see it.
+#### Job number
+- Auto-assign next sequential `YYYY-NNN` for current year
+- Display as read-only in the form header so admin sees it before saving
+- Query: `SELECT job_number FROM projects WHERE job_number LIKE '{year}-%' ORDER BY job_number DESC LIMIT 1`
+  then parse the NNN and increment by 1, zero-padded to 3 digits
 
-**On submit:**
-- Insert into `projects` table
-- Insert a `billing_periods` row for the current month with `estimated_income_snapshot` = entered value
+#### On submit
+- Insert into `projects` with `is_active = true`, `estimated_income = contract_price`
+- Insert a `billing_periods` row for current month with `estimated_income_snapshot = contract_price`
+- If "Add new customer" was used, insert into `customers` table first
 - Close modal, refresh projects list
-
-### Modal pattern:
-Use a simple overlay modal with backdrop. No external library needed.
-Use semantic token classes throughout (`bg-surface-overlay`, `border-border-default`, etc.)
 
 ---
 
-## Part D — Edit Project
+## Part D — Edit Project modal
 
-Each project row in the Projects tab should have an **Edit** button (pencil icon or "Edit" text link).
-Clicking opens the same modal pre-populated with the project's current values.
+Each project row in the Projects tab gets an **Edit** button (pencil icon or text link).
+Opens the same modal pre-populated with all current values.
 
-Editable fields:
-- Project Name
-- Customer (dropdown)
-- Estimated Income
+All fields from Part C are editable.
+
+**Additional fields only in Edit (not New):**
 - Billed in Full (checkbox)
 - Paid in Full (checkbox)
-- Notes
 
 **Billed in Full / Paid in Full logic:**
-- When "Billed in Full" is checked → set `billed_in_full = true`
-- When "Paid in Full" is checked → set `paid_in_full = true`
-- When BOTH are checked → also set `is_active = false` and `completed_at = now()`
+- When BOTH are checked → set `is_active = false`, `completed_at = now()`
 - If either is unchecked → set `is_active = true`, clear `completed_at`
 
 On save:
-- Update `projects` table
-- If `estimated_income` changed, also update `billing_periods.estimated_income_snapshot`
-  for all billing periods belonging to this project where `actual_billed` is null
+- Update `projects` row
+- If `contract_price` changed, also set `estimated_income = contract_price` and
+  update `billing_periods.estimated_income_snapshot` for all periods of this project
+  where `actual_billed IS NULL`
 
 ---
 
-## Part E — Projects list display
+## Part E — Projects list display updates
 
-Update `src/app/projects/projects-list.tsx` to show Active and Completed sections:
-- Active: `is_active = true`
-- Completed: `is_active = false`
+Update `src/app/projects/projects-list.tsx`:
 
-Add "Billed in Full" and "Paid in Full" badge columns to the table.
-Use:
-- Billed in Full: `bg-status-success/10 text-status-success` badge when true
-- Paid in Full: `bg-brand-primary/10 text-brand-primary` badge when true
+- Fetch and display the new fields in an expanded row or detail panel
+- Add "Billed in Full" and "Paid in Full" badge columns:
+  - Billed: `bg-status-success/10 text-status-success`
+  - Paid: `bg-brand-primary/10 text-brand-primary`
+- Active/Completed split already exists — keep it
 
-Also update `src/app/projects/page.tsx` to fetch the new fields:
+Update `src/app/projects/page.tsx` select to include new fields:
 ```ts
-.select("id, name, job_number, is_active, migration_status, sharepoint_folder, created_at, billed_in_full, paid_in_full, completed_at")
+.select("id, name, job_number, is_active, migration_status, sharepoint_folder, created_at, billed_in_full, paid_in_full, completed_at, contract_price, customer_poc, site_address")
 ```
 
 ---
@@ -125,9 +160,9 @@ Also update `src/app/projects/page.tsx` to fetch the new fields:
 ## Constraints
 
 - Do not modify `.env.local`
-- Do not run the SQL migration — create the file only, Timothy runs it manually
+- Do not run any SQL — create migration file only, Timothy runs it manually
 - Run `npm run build` after changes, fix only new errors
-- Mechanical only — do not restructure existing components beyond what's needed
+- Modal should use semantic token classes throughout (no hardcoded colors)
 
 ---
 
@@ -140,12 +175,12 @@ Create `codex/task-014-output.md`:
 - list each
 
 ## Migration file created
-- filename
+- filename and column list
 
-## New Project form fields implemented
-- list required and optional fields
+## New Project form
+- list required and optional fields implemented
 
-## Edit Project implemented
+## Edit Project
 - yes/no + what fields
 
 ## Billed/Paid logic
