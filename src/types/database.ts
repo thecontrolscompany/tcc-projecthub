@@ -1,6 +1,6 @@
 // Database types matching Supabase schema
 
-export type UserRole = "admin" | "pm" | "customer";
+export type UserRole = "admin" | "pm" | "lead" | "installer" | "ops_manager" | "customer";
 
 export interface Profile {
   id: string;

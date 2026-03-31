@@ -30,6 +30,13 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+  const roleHome = (role?: string | null) => {
+    if (role === "admin") return "/admin";
+    if (role === "pm" || role === "lead") return "/pm";
+    if (role === "installer") return "/installer";
+    if (role === "ops_manager") return "/ops";
+    return "/customer";
+  };
 
   // Public routes that don't require auth
   const publicPaths = ["/login", "/auth/callback", "/auth/confirm"];
@@ -50,9 +57,7 @@ export async function updateSession(request: NextRequest) {
       .single();
 
     const url = request.nextUrl.clone();
-    if (profile?.role === "admin") url.pathname = "/admin";
-    else if (profile?.role === "pm") url.pathname = "/pm";
-    else url.pathname = "/customer";
+    url.pathname = roleHome(profile?.role);
     return NextResponse.redirect(url);
   }
 
@@ -67,12 +72,22 @@ export async function updateSession(request: NextRequest) {
     const role = profile?.role;
     if (pathname.startsWith("/admin") && role !== "admin") {
       const url = request.nextUrl.clone();
-      url.pathname = role === "pm" ? "/pm" : "/customer";
+      url.pathname = roleHome(role);
       return NextResponse.redirect(url);
     }
-    if (pathname.startsWith("/pm") && role === "customer") {
+    if (pathname.startsWith("/pm") && !["admin", "pm", "lead"].includes(role ?? "")) {
       const url = request.nextUrl.clone();
-      url.pathname = "/customer";
+      url.pathname = roleHome(role);
+      return NextResponse.redirect(url);
+    }
+    if (pathname.startsWith("/installer") && role !== "installer") {
+      const url = request.nextUrl.clone();
+      url.pathname = roleHome(role);
+      return NextResponse.redirect(url);
+    }
+    if (pathname.startsWith("/ops") && role !== "ops_manager") {
+      const url = request.nextUrl.clone();
+      url.pathname = roleHome(role);
       return NextResponse.redirect(url);
     }
   }

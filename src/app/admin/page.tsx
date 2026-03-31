@@ -981,6 +981,9 @@ function UsersTab() {
     const styles: Record<UserRole, string> = {
       admin: "bg-brand-primary/10 text-brand-primary",
       pm: "bg-status-info/10 text-status-info",
+      lead: "bg-status-warning/10 text-status-warning",
+      installer: "bg-status-info/10 text-brand-primary",
+      ops_manager: "bg-brand-primary/10 text-text-primary",
       customer: "bg-status-success/10 text-status-success",
     };
 
@@ -1094,6 +1097,9 @@ function UsersTab() {
                 >
                   <option value="admin">admin</option>
                   <option value="pm">pm</option>
+                  <option value="lead">lead</option>
+                  <option value="installer">installer</option>
+                  <option value="ops_manager">ops_manager</option>
                   <option value="customer">customer</option>
                 </select>
               </div>

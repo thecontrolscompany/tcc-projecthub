@@ -31,7 +31,9 @@ export async function GET(request: Request) {
         }
 
         if (profile?.role === "admin") return NextResponse.redirect(`${origin}/admin`);
-        if (profile?.role === "pm") return NextResponse.redirect(`${origin}/pm`);
+        if (profile?.role === "pm" || profile?.role === "lead") return NextResponse.redirect(`${origin}/pm`);
+        if (profile?.role === "installer") return NextResponse.redirect(`${origin}/installer`);
+        if (profile?.role === "ops_manager") return NextResponse.redirect(`${origin}/ops`);
         return NextResponse.redirect(`${origin}/customer`);
       }
 

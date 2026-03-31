@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { Profile } from "@/types/database";
+import type { Profile, UserRole } from "@/types/database";
 
 export default function UserManagementPage() {
   const supabase = createClient();
@@ -21,18 +21,21 @@ export default function UserManagementPage() {
     setLoading(false);
   }
 
-  async function handleUpdateRole(userId: string, newRole: string) {
+  async function handleUpdateRole(userId: string, newRole: UserRole) {
     await supabase.from("profiles").update({ role: newRole }).eq("id", userId);
     loadProfiles();
   }
 
-  const roleBadge = (role: string) => {
-    const styles: Record<string, string> = {
+  const roleBadge = (role: UserRole) => {
+    const styles: Record<UserRole, string> = {
       admin: "bg-brand-primary/10 text-brand-primary",
       pm: "bg-status-info/10 text-status-info",
+      lead: "bg-status-warning/10 text-status-warning",
+      installer: "bg-status-info/10 text-brand-primary",
+      ops_manager: "bg-brand-primary/10 text-text-primary",
       customer: "bg-status-success/10 text-status-success",
     };
-    return styles[role] ?? "bg-surface-overlay text-text-tertiary";
+    return styles[role];
   };
 
   return (
@@ -88,11 +91,14 @@ export default function UserManagementPage() {
                   <td className="px-4 py-2.5">
                     <select
                       defaultValue={p.role}
-                      onChange={(e) => handleUpdateRole(p.id, e.target.value)}
+                      onChange={(e) => handleUpdateRole(p.id, e.target.value as UserRole)}
                       className="rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-xs text-text-primary focus:border-brand-primary focus:outline-none"
                     >
                       <option value="admin">admin</option>
                       <option value="pm">pm</option>
+                      <option value="lead">lead</option>
+                      <option value="installer">installer</option>
+                      <option value="ops_manager">ops_manager</option>
                       <option value="customer">customer</option>
                     </select>
                   </td>

@@ -22,6 +22,9 @@ export default async function RootPage() {
     const destinations: Record<string, string> = {
       admin: "/admin",
       pm: "/pm",
+      lead: "/pm",
+      installer: "/installer",
+      ops_manager: "/ops",
       estimator: "/estimating",
       billing: "/billing",
       accounting: "/admin/analytics",
