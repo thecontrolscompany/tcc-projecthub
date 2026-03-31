@@ -36,6 +36,7 @@ export default function AdminPage() {
       prev_billed: number;
       actual_billed: number | null;
       estimated_income_snapshot: number;
+      notes?: string | null;
       synced_from_onedrive?: boolean | null;
       project:
         | {
@@ -81,6 +82,7 @@ export default function AdminPage() {
         prev_billed_pct: estimatedIncome > 0 ? prevBilled / estimatedIncome : 0,
         to_bill: calcToBill(estimatedIncome, period.pct_complete ?? 0, prevBilled),
         actual_billed: period.actual_billed,
+        notes: period.notes ?? null,
         synced_from_onedrive: period.synced_from_onedrive ?? false,
       };
     });
@@ -92,69 +94,61 @@ export default function AdminPage() {
 
     try {
       const { data, error } = await supabase
-        .from("billing_rows")
-        .select("*")
+        .from("billing_periods")
+        .select(`
+          id,
+          period_month,
+          pct_complete,
+          prior_pct,
+          prev_billed,
+          actual_billed,
+          estimated_income_snapshot,
+          notes,
+          synced_from_onedrive,
+          project:projects (
+            id,
+            name,
+            job_number,
+            customer:customers ( name ),
+            pm:profiles ( email, full_name )
+          )
+        `)
         .eq("period_month", monthStr)
-        .order("customer_name");
+        .order("period_month");
 
       if (!error && data) {
-        setRows(data as BillingRow[]);
+        const mapped = mapFallbackBillingRows(
+          data as Array<{
+            id: string;
+            period_month: string;
+            pct_complete: number;
+            prior_pct: number;
+            prev_billed: number;
+            actual_billed: number | null;
+            estimated_income_snapshot: number;
+            notes?: string | null;
+            synced_from_onedrive?: boolean | null;
+            project:
+              | {
+                  id: string;
+                  name: string;
+                  job_number?: string | null;
+                  customer?: { name: string } | Array<{ name: string }>;
+                  pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
+                }
+              | Array<{
+                  id: string;
+                  name: string;
+                  job_number?: string | null;
+                  customer?: { name: string } | Array<{ name: string }>;
+                  pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
+                }>;
+          }>
+        ).sort((a, b) => a.customer_name.localeCompare(b.customer_name));
+
+        setRows(mapped);
       } else {
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from("billing_periods")
-          .select(`
-            id,
-            period_month,
-            pct_complete,
-            prior_pct,
-            prev_billed,
-            actual_billed,
-            estimated_income_snapshot,
-            synced_from_onedrive,
-            project:projects (
-              id,
-              name,
-              job_number,
-              customer:customers ( name ),
-              pm:profiles ( email, full_name )
-            )
-          `)
-          .eq("period_month", monthStr)
-          .order("period_month");
-
-        if (!fallbackError && fallbackData) {
-          const mapped = mapFallbackBillingRows(
-            fallbackData as Array<{
-              id: string;
-              period_month: string;
-              pct_complete: number;
-              prior_pct: number;
-              prev_billed: number;
-              actual_billed: number | null;
-              estimated_income_snapshot: number;
-              synced_from_onedrive?: boolean | null;
-              project:
-                | {
-                    id: string;
-                    name: string;
-                    job_number?: string | null;
-                    customer?: { name: string } | Array<{ name: string }>;
-                    pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
-                  }
-                | Array<{
-                    id: string;
-                    name: string;
-                    job_number?: string | null;
-                    customer?: { name: string } | Array<{ name: string }>;
-                    pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
-                  }>;
-            }>
-          ).sort((a, b) => a.customer_name.localeCompare(b.customer_name));
-
-          setRows(mapped);
-        } else {
-          setRows([]);
-        }
+        setRows([]);
       }
     } catch {
       setRows([]);

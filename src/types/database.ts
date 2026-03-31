@@ -109,5 +109,6 @@ export interface BillingRow {
   prev_billed_pct: number; // prev_billed / estimated_income
   to_bill: number;
   actual_billed: number | null;
+  notes: string | null;
   synced_from_onedrive: boolean;
 }

@@ -30,14 +30,26 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
   const supabase = createClient();
 
   const updateRow = useCallback(
-    async (billingPeriodId: string, field: "pct_complete" | "actual_billed", value: number) => {
+    async (
+      billingPeriodId: string,
+      field: "pct_complete" | "prior_pct" | "prev_billed" | "actual_billed" | "estimated_income_snapshot" | "notes",
+      value: number | string | null
+    ) => {
       const updated = rows.map((r) => {
         if (r.billing_period_id !== billingPeriodId) return r;
-        const next = { ...r, [field]: value };
-        next.to_bill = calcToBill(next.estimated_income, next.pct_complete, next.prev_billed);
-        if (field === "pct_complete") {
-          next.prev_billed_pct = next.estimated_income > 0 ? next.prev_billed / next.estimated_income : 0;
+        const next = { ...r };
+
+        if (field === "estimated_income_snapshot") {
+          next.estimated_income = Number(value ?? 0);
+        } else if (field === "notes") {
+          next.notes = typeof value === "string" ? value : null;
+        } else {
+          (next[field] as number | null) = typeof value === "number" ? value : null;
         }
+
+        next.to_bill = calcToBill(next.estimated_income, next.pct_complete, next.prev_billed);
+        next.backlog = Math.max(next.estimated_income - next.prev_billed, 0);
+        next.prev_billed_pct = next.estimated_income > 0 ? next.prev_billed / next.estimated_income : 0;
         return next;
       });
       onRowsChange(updated);
@@ -75,8 +87,12 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
     {
       accessorKey: "estimated_income",
       header: () => <span className="block text-right">Est. Income</span>,
-      cell: ({ getValue }) => (
-        <span className="block text-right text-text-secondary">{fmt(getValue<number>())}</span>
+      cell: ({ row }) => (
+        <EditableCurrency
+          value={row.original.estimated_income}
+          onChange={(v) => updateRow(row.original.billing_period_id, "estimated_income_snapshot", v)}
+          className="text-text-secondary"
+        />
       ),
     },
     {
@@ -89,8 +105,13 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
     {
       accessorKey: "prior_pct",
       header: () => <span className="block text-right">Prior %</span>,
-      cell: ({ getValue }) => (
-        <span className="block text-right text-text-secondary">{pct(getValue<number>())}</span>
+      cell: ({ row }) => (
+        <EditablePct
+          value={row.original.prior_pct}
+          onChange={(v) => updateRow(row.original.billing_period_id, "prior_pct", v)}
+          warn={false}
+          className="text-text-secondary"
+        />
       ),
     },
     {
@@ -107,8 +128,12 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
     {
       accessorKey: "prev_billed",
       header: () => <span className="block text-right">Prev. Billed</span>,
-      cell: ({ getValue }) => (
-        <span className="block text-right text-text-secondary">{fmt(getValue<number>())}</span>
+      cell: ({ row }) => (
+        <EditableCurrency
+          value={row.original.prev_billed}
+          onChange={(v) => updateRow(row.original.billing_period_id, "prev_billed", v)}
+          className="text-text-secondary"
+        />
       ),
     },
     {
@@ -132,6 +157,16 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
         <EditableCurrency
           value={row.original.actual_billed}
           onChange={(v) => updateRow(row.original.billing_period_id, "actual_billed", v)}
+        />
+      ),
+    },
+    {
+      accessorKey: "notes",
+      header: "Notes",
+      cell: ({ row }) => (
+        <EditableText
+          value={row.original.notes}
+          onChange={(v) => updateRow(row.original.billing_period_id, "notes", v)}
         />
       ),
     },
@@ -169,7 +204,7 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
       />
 
       <div className="overflow-x-auto rounded-2xl border border-border-default">
-        <table className="w-full min-w-[1100px] text-sm">
+        <table className="w-full min-w-[1260px] text-sm">
           <thead>
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id} className="border-b border-border-default bg-surface-raised/80">
@@ -226,6 +261,7 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
               <td />
               <td className="px-3 py-2.5 text-right text-brand-primary">{fmt(totals.to_bill)}</td>
               <td className="px-3 py-2.5 text-right text-status-success">{fmt(totals.actual_billed)}</td>
+              <td />
             </tr>
           </tfoot>
         </table>
@@ -253,10 +289,12 @@ function EditablePct({
   value,
   onChange,
   warn,
+  className,
 }: {
   value: number;
   onChange: (v: number) => void;
   warn: boolean;
+  className?: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -290,7 +328,7 @@ function EditablePct({
       }}
       className={[
         "block w-full rounded-lg px-2 py-1 text-right text-sm transition hover:bg-status-warning/10",
-        warn ? "text-status-danger" : "text-text-primary",
+        warn ? "text-status-danger" : className ?? "text-text-primary",
       ].join(" ")}
       title="Click to edit"
     >
@@ -302,9 +340,11 @@ function EditablePct({
 function EditableCurrency({
   value,
   onChange,
+  className,
 }: {
   value: number | null;
   onChange: (v: number) => void;
+  className?: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -335,10 +375,53 @@ function EditableCurrency({
         setDraft(String(value ?? ""));
         setEditing(true);
       }}
-      className="block w-full rounded-lg px-2 py-1 text-right text-sm text-status-success transition hover:bg-status-warning/10"
+      className={`block w-full rounded-lg px-2 py-1 text-right text-sm transition hover:bg-status-warning/10 ${className ?? "text-status-success"}`}
       title="Click to edit"
     >
       {value !== null ? fmt(value) : <span className="text-text-tertiary">-</span>}
+    </button>
+  );
+}
+
+function EditableText({
+  value,
+  onChange,
+}: {
+  value: string | null;
+  onChange: (v: string | null) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+
+  const commit = () => {
+    onChange(draft.trim() || null);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        defaultValue={value ?? ""}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => e.key === "Enter" && commit()}
+        className="w-full min-w-[180px] rounded-lg border border-status-warning/50 bg-status-warning/10 px-2 py-1 text-left text-sm text-status-warning focus:outline-none"
+        placeholder="Add note"
+      />
+    );
+  }
+
+  return (
+    <button
+      onClick={() => {
+        setDraft(value ?? "");
+        setEditing(true);
+      }}
+      className="block w-full rounded-lg px-2 py-1 text-left text-sm text-text-secondary transition hover:bg-status-warning/10"
+      title="Click to edit"
+    >
+      {value?.trim() ? value : <span className="text-text-tertiary">-</span>}
     </button>
   );
 }

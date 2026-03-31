@@ -55,6 +55,7 @@ export function computeBillingRow(
     prev_billed_pct: calcPrevBilledPct(est, period.prev_billed),
     to_bill: calcToBill(est, period.pct_complete, period.prev_billed),
     actual_billed: period.actual_billed,
+    notes: period.notes ?? null,
     synced_from_onedrive: period.synced_from_onedrive,
   };
 }
