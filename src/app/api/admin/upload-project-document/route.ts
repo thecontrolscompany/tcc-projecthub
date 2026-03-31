@@ -2,10 +2,6 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getSharePointDriveId, getSharePointSiteId, graphFetch } from "@/lib/graph/client";
 
-const AZURE_TENANT_ID = "7eec7a09-a47b-4bf1-a877-80fd5323c774";
-const AZURE_CLIENT_ID = "0777b14d-29c4-4186-8d8e-4a8f43de6589";
-const TOKEN_URL = `https://login.microsoftonline.com/${AZURE_TENANT_ID}/oauth2/v2.0/token`;
-
 const DOCUMENT_TYPE_FOLDERS = {
   contract: "01 Contract",
   scope: "01 Contract",
@@ -38,42 +34,23 @@ async function requireAdmin() {
     return { error: NextResponse.json({ error: "Admin access required." }, { status: 403 }) };
   }
 
-  return { supabase };
-}
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-async function getAppToken() {
-  const clientSecret = process.env.AZURE_CLIENT_SECRET;
-
-  if (!clientSecret) {
-    throw new Error("AZURE_CLIENT_SECRET is not configured.");
+  if (!session?.provider_token) {
+    return {
+      error: NextResponse.json(
+        {
+          error:
+            "Microsoft sign-in required for SharePoint uploads. Please sign out and sign back in with Microsoft.",
+        },
+        { status: 401 }
+      ),
+    };
   }
 
-  const body = new URLSearchParams({
-    grant_type: "client_credentials",
-    client_id: AZURE_CLIENT_ID,
-    client_secret: clientSecret,
-    scope: "https://graph.microsoft.com/.default",
-  });
-
-  const res = await fetch(TOKEN_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body,
-  });
-
-  if (!res.ok) {
-    const message = await res.text();
-    throw new Error(message || "Failed to acquire Microsoft app token.");
-  }
-
-  const data = await res.json();
-  if (typeof data?.access_token !== "string" || !data.access_token) {
-    throw new Error("Microsoft token endpoint did not return an access token.");
-  }
-
-  return data.access_token as string;
+  return { supabase, providerToken: session.provider_token };
 }
 
 function isDocumentType(value: string): value is DocumentType {
@@ -143,13 +120,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const accessToken = await getAppToken();
-    const { siteId, driveId } = await resolveSharePointIds(accessToken);
+    const { siteId, driveId } = await resolveSharePointIds(auth.providerToken);
     const subfolder = DOCUMENT_TYPE_FOLDERS[documentType];
     const encodedPath = encodeGraphPath(project.sharepoint_folder, subfolder, file.name);
     const uploadPath = `/sites/${siteId}/drives/${driveId}/root:/${encodedPath}:/content`;
 
-    const uploadRes = await graphFetch(uploadPath, accessToken, {
+    const uploadRes = await graphFetch(uploadPath, auth.providerToken, {
       method: "PUT",
       headers: {
         "Content-Type": file.type || "application/octet-stream",
