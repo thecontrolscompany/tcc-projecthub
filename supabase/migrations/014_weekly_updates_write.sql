@@ -16,3 +16,7 @@ CREATE POLICY "Assigned staff updates own weekly updates" ON weekly_updates FOR 
       AND pa.role_on_project IN ('pm', 'lead', 'ops_manager')
   )
 );
+
+-- Required for upsert onConflict: "project_id,week_of" to work
+ALTER TABLE weekly_updates
+  ADD CONSTRAINT weekly_updates_project_week_unique UNIQUE (project_id, week_of);
