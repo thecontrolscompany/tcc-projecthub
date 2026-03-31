@@ -25,6 +25,7 @@
 - Admin Projects tab: New/Edit Project modals, auto YYYY-NNN job number, Billed/Paid logic, SharePoint provisioning (task-014)
 - PM auto-link on Microsoft sign-in (auth callback) (task-014)
 - PM Directory: Import from Microsoft button, Graph API GET /users with paging, upserts first/last name, links profile_id (task-015)
+- PM Directory: Add/Edit/Delete CRUD, linked vs external badge (task-019)
 - PM import consent error now returns direct Azure admin-consent URL with inline "Grant Admin Consent" link (task-016)
 
 ### Infrastructure (live)
