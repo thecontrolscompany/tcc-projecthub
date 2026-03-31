@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
-import { roleHome } from "@/lib/auth/role-routes";
 
 export type NavRole = "admin" | "pm" | "lead" | "installer" | "ops_manager" | "customer";
 type IconProps = { className?: string };
@@ -191,13 +190,11 @@ function isActivePath(pathname: string, href: string) {
 
 export function SidebarNav({
   role,
-  overrideRole,
   userEmail,
   collapsed,
   onToggle,
 }: {
   role: string;
-  overrideRole?: NavRole | null;
   userEmail: string;
   collapsed: boolean;
   onToggle: () => void;
@@ -205,7 +202,7 @@ export function SidebarNav({
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createBrowserClient();
-  const effectiveRole = overrideRole ?? (role as NavRole);
+  const effectiveRole = role as NavRole;
   const links = NAV_LINKS.filter((link) => link.roles.includes(effectiveRole));
   const initials = getUserInitials(userEmail);
 
@@ -307,15 +304,6 @@ export function SidebarNav({
               {!collapsed && <span className="ml-2">Sign Out</span>}
             </button>
           </div>
-
-          {overrideRole && !collapsed && (
-            <Link
-              href={roleHome(overrideRole)}
-              className="inline-flex items-center justify-center rounded-lg border border-status-warning/30 bg-status-warning/10 px-3 py-2 text-xs font-medium text-status-warning transition hover:bg-status-warning/20"
-            >
-              Open {overrideRole === "ops_manager" ? "Ops Manager" : overrideRole === "lead" ? "Lead" : overrideRole === "customer" ? "Customer" : overrideRole === "installer" ? "Installer" : overrideRole === "pm" ? "PM" : "Admin"} Home
-            </Link>
-          )}
         </div>
       </div>
     </aside>
