@@ -73,7 +73,7 @@ export default function LoginPage() {
         <div className="rounded-3xl border border-border-default bg-surface-raised p-8">
           {view === "login" ? (
             <>
-              {/* Microsoft SSO â€” primary for internal users */}
+              {/* Microsoft SSO -- primary for internal users */}
               <button
                 onClick={handleMicrosoftLogin}
                 disabled={loading}
@@ -89,7 +89,7 @@ export default function LoginPage() {
                 <div className="h-px flex-1 bg-surface-overlay" />
               </div>
 
-              {/* Email / password â€” for customer portal accounts */}
+              {/* Email / password -- for customer portal accounts */}
               <form onSubmit={handleEmailLogin} className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-text-secondary">
@@ -116,7 +116,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm text-text-primary placeholder-text-tertiary focus:border-brand-primary/50 focus:outline-none focus:ring-1 focus:ring-brand-primary/50"
-                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                    placeholder="••••••••"
                   />
                 </div>
 
@@ -131,7 +131,7 @@ export default function LoginPage() {
                   disabled={loading}
                   className="w-full rounded-xl bg-brand-primary px-4 py-2.5 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:opacity-50"
                 >
-                  {loading ? "Signing inâ€¦" : "Sign in"}
+                  {loading ? "Signing in..." : "Sign in"}
                 </button>
               </form>
 
@@ -157,7 +157,7 @@ export default function LoginPage() {
 
               {resetSent ? (
                 <p className="rounded-xl bg-status-success/10 px-4 py-3 text-sm text-status-success">
-                  Check your inbox â€” reset link sent.
+                  Check your inbox -- reset link sent.
                 </p>
               ) : (
                 <form onSubmit={handlePasswordReset} className="space-y-4">
@@ -179,7 +179,7 @@ export default function LoginPage() {
                     disabled={loading}
                     className="w-full rounded-xl bg-brand-primary px-4 py-2.5 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:opacity-50"
                   >
-                    {loading ? "Sendingâ€¦" : "Send reset link"}
+                    {loading ? "Sending..." : "Send reset link"}
                   </button>
                 </form>
               )}
@@ -192,14 +192,14 @@ export default function LoginPage() {
                 }}
                 className="mt-4 w-full text-center text-xs text-text-tertiary hover:text-text-secondary"
               >
-                â† Back to sign in
+                &larr; Back to sign in
               </button>
             </>
           )}
         </div>
 
         <p className="mt-6 text-center text-xs text-text-tertiary">
-          Admin &amp; PMs sign in with Microsoft &nbsp;Â·&nbsp; Customers use email + password
+          Admin &amp; PMs sign in with Microsoft &nbsp;&middot;&nbsp; Customers use email + password
         </p>
       </div>
     </main>
