@@ -48,10 +48,10 @@ async function requireAdmin() {
 }
 
 async function getAppToken() {
-  const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+  const clientSecret = process.env.AZURE_CLIENT_SECRET;
 
   if (!clientSecret) {
-    throw new Error("MICROSOFT_CLIENT_SECRET is not configured.");
+    throw new Error("AZURE_CLIENT_SECRET is not configured.");
   }
 
   const body = new URLSearchParams({
