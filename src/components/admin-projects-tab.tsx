@@ -51,6 +51,14 @@ type PmOption = {
 };
 
 type ProjectFormErrors = Partial<Record<"form" | "projectName" | "customerId" | "newCustomerName" | "contractPrice", string>>;
+type DocumentType = "contract" | "scope" | "estimate";
+type UploadState = "idle" | "uploading" | "success" | "error";
+
+type UploadStatus = {
+  state: UploadState;
+  message: string;
+  webUrl?: string | null;
+};
 
 type ProjectFormValues = {
   projectName: string;
@@ -113,6 +121,45 @@ const inputClassName =
 const textareaClassName =
   "w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none";
 
+const PROJECT_SELECT_FIELDS = `
+  id,
+  name,
+  job_number,
+  estimated_income,
+  contract_price,
+  migration_status,
+  is_active,
+  billed_in_full,
+  paid_in_full,
+  completed_at,
+  customer_id,
+  customer_poc,
+  customer_po_number,
+  site_address,
+  general_contractor,
+  mechanical_contractor,
+  electrical_contractor,
+  all_conduit_plenum,
+  certified_payroll,
+  buy_american,
+  bond_required,
+  special_requirements,
+  special_access,
+  notes,
+  pm_directory_id,
+  pm_id,
+  sharepoint_folder,
+  created_at,
+  customer:customers(name),
+  pm_directory:pm_directory(id, first_name, last_name, email, profile_id)
+`;
+
+const DOCUMENT_OPTIONS: Array<{ type: DocumentType; label: string }> = [
+  { type: "contract", label: "Contract" },
+  { type: "scope", label: "Scope" },
+  { type: "estimate", label: "Estimate" },
+];
+
 type SortKey = "name" | "customer" | "contract_price";
 type SortDir = "asc" | "desc";
 type StatusFilter = "active" | "completed" | "all";
@@ -126,6 +173,8 @@ export function AdminProjectsTab() {
   const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectRow | null>(null);
+  const [isNewProjectFlow, setIsNewProjectFlow] = useState(false);
+  const [isWaitingForSharePointFolder, setIsWaitingForSharePointFolder] = useState(false);
   const [jobNumberPreview, setJobNumberPreview] = useState("");
   const [formValues, setFormValues] = useState<ProjectFormValues>(EMPTY_PROJECT_FORM);
   const [validationErrors, setValidationErrors] = useState<ProjectFormErrors>({});
@@ -140,50 +189,23 @@ export function AdminProjectsTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  function normalizeProject(item: Record<string, unknown>): ProjectRow {
+    return {
+      ...(item as ProjectRow),
+      customer: normalizeSingle(item.customer as ProjectRow["customer"]),
+      pm_directory: normalizeSingle(item.pm_directory as ProjectRow["pm_directory"]),
+    };
+  }
+
   async function loadProjects() {
     setLoading(true);
     try {
       const { data } = await supabase
         .from("projects")
-        .select(`
-          id,
-          name,
-          job_number,
-          estimated_income,
-          contract_price,
-          migration_status,
-          is_active,
-          billed_in_full,
-          paid_in_full,
-          completed_at,
-          customer_id,
-          customer_poc,
-          customer_po_number,
-          site_address,
-          general_contractor,
-          mechanical_contractor,
-          electrical_contractor,
-          all_conduit_plenum,
-          certified_payroll,
-          buy_american,
-          bond_required,
-          special_requirements,
-          special_access,
-          notes,
-          pm_directory_id,
-          pm_id,
-          sharepoint_folder,
-          created_at,
-          customer:customers(name),
-          pm_directory:pm_directory(id, first_name, last_name, email, profile_id)
-        `)
+        .select(PROJECT_SELECT_FIELDS)
         .order("name");
 
-      const normalized = (data ?? []).map((item) => ({
-        ...item,
-        customer: normalizeSingle(item.customer),
-        pm_directory: normalizeSingle(item.pm_directory),
-      })) as ProjectRow[];
+      const normalized = (data ?? []).map((item) => normalizeProject(item as Record<string, unknown>));
 
       setProjects(normalized);
     } catch {
@@ -203,6 +225,38 @@ export function AdminProjectsTab() {
     setPms((pmData as PmOption[]) ?? []);
   }
 
+  async function fetchProjectById(projectId: string) {
+    const { data, error } = await supabase
+      .from("projects")
+      .select(PROJECT_SELECT_FIELDS)
+      .eq("id", projectId)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return normalizeProject(data as Record<string, unknown>);
+  }
+
+  async function pollForSharePointFolder(projectId: string) {
+    setIsWaitingForSharePointFolder(true);
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      await new Promise((resolve) => window.setTimeout(resolve, 3000));
+      const refreshedProject = await fetchProjectById(projectId);
+
+      if (refreshedProject?.sharepoint_folder) {
+        setEditingProject((current) => (!current || current.id === projectId ? refreshedProject : current));
+        await loadProjects();
+        setIsWaitingForSharePointFolder(false);
+        return;
+      }
+    }
+
+    setIsWaitingForSharePointFolder(false);
+  }
+
   async function getNextJobNumber() {
     const year = new Date().getFullYear();
     const { data } = await supabase
@@ -220,6 +274,8 @@ export function AdminProjectsTab() {
   async function openNewProjectModal() {
     const nextJobNumber = await getNextJobNumber();
     setEditingProject(null);
+    setIsNewProjectFlow(true);
+    setIsWaitingForSharePointFolder(false);
     setFormValues(EMPTY_PROJECT_FORM);
     setValidationErrors({});
     setJobNumberPreview(nextJobNumber);
@@ -228,6 +284,8 @@ export function AdminProjectsTab() {
 
   function openEditProjectModal(project: ProjectRow) {
     setEditingProject(project);
+    setIsNewProjectFlow(false);
+    setIsWaitingForSharePointFolder(false);
     setJobNumberPreview(project.job_number ?? "");
     setFormValues({
       projectName: project.name.startsWith(`${project.job_number} - `) && project.job_number
@@ -369,6 +427,13 @@ export function AdminProjectsTab() {
             .eq("project_id", editingProject.id)
             .is("actual_billed", null);
         }
+
+        setShowModal(false);
+        setEditingProject(null);
+        setIsNewProjectFlow(false);
+        setIsWaitingForSharePointFolder(false);
+        setFormValues(EMPTY_PROJECT_FORM);
+        setValidationErrors({});
       } else {
         const { data: insertedProject, error } = await supabase
           .from("projects")
@@ -398,12 +463,13 @@ export function AdminProjectsTab() {
             projectName: formValues.projectName.trim(),
           }),
         }).catch((error) => console.error("Project folder provisioning failed", error));
+
+        const createdProject = await fetchProjectById(insertedProject.id);
+        setEditingProject(createdProject);
+        setJobNumberPreview(insertedProject.job_number ?? jobNumberPreview);
+        void pollForSharePointFolder(insertedProject.id);
       }
 
-      setShowModal(false);
-      setEditingProject(null);
-      setFormValues(EMPTY_PROJECT_FORM);
-      setValidationErrors({});
       await loadProjects();
     } finally {
       setSaving(false);
@@ -571,11 +637,15 @@ export function AdminProjectsTab() {
           onClose={() => {
             setShowModal(false);
             setEditingProject(null);
+            setIsNewProjectFlow(false);
+            setIsWaitingForSharePointFolder(false);
             setFormValues(EMPTY_PROJECT_FORM);
             setValidationErrors({});
           }}
           onChange={updateFormValue}
           onSave={handleSaveProject}
+          isNewProjectFlow={isNewProjectFlow}
+          isWaitingForSharePointFolder={isWaitingForSharePointFolder}
         />
       )}
     </div>
@@ -591,6 +661,8 @@ function ProjectModal({
   values,
   saving,
   errors,
+  isNewProjectFlow,
+  isWaitingForSharePointFolder,
   onClose,
   onChange,
   onSave,
@@ -603,6 +675,8 @@ function ProjectModal({
   values: ProjectFormValues;
   saving: boolean;
   errors: ProjectFormErrors;
+  isNewProjectFlow: boolean;
+  isWaitingForSharePointFolder: boolean;
   onClose: () => void;
   onChange: <K extends keyof ProjectFormValues>(field: K, value: ProjectFormValues[K]) => void;
   onSave: () => void;
@@ -771,6 +845,14 @@ function ProjectModal({
               </div>
             </section>
           )}
+
+          {editingProject && (
+            <ProjectDocumentUploads
+              project={editingProject}
+              isNewProjectFlow={isNewProjectFlow}
+              isWaitingForSharePointFolder={isWaitingForSharePointFolder}
+            />
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-3 border-t border-border-default px-6 py-4">
@@ -781,6 +863,186 @@ function ProjectModal({
         </div>
       </div>
     </div>
+  );
+}
+
+function ProjectDocumentUploads({
+  project,
+  isNewProjectFlow,
+  isWaitingForSharePointFolder,
+}: {
+  project: ProjectRow;
+  isNewProjectFlow: boolean;
+  isWaitingForSharePointFolder: boolean;
+}) {
+  const [selectedFiles, setSelectedFiles] = useState<Record<DocumentType, File | null>>({
+    contract: null,
+    scope: null,
+    estimate: null,
+  });
+  const [statuses, setStatuses] = useState<Record<DocumentType, UploadStatus>>({
+    contract: { state: "idle", message: "No file selected" },
+    scope: { state: "idle", message: "No file selected" },
+    estimate: { state: "idle", message: "No file selected" },
+  });
+
+  useEffect(() => {
+    setSelectedFiles({
+      contract: null,
+      scope: null,
+      estimate: null,
+    });
+    setStatuses({
+      contract: { state: "idle", message: "No file selected" },
+      scope: { state: "idle", message: "No file selected" },
+      estimate: { state: "idle", message: "No file selected" },
+    });
+  }, [project.id]);
+
+  async function handleUpload(documentType: DocumentType) {
+    const file = selectedFiles[documentType];
+
+    if (!file) {
+      setStatuses((current) => ({
+        ...current,
+        [documentType]: { state: "error", message: "Choose a file before uploading." },
+      }));
+      return;
+    }
+
+    setStatuses((current) => ({
+      ...current,
+      [documentType]: { state: "uploading", message: `Uploading ${file.name}...` },
+    }));
+
+    try {
+      const formData = new FormData();
+      formData.append("projectId", project.id);
+      formData.append("documentType", documentType);
+      formData.append("file", file);
+
+      const res = await fetch("/api/admin/upload-project-document", {
+        method: "POST",
+        body: formData,
+      });
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(typeof json?.error === "string" ? json.error : "Upload failed.");
+      }
+
+      setStatuses((current) => ({
+        ...current,
+        [documentType]: {
+          state: "success",
+          message: `Uploaded: ${file.name}`,
+          webUrl: typeof json?.webUrl === "string" ? json.webUrl : null,
+        },
+      }));
+      setSelectedFiles((current) => ({ ...current, [documentType]: null }));
+    } catch (error) {
+      setStatuses((current) => ({
+        ...current,
+        [documentType]: {
+          state: "error",
+          message: error instanceof Error ? error.message : "Upload failed.",
+        },
+      }));
+    }
+  }
+
+  const uploadsEnabled = Boolean(project.sharepoint_folder);
+
+  return (
+    <section className="space-y-4">
+      <div className="space-y-1">
+        <h4 className="font-heading text-lg font-semibold text-text-primary">Uploads</h4>
+        <p className="text-sm text-text-secondary">
+          Upload contract, scope, or estimate files directly into the project SharePoint folder.
+        </p>
+        {isNewProjectFlow && (
+          <p className="text-sm text-text-tertiary">
+            SharePoint folder is being provisioned - uploads available shortly after saving.
+          </p>
+        )}
+        {!uploadsEnabled && !isNewProjectFlow && (
+          <p className="text-sm text-status-warning">
+            SharePoint folder not yet provisioned for this project.
+          </p>
+        )}
+        {isWaitingForSharePointFolder && (
+          <p className="text-sm text-brand-primary">Checking SharePoint folder availability...</p>
+        )}
+      </div>
+
+      <div className="space-y-3 rounded-2xl border border-border-default bg-surface-raised p-4">
+        {DOCUMENT_OPTIONS.map((document) => {
+          const selectedFile = selectedFiles[document.type];
+          const status = statuses[document.type];
+
+          return (
+            <div key={document.type} className="grid gap-3 rounded-xl border border-border-default bg-surface-base px-4 py-3 md:grid-cols-[140px,1fr,120px,1fr] md:items-center">
+              <div className="text-sm font-medium text-text-primary">{document.label}</div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="inline-flex cursor-pointer items-center rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-secondary transition hover:bg-surface-base hover:text-text-primary">
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null;
+                      setSelectedFiles((current) => ({ ...current, [document.type]: file }));
+                      setStatuses((current) => ({
+                        ...current,
+                        [document.type]: {
+                          state: "idle",
+                          message: file ? `Ready: ${file.name}` : "No file selected",
+                        },
+                      }));
+                    }}
+                  />
+                  Choose File
+                </label>
+                <span className="text-xs text-text-tertiary">
+                  {selectedFile?.name ?? "PDF, DOCX, XLSX, or other file"}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => void handleUpload(document.type)}
+                disabled={!uploadsEnabled || !selectedFile || status.state === "uploading"}
+                className="rounded-lg bg-brand-primary px-3 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {status.state === "uploading" ? "Uploading..." : "Upload"}
+              </button>
+
+              <div
+                className={[
+                  "text-sm",
+                  status.state === "error"
+                    ? "text-status-danger"
+                    : status.state === "success"
+                      ? "text-status-success"
+                      : status.state === "uploading"
+                        ? "text-brand-primary"
+                        : "text-text-secondary",
+                ].join(" ")}
+              >
+                {status.webUrl && status.state === "success" ? (
+                  <a href={status.webUrl} target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">
+                    {status.message}
+                  </a>
+                ) : (
+                  status.message
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
