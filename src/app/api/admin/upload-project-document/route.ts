@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { graphFetch } from "@/lib/graph/client";
+import { getSharePointDriveId, getSharePointSiteId, graphFetch } from "@/lib/graph/client";
 
 const AZURE_TENANT_ID = "7eec7a09-a47b-4bf1-a877-80fd5323c774";
 const AZURE_CLIENT_ID = "0777b14d-29c4-4186-8d8e-4a8f43de6589";
@@ -13,6 +13,9 @@ const DOCUMENT_TYPE_FOLDERS = {
 } as const;
 
 type DocumentType = keyof typeof DOCUMENT_TYPE_FOLDERS;
+
+let cachedSiteId = process.env.SHAREPOINT_SITE_ID ?? "";
+let cachedDriveId = process.env.SHAREPOINT_DRIVE_ID ?? "";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -85,6 +88,22 @@ function encodeGraphPath(...segments: string[]) {
     .join("/");
 }
 
+async function resolveSharePointIds(accessToken: string) {
+  let siteId = process.env.SHAREPOINT_SITE_ID || cachedSiteId;
+  if (!siteId) {
+    siteId = await getSharePointSiteId(accessToken);
+    cachedSiteId = siteId;
+  }
+
+  let driveId = process.env.SHAREPOINT_DRIVE_ID || cachedDriveId;
+  if (!driveId) {
+    driveId = await getSharePointDriveId(accessToken, siteId);
+    cachedDriveId = driveId;
+  }
+
+  return { siteId, driveId };
+}
+
 export async function POST(request: Request) {
   const auth = await requireAdmin();
   if ("error" in auth) return auth.error;
@@ -107,16 +126,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "A file is required." }, { status: 400 });
     }
 
-    const siteId = process.env.SHAREPOINT_SITE_ID;
-    const driveId = process.env.SHAREPOINT_DRIVE_ID;
-
-    if (!siteId || !driveId) {
-      return NextResponse.json(
-        { error: "SHAREPOINT_SITE_ID and SHAREPOINT_DRIVE_ID must be configured." },
-        { status: 500 }
-      );
-    }
-
     const { data: project, error: projectError } = await auth.supabase
       .from("projects")
       .select("sharepoint_folder")
@@ -135,6 +144,7 @@ export async function POST(request: Request) {
     }
 
     const accessToken = await getAppToken();
+    const { siteId, driveId } = await resolveSharePointIds(accessToken);
     const subfolder = DOCUMENT_TYPE_FOLDERS[documentType];
     const encodedPath = encodeGraphPath(project.sharepoint_folder, subfolder, file.name);
     const uploadPath = `/sites/${siteId}/drives/${driveId}/root:/${encodedPath}:/content`;
