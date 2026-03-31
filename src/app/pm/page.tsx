@@ -317,6 +317,7 @@ function UpdateForm({
   const [blockers, setBlockers] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [recentUpdates, setRecentUpdates] = useState<WeeklyUpdate[]>([]);
 
   useEffect(() => {
@@ -341,11 +342,12 @@ function UpdateForm({
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setSaving(true);
+    setSaveError(null);
 
     try {
       const pctDecimal = Math.min(Math.max(pctComplete / 100, 0), 1);
 
-      await supabase.from("weekly_updates").upsert({
+      const { error: updateError } = await supabase.from("weekly_updates").upsert({
         project_id: project.id,
         pm_id: pmId,
         week_of: weekOf,
@@ -353,6 +355,8 @@ function UpdateForm({
         notes: notes || null,
         blockers: blockers || null,
       }, { onConflict: "project_id,week_of" });
+
+      if (updateError) throw new Error(updateError.message);
 
       if (project.current_period) {
         await supabase.from("billing_periods").update({ pct_complete: pctDecimal }).eq("id", project.current_period.id);
@@ -363,8 +367,8 @@ function UpdateForm({
         setSaved(false);
         onBack();
       }, 1500);
-    } catch {
-      setSaved(false);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Save failed. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -444,6 +448,12 @@ function UpdateForm({
             className="w-full rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm text-text-primary placeholder-text-tertiary focus:border-status-success/50 focus:outline-none"
           />
         </div>
+
+        {saveError && (
+          <div className="rounded-xl bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
+            {saveError}
+          </div>
+        )}
 
         {saved ? (
           <div className="rounded-xl bg-status-success/10 px-4 py-3 text-center text-sm font-medium text-status-success">
