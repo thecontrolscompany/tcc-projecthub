@@ -266,28 +266,8 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-surface-base text-text-primary">
-      <header className="border-b border-border-default">
-        <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">
-              The Controls Company
-            </p>
-            <h1 className="text-lg font-bold text-text-primary">TCC ProjectHub - Admin</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/admin/analytics"
-              className="rounded-full border border-border-default px-4 py-1.5 text-sm text-text-secondary hover:border-brand-primary/40 hover:text-text-primary"
-            >
-              Analytics
-            </Link>
-            <SignOutButton />
-          </div>
-        </div>
-      </header>
-
       <div className="border-b border-border-default">
-        <div className="mx-auto flex max-w-screen-2xl gap-1 px-6">
+        <div className="mx-auto flex max-w-screen-2xl flex-wrap gap-2 px-6 py-4">
           {(
             [
               { id: "billing", label: "Billing Table" },
@@ -300,10 +280,10 @@ export default function AdminPage() {
               key={id}
               onClick={() => setTab(id)}
               className={[
-                "border-b-2 px-4 py-3 text-sm font-medium transition",
+                "rounded-lg px-4 py-2.5 text-sm font-medium transition",
                 tab === id
-                  ? "border-brand-primary text-text-primary"
-                  : "border-transparent text-text-secondary hover:text-text-primary",
+                  ? "bg-surface-overlay text-text-primary shadow-sm"
+                  : "text-text-secondary hover:bg-surface-overlay/70 hover:text-text-primary",
               ].join(" ")}
             >
               {label}
@@ -442,7 +422,7 @@ function ProjectsTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-text-primary">Projects</h2>
+        <h2 className="text-2xl font-bold text-text-primary">Projects</h2>
         <Link
           href="/admin/projects/new"
           className="rounded-xl bg-brand-primary px-4 py-1.5 text-sm font-semibold text-text-inverse hover:bg-brand-hover"
@@ -701,7 +681,7 @@ function PmDirectoryTab() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
-          <h2 className="text-lg font-semibold text-text-primary">PM Directory</h2>
+          <h2 className="text-2xl font-bold text-text-primary">PM Directory</h2>
           <p className="text-sm text-text-secondary">
             Stores both internal TCC PMs and external customer-side contacts. Linked portal accounts are shown when `profile_id` is present.
           </p>
@@ -994,7 +974,7 @@ function UsersTab() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
-          <h2 className="text-lg font-semibold text-text-primary">User Management</h2>
+          <h2 className="text-2xl font-bold text-text-primary">User Management</h2>
           <p className="text-sm text-text-secondary">
             Manage internal and customer portal users. Name and role come directly from the `profiles` table.
           </p>

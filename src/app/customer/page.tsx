@@ -101,7 +101,7 @@ export default function CustomerPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">
               Customer Portal
             </p>
-            <h1 className="text-lg font-bold text-text-primary">Project Updates</h1>
+            <h1 className="font-heading text-2xl font-bold text-text-primary">Project Updates</h1>
           </div>
           <SignOutButton />
         </div>

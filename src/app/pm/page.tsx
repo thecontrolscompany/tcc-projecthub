@@ -99,18 +99,6 @@ export default function PmPage() {
 
   return (
     <div className="min-h-screen bg-surface-base text-text-primary">
-      <header className="border-b border-border-default">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-status-success">
-              Project Manager Portal
-            </p>
-            <h1 className="text-lg font-bold text-text-primary">My Projects</h1>
-          </div>
-          <SignOutButton />
-        </div>
-      </header>
-
       <main className="mx-auto max-w-4xl px-6 py-6">
         {view === "list" ? (
           <ProjectList
@@ -155,9 +143,12 @@ function ProjectList({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-text-secondary">
-        {projects.length} active project{projects.length !== 1 ? "s" : ""} - click to submit a weekly update.
-      </p>
+      <div>
+        <h1 className="font-heading text-2xl font-bold text-text-primary">My Projects</h1>
+        <p className="mt-1 text-sm text-text-secondary">
+          {projects.length} active project{projects.length !== 1 ? "s" : ""} - click to submit a weekly update.
+        </p>
+      </div>
 
       {projects.map((p) => {
         const period = p.current_period;
@@ -424,20 +415,5 @@ function CenteredMsg({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen items-center justify-center bg-surface-base text-text-secondary">
       {children}
     </div>
-  );
-}
-
-function SignOutButton() {
-  const supabase = createClient();
-  return (
-    <button
-      onClick={async () => {
-        await supabase.auth.signOut();
-        window.location.href = "/login";
-      }}
-      className="rounded-full border border-border-default px-4 py-1.5 text-sm text-text-secondary hover:text-text-primary"
-    >
-      Sign out
-    </button>
   );
 }
