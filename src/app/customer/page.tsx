@@ -48,6 +48,7 @@ export default function CustomerPage() {
         .select("id, name, estimated_income")
         .eq("customer_id", customer.id)
         .eq("is_active", true)
+        .eq("customer_portal_access", true)
         .order("name");
 
       if (!projectData?.length) {

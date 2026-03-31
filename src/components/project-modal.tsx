@@ -49,6 +49,8 @@ export type ProjectFormValues = {
   notes: string;
   specialRequirements: string;
   specialAccess: string;
+  customerPortalAccess: boolean;
+  customerEmailDigest: boolean;
   allConduitPlenum: boolean;
   certifiedPayroll: boolean;
   buyAmerican: boolean;
@@ -78,6 +80,8 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   notes: "",
   specialRequirements: "",
   specialAccess: "",
+  customerPortalAccess: true,
+  customerEmailDigest: false,
   allConduitPlenum: false,
   certifiedPayroll: false,
   buyAmerican: false,
@@ -227,25 +231,47 @@ export function ProjectModal({
 
               <FormField label="Customer *" error={values.useNewCustomer ? errors.newCustomerName : errors.customerId}>
                 <div className="space-y-2">
-                  <select
-                    value={values.useNewCustomer ? "__new__" : values.customerId}
-                    onChange={(e) => {
-                      const useNewCustomer = e.target.value === "__new__";
-                      onChange("useNewCustomer", useNewCustomer);
-                      onChange("customerId", useNewCustomer ? "" : e.target.value);
-                    }}
-                    className={inputClassName}
-                  >
-                    <option value="">Select customer</option>
-                    {customerOptions.map((customer) => (
-                      <option key={customer.id} value={customer.id}>
-                        {customer.name}
-                      </option>
-                    ))}
-                    <option value="__new__">Add new customer</option>
-                  </select>
-                  {values.useNewCustomer && (
+                  {!values.useNewCustomer ? (
+                    <>
+                      <select
+                        value={values.customerId}
+                        onChange={(e) => onChange("customerId", e.target.value)}
+                        className={inputClassName}
+                      >
+                        <option value="">Select customer</option>
+                        {customerOptions.map((customer) => (
+                          <option key={customer.id} value={customer.id}>
+                            {customer.name}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onChange("useNewCustomer", true);
+                          onChange("customerId", "");
+                        }}
+                        className="text-sm font-medium text-brand-primary transition hover:text-brand-hover"
+                      >
+                        + Add new customer
+                      </button>
+                    </>
+                  ) : (
                     <div className="grid gap-2 md:grid-cols-2">
+                      <div className="md:col-span-2 flex items-center justify-between">
+                        <span className="text-sm font-medium text-text-secondary">New customer</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onChange("useNewCustomer", false);
+                            onChange("newCustomerName", "");
+                            onChange("newCustomerEmail", "");
+                          }}
+                          className="text-sm font-medium text-text-tertiary transition hover:text-text-primary"
+                        >
+                          Cancel
+                        </button>
+                      </div>
                       <input placeholder="New customer name" value={values.newCustomerName} onChange={(e) => onChange("newCustomerName", e.target.value)} className={inputClassName} />
                       <input placeholder="Customer email" value={values.newCustomerEmail} onChange={(e) => onChange("newCustomerEmail", e.target.value)} className={inputClassName} />
                     </div>
@@ -301,6 +327,27 @@ export function ProjectModal({
             <FormField label="Special Access">
               <input value={values.specialAccess} onChange={(e) => onChange("specialAccess", e.target.value)} className={inputClassName} />
             </FormField>
+          </section>
+
+          <section className="space-y-4">
+            <div>
+              <h4 className="font-heading text-lg font-semibold text-text-primary">Customer Notifications</h4>
+              <p className="mt-1 text-sm text-text-secondary">
+                Control whether the customer can see this project in the portal and receive digest updates.
+              </p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <CheckboxField
+                label="Portal Access — Customer can log in and view this project in the customer portal"
+                checked={values.customerPortalAccess}
+                onChange={(checked) => onChange("customerPortalAccess", checked)}
+              />
+              <CheckboxField
+                label="Email Digest — Customer receives periodic email progress updates"
+                checked={values.customerEmailDigest}
+                onChange={(checked) => onChange("customerEmailDigest", checked)}
+              />
+            </div>
           </section>
 
           <section className="space-y-4">
