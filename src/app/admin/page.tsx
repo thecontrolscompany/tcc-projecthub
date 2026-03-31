@@ -545,17 +545,26 @@ function PmDirectoryTab() {
       const json = await res.json();
 
       if (!res.ok) {
+        const rawCount = typeof json?.rawCount === "number" ? json.rawCount : null;
         setStatus({
           type: "error",
-          message: typeof json?.error === "string" ? json.error : "PM import failed.",
+          message:
+            `${typeof json?.error === "string" ? json.error : "PM import failed."}${
+              rawCount !== null ? ` Graph returned ${rawCount} ${rawCount === 1 ? "user" : "users"} before filtering.` : ""
+            }`,
           consentUrl: typeof json?.consentUrl === "string" ? json.consentUrl : undefined,
         });
         return;
       }
 
+      const rawCount = typeof json?.rawCount === "number" ? json.rawCount : 0;
+      const inserted = typeof json?.inserted === "number" ? json.inserted : 0;
+      const updated = typeof json?.updated === "number" ? json.updated : 0;
+      const skipped = typeof json?.skipped === "number" ? json.skipped : 0;
+
       setStatus({
         type: "success",
-        message: `Import complete: ${json.inserted ?? 0} inserted, ${json.updated ?? 0} updated, ${json.skipped ?? 0} skipped.`,
+        message: `Graph returned ${rawCount} ${rawCount === 1 ? "user" : "users"}, imported ${inserted + updated}, skipped ${skipped}.`,
       });
       await loadPms();
     } catch {

@@ -93,9 +93,18 @@ export async function POST() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+  let rawGraphCount = 0;
 
   try {
     const users = await listGraphUsers(auth.providerToken);
+    rawGraphCount = users.length;
+
+    console.info(`[PM Import] Graph returned ${rawGraphCount} user(s) before filtering.`);
+    if (rawGraphCount <= 1) {
+      console.warn(
+        "[PM Import] Graph returned one or fewer users. This usually means the signed-in admin can consent to User.ReadBasic.All but still lacks a directory role that allows reading all org users."
+      );
+    }
 
     const candidates = users
       .map((user) => {
@@ -199,7 +208,12 @@ export async function POST() {
       }
     }
 
-    return NextResponse.json({ inserted, updated, skipped });
+    return NextResponse.json({
+      rawCount: rawGraphCount,
+      inserted,
+      updated,
+      skipped,
+    });
   } catch (error) {
     const graphError = await getGraphError(auth.providerToken);
 
@@ -230,6 +244,7 @@ export async function POST() {
 
     return NextResponse.json(
       {
+        rawCount: rawGraphCount,
         error: error instanceof Error ? error.message : "PM import failed.",
       },
       { status: 500 }
