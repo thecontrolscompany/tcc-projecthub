@@ -63,12 +63,16 @@ export async function updateSession(request: NextRequest) {
       .single();
 
     const role = profile?.role;
-    if (pathname.startsWith("/admin") && role !== "admin") {
+    if (
+      pathname.startsWith("/admin") &&
+      role !== "admin" &&
+      !(role === "ops_manager" && pathname.startsWith("/admin/analytics"))
+    ) {
       const url = request.nextUrl.clone();
       url.pathname = roleHome(role);
       return NextResponse.redirect(url);
     }
-    if (pathname.startsWith("/pm") && !["admin", "pm", "lead"].includes(role ?? "")) {
+    if (pathname.startsWith("/pm") && !["admin", "pm", "lead", "ops_manager"].includes(role ?? "")) {
       const url = request.nextUrl.clone();
       url.pathname = roleHome(role);
       return NextResponse.redirect(url);

@@ -79,7 +79,7 @@ export default function PmPage() {
           )
         `)
         .eq("profile_id", profileId)
-        .in("role_on_project", ["pm", "lead"]);
+        .in("role_on_project", ["pm", "lead", "ops_manager"]);
 
       const normalizedProjects = (((assignmentData ?? []) as Array<{
         role_on_project: ProjectAssignmentRole;
@@ -250,6 +250,17 @@ function ProjectList({
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-semibold text-text-primary">{project.name}</p>
+                  {project.sharepoint_folder && (
+                    <a
+                      href={`https://controlsco.sharepoint.com/sites/TCCProjects/Shared%20Documents/${project.sharepoint_folder.split("/").filter(Boolean).map(encodeURIComponent).join("/")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 rounded border border-brand-primary/20 bg-brand-primary/10 px-2 py-0.5 text-xs font-medium text-brand-primary hover:bg-brand-primary/20"
+                    >
+                      SharePoint
+                    </a>
+                  )}
                   <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${roleBadgeStyles[project.assignmentRole]}`}>
                     {roleLabels[project.assignmentRole]}
                   </span>

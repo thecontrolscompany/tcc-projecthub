@@ -135,7 +135,7 @@ export const NAV_LINKS: NavItem[] = [
   { label: "Quotes", href: "/quotes", roles: ["admin", "customer"], icon: DocumentIcon },
   { label: "Estimating", href: "/estimating", roles: ["admin"], icon: CalculatorIcon },
   { label: "Projects", href: "/projects", roles: ["pm", "lead"], icon: FolderIcon },
-  { label: "PM Portal", href: "/pm", roles: ["pm", "lead"], icon: ClipboardIcon },
+  { label: "PM Portal", href: "/pm", roles: ["pm", "lead", "ops_manager"], icon: ClipboardIcon },
   { label: "Installer", href: "/installer", roles: ["installer"], icon: WrenchIcon },
   { label: "Analytics", href: "/admin/analytics", roles: ["admin", "ops_manager"], icon: ChartIcon },
   { label: "SharePoint", href: "/admin/migrate-sharepoint", roles: ["admin"], icon: FolderIcon },

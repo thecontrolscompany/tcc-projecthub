@@ -9,6 +9,7 @@ type OpsProject = {
   id: string;
   name: string;
   is_active: boolean | null;
+  sharepoint_folder?: string | null;
   customer?: { name?: string | null } | Array<{ name?: string | null }> | null;
   pm?: { full_name?: string | null; email?: string | null } | Array<{ full_name?: string | null; email?: string | null }> | null;
   pm_directory?:
@@ -32,6 +33,7 @@ export type OpsProjectListItem = {
   customerName: string | null;
   pmGroupName: string;
   pctComplete: number;
+  sharepointFolder: string | null;
 };
 
 export default async function OpsPage() {
@@ -61,6 +63,7 @@ export default async function OpsPage() {
           id,
           name,
           is_active,
+          sharepoint_folder,
           customer:customers(name),
           pm:profiles(full_name, email),
           pm_directory:pm_directory(first_name, last_name, email),
@@ -80,6 +83,7 @@ export default async function OpsPage() {
             id,
             name,
             is_active,
+            sharepoint_folder,
             customer:customers(name),
             pm:profiles(full_name, email),
             pm_directory:pm_directory(first_name, last_name, email),
@@ -135,6 +139,7 @@ export default async function OpsPage() {
       customerName: customer?.name ?? null,
       pmGroupName,
       pctComplete: (pctByProjectId.get(project.id) ?? 0) * 100,
+      sharepointFolder: project.sharepoint_folder ?? null,
     };
   }).sort((a, b) => a.name.localeCompare(b.name));
 

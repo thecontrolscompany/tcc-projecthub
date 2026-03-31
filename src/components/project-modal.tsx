@@ -190,9 +190,21 @@ export function ProjectModal({
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">
               {editingProject ? "Edit Project" : "New Project"}
             </p>
-            <h3 className="font-heading text-xl font-bold text-text-primary">
-              {jobNumberPreview || "Pending Job Number"}
-            </h3>
+            <div className="flex items-center gap-3">
+              <h3 className="font-heading text-xl font-bold text-text-primary">
+                {jobNumberPreview || "Pending Job Number"}
+              </h3>
+              {editingProject?.sharepoint_folder && (
+                <a
+                  href={`https://controlsco.sharepoint.com/sites/TCCProjects/Shared%20Documents/${editingProject.sharepoint_folder.split("/").filter(Boolean).map(encodeURIComponent).join("/")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 rounded-lg border border-brand-primary/20 bg-brand-primary/10 px-2.5 py-1 text-xs font-semibold text-brand-primary hover:bg-brand-primary/20"
+                >
+                  Open SharePoint
+                </a>
+              )}
+            </div>
           </div>
           <button onClick={onClose} className="text-text-secondary hover:text-text-primary">
             x

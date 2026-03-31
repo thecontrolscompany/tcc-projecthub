@@ -469,7 +469,22 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
                         onClick={() => void openProject(project.id)}
                         className="cursor-pointer border-b border-border-default hover:bg-surface-raised"
                       >
-                        <td className="px-4 py-2.5 font-medium text-text-primary">{project.name}</td>
+                        <td className="px-4 py-2.5 font-medium text-text-primary">
+                          <div className="flex items-center gap-2">
+                            <span>{project.name}</span>
+                            {project.sharepointFolder && (
+                              <a
+                                href={`https://controlsco.sharepoint.com/sites/TCCProjects/Shared%20Documents/${project.sharepointFolder.split("/").filter(Boolean).map(encodeURIComponent).join("/")}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="shrink-0 rounded border border-brand-primary/20 bg-brand-primary/10 px-1.5 py-0.5 text-xs font-medium text-brand-primary hover:bg-brand-primary/20"
+                              >
+                                SP
+                              </a>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-4 py-2.5 text-text-secondary">{project.customerName ?? "-"}</td>
                         <td className="px-4 py-2.5 text-center">
                           <span
