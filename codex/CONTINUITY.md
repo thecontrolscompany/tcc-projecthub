@@ -49,6 +49,8 @@
 - `003_migration_status.sql` ✅
 - `004_project_fields.sql` ✅ run manually
 - `005_pm_directory_last_name.sql` ✅ run manually
+- `006_new_roles.sql` ✅ run manually
+- `007_pm_directory_intended_role.sql` ⏳ — run manually before using pre-sign-in role assignment
 
 ---
 
@@ -121,7 +123,8 @@ src/
 ├── middleware.ts               ✅
 └── types/database.ts           ✅ Project + PmDirectory types updated (tasks 014–015)
 supabase/
-├── migrations/001–005          ✅ Run
+├── migrations/001–006          ✅ Run
+├── migrations/007              ⏳ run manually (intended_role column)
 ├── migrations/005              ✅ Run
 ├── seed-projects.sql           ✅ Run (customers + PM directory)
 └── seed-projects-fix.sql       ✅ Run (income + billing snapshot sync)
@@ -143,6 +146,8 @@ public/
 | 4b — PM Directory import | ✅ Complete (tasks 015–016) |
 | 4c — New roles (lead, installer, ops_manager) | ✅ Complete (task-022) |
 | 4d — UI overhaul (sidebar, nav, shell) | ✅ Complete (task-023) |
+| 4e — Contacts tab CRUD + pre-sign-in roles | ✅ Complete (task-024) |
+| 4f — Audit fixes (billing save, role-routes, layout auth, Zod) | ✅ Complete (task-025) |
 | 5 — Quote Requests workflow | ❌ Not yet started |
 | 6 — Estimate → Project lifecycle | ❌ Not started |
 | 7 — Analytics expansion | ❌ Not started |
