@@ -776,9 +776,13 @@ function PmDirectoryTab() {
                         </span>
                         <span className="text-xs text-text-secondary">{pm.profile?.full_name ?? pm.profile_id}</span>
                       </div>
+                    ) : pm.email.toLowerCase().endsWith("@controlsco.net") ? (
+                      <span className="inline-flex rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-xs font-medium text-brand-primary">
+                        Internal — Not Yet Signed In
+                      </span>
                     ) : (
                       <span className="inline-flex rounded-full bg-surface-overlay px-2.5 py-0.5 text-xs font-medium text-text-secondary">
-                        External / No Portal Link
+                        External
                       </span>
                     )}
                   </td>
