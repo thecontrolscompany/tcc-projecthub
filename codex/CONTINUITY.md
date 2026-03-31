@@ -43,7 +43,7 @@
 - `002_add_sharepoint_columns.sql` ✅
 - `003_migration_status.sql` ✅
 - `004_project_fields.sql` ✅ run manually
-- `005_pm_directory_last_name.sql` ⏳ — created by Codex (task-015); **Timothy must run manually**
+- `005_pm_directory_last_name.sql` ✅ run manually
 
 ---
 
@@ -116,8 +116,8 @@ src/
 ├── middleware.ts               ✅
 └── types/database.ts           ✅ Project + PmDirectory types updated (tasks 014–015)
 supabase/
-├── migrations/001–004          ✅ Run
-├── migrations/005              ⏳ created (Timothy must run manually)
+├── migrations/001–005          ✅ Run
+├── migrations/005              ✅ Run
 ├── seed-projects.sql           ✅ Run (customers + PM directory)
 └── seed-projects-fix.sql       ✅ Run (income + billing snapshot sync)
 public/

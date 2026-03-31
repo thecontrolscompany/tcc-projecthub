@@ -5,6 +5,19 @@ Paste this file into a new Claude session to restore full context.
 
 ---
 
+## Standing Instructions for Codex
+
+**After every task, Codex must:**
+1. Run `npm run build` and fix all errors
+2. `git add` all changed/new files
+3. `git commit` with a descriptive message
+4. `git push` to origin main
+5. Create a `codex/task-0XX-output.md` summarizing what was done
+
+Do not leave changes uncommitted. The live site deploys from main via Vercel.
+
+---
+
 ## Project Summary
 
 **TCC ProjectHub** — web portal for The Controls Company, LLC (HVAC/controls contractor).
@@ -43,8 +56,9 @@ Replaces an Excel-based monthly billing tracker with a multi-role portal.
 - Admin SharePoint migration tool (migrated ~120 active projects from OneDrive to SharePoint)
 - PM portal, Customer portal, Quote requests stub, Estimating link page
 - Brand token system (Tailwind semantic classes), sidebar nav, dark/light theme
-- Database: migrations 001–004 run, 005 created (run manually); 24 projects seeded
+- Database: all migrations 001–005 run; 24 projects seeded
 - Admin Projects tab: New/Edit Project modals, auto YYYY-NNN job number, Billed/Paid logic, SharePoint provisioning
+- Admin Projects tab: Active/Completed/All filter, text search, sortable columns
 - PM auto-link on Microsoft sign-in (auth callback)
 - PM Directory: Import from Microsoft button, Graph API GET /users with paging, upserts first/last name, links profile_id
 - Build is clean (tasks 001–015 complete)
@@ -61,10 +75,6 @@ What it adds:
 - Customer-facing intake form
 - Admin status updates + notes
 
-**Before running task 016:**
-- Timothy must run `supabase/migrations/005_pm_directory_last_name.sql` in Supabase SQL editor
-- Grant `User.ReadBasic.All` admin consent in Azure portal if PM import hasn't been tested yet
-
 ---
 
 ## Key Context and Decisions
@@ -73,7 +83,7 @@ What it adds:
 - `projects.name` format: `"YYYY-NNN - Project Name"` (job number prefixed during SharePoint migration)
 - `projects.pm_id` references `profiles(id)` — for authenticated PMs
 - `pm_directory` stores all PM emails (including external: Trane, JCI, Siemens PMs)
-- After task-014: `projects.pm_directory_id` references `pm_directory(id)` for assignment
+- `projects.pm_directory_id` references `pm_directory(id)` for assignment (added task-014)
 - `billing_periods.estimated_income_snapshot` is locked at roll-forward time
 - `billing_periods.to_bill` is a generated column: `MAX(estimated_income_snapshot * pct_complete - prev_billed, 0)`
 
@@ -104,15 +114,15 @@ What it adds:
 
 1. `CLAUDE.md` — project instructions and file map
 2. `codex/CONTINUITY.md` — Codex-focused state tracker
-3. `codex/task-014-project-management-ui.md` — current task spec
-4. `src/types/database.ts` — TypeScript types
-5. `src/app/admin/page.tsx` — admin portal (largest file)
+3. `src/types/database.ts` — TypeScript types
+4. `src/app/admin/page.tsx` — admin portal (largest file)
 
 ---
 
-## Upcoming After Task 014
+## Upcoming After Task 016
 
-- **Task 015**: PM import from Microsoft (Graph API `GET /users`, `User.ReadBasic.All` scope)
-- **Task 016**: Quote Requests workflow (status management, detail page, customer intake form)
-- **SharePoint cleanup**: Run cleanup tool at `/admin/migrate-sharepoint` to remove duplicate folders from failed migration runs
+- **Task 017**: Estimate → Project lifecycle (convert won quote to project)
+- **Task 018**: Analytics expansion (more charts, date range filters)
+- **SharePoint cleanup**: Run cleanup tool at `/admin/migrate-sharepoint` to remove duplicate folders
 - **Supabase Site URL**: Confirm it's set to `https://internal.thecontrolscompany.com` in Supabase Auth settings
+- **Azure admin consent**: Grant `User.ReadBasic.All` for PM import if not yet done
