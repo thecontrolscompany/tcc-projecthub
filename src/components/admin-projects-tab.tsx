@@ -192,7 +192,7 @@ export function AdminProjectsTab() {
   async function loadFormLookups() {
     const [{ data: customerData }, { data: pmData }] = await Promise.all([
       supabase.from("customers").select("id, name, contact_email").order("name"),
-      supabase.from("pm_directory").select("id, first_name, email, profile_id").order("email"),
+      supabase.from("pm_directory").select("id, first_name, email, profile_id").ilike("email", "%@controlsco.net").order("email"),
     ]);
 
     setCustomers((customerData as CustomerOption[]) ?? []);
@@ -470,7 +470,10 @@ export function AdminProjectsTab() {
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-text-secondary">{p.customer?.name ?? "-"}</td>
+                  <td className="px-3 py-2 text-text-secondary">
+                    <div>{p.customer?.name ?? "-"}</div>
+                    {p.customer_poc && <div className="text-xs text-text-tertiary">{p.customer_poc}</div>}
+                  </td>
                   <td className="px-3 py-2 text-text-secondary">
                     {p.pm_directory ? (p.pm_directory.first_name ?? p.pm_directory.email) : "-"}
                   </td>
