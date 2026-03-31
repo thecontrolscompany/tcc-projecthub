@@ -505,12 +505,28 @@ function ProjectsTab() {
 
 function PmDirectoryTab() {
   const supabase = createClient();
+  type PmDirectoryRow = {
+    id: string;
+    email: string;
+    first_name: string | null;
+    last_name: string | null;
+    profile_id: string | null;
+    profile?: { full_name: string | null } | null;
+  };
+
   const [pms, setPms] = useState<
-    Array<{ id: string; first_name: string | null; last_name: string | null; email: string; profile?: { full_name: string | null } }>
+    PmDirectoryRow[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [status, setStatus] = useState<{ type: "success" | "error"; message: string; consentUrl?: string } | null>(null);
+  const [editingPm, setEditingPm] = useState<PmDirectoryRow | null>(null);
+  const [isAddingPm, setIsAddingPm] = useState(false);
+  const [formEmail, setFormEmail] = useState("");
+  const [formFirstName, setFormFirstName] = useState("");
+  const [formLastName, setFormLastName] = useState("");
+  const [savingPm, setSavingPm] = useState(false);
+  const [deletingPmId, setDeletingPmId] = useState<string | null>(null);
 
   async function loadPms() {
     setLoading(true);
@@ -518,10 +534,16 @@ function PmDirectoryTab() {
     try {
       const { data } = await supabase
         .from("pm_directory")
-        .select("*, profile:profiles(full_name)")
+        .select("id, email, first_name, last_name, profile_id, profile:profiles(full_name)")
         .order("email");
 
-      setPms((data as typeof pms) ?? []);
+      const normalized = ((data as Array<PmDirectoryRow & { profile?: { full_name: string | null } | Array<{ full_name: string | null }> }> | null) ?? [])
+        .map((item) => ({
+          ...item,
+          profile: Array.isArray(item.profile) ? item.profile[0] ?? null : item.profile ?? null,
+        }));
+
+      setPms(normalized);
     } catch {
       setPms([]);
     } finally {
@@ -533,6 +555,110 @@ function PmDirectoryTab() {
     loadPms();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function resetPmForm() {
+    setEditingPm(null);
+    setIsAddingPm(false);
+    setFormEmail("");
+    setFormFirstName("");
+    setFormLastName("");
+  }
+
+  function openAddPmModal() {
+    resetPmForm();
+    setIsAddingPm(true);
+    setStatus(null);
+  }
+
+  function openEditPmModal(pm: PmDirectoryRow) {
+    setEditingPm(pm);
+    setIsAddingPm(false);
+    setFormEmail(pm.email);
+    setFormFirstName(pm.first_name ?? "");
+    setFormLastName(pm.last_name ?? "");
+    setStatus(null);
+  }
+
+  async function handleSavePm() {
+    const normalizedEmail = formEmail.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      setStatus({ type: "error", message: "Email is required." });
+      return;
+    }
+
+    setSavingPm(true);
+    setStatus(null);
+
+    try {
+      if (editingPm) {
+        const { error } = await supabase
+          .from("pm_directory")
+          .update({
+            email: normalizedEmail,
+            first_name: formFirstName.trim() || null,
+            last_name: formLastName.trim() || null,
+          })
+          .eq("id", editingPm.id);
+
+        if (error) throw error;
+
+        setStatus({ type: "success", message: "PM directory entry updated." });
+      } else {
+        const { error } = await supabase
+          .from("pm_directory")
+          .insert({
+            email: normalizedEmail,
+            first_name: formFirstName.trim() || null,
+            last_name: formLastName.trim() || null,
+          });
+
+        if (error) throw error;
+
+        setStatus({ type: "success", message: "PM directory entry added." });
+      }
+
+      resetPmForm();
+      await loadPms();
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "Unable to save PM directory entry.",
+      });
+    } finally {
+      setSavingPm(false);
+    }
+  }
+
+  async function handleDeletePm(pm: PmDirectoryRow) {
+    if (!confirm(`Delete PM directory entry for ${pm.email}?`)) return;
+
+    setDeletingPmId(pm.id);
+    setStatus(null);
+
+    try {
+      const { error } = await supabase
+        .from("pm_directory")
+        .delete()
+        .eq("id", pm.id);
+
+      if (error) throw error;
+
+      if (editingPm?.id === pm.id) {
+        resetPmForm();
+      }
+
+      setStatus({ type: "success", message: "PM directory entry deleted." });
+      await loadPms();
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "Unable to delete PM directory entry.",
+      });
+    } finally {
+      setDeletingPmId(null);
+    }
+  }
 
   async function handleImport() {
     setImporting(true);
@@ -583,17 +709,24 @@ function PmDirectoryTab() {
         <div className="space-y-1">
           <h2 className="text-lg font-semibold text-text-primary">PM Directory</h2>
           <p className="text-sm text-text-secondary">
-            First names are used for personalized billing email greetings. Mirrors the legacy &quot;PM Directory&quot; sheet.
+            Stores both internal TCC PMs and external customer-side contacts. Linked portal accounts are shown when `profile_id` is present.
           </p>
         </div>
-
-        <button
-          onClick={handleImport}
-          disabled={importing}
-          className="rounded-xl border border-brand-primary/40 bg-brand-primary/10 px-4 py-1.5 text-sm font-medium text-brand-primary transition hover:bg-brand-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {importing ? "Importing from Microsoft..." : "Import from Microsoft"}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={openAddPmModal}
+            className="rounded-xl border border-border-default bg-surface-raised px-4 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
+          >
+            Add PM
+          </button>
+          <button
+            onClick={handleImport}
+            disabled={importing}
+            className="rounded-xl border border-brand-primary/40 bg-brand-primary/10 px-4 py-1.5 text-sm font-medium text-brand-primary transition hover:bg-brand-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {importing ? "Importing from Microsoft..." : "Import from Microsoft"}
+          </button>
+        </div>
       </div>
 
       {status && (
@@ -631,7 +764,8 @@ function PmDirectoryTab() {
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Email</th>
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">First Name</th>
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Last Name</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Profile</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Portal Link</th>
+                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -640,11 +774,129 @@ function PmDirectoryTab() {
                   <td className="px-4 py-2.5 text-text-primary">{pm.email}</td>
                   <td className="px-4 py-2.5 text-text-secondary">{pm.first_name ?? "-"}</td>
                   <td className="px-4 py-2.5 text-text-secondary">{pm.last_name ?? "-"}</td>
-                  <td className="px-4 py-2.5 text-text-secondary">{pm.profile?.full_name ?? "-"}</td>
+                  <td className="px-4 py-2.5">
+                    {pm.profile_id ? (
+                      <div className="flex flex-col gap-1">
+                        <span className="inline-flex w-fit rounded-full bg-status-success/10 px-2.5 py-0.5 text-xs font-medium text-status-success">
+                          Linked Portal Account
+                        </span>
+                        <span className="text-xs text-text-secondary">{pm.profile?.full_name ?? pm.profile_id}</span>
+                      </div>
+                    ) : (
+                      <span className="inline-flex rounded-full bg-surface-overlay px-2.5 py-0.5 text-xs font-medium text-text-secondary">
+                        External / No Portal Link
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2.5 text-right">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => openEditPmModal(pm)}
+                        className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-surface-raised hover:text-text-primary"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeletePm(pm)}
+                        disabled={deletingPmId === pm.id}
+                        className="rounded-lg border border-status-danger/30 bg-status-danger/10 px-3 py-1.5 text-xs font-medium text-status-danger transition hover:bg-status-danger/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {deletingPmId === pm.id ? "Deleting..." : "Delete"}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {(isAddingPm || editingPm) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-base/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl border border-border-default bg-surface-raised p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-text-primary">
+                  {editingPm ? "Edit PM Directory Entry" : "Add PM Directory Entry"}
+                </h3>
+                <p className="mt-1 text-sm text-text-secondary">
+                  {editingPm?.profile_id
+                    ? "This entry is linked to a portal account. Editing email may affect future auto-linking."
+                    : "Use this for external PMs or manual contacts not imported from Microsoft."}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  resetPmForm();
+                  setStatus(null);
+                }}
+                className="rounded-lg px-2 py-1 text-text-tertiary transition hover:bg-surface-overlay hover:text-text-primary"
+              >
+                x
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-text-secondary">Email</label>
+                <input
+                  type="email"
+                  value={formEmail}
+                  onChange={(e) => setFormEmail(e.target.value)}
+                  className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+                />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">First Name</label>
+                  <input
+                    type="text"
+                    value={formFirstName}
+                    onChange={(e) => setFormFirstName(e.target.value)}
+                    className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">Last Name</label>
+                  <input
+                    type="text"
+                    value={formLastName}
+                    onChange={(e) => setFormLastName(e.target.value)}
+                    className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {editingPm?.profile_id && (
+                <div className="rounded-xl border border-status-success/20 bg-status-success/10 px-3 py-2 text-sm text-status-success">
+                  Linked portal account: {editingPm.profile?.full_name ?? editingPm.profile_id}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  resetPmForm();
+                  setStatus(null);
+                }}
+                className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm text-text-secondary transition hover:bg-surface-base hover:text-text-primary"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSavePm}
+                disabled={savingPm}
+                className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {savingPm ? "Saving..." : editingPm ? "Save Changes" : "Add PM"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
