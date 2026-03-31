@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { AdminProjectsTab } from "@/components/admin-projects-tab";
 import { BillingTable } from "@/components/billing-table";
 import { calcToBill, generatePmEmailDrafts, rollForwardRows } from "@/lib/billing/calculations";
-import type { BillingRow, BillingPeriod } from "@/types/database";
+import type { BillingRow, BillingPeriod, Profile, UserRole } from "@/types/database";
 
 type Tab = "billing" | "projects" | "pm-directory" | "users";
 
@@ -390,16 +390,7 @@ export default function AdminPage() {
         {tab === "projects" && <AdminProjectsTab />}
         {tab === "pm-directory" && <PmDirectoryTab />}
 
-        {tab === "users" && (
-          <div className="py-8 text-center">
-            <p className="text-text-secondary">
-              User management is at{" "}
-              <Link href="/admin/users" className="text-brand-primary hover:text-brand-primary">
-                /admin/users
-              </Link>
-            </p>
-          </div>
-        )}
+        {tab === "users" && <UsersTab />}
       </main>
     </div>
   );
@@ -645,6 +636,231 @@ function PmDirectoryTab() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function UsersTab() {
+  const supabase = createClient();
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingUser, setEditingUser] = useState<Profile | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editRole, setEditRole] = useState<UserRole>("customer");
+  const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    loadProfiles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function loadProfiles() {
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, role")
+        .order("role")
+        .order("email");
+
+      if (error) {
+        throw error;
+      }
+
+      setProfiles((data as Profile[]) ?? []);
+    } catch {
+      setProfiles([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function openEditUser(user: Profile) {
+    setEditingUser(user);
+    setEditName(user.full_name ?? "");
+    setEditRole(user.role);
+    setStatus(null);
+  }
+
+  async function handleSaveUser() {
+    if (!editingUser) return;
+
+    setSaving(true);
+    setStatus(null);
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: editName.trim() || null,
+          role: editRole,
+        })
+        .eq("id", editingUser.id);
+
+      if (error) {
+        throw error;
+      }
+
+      setStatus({ type: "success", message: "User updated." });
+      setEditingUser(null);
+      await loadProfiles();
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "Failed to update user.",
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const roleBadge = (role: UserRole) => {
+    const styles: Record<UserRole, string> = {
+      admin: "bg-brand-primary/10 text-brand-primary",
+      pm: "bg-status-info/10 text-status-info",
+      customer: "bg-status-success/10 text-status-success",
+    };
+
+    return styles[role];
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold text-text-primary">User Management</h2>
+          <p className="text-sm text-text-secondary">
+            Manage internal and customer portal users. Name and role come directly from the `profiles` table.
+          </p>
+        </div>
+        <Link
+          href="/admin/users"
+          className="rounded-xl border border-border-default bg-surface-raised px-4 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
+        >
+          Open Full User Page
+        </Link>
+      </div>
+
+      {status && (
+        <div
+          className={[
+            "rounded-xl border px-4 py-2.5 text-sm",
+            status.type === "success"
+              ? "border-status-success/30 bg-status-success/10 text-status-success"
+              : "border-status-danger/30 bg-status-danger/10 text-status-danger",
+          ].join(" ")}
+        >
+          {status.message}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="py-10 text-center text-text-tertiary">Loading...</div>
+      ) : (
+        <div className="overflow-x-auto rounded-2xl border border-border-default">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border-default bg-surface-raised/80">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Full Name</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Email</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Role</th>
+                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {profiles.map((profile) => (
+                <tr key={profile.id} className="border-b border-border-default hover:bg-surface-raised">
+                  <td className="px-4 py-2.5 font-medium text-text-primary">{profile.full_name?.trim() || "-"}</td>
+                  <td className="px-4 py-2.5 text-text-secondary">{profile.email}</td>
+                  <td className="px-4 py-2.5">
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${roleBadge(profile.role)}`}>
+                      {profile.role}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5 text-right">
+                    <button
+                      onClick={() => openEditUser(profile)}
+                      className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-surface-raised hover:text-text-primary"
+                    >
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-base/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl border border-border-default bg-surface-raised p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-text-primary">Edit User</h3>
+                <p className="mt-1 text-sm text-text-secondary">{editingUser.email}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setEditingUser(null);
+                  setStatus(null);
+                }}
+                className="rounded-lg px-2 py-1 text-text-tertiary transition hover:bg-surface-overlay hover:text-text-primary"
+              >
+                x
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-text-secondary">Full name</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-text-secondary">Role</label>
+                <select
+                  value={editRole}
+                  onChange={(e) => setEditRole(e.target.value as UserRole)}
+                  className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+                >
+                  <option value="admin">admin</option>
+                  <option value="pm">pm</option>
+                  <option value="customer">customer</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingUser(null);
+                  setStatus(null);
+                }}
+                className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm text-text-secondary transition hover:bg-surface-base hover:text-text-primary"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveUser}
+                disabled={saving}
+                className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
