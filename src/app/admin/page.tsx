@@ -605,17 +605,19 @@ function PmDirectoryTab() {
               : "border-status-warning/30 bg-status-warning/10 text-status-warning",
           ].join(" ")}
         >
-          <span>{status.message}</span>
-          {status.consentUrl && (
-            <a
-              href={status.consentUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ml-3 inline-flex items-center rounded-lg border border-status-warning/50 bg-status-warning/10 px-3 py-1 text-xs font-medium text-status-warning transition hover:bg-status-warning/20"
-            >
-              Grant Admin Consent in Azure &rarr;
-            </a>
-          )}
+          <div className="flex flex-wrap items-center gap-3">
+            <span>{status.message}</span>
+            {status.consentUrl && (
+              <a
+                href={status.consentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center rounded-lg border border-status-warning/50 bg-status-warning/10 px-3 py-1 text-xs font-medium text-status-warning transition hover:bg-status-warning/20"
+              >
+                Grant Admin Consent in Azure &rarr;
+              </a>
+            )}
+          </div>
         </div>
       )}
 

@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { graphFetch, listGraphUsers } from "@/lib/graph/client";
 
+const ADMIN_CONSENT_URL =
+  "https://login.microsoftonline.com/7eec7a09-a47b-4bf1-a877-80fd5323c774/adminconsent?client_id=0777b14d-29c4-4186-8d8e-4a8f43de6589&redirect_uri=https://internal.thecontrolscompany.com/admin";
+
 interface GraphErrorBody {
   error?: {
     code?: string;
@@ -202,22 +205,24 @@ export async function POST() {
 
     if (
       graphError &&
-      graphError.status === 403 &&
+      (graphError.status === 403 ||
+        graphError.code === "Authorization_RequestDenied" ||
+        graphError.code === "InsufficientPermissions" ||
+        /insufficient privileges/i.test(graphError.message) ||
+        /Authorization_RequestDenied/i.test(graphError.code) ||
+        /InsufficientPermissions/i.test(graphError.code)) &&
       (graphError.code === "Authorization_RequestDenied" ||
         graphError.code === "InsufficientPermissions" ||
         /insufficient privileges/i.test(graphError.message) ||
-        /Authorization_RequestDenied/i.test(graphError.code))
+        /Authorization_RequestDenied/i.test(graphError.code) ||
+        /InsufficientPermissions/i.test(graphError.code) ||
+        /access was denied/i.test(graphError.message))
     ) {
-      const tenantId = "7eec7a09-a47b-4bf1-a877-80fd5323c774";
-      const clientId = "0777b14d-29c4-4186-8d8e-4a8f43de6589";
-      const redirectUri = "https://internal.thecontrolscompany.com/admin";
-      const consentUrl = `https://login.microsoftonline.com/${tenantId}/adminconsent?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
-
       return NextResponse.json(
         {
           error:
             "Microsoft Graph access was denied. Admin consent for User.ReadBasic.All is required. Use the button below to grant consent in Azure, then sign out and sign back in.",
-          consentUrl,
+          consentUrl: ADMIN_CONSENT_URL,
         },
         { status: 403 }
       );

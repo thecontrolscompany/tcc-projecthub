@@ -1,38 +1,26 @@
-# Task 016 — PM Import Consent Error UX
+## Files modified
+- `src/app/api/admin/import-pm-directory/route.ts`
+- `src/app/admin/page.tsx`
+- `codex/task-016-consent-ux-output.md`
 
-**Date:** 2026-03-31
-**Status:** Complete
+## Consent error UX
+- Added a direct `consentUrl` to the PM import API's permission-denied response
+- Used the exact Azure admin-consent URL for the TCC tenant, portal app, and `/admin` redirect
 
-## What was done
+## API behavior
+- The route now returns `consentUrl` when Graph denies access due to `403`, `Authorization_RequestDenied`, or `InsufficientPermissions`
+- The existing error message still explains that `User.ReadBasic.All` admin consent is required
 
-Improved the UX when the admin clicks "Import from Microsoft" and the app lacks `User.ReadBasic.All` admin consent in Azure.
+## Admin UI
+- The PM Directory error banner now renders the returned error message plus a `Grant Admin Consent in Azure ->` link when `consentUrl` is present
+- The consent link opens in a new tab
 
-### Changes
+## Build result
+- clean
+- Ran `npm run build`
 
-#### `src/app/api/admin/import-pm-directory/route.ts`
-- Extended the 403 / consent-denied error branch to also match `InsufficientPermissions` error codes
-- When a consent-denied error is detected, the JSON response now includes a `consentUrl` field pointing to the Azure tenant admin consent URL:
-  ```
-  https://login.microsoftonline.com/7eec7a09-a47b-4bf1-a877-80fd5323c774/adminconsent
-    ?client_id=0777b14d-29c4-4186-8d8e-4a8f43de6589
-    &redirect_uri=https%3A%2F%2Finternal.thecontrolscompany.com%2Fadmin
-  ```
-- Error message updated to explain the one-click flow
+## Git
+- Committed and pushed Task 016 consent UX changes to `origin main`
 
-#### `src/app/admin/page.tsx`
-- Extended the `status` state type to include optional `consentUrl?: string`
-- `handleImport` now reads `json.consentUrl` from the error response and stores it in state
-- The error banner now conditionally renders a "Grant Admin Consent in Azure →" link that opens the consent URL in a new tab when `consentUrl` is present
-
-## How it works
-
-1. Admin clicks "Import from Microsoft"
-2. Graph API returns 403 Authorization_RequestDenied / InsufficientPermissions
-3. API route returns `{ error: "...", consentUrl: "https://login.microsoftonline.com/..." }`
-4. Admin page shows the error message + an inline "Grant Admin Consent in Azure →" button
-5. Timothy clicks the button, logs in as a Global Admin in Azure, and grants consent
-6. He then signs out and back in to get a fresh provider token with the new permission
-7. Import succeeds
-
-## Build
-`npm run build` passes clean — 24 routes, no TypeScript or lint errors.
+## Notes
+- Left unrelated untracked screenshot files untouched
