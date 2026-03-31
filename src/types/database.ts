@@ -1,6 +1,7 @@
 // Database types matching Supabase schema
 
 export type UserRole = "admin" | "pm" | "lead" | "installer" | "ops_manager" | "customer";
+export type InternalContactRole = "pm" | "lead" | "installer" | "ops_manager";
 
 export interface Profile {
   id: string;
@@ -88,6 +89,7 @@ export interface PmDirectory {
   first_name: string | null;
   last_name: string | null;
   email: string;
+  intended_role: InternalContactRole | null;
   // joined
   profile?: Profile;
 }

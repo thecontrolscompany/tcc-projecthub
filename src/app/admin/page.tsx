@@ -7,9 +7,10 @@ import { createClient } from "@/lib/supabase/client";
 import { AdminProjectsTab } from "@/components/admin-projects-tab";
 import { BillingTable } from "@/components/billing-table";
 import { calcToBill, generatePmEmailDrafts, rollForwardRows } from "@/lib/billing/calculations";
-import type { BillingRow, BillingPeriod, Profile, UserRole } from "@/types/database";
+import type { BillingRow, BillingPeriod, InternalContactRole, Profile, UserRole } from "@/types/database";
 
 type Tab = "billing" | "projects" | "contacts" | "users";
+const INTERNAL_CONTACT_ROLES: InternalContactRole[] = ["pm", "lead", "installer", "ops_manager"];
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("billing");
@@ -46,6 +47,9 @@ export default function AdminPage() {
             is_active?: boolean | null;
             customer?: { name: string } | Array<{ name: string }>;
             pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
+            pm_directory?:
+              | { id: string; first_name?: string | null; last_name?: string | null; email?: string | null }
+              | Array<{ id: string; first_name?: string | null; last_name?: string | null; email?: string | null }>;
           }
         | Array<{
             id: string;
@@ -54,6 +58,9 @@ export default function AdminPage() {
             is_active?: boolean | null;
             customer?: { name: string } | Array<{ name: string }>;
             pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
+            pm_directory?:
+              | { id: string; first_name?: string | null; last_name?: string | null; email?: string | null }
+              | Array<{ id: string; first_name?: string | null; last_name?: string | null; email?: string | null }>;
           }>;
     }>
   ): BillingRow[] {
@@ -61,12 +68,18 @@ export default function AdminPage() {
       const project = Array.isArray(period.project) ? period.project[0] : period.project;
       const customer = Array.isArray(project?.customer) ? project.customer[0] : project?.customer;
       const pm = Array.isArray(project?.pm) ? project.pm[0] : project?.pm;
+      const pmDirectory = Array.isArray(project?.pm_directory) ? project.pm_directory[0] : project?.pm_directory;
       const estimatedIncome = period.estimated_income_snapshot ?? 0;
       const prevBilled = period.prev_billed ?? 0;
       const projectLabel =
         project?.job_number && project?.name && !project.name.startsWith(project.job_number)
           ? `${project.job_number} - ${project.name}`
           : project?.name ?? "Unknown Project";
+      const pmDirectoryName = [pmDirectory?.first_name, pmDirectory?.last_name].filter(Boolean).join(" ").trim();
+      const pmEmail = pm?.email ?? pmDirectory?.email ?? "";
+      const pmName =
+        pm?.full_name ??
+        (pmDirectoryName || pmDirectory?.email || (pm?.email ? pm.email.split("@")[0] : ""));
 
       return {
         billing_period_id: period.id,
@@ -74,8 +87,8 @@ export default function AdminPage() {
         project_id: project?.id ?? "",
         customer_name: customer?.name ?? "",
         project_name: projectLabel,
-        pm_email: pm?.email ?? "",
-        pm_name: pm?.full_name ?? (pm?.email ? pm.email.split("@")[0] : ""),
+        pm_email: pmEmail,
+        pm_name: pmName,
         estimated_income: estimatedIncome,
         backlog: Math.max(estimatedIncome - prevBilled, 0),
         prior_pct: period.prior_pct ?? 0,
@@ -113,7 +126,8 @@ export default function AdminPage() {
             job_number,
             is_active,
             customer:customers ( name ),
-            pm:profiles ( email, full_name )
+            pm:profiles ( email, full_name ),
+            pm_directory:pm_directory ( id, first_name, last_name, email )
           )
         `)
         .eq("period_month", monthStr)
@@ -139,6 +153,9 @@ export default function AdminPage() {
                   is_active?: boolean | null;
                   customer?: { name: string } | Array<{ name: string }>;
                   pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
+                  pm_directory?:
+                    | { id: string; first_name?: string | null; last_name?: string | null; email?: string | null }
+                    | Array<{ id: string; first_name?: string | null; last_name?: string | null; email?: string | null }>;
                 }
               | Array<{
                   id: string;
@@ -147,6 +164,9 @@ export default function AdminPage() {
                   is_active?: boolean | null;
                   customer?: { name: string } | Array<{ name: string }>;
                   pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
+                  pm_directory?:
+                    | { id: string; first_name?: string | null; last_name?: string | null; email?: string | null }
+                    | Array<{ id: string; first_name?: string | null; last_name?: string | null; email?: string | null }>;
                 }>;
           }>
         ).filter((period) => {
@@ -502,12 +522,12 @@ function PmDirectoryTab() {
     first_name: string | null;
     last_name: string | null;
     profile_id: string | null;
+    intended_role: InternalContactRole | null;
     profile?: { full_name: string | null } | null;
+    matchedProfileRole?: UserRole | null;
   };
 
-  const [pms, setPms] = useState<
-    PmDirectoryRow[]
-  >([]);
+  const [pms, setPms] = useState<PmDirectoryRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [status, setStatus] = useState<{ type: "success" | "error"; message: string; consentUrl?: string } | null>(null);
@@ -516,6 +536,7 @@ function PmDirectoryTab() {
   const [formEmail, setFormEmail] = useState("");
   const [formFirstName, setFormFirstName] = useState("");
   const [formLastName, setFormLastName] = useState("");
+  const [formRole, setFormRole] = useState<InternalContactRole>("pm");
   const [savingPm, setSavingPm] = useState(false);
   const [deletingPmId, setDeletingPmId] = useState<string | null>(null);
 
@@ -523,16 +544,30 @@ function PmDirectoryTab() {
     setLoading(true);
 
     try {
-      const { data } = await supabase
-        .from("pm_directory")
-        .select("id, email, first_name, last_name, profile_id, profile:profiles(full_name)")
-        .order("email");
+      const [{ data: contactData }, { data: profileData }] = await Promise.all([
+        supabase
+          .from("pm_directory")
+          .select("id, email, first_name, last_name, profile_id, intended_role, profile:profiles(full_name)")
+          .order("email"),
+        supabase
+          .from("profiles")
+          .select("email, role"),
+      ]);
 
-      const normalized = ((data as Array<PmDirectoryRow & { profile?: { full_name: string | null } | Array<{ full_name: string | null }> }> | null) ?? [])
-        .map((item) => ({
-          ...item,
-          profile: Array.isArray(item.profile) ? item.profile[0] ?? null : item.profile ?? null,
-        }));
+      const profileRoleByEmail = new Map(
+        ((profileData as Array<{ email: string; role: UserRole }> | null) ?? []).map((profile) => [
+          profile.email.toLowerCase(),
+          profile.role,
+        ])
+      );
+
+      const normalized = (
+        (contactData as Array<PmDirectoryRow & { profile?: { full_name: string | null } | Array<{ full_name: string | null }> }> | null) ?? []
+      ).map((item) => ({
+        ...item,
+        profile: Array.isArray(item.profile) ? item.profile[0] ?? null : item.profile ?? null,
+        matchedProfileRole: profileRoleByEmail.get(item.email.toLowerCase()) ?? null,
+      }));
 
       setPms(normalized);
     } catch {
@@ -553,6 +588,7 @@ function PmDirectoryTab() {
     setFormEmail("");
     setFormFirstName("");
     setFormLastName("");
+    setFormRole("pm");
   }
 
   function openAddPmModal() {
@@ -567,11 +603,17 @@ function PmDirectoryTab() {
     setFormEmail(pm.email);
     setFormFirstName(pm.first_name ?? "");
     setFormLastName(pm.last_name ?? "");
+    setFormRole(
+      pm.matchedProfileRole && INTERNAL_CONTACT_ROLES.includes(pm.matchedProfileRole as InternalContactRole)
+        ? (pm.matchedProfileRole as InternalContactRole)
+        : pm.intended_role ?? "pm"
+    );
     setStatus(null);
   }
 
   async function handleSavePm() {
     const normalizedEmail = formEmail.trim().toLowerCase();
+    const isInternalContact = normalizedEmail.endsWith("@controlsco.net");
 
     if (!normalizedEmail) {
       setStatus({ type: "error", message: "Email is required." });
@@ -582,6 +624,27 @@ function PmDirectoryTab() {
     setStatus(null);
 
     try {
+      let intendedRole: InternalContactRole | null = null;
+
+      if (isInternalContact) {
+        const { data: matchingProfile } = await supabase
+          .from("profiles")
+          .select("id, role")
+          .eq("email", normalizedEmail)
+          .maybeSingle();
+
+        if (matchingProfile?.id) {
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .update({ role: formRole })
+            .eq("id", matchingProfile.id);
+
+          if (profileError) throw profileError;
+        } else {
+          intendedRole = formRole;
+        }
+      }
+
       if (editingPm) {
         const { error } = await supabase
           .from("pm_directory")
@@ -589,12 +652,13 @@ function PmDirectoryTab() {
             email: normalizedEmail,
             first_name: formFirstName.trim() || null,
             last_name: formLastName.trim() || null,
+            intended_role: isInternalContact ? intendedRole : null,
           })
           .eq("id", editingPm.id);
 
         if (error) throw error;
 
-        setStatus({ type: "success", message: "PM directory entry updated." });
+        setStatus({ type: "success", message: "Contact entry updated." });
       } else {
         const { error } = await supabase
           .from("pm_directory")
@@ -602,11 +666,12 @@ function PmDirectoryTab() {
             email: normalizedEmail,
             first_name: formFirstName.trim() || null,
             last_name: formLastName.trim() || null,
+            intended_role: isInternalContact ? intendedRole : null,
           });
 
         if (error) throw error;
 
-        setStatus({ type: "success", message: "PM directory entry added." });
+        setStatus({ type: "success", message: "Contact entry added." });
       }
 
       resetPmForm();
@@ -614,7 +679,7 @@ function PmDirectoryTab() {
     } catch (error) {
       setStatus({
         type: "error",
-        message: error instanceof Error ? error.message : "Unable to save PM directory entry.",
+        message: error instanceof Error ? error.message : "Unable to save contact entry.",
       });
     } finally {
       setSavingPm(false);
@@ -622,7 +687,7 @@ function PmDirectoryTab() {
   }
 
   async function handleDeletePm(pm: PmDirectoryRow) {
-    if (!confirm(`Delete PM directory entry for ${pm.email}?`)) return;
+    if (!confirm(`Delete contact entry for ${pm.email}?`)) return;
 
     setDeletingPmId(pm.id);
     setStatus(null);
@@ -639,12 +704,12 @@ function PmDirectoryTab() {
         resetPmForm();
       }
 
-      setStatus({ type: "success", message: "PM directory entry deleted." });
+      setStatus({ type: "success", message: "Contact entry deleted." });
       await loadPms();
     } catch (error) {
       setStatus({
         type: "error",
-        message: error instanceof Error ? error.message : "Unable to delete PM directory entry.",
+        message: error instanceof Error ? error.message : "Unable to delete contact entry.",
       });
     } finally {
       setDeletingPmId(null);
@@ -700,7 +765,7 @@ function PmDirectoryTab() {
         <div className="space-y-1">
           <h2 className="text-2xl font-bold text-text-primary">Contacts</h2>
           <p className="text-sm text-text-secondary">
-            Stores both internal TCC PMs and external customer-side contacts. Linked portal accounts are shown when `profile_id` is present.
+            Stores both internal TCC staff and external customer-side contacts. Linked portal accounts are shown when `profile_id` is present.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -708,7 +773,7 @@ function PmDirectoryTab() {
             onClick={openAddPmModal}
             className="rounded-xl border border-border-default bg-surface-raised px-4 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
           >
-            Add PM
+            Add Contact
           </button>
           <button
             onClick={handleImport}
@@ -774,9 +839,16 @@ function PmDirectoryTab() {
                         <span className="text-xs text-text-secondary">{pm.profile?.full_name ?? pm.profile_id}</span>
                       </div>
                     ) : pm.email.toLowerCase().endsWith("@controlsco.net") ? (
-                      <span className="inline-flex rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-xs font-medium text-brand-primary">
-                        Internal — Not Yet Signed In
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className="inline-flex w-fit rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-xs font-medium text-brand-primary">
+                          Internal - Not Yet Signed In
+                        </span>
+                        {(pm.intended_role ?? pm.matchedProfileRole) && (
+                          <span className="text-xs text-text-secondary">
+                            Intended role: {pm.intended_role ?? pm.matchedProfileRole}
+                          </span>
+                        )}
+                      </div>
                     ) : (
                       <span className="inline-flex rounded-full bg-surface-overlay px-2.5 py-0.5 text-xs font-medium text-text-secondary">
                         External
@@ -818,7 +890,7 @@ function PmDirectoryTab() {
                 <p className="mt-1 text-sm text-text-secondary">
                   {editingPm?.profile_id
                     ? "This entry is linked to a portal account. Editing email may affect future auto-linking."
-                    : "Use this for external PMs or manual contacts not imported from Microsoft."}
+                    : "Use this for external contacts or internal staff not yet linked to a portal account."}
                 </p>
               </div>
               <button
@@ -864,6 +936,26 @@ function PmDirectoryTab() {
                 </div>
               </div>
 
+              {formEmail.trim().toLowerCase().endsWith("@controlsco.net") && !editingPm?.profile_id && (
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">Role</label>
+                  <select
+                    value={formRole}
+                    onChange={(e) => setFormRole(e.target.value as InternalContactRole)}
+                    className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+                  >
+                    {INTERNAL_CONTACT_ROLES.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-text-tertiary">
+                    If this user has not signed in yet, the selected role will be applied automatically after their first login.
+                  </p>
+                </div>
+              )}
+
               {editingPm?.profile_id && (
                 <div className="rounded-xl border border-status-success/20 bg-status-success/10 px-3 py-2 text-sm text-status-success">
                   Linked portal account: {editingPm.profile?.full_name ?? editingPm.profile_id}
@@ -888,7 +980,7 @@ function PmDirectoryTab() {
                 disabled={savingPm}
                 className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {savingPm ? "Saving..." : editingPm ? "Save Changes" : "Add PM"}
+                {savingPm ? "Saving..." : editingPm ? "Save Changes" : "Add Contact"}
               </button>
             </div>
           </div>
@@ -899,6 +991,7 @@ function PmDirectoryTab() {
 }
 
 function UsersTab() {
+
   const supabase = createClient();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
