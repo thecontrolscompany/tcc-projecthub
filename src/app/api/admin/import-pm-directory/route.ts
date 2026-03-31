@@ -204,12 +204,20 @@ export async function POST() {
       graphError &&
       graphError.status === 403 &&
       (graphError.code === "Authorization_RequestDenied" ||
-        /insufficient privileges/i.test(graphError.message))
+        graphError.code === "InsufficientPermissions" ||
+        /insufficient privileges/i.test(graphError.message) ||
+        /Authorization_RequestDenied/i.test(graphError.code))
     ) {
+      const tenantId = "7eec7a09-a47b-4bf1-a877-80fd5323c774";
+      const clientId = "0777b14d-29c4-4186-8d8e-4a8f43de6589";
+      const redirectUri = "https://internal.thecontrolscompany.com/admin";
+      const consentUrl = `https://login.microsoftonline.com/${tenantId}/adminconsent?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+
       return NextResponse.json(
         {
           error:
-            "Microsoft Graph access was denied. Grant admin consent for the User.ReadBasic.All permission in Azure, then sign out and sign back in with Microsoft.",
+            "Microsoft Graph access was denied. Admin consent for User.ReadBasic.All is required. Use the button below to grant consent in Azure, then sign out and sign back in.",
+          consentUrl,
         },
         { status: 403 }
       );

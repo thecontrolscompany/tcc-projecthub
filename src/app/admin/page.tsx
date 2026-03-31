@@ -519,7 +519,7 @@ function PmDirectoryTab() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
-  const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [status, setStatus] = useState<{ type: "success" | "error"; message: string; consentUrl?: string } | null>(null);
 
   async function loadPms() {
     setLoading(true);
@@ -557,6 +557,7 @@ function PmDirectoryTab() {
         setStatus({
           type: "error",
           message: typeof json?.error === "string" ? json.error : "PM import failed.",
+          consentUrl: typeof json?.consentUrl === "string" ? json.consentUrl : undefined,
         });
         return;
       }
@@ -604,7 +605,17 @@ function PmDirectoryTab() {
               : "border-status-warning/30 bg-status-warning/10 text-status-warning",
           ].join(" ")}
         >
-          {status.message}
+          <span>{status.message}</span>
+          {status.consentUrl && (
+            <a
+              href={status.consentUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-3 inline-flex items-center rounded-lg border border-status-warning/50 bg-status-warning/10 px-3 py-1 text-xs font-medium text-status-warning transition hover:bg-status-warning/20"
+            >
+              Grant Admin Consent in Azure &rarr;
+            </a>
+          )}
         </div>
       )}
 
