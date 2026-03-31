@@ -3,6 +3,7 @@
 export type UserRole = "admin" | "pm" | "lead" | "installer" | "ops_manager" | "customer";
 export type InternalContactRole = "pm" | "lead" | "installer" | "ops_manager";
 export type ProjectAssignmentRole = "pm" | "lead" | "installer" | "ops_manager";
+export type QuoteRequestStatus = "new" | "reviewing" | "quoted" | "won" | "lost";
 
 export interface Profile {
   id: string;
@@ -105,6 +106,22 @@ export interface ProjectAssignment {
   profile?: Profile | null;
   pm_directory?: PmDirectory | null;
 }
+
+export type QuoteRequest = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  company_name: string;
+  contact_name: string;
+  contact_email: string;
+  contact_phone: string | null;
+  project_description: string;
+  site_address: string | null;
+  estimated_value: number | null;
+  status: QuoteRequestStatus;
+  notes: string | null;
+  project_id: string | null;
+};
 
 // Billing table row (joined view used in admin table)
 export interface BillingRow {
