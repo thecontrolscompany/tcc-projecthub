@@ -9,7 +9,7 @@
 - Token/theme system, sidebar shell, AppShell, ThemeProvider
 - Microsoft SSO (admin/PM) + email/password (customer) auth
 - Route protection middleware
-- Admin billing table (TanStack Table, inline editing, roll-forward, POC sync, email gen, Excel export)
+- Admin billing table (TanStack Table, inline editing all fields, roll-forward, POC sync, email gen, Excel export — task-020)
 - Admin analytics (Recharts + Power BI embed)
 - Admin user management — shows full name/email/role, Edit modal for name and role (task-017)
 - Admin SharePoint migration tool + cleanup tab
