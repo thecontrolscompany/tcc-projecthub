@@ -7,6 +7,7 @@
 
 ### Completed (tasks 001–015, build clean)
 - Token/theme system, sidebar shell, AppShell, ThemeProvider
+- UI overhaul: collapsible sidebar (localStorage), aligned header, SVG nav icons, avatar, pill tabs, cleaned nav structure (task-023)
 - Microsoft SSO (admin/PM) + email/password (customer) auth
 - Route protection middleware
 - Admin billing table (TanStack Table, inline editing all fields, roll-forward, POC sync, email gen, Excel export — task-020)
@@ -138,7 +139,9 @@ public/
 | 3 — Billing table + data | ✅ Complete |
 | 4 — Project management UI | ✅ Complete (task-014) |
 | 4b — PM Directory import | ✅ Complete (tasks 015–016) |
-| 5 — Quote Requests workflow | ❌ Task 017 (not written) |
+| 4c — New roles (lead, installer, ops_manager) | ✅ Complete (task-022) |
+| 4d — UI overhaul (sidebar, nav, shell) | ✅ Complete (task-023) |
+| 5 — Quote Requests workflow | ❌ Not yet started |
 | 6 — Estimate → Project lifecycle | ❌ Not started |
 | 7 — Analytics expansion | ❌ Not started |
 | 8 — QBO integration | ❌ Not started |
