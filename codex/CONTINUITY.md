@@ -25,6 +25,7 @@
 - Admin Projects tab: New/Edit Project modals, auto YYYY-NNN job number, Billed/Paid logic, SharePoint provisioning (task-014)
 - PM auto-link on Microsoft sign-in (auth callback) (task-014)
 - PM Directory: Import from Microsoft button, Graph API GET /users with paging, upserts first/last name, links profile_id (task-015)
+- PM import consent error now returns direct Azure admin-consent URL with inline "Grant Admin Consent" link (task-016)
 
 ### Infrastructure (live)
 | Item | Value |
@@ -49,7 +50,7 @@
 
 ## Next Task — READY TO RUN
 
-### Task 016 — Quote Requests Workflow
+### Task 017 — Quote Requests Workflow
 File: `codex/task-016-quote-requests.md` (not yet written)
 
 **What it does:**
@@ -102,7 +103,7 @@ src/
 │       ├── admin/migrate-sharepoint/ ✅
 │       ├── admin/sharepoint-cleanup/ ✅
 │       ├── admin/provision-project-folder/ ✅ (task-014)
-│       └── admin/import-pm-directory/ ✅ (task-015)
+│       └── admin/import-pm-directory/ ✅ (task-015, consent UX task-016)
 ├── components/
 │   ├── billing-table.tsx       ✅ TanStack Table with fallback query
 │   ├── admin-projects-tab.tsx  ✅ New/Edit Project modals (task-014)
@@ -135,8 +136,8 @@ public/
 | 2 — Auth + roles | ✅ Complete |
 | 3 — Billing table + data | ✅ Complete |
 | 4 — Project management UI | ✅ Complete (task-014) |
-| 4b — PM Directory import | ✅ Complete (task-015) |
-| 5 — Quote Requests workflow | ❌ Task 016 (not written) |
+| 4b — PM Directory import | ✅ Complete (tasks 015–016) |
+| 5 — Quote Requests workflow | ❌ Task 017 (not written) |
 | 6 — Estimate → Project lifecycle | ❌ Not started |
 | 7 — Analytics expansion | ❌ Not started |
 | 8 — QBO integration | ❌ Not started |
