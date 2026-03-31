@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { format, startOfMonth, subMonths, addMonths } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
+import { AdminProjectsTab } from "@/components/admin-projects-tab";
 import { BillingTable } from "@/components/billing-table";
-import { generatePmEmailDrafts, rollForwardRows } from "@/lib/billing/calculations";
+import { calcToBill, generatePmEmailDrafts, rollForwardRows } from "@/lib/billing/calculations";
 import type { BillingRow, BillingPeriod } from "@/types/database";
 
 type Tab = "billing" | "projects" | "pm-directory" | "users";
@@ -26,6 +27,65 @@ export default function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, periodMonth]);
 
+  function mapFallbackBillingRows(
+    periods: Array<{
+      id: string;
+      period_month: string;
+      pct_complete: number;
+      prior_pct: number;
+      prev_billed: number;
+      actual_billed: number | null;
+      estimated_income_snapshot: number;
+      synced_from_onedrive?: boolean | null;
+      project:
+        | {
+            id: string;
+            name: string;
+            job_number?: string | null;
+            customer?: { name: string } | Array<{ name: string }>;
+            pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
+          }
+        | Array<{
+            id: string;
+            name: string;
+            job_number?: string | null;
+            customer?: { name: string } | Array<{ name: string }>;
+            pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
+          }>;
+    }>
+  ): BillingRow[] {
+    return periods.map((period) => {
+      const project = Array.isArray(period.project) ? period.project[0] : period.project;
+      const customer = Array.isArray(project?.customer) ? project.customer[0] : project?.customer;
+      const pm = Array.isArray(project?.pm) ? project.pm[0] : project?.pm;
+      const estimatedIncome = period.estimated_income_snapshot ?? 0;
+      const prevBilled = period.prev_billed ?? 0;
+      const projectLabel =
+        project?.job_number && project?.name && !project.name.startsWith(project.job_number)
+          ? `${project.job_number} - ${project.name}`
+          : project?.name ?? "Unknown Project";
+
+      return {
+        billing_period_id: period.id,
+        period_month: period.period_month,
+        project_id: project?.id ?? "",
+        customer_name: customer?.name ?? "",
+        project_name: projectLabel,
+        pm_email: pm?.email ?? "",
+        pm_name: pm?.full_name ?? (pm?.email ? pm.email.split("@")[0] : ""),
+        estimated_income: estimatedIncome,
+        backlog: Math.max(estimatedIncome - prevBilled, 0),
+        prior_pct: period.prior_pct ?? 0,
+        pct_complete: period.pct_complete ?? 0,
+        prev_billed: prevBilled,
+        prev_billed_pct: estimatedIncome > 0 ? prevBilled / estimatedIncome : 0,
+        to_bill: calcToBill(estimatedIncome, period.pct_complete ?? 0, prevBilled),
+        actual_billed: period.actual_billed,
+        synced_from_onedrive: period.synced_from_onedrive ?? false,
+      };
+    });
+  }
+
   async function loadBillingData() {
     setLoading(true);
     const monthStr = format(periodMonth, "yyyy-MM-dd");
@@ -40,7 +100,61 @@ export default function AdminPage() {
       if (!error && data) {
         setRows(data as BillingRow[]);
       } else {
-        setRows([]);
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("billing_periods")
+          .select(`
+            id,
+            period_month,
+            pct_complete,
+            prior_pct,
+            prev_billed,
+            actual_billed,
+            estimated_income_snapshot,
+            synced_from_onedrive,
+            project:projects (
+              id,
+              name,
+              job_number,
+              customer:customers ( name ),
+              pm:profiles ( email, full_name )
+            )
+          `)
+          .eq("period_month", monthStr)
+          .order("period_month");
+
+        if (!fallbackError && fallbackData) {
+          const mapped = mapFallbackBillingRows(
+            fallbackData as Array<{
+              id: string;
+              period_month: string;
+              pct_complete: number;
+              prior_pct: number;
+              prev_billed: number;
+              actual_billed: number | null;
+              estimated_income_snapshot: number;
+              synced_from_onedrive?: boolean | null;
+              project:
+                | {
+                    id: string;
+                    name: string;
+                    job_number?: string | null;
+                    customer?: { name: string } | Array<{ name: string }>;
+                    pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
+                  }
+                | Array<{
+                    id: string;
+                    name: string;
+                    job_number?: string | null;
+                    customer?: { name: string } | Array<{ name: string }>;
+                    pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
+                  }>;
+            }>
+          ).sort((a, b) => a.customer_name.localeCompare(b.customer_name));
+
+          setRows(mapped);
+        } else {
+          setRows([]);
+        }
       }
     } catch {
       setRows([]);
@@ -273,7 +387,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {tab === "projects" && <ProjectsTab />}
+        {tab === "projects" && <AdminProjectsTab />}
         {tab === "pm-directory" && <PmDirectoryTab />}
 
         {tab === "users" && (
@@ -401,35 +515,98 @@ function ProjectsTab() {
 function PmDirectoryTab() {
   const supabase = createClient();
   const [pms, setPms] = useState<
-    Array<{ id: string; first_name: string | null; email: string; profile?: { full_name: string | null } }>
+    Array<{ id: string; first_name: string | null; last_name: string | null; email: string; profile?: { full_name: string | null } }>
   >([]);
   const [loading, setLoading] = useState(true);
+  const [importing, setImporting] = useState(false);
+  const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  async function loadPms() {
+    setLoading(true);
+
+    try {
+      const { data } = await supabase
+        .from("pm_directory")
+        .select("*, profile:profiles(full_name)")
+        .order("email");
+
+      setPms((data as typeof pms) ?? []);
+    } catch {
+      setPms([]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function loadPms() {
-      try {
-        const { data } = await supabase
-          .from("pm_directory")
-          .select("*, profile:profiles(full_name)")
-          .order("email");
-
-        setPms((data as typeof pms) ?? []);
-      } catch {
-        setPms([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     loadPms();
-  }, [supabase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function handleImport() {
+    setImporting(true);
+    setStatus(null);
+
+    try {
+      const res = await fetch("/api/admin/import-pm-directory", {
+        method: "POST",
+      });
+      const json = await res.json();
+
+      if (!res.ok) {
+        setStatus({
+          type: "error",
+          message: typeof json?.error === "string" ? json.error : "PM import failed.",
+        });
+        return;
+      }
+
+      setStatus({
+        type: "success",
+        message: `Import complete: ${json.inserted ?? 0} inserted, ${json.updated ?? 0} updated, ${json.skipped ?? 0} skipped.`,
+      });
+      await loadPms();
+    } catch {
+      setStatus({
+        type: "error",
+        message: "PM import failed. Please try again.",
+      });
+    } finally {
+      setImporting(false);
+    }
+  }
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-text-primary">PM Directory</h2>
-      <p className="text-sm text-text-secondary">
-        First names are used for personalized billing email greetings. Mirrors the legacy &quot;PM Directory&quot; sheet.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h2 className="text-lg font-semibold text-text-primary">PM Directory</h2>
+          <p className="text-sm text-text-secondary">
+            First names are used for personalized billing email greetings. Mirrors the legacy &quot;PM Directory&quot; sheet.
+          </p>
+        </div>
+
+        <button
+          onClick={handleImport}
+          disabled={importing}
+          className="rounded-xl border border-brand-primary/40 bg-brand-primary/10 px-4 py-1.5 text-sm font-medium text-brand-primary transition hover:bg-brand-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {importing ? "Importing from Microsoft..." : "Import from Microsoft"}
+        </button>
+      </div>
+
+      {status && (
+        <div
+          className={[
+            "rounded-xl border px-4 py-2.5 text-sm",
+            status.type === "success"
+              ? "border-status-success/30 bg-status-success/10 text-status-success"
+              : "border-status-warning/30 bg-status-warning/10 text-status-warning",
+          ].join(" ")}
+        >
+          {status.message}
+        </div>
+      )}
 
       {loading ? (
         <div className="py-10 text-center text-text-tertiary">Loading...</div>
@@ -440,6 +617,7 @@ function PmDirectoryTab() {
               <tr className="border-b border-border-default bg-surface-raised/80">
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Email</th>
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">First Name</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Last Name</th>
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Profile</th>
               </tr>
             </thead>
@@ -448,6 +626,7 @@ function PmDirectoryTab() {
                 <tr key={pm.id} className="border-b border-border-default hover:bg-surface-raised">
                   <td className="px-4 py-2.5 text-text-primary">{pm.email}</td>
                   <td className="px-4 py-2.5 text-text-secondary">{pm.first_name ?? "-"}</td>
+                  <td className="px-4 py-2.5 text-text-secondary">{pm.last_name ?? "-"}</td>
                   <td className="px-4 py-2.5 text-text-secondary">{pm.profile?.full_name ?? "-"}</td>
                 </tr>
               ))}

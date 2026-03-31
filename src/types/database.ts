@@ -26,11 +26,30 @@ export interface Project {
   sharepoint_item_id?: string | null;
   job_number?: string | null;
   migration_status?: "legacy" | "migrated" | "clean" | null;
+  billed_in_full: boolean;
+  paid_in_full: boolean;
+  completed_at: string | null;
+  customer_poc: string | null;
+  customer_po_number: string | null;
+  site_address: string | null;
+  contract_price: number | null;
+  general_contractor: string | null;
+  mechanical_contractor: string | null;
+  electrical_contractor: string | null;
+  all_conduit_plenum: boolean;
+  certified_payroll: boolean;
+  buy_american: boolean;
+  bond_required: boolean;
+  special_requirements: string | null;
+  special_access: string | null;
+  notes: string | null;
+  pm_directory_id: string | null;
   is_active: boolean;
   created_at: string;
   // joined
   customer?: Customer;
   pm?: Profile;
+  pm_directory?: PmDirectory;
 }
 
 export interface BillingPeriod {
@@ -67,6 +86,7 @@ export interface PmDirectory {
   id: string;
   profile_id: string | null;
   first_name: string | null;
+  last_name: string | null;
   email: string;
   // joined
   profile?: Profile;
@@ -75,6 +95,7 @@ export interface PmDirectory {
 // Billing table row (joined view used in admin table)
 export interface BillingRow {
   billing_period_id: string;
+  period_month?: string;
   project_id: string;
   customer_name: string;
   project_name: string;

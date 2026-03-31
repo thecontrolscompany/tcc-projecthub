@@ -14,6 +14,8 @@ which captures all fields needed at project kickoff.
 - `src/app/projects/page.tsx` and `src/app/projects/projects-list.tsx`
 - `src/types/database.ts` (Project type)
 - `supabase/migrations/001_initial_schema.sql` (current schema)
+- `src/app/api/admin/migrate-sharepoint/route.ts` (has PROJECT_SUBFOLDERS list and Graph API helpers)
+- `src/lib/graph/client.ts` (createSharePointFolder, getSharePointSiteId, getSharePointDriveId)
 
 ---
 
@@ -39,7 +41,8 @@ ALTER TABLE projects
   ADD COLUMN IF NOT EXISTS bond_required BOOLEAN DEFAULT false,
   ADD COLUMN IF NOT EXISTS special_requirements TEXT,
   ADD COLUMN IF NOT EXISTS special_access TEXT,
-  ADD COLUMN IF NOT EXISTS notes TEXT;
+  ADD COLUMN IF NOT EXISTS notes TEXT,
+  ADD COLUMN IF NOT EXISTS pm_directory_id UUID REFERENCES pm_directory(id);
 ```
 
 **Timothy must run this migration manually in Supabase SQL editor.**
@@ -69,6 +72,9 @@ bond_required: boolean;
 special_requirements: string | null;
 special_access: string | null;
 notes: string | null;
+pm_directory_id: string | null;
+// joined
+pm_directory?: PmDirectory;
 ```
 
 ---
@@ -92,7 +98,7 @@ in the top-right. Clicking opens a modal form.
 | General Contractor | text | No |
 | Mechanical Contractor | text | No |
 | Electrical Contractor | text | No |
-| Assigned PM | dropdown (from `pm_directory` table) | No |
+| Assigned PM | dropdown (from `pm_directory` table, display `first_name + email`) | No |
 | Notes | textarea | No |
 | Special Requirements | textarea (conduit fill, 270 rule, below 10' rigid, etc.) | No |
 | Special Access | text (DBIDS, site-specific safety orientation, etc.) | No |
@@ -110,9 +116,14 @@ in the top-right. Clicking opens a modal form.
   then parse the NNN and increment by 1, zero-padded to 3 digits
 
 #### On submit
-- Insert into `projects` with `is_active = true`, `estimated_income = contract_price`
+- Insert into `projects` with `is_active = true`, `estimated_income = contract_price`,
+  `pm_directory_id = selected pm id (or null)`
 - Insert a `billing_periods` row for current month with `estimated_income_snapshot = contract_price`
 - If "Add new customer" was used, insert into `customers` table first
+- After project is inserted, call `POST /api/admin/provision-project-folder` with
+  `{ projectId, jobNumber, projectName }` to create the SharePoint folder structure.
+  This call is fire-and-forget — do NOT block the modal close on it. If it fails,
+  log to console and continue.
 - Close modal, refresh projects list
 
 ---
@@ -157,12 +168,72 @@ Update `src/app/projects/page.tsx` select to include new fields:
 
 ---
 
+## Part F — SharePoint folder provisioning API route
+
+Create `src/app/api/admin/provision-project-folder/route.ts`:
+
+```ts
+POST body: { projectId: string, jobNumber: string, projectName: string }
+```
+
+- Require admin role + Microsoft provider token (same pattern as migrate-sharepoint route)
+- Get SharePoint siteId and driveId using `getSharePointSiteId` / `getSharePointDriveId`
+- Full folder name: `{jobNumber} - {projectName}` (same format as migrated projects)
+- Create top-level folder under `"Active Projects"` library
+- Create these subfolders inside it:
+  ```
+  "01 Contract"
+  "02 Estimate"
+  "03 Submittals"
+  "04 Drawings"
+  "05 Change Orders"
+  "06 Closeout"
+  "07 Billing"
+  "99 Archive - Legacy Files"
+  ```
+- On success, update `projects.sharepoint_folder` and `projects.sharepoint_item_id` for `projectId`
+- Return `{ ok: true, sharepoint_folder }` or `{ ok: false, error }` — non-fatal either way
+- If provider token is missing or Graph API call fails, return `{ ok: false, error }` gracefully
+  (do not throw a 500 — the project already exists in the DB)
+
+---
+
+## Part G — PM assignment and Microsoft link (design notes)
+
+The `pm_directory` table stores PM email + first_name + optional `profile_id`.
+The `projects.pm_directory_id` (added in migration) references `pm_directory.id`.
+
+**Dropdown behavior:**
+- New/Edit project form shows PMs from `pm_directory` as `"FirstName (email@domain.com)"`
+- Saves `pm_directory.id` as `pm_directory_id` on the project
+
+**Microsoft link (auto-link on sign-in):**
+In `src/app/auth/callback/route.ts`, after creating/finding the profile, add:
+```ts
+// If PM signs in via Microsoft SSO and their email matches a pm_directory entry,
+// set pm_directory.profile_id = profile.id (if not already set)
+await supabase
+  .from("pm_directory")
+  .update({ profile_id: profile.id })
+  .eq("email", profile.email)
+  .is("profile_id", null);
+```
+This silently links external PMs to their Supabase profile on first Microsoft login.
+No UI needed — it happens automatically.
+
+**Adding PMs manually:**
+For now, PMs are added directly to `pm_directory` in the Admin → PM Directory tab
+(existing functionality). A "Import from Microsoft" button can be added in a future task.
+
+---
+
 ## Constraints
 
 - Do not modify `.env.local`
 - Do not run any SQL — create migration file only, Timothy runs it manually
 - Run `npm run build` after changes, fix only new errors
 - Modal should use semantic token classes throughout (no hardcoded colors)
+- SharePoint folder creation is fire-and-forget — never block project creation on it
 
 ---
 
@@ -185,6 +256,12 @@ Create `codex/task-014-output.md`:
 
 ## Billed/Paid logic
 - describe behavior
+
+## SharePoint provisioning
+- describe what the API route does and whether it was wired into the form
+
+## PM auto-link
+- describe where the auth callback change was made
 
 ## Build result
 - "clean" or paste new errors

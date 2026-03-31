@@ -27,6 +27,28 @@ export interface SharePointItem {
   folder: { childCount: number };
 }
 
+export interface GraphUser {
+  id: string;
+  givenName: string | null;
+  surname: string | null;
+  displayName: string | null;
+  mail: string | null;
+  userPrincipalName: string | null;
+  userType: string | null;
+  accountEnabled: boolean | null;
+}
+
+interface RawGraphUser {
+  id?: unknown;
+  givenName?: unknown;
+  surname?: unknown;
+  displayName?: unknown;
+  mail?: unknown;
+  userPrincipalName?: unknown;
+  userType?: unknown;
+  accountEnabled?: unknown;
+}
+
 /**
  * Make an authenticated Graph API request using the user's provider token.
  * providerToken comes from: supabase.auth.getSession() -> session.provider_token
@@ -44,6 +66,45 @@ export async function graphFetch(
       ...(options.headers ?? {}),
     },
   });
+}
+
+function normalizeGraphPath(pathOrUrl: string) {
+  return pathOrUrl.startsWith(GRAPH_BASE) ? pathOrUrl.slice(GRAPH_BASE.length) : pathOrUrl;
+}
+
+export async function listGraphUsers(providerToken: string): Promise<GraphUser[]> {
+  const users: GraphUser[] = [];
+  let nextPath =
+    "/users?$select=id,givenName,surname,displayName,mail,userPrincipalName,userType,accountEnabled&$top=999";
+
+  while (nextPath) {
+    const res = await graphFetch(normalizeGraphPath(nextPath), providerToken);
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(body || `Failed to list Microsoft users: ${res.status}`);
+    }
+
+    const data = await res.json();
+    const page: RawGraphUser[] = Array.isArray(data?.value) ? data.value : [];
+
+    users.push(
+      ...page.map((user) => ({
+        id: typeof user?.id === "string" ? user.id : "",
+        givenName: typeof user?.givenName === "string" ? user.givenName : null,
+        surname: typeof user?.surname === "string" ? user.surname : null,
+        displayName: typeof user?.displayName === "string" ? user.displayName : null,
+        mail: typeof user?.mail === "string" ? user.mail : null,
+        userPrincipalName: typeof user?.userPrincipalName === "string" ? user.userPrincipalName : null,
+        userType: typeof user?.userType === "string" ? user.userType : null,
+        accountEnabled: typeof user?.accountEnabled === "boolean" ? user.accountEnabled : null,
+      }))
+    );
+
+    nextPath = typeof data?.["@odata.nextLink"] === "string" ? data["@odata.nextLink"] : "";
+  }
+
+  return users.filter((user) => Boolean(user.id));
 }
 
 export async function getSharePointSiteId(providerToken: string): Promise<string> {

@@ -7,7 +7,21 @@ import type { Project, WeeklyUpdate, BillingPeriod } from "@/types/database";
 
 type ViewState = "list" | "update";
 
-interface ProjectWithBilling extends Omit<Project, "customer"> {
+interface ProjectWithBilling extends Pick<
+  Project,
+  | "id"
+  | "customer_id"
+  | "pm_id"
+  | "name"
+  | "estimated_income"
+  | "onedrive_path"
+  | "sharepoint_folder"
+  | "sharepoint_item_id"
+  | "job_number"
+  | "migration_status"
+  | "is_active"
+  | "created_at"
+> {
   customer?: { name: string };
   current_period?: BillingPeriod;
 }

@@ -18,9 +18,17 @@ export async function GET(request: Request) {
       if (user) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("role")
+          .select("id, role, email")
           .eq("id", user.id)
           .single();
+
+        if (profile?.id && profile?.email) {
+          await supabase
+            .from("pm_directory")
+            .update({ profile_id: profile.id })
+            .eq("email", profile.email)
+            .is("profile_id", null);
+        }
 
         if (profile?.role === "admin") return NextResponse.redirect(`${origin}/admin`);
         if (profile?.role === "pm") return NextResponse.redirect(`${origin}/pm`);

@@ -1,60 +1,32 @@
 # TCC ProjectHub — Session Continuity
-**Last updated:** 2026-03-30 night
+**Last updated:** 2026-03-31
 
 ---
 
-## Where We Are
+## Current State
 
-### Completed tonight
-- Tasks 001–009 implemented and building clean
-- Supabase project live: `vzjjkssngkoedikbggbb.supabase.co`
-- Azure AD app registered: TCC ProjectHub (`0777b14d-29c4-4186-8d8e-4a8f43de6589`)
-- SharePoint site created: `https://controlsco.sharepoint.com/sites/TCCProjects`
-- Database migrations run: 001 (initial schema), 002 (sharepoint columns), 003 (migration_status)
-- Admin login working: Tim@controlsco.net via Microsoft SSO
-- SharePoint migration tool built and running at `/admin/migrate-sharepoint`
-- Brand token system live (Tailwind semantic classes)
-- Sidebar shell with role-filtered nav working
-- ThemeProvider and ThemeToggle in place
+### Completed (tasks 001–015, build clean)
+- Token/theme system, sidebar shell, AppShell, ThemeProvider
+- Microsoft SSO (admin/PM) + email/password (customer) auth
+- Route protection middleware
+- Admin billing table (TanStack Table, inline editing, roll-forward, POC sync, email gen, Excel export)
+- Admin analytics (Recharts + Power BI embed)
+- Admin user management
+- Admin SharePoint migration tool + cleanup tab
+- PM portal (assigned projects, weekly update form)
+- Customer portal (read-only updates + billing history)
+- Quote requests page (`/quotes`)
+- Estimating stub page (`/estimating` → links to estimates.thecontrolscompany.com)
+- Brand assets: `public/logo.png` replaced with TCC_v5.png bar-chart logo
+- Billing table fallback query (no longer depends on `billing_rows` view alone)
+- Project data seeded: 24 active projects with estimated_income and customer_id
+- billing_periods.estimated_income_snapshot synced from projects.estimated_income
+- Projects page: filters z-prefix placeholders, sorts by name
+- Admin Projects tab: New/Edit Project modals, auto YYYY-NNN job number, Billed/Paid logic, SharePoint provisioning (task-014)
+- PM auto-link on Microsoft sign-in (auth callback) (task-014)
+- PM Directory: Import from Microsoft button, Graph API GET /users with paging, upserts first/last name, links profile_id (task-015)
 
-### In progress right now
-- SharePoint migration running in browser — copying ~581 OneDrive projects to SharePoint
-- Migration is batching 25 at a time, will continue until browser tab is closed or complete
-- If it stops partway, re-run in the morning — skips already-done items safely
-
-### Known issues to fix tomorrow
-- `logo.png` returns 404 — sidebar shows text fallback (task-010)
-- Raleway fonts return 404 — using system-ui fallback (task-010)
-- Middleware deprecation warning (task-010)
-- No billing periods exist yet — admin billing table shows empty state (task-010 seed script)
-- SharePoint has some duplicate folders from earlier failed runs — use Cleanup tab once copying stops
-
----
-
-## Next Tasks (in order)
-
-### Task 010 — Brand Assets + Data (READY TO RUN)
-File: `codex/task-010-brand-assets-and-data.md`
-Prompt: "Read codex/task-010-brand-assets-and-data.md and implement everything in it exactly as written."
-After Codex: run `supabase/seed-billing.sql` in Supabase SQL editor
-
-### Task 011 — Quote Requests Domain (Phase 3)
-Not written yet. Covers:
-- `/quotes` dashboard page
-- `/quotes/new` intake form
-- `/quotes/[id]` detail page
-- Quote request DB schema (migration 004)
-- Status management actions
-
-### Task 012 — Customer Portal Improvements
-Not written yet. Covers:
-- `/customer/quotes/new` intake form
-- Customer can submit quote requests with file attachments
-
----
-
-## Credentials (non-secret)
-
+### Infrastructure (live)
 | Item | Value |
 |------|-------|
 | Supabase URL | https://vzjjkssngkoedikbggbb.supabase.co |
@@ -62,63 +34,94 @@ Not written yet. Covers:
 | Azure Client ID (TCC ProjectHub) | 0777b14d-29c4-4186-8d8e-4a8f43de6589 |
 | Azure Client ID (hvac-estimator) | f9f9bab6-2540-46dd-984c-b784fd64a480 |
 | SharePoint site | https://controlsco.sharepoint.com/sites/TCCProjects |
-| Admin user | Tim@controlsco.net |
+| Admin login | Tim@controlsco.net |
+| Portal URL | https://internal.thecontrolscompany.com |
+| Estimating URL | https://estimates.thecontrolscompany.com |
 
-Secrets (client secret, service role key) are in `.env.local` only — not stored here.
+### Migrations run in Supabase
+- `001_initial_schema.sql` ✅
+- `002_add_sharepoint_columns.sql` ✅
+- `003_migration_status.sql` ✅
+- `004_project_fields.sql` ✅ run manually
+- `005_pm_directory_last_name.sql` ⏳ — created by Codex (task-015); **Timothy must run manually**
 
 ---
 
-## File Map (key files)
+## Next Task — READY TO RUN
+
+### Task 016 — Quote Requests Workflow
+File: `codex/task-016-quote-requests.md` (not yet written)
+
+**What it does:**
+- Expand `/quotes` stub into a full workflow: status management (new → reviewing → quoted → won/lost)
+- Quote detail page `/quotes/[id]`
+- Customer-facing intake form (public or authenticated)
+- Admin can update status, attach notes, link to a project once won
+
+**Before running task 016:**
+- Timothy must run `supabase/migrations/005_pm_directory_last_name.sql` in Supabase SQL editor
+- Grant `User.ReadBasic.All` admin consent in Azure if not done (required for PM import)
+
+---
+
+## Upcoming Tasks (not yet written)
+
+### Task 017 — Estimate → Project lifecycle
+- Convert a won quote into a project (pre-fill New Project modal from quote data)
+- Link `quotes.project_id` after conversion
+
+### Task 018 — Analytics expansion
+- More Recharts charts: billing trend, PM workload, project status breakdown
+- Date range filters
+
+---
+
+## Key File Map (current)
 
 ```
 src/
 ├── app/
 │   ├── admin/
-│   │   ├── layout.tsx          ✅ AppShell wrapped, Supabase profile fetch
-│   │   ├── page.tsx            ✅ Billing table + tabs, token migrated
-│   │   ├── analytics/page.tsx  ✅ Recharts + Power BI embed
+│   │   ├── page.tsx            ✅ Billing/Projects/PM Dir/Users tabs + Import from Microsoft
+│   │   ├── analytics/page.tsx  ✅ Recharts + Power BI
 │   │   ├── users/page.tsx      ✅ User management
-│   │   └── migrate-sharepoint/ ✅ Migration tool + cleanup tab
-│   ├── pm/layout.tsx           ✅ AppShell wrapped
-│   ├── pm/page.tsx             ✅ PM workflow, legacy badge
+│   │   └── migrate-sharepoint/ ✅ Migration tool
+│   ├── projects/
+│   │   ├── page.tsx            ✅ Supabase fetch, filter z-prefix, sort by name
+│   │   └── projects-list.tsx   ✅ Active/Completed split, badges
+│   ├── pm/page.tsx             ✅ PM workflow
 │   ├── customer/page.tsx       ✅ Customer portal
-│   ├── login/page.tsx          ✅ Microsoft SSO + email/pw
-│   ├── preview/page.tsx        ✅ Token system visual test (no auth)
+│   ├── estimating/page.tsx     ✅ Link to estimates.thecontrolscompany.com
+│   ├── quotes/page.tsx         ✅ Stub (task-016 will expand)
+│   ├── billing/page.tsx        ✅ Billing view
 │   └── api/
-│       ├── sync-poc/           ✅ Graph API POC sync
-│       ├── generate-emails/    ✅ Outlook draft creation
-│       ├── export-excel/       ✅ ExcelJS export
-│       ├── admin/create-user/  ✅ Service role user creation
-│       ├── admin/migrate-sharepoint/ ✅ Migration API (batched)
-│       └── admin/sharepoint-cleanup/ ✅ Duplicate cleanup API
+│       ├── sync-poc/           ✅
+│       ├── generate-emails/    ✅
+│       ├── export-excel/       ✅
+│       ├── admin/create-user/  ✅
+│       ├── admin/migrate-sharepoint/ ✅
+│       ├── admin/sharepoint-cleanup/ ✅
+│       ├── admin/provision-project-folder/ ✅ (task-014)
+│       └── admin/import-pm-directory/ ✅ (task-015)
 ├── components/
-│   ├── billing-table.tsx       ✅ TanStack Table, token migrated
-│   ├── sidebar-nav.tsx         ✅ Role-filtered, logo with fallback
-│   ├── app-shell.tsx           ✅ Fixed sidebar + header + ThemeToggle
-│   ├── theme-provider.tsx      ✅ Light/dark/system
-│   └── theme-toggle.tsx        ✅ Sun/moon inline SVG
+│   ├── billing-table.tsx       ✅ TanStack Table with fallback query
+│   ├── admin-projects-tab.tsx  ✅ New/Edit Project modals (task-014)
+│   ├── sidebar-nav.tsx         ✅
+│   ├── app-shell.tsx           ✅
+│   └── theme-*.tsx             ✅
 ├── lib/
-│   ├── supabase/client.ts      ✅
-│   ├── supabase/server.ts      ✅
-│   ├── supabase/middleware.ts  ✅
-│   ├── graph/client.ts         ✅ OneDrive + SharePoint Graph helpers
-│   └── billing/calculations.ts ✅ Core formula + roll-forward + email gen
-├── middleware.ts               ⚠️ Deprecated — rename to proxy.ts (task-010)
-└── types/database.ts           ✅ All DB types including migration_status
+│   ├── supabase/               ✅ client, server, middleware
+│   ├── graph/client.ts         ✅ OneDrive + SharePoint helpers + paging (task-015)
+│   └── billing/calculations.ts ✅
+├── middleware.ts               ✅
+└── types/database.ts           ✅ Project + PmDirectory types updated (tasks 014–015)
 supabase/
-├── migrations/
-│   ├── 001_initial_schema.sql  ✅ Run
-│   ├── 002_add_sharepoint_columns.sql ✅ Run
-│   └── 003_migration_status.sql ✅ Run
-├── seed.sql                    (sample data — not run yet)
-└── seed-billing.sql            (task-010 will create this)
+├── migrations/001–004          ✅ Run
+├── migrations/005              ⏳ created (Timothy must run manually)
+├── seed-projects.sql           ✅ Run (customers + PM directory)
+└── seed-projects-fix.sql       ✅ Run (income + billing snapshot sync)
 public/
-├── logo.png                    ❌ Missing (task-010)
-└── fonts/                      ❌ Missing (task-010)
-codex/
-├── task-001 through task-009   ✅ Complete
-├── task-010-brand-assets-and-data.md ✅ Ready to run
-└── CONTINUITY.md               ← this file
+└── logo.png                    ✅ TCC_v5.png bar chart logo
 ```
 
 ---
@@ -127,12 +130,13 @@ codex/
 
 | Phase | Status |
 |-------|--------|
-| 0 — Connect platform | ✅ Complete |
-| 1 — Brand, shell, theme | ✅ Complete (fonts/logo pending task-010) |
-| 2 — Expanded roles + nav | ⚠️ Partial (sidebar done, roles not expanded beyond admin/pm/customer) |
-| 3 — Quote Requests | ❌ Not started (task-011) |
-| 4 — Estimate → Project lifecycle | ❌ Not started |
-| 5 — Estimating module migration | ❌ Not started |
-| 6 — Analytics expansion | ❌ Not started |
-| 7 — QBO integrations | ❌ Not started |
-| SharePoint migration | 🔄 In progress (running tonight) |
+| 0 — Platform connect | ✅ Complete |
+| 1 — Brand, shell, theme | ✅ Complete |
+| 2 — Auth + roles | ✅ Complete |
+| 3 — Billing table + data | ✅ Complete |
+| 4 — Project management UI | ✅ Complete (task-014) |
+| 4b — PM Directory import | ✅ Complete (task-015) |
+| 5 — Quote Requests workflow | ❌ Task 016 (not written) |
+| 6 — Estimate → Project lifecycle | ❌ Not started |
+| 7 — Analytics expansion | ❌ Not started |
+| 8 — QBO integration | ❌ Not started |
