@@ -326,8 +326,7 @@ function UpdateForm({
           .from("weekly_updates")
           .select("*")
           .eq("project_id", project.id)
-          .order("week_of", { ascending: false })
-          .limit(4);
+          .order("week_of", { ascending: false });
 
         setRecentUpdates((data as WeeklyUpdate[]) ?? []);
       } catch {
@@ -463,7 +462,7 @@ function UpdateForm({
 
       {recentUpdates.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Recent Updates</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Update History</h3>
           {recentUpdates.map((update) => (
             <div key={update.id} className="rounded-xl border border-border-default bg-surface-raised p-4">
               <div className="flex items-center justify-between">

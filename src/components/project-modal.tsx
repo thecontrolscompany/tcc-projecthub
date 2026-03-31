@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { format } from "date-fns";
+import { createClient } from "@/lib/supabase/client";
 import type { ProjectAssignmentRole } from "@/types/database";
 
 export type ProjectCustomerOption = {
@@ -462,6 +464,10 @@ export function ProjectModal({
               isWaitingForSharePointFolder={isWaitingForSharePointFolder}
             />
           )}
+
+          {editingProject && (
+            <WeeklyUpdatesSection projectId={editingProject.id} />
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-3 border-t border-border-default px-6 py-4">
@@ -684,5 +690,64 @@ function CheckboxField({
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 accent-[var(--color-brand-primary)]" />
       {label}
     </label>
+  );
+}
+
+type UpdateRow = {
+  id: string;
+  week_of: string;
+  pct_complete: number | null;
+  notes: string | null;
+  blockers: string | null;
+};
+
+function WeeklyUpdatesSection({ projectId }: { projectId: string }) {
+  const supabase = createClient();
+  const [updates, setUpdates] = useState<UpdateRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from("weekly_updates")
+      .select("id, week_of, pct_complete, notes, blockers")
+      .eq("project_id", projectId)
+      .order("week_of", { ascending: false })
+      .then(({ data }) => {
+        setUpdates((data as UpdateRow[]) ?? []);
+        setLoading(false);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
+  return (
+    <section className="space-y-3">
+      <h4 className="font-heading text-lg font-semibold text-text-primary">Weekly Updates</h4>
+      {loading ? (
+        <p className="text-sm text-text-tertiary">Loading...</p>
+      ) : updates.length === 0 ? (
+        <p className="text-sm text-text-tertiary">No updates submitted yet.</p>
+      ) : (
+        <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+          {updates.map((u) => (
+            <div key={u.id} className="rounded-xl border border-border-default bg-surface-raised p-4">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-xs font-medium text-text-secondary">
+                  Week of {format(new Date(u.week_of), "MMM d, yyyy")}
+                </span>
+                {u.pct_complete !== null && (
+                  <span className="shrink-0 text-sm font-semibold text-brand-primary">
+                    {(u.pct_complete * 100).toFixed(1)}%
+                  </span>
+                )}
+              </div>
+              {u.notes && <p className="mt-1.5 text-sm text-text-secondary">{u.notes}</p>}
+              {u.blockers && (
+                <p className="mt-1 text-sm text-status-danger">Blocker: {u.blockers}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
