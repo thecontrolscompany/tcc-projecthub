@@ -3,8 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { graphFetch, listGraphUsers } from "@/lib/graph/client";
 
-const ADMIN_CONSENT_URL =
-  "https://login.microsoftonline.com/7eec7a09-a47b-4bf1-a877-80fd5323c774/adminconsent?client_id=0777b14d-29c4-4186-8d8e-4a8f43de6589&redirect_uri=https://internal.thecontrolscompany.com/auth/callback";
+const AZURE_TENANT_ID = "7eec7a09-a47b-4bf1-a877-80fd5323c774";
+const AZURE_CLIENT_ID = "0777b14d-29c4-4186-8d8e-4a8f43de6589";
+const TOKEN_URL = `https://login.microsoftonline.com/${AZURE_TENANT_ID}/oauth2/v2.0/token`;
 
 interface GraphErrorBody {
   error?: {
@@ -22,7 +23,7 @@ function hasPersonalName(firstName: string | null, lastName: string | null) {
   return Boolean(firstName?.trim() || lastName?.trim());
 }
 
-async function requireAdminWithToken() {
+async function requireAdmin() {
   const supabase = await createClient();
 
   const {
@@ -43,29 +44,46 @@ async function requireAdminWithToken() {
     return { error: NextResponse.json({ error: "Admin access required." }, { status: 403 }) };
   }
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session?.provider_token) {
-    return {
-      error: NextResponse.json(
-        {
-          error: "Microsoft access token not available. Please sign out and sign back in with Microsoft.",
-        },
-        { status: 400 }
-      ),
-    };
-  }
-
-  return { providerToken: session.provider_token };
+  return { ok: true as const };
 }
 
-async function getGraphError(providerToken: string) {
-  const res = await graphFetch(
-    "/users?$select=id&$top=1",
-    providerToken
-  );
+async function getAppToken() {
+  const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+
+  if (!clientSecret) {
+    throw new Error("MICROSOFT_CLIENT_SECRET is not configured.");
+  }
+
+  const body = new URLSearchParams({
+    grant_type: "client_credentials",
+    client_id: AZURE_CLIENT_ID,
+    client_secret: clientSecret,
+    scope: "https://graph.microsoft.com/.default",
+  });
+
+  const res = await fetch(TOKEN_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body,
+  });
+
+  if (!res.ok) {
+    const message = await res.text();
+    throw new Error(message || "Failed to acquire Microsoft app token.");
+  }
+
+  const data = await res.json();
+  if (typeof data?.access_token !== "string" || !data.access_token) {
+    throw new Error("Microsoft token endpoint did not return an access token.");
+  }
+
+  return data.access_token as string;
+}
+
+async function getGraphError(accessToken: string) {
+  const res = await graphFetch("/users?$select=id&$top=1", accessToken);
 
   if (res.ok) {
     return null;
@@ -86,25 +104,24 @@ async function getGraphError(providerToken: string) {
 }
 
 export async function POST() {
-  const auth = await requireAdminWithToken();
+  const auth = await requireAdmin();
   if ("error" in auth) return auth.error;
 
   const adminClient = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+
   let rawGraphCount = 0;
+  let accessToken = "";
 
   try {
-    const users = await listGraphUsers(auth.providerToken);
+    accessToken = await getAppToken();
+
+    const users = await listGraphUsers(accessToken);
     rawGraphCount = users.length;
 
     console.info(`[PM Import] Graph returned ${rawGraphCount} user(s) before filtering.`);
-    if (rawGraphCount <= 1) {
-      console.warn(
-        "[PM Import] Graph returned one or fewer users. This usually means the signed-in admin can consent to User.ReadBasic.All but still lacks a directory role that allows reading all org users."
-      );
-    }
 
     const candidates = users
       .map((user) => {
@@ -215,7 +232,7 @@ export async function POST() {
       skipped,
     });
   } catch (error) {
-    const graphError = await getGraphError(auth.providerToken);
+    const graphError = accessToken ? await getGraphError(accessToken) : null;
 
     if (
       graphError &&
@@ -224,19 +241,12 @@ export async function POST() {
         graphError.code === "InsufficientPermissions" ||
         /insufficient privileges/i.test(graphError.message) ||
         /Authorization_RequestDenied/i.test(graphError.code) ||
-        /InsufficientPermissions/i.test(graphError.code)) &&
-      (graphError.code === "Authorization_RequestDenied" ||
-        graphError.code === "InsufficientPermissions" ||
-        /insufficient privileges/i.test(graphError.message) ||
-        /Authorization_RequestDenied/i.test(graphError.code) ||
-        /InsufficientPermissions/i.test(graphError.code) ||
-        /access was denied/i.test(graphError.message))
+        /InsufficientPermissions/i.test(graphError.code))
     ) {
       return NextResponse.json(
         {
           error:
-            "Microsoft Graph access was denied. Admin consent for User.ReadBasic.All is required. Use the button below to grant consent in Azure, then sign out and sign back in.",
-          consentUrl: ADMIN_CONSENT_URL,
+            "Microsoft Graph access was denied. Configure the Azure app with a client secret and grant User.ReadBasic.All as an application permission with admin consent.",
         },
         { status: 403 }
       );
