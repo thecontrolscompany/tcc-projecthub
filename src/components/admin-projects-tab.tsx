@@ -42,7 +42,14 @@ type CustomerOption = {
   contact_email: string | null;
 };
 
-type PmOption = {
+type PmProfileOption = {
+  id: string;
+  full_name: string | null;
+  email: string;
+  role: "pm" | "lead" | "ops_manager";
+};
+
+type ContactOption = {
   id: string;
   first_name: string | null;
   last_name: string | null;
@@ -168,7 +175,8 @@ export function AdminProjectsTab() {
   const supabase = createClient();
   const [projects, setProjects] = useState<ProjectRow[]>([]);
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
-  const [pms, setPms] = useState<PmOption[]>([]);
+  const [pmProfiles, setPmProfiles] = useState<PmProfileOption[]>([]);
+  const [contacts, setContacts] = useState<ContactOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -216,13 +224,19 @@ export function AdminProjectsTab() {
   }
 
   async function loadFormLookups() {
-    const [{ data: customerData }, { data: pmData }] = await Promise.all([
+    const [{ data: customerData }, { data: profileData }, { data: contactData }] = await Promise.all([
       supabase.from("customers").select("id, name, contact_email").order("name"),
+      supabase
+        .from("profiles")
+        .select("id, full_name, email, role")
+        .in("role", ["pm", "lead", "ops_manager"])
+        .order("full_name"),
       supabase.from("pm_directory").select("id, first_name, last_name, email, profile_id").order("email"),
     ]);
 
     setCustomers((customerData as CustomerOption[]) ?? []);
-    setPms((pmData as PmOption[]) ?? []);
+    setPmProfiles((profileData as PmProfileOption[]) ?? []);
+    setContacts((contactData as ContactOption[]) ?? []);
   }
 
   async function fetchProjectById(projectId: string) {
@@ -302,7 +316,7 @@ export function AdminProjectsTab() {
       generalContractor: project.general_contractor ?? "",
       mechanicalContractor: project.mechanical_contractor ?? "",
       electricalContractor: project.electrical_contractor ?? "",
-      assignedPmId: project.pm_directory_id ?? "",
+      assignedPmId: project.pm_id ?? project.pm_directory?.profile_id ?? "",
       notes: project.notes ?? "",
       specialRequirements: project.special_requirements ?? "",
       specialAccess: project.special_access ?? "",
@@ -380,7 +394,11 @@ export function AdminProjectsTab() {
         customerId = newCustomer.id;
       }
 
-      const selectedPm = pms.find((pm) => pm.id === formValues.assignedPmId) ?? null;
+      const selectedPmProfile = pmProfiles.find((pm) => pm.id === formValues.assignedPmId) ?? null;
+      const matchedPmDirectory =
+        selectedPmProfile
+          ? contacts.find((contact) => contact.email.toLowerCase() === selectedPmProfile.email.toLowerCase()) ?? null
+          : null;
       const contractPrice = Number(formValues.contractPrice);
       const billedAndPaid = formValues.billedInFull && formValues.paidInFull;
       const effectiveJobNumber = editingProject?.job_number ?? jobNumberPreview;
@@ -388,8 +406,8 @@ export function AdminProjectsTab() {
 
       const payload = {
         customer_id: customerId || null,
-        pm_directory_id: formValues.assignedPmId || null,
-        pm_id: selectedPm?.profile_id ?? null,
+        pm_directory_id: matchedPmDirectory?.id ?? null,
+        pm_id: selectedPmProfile?.id ?? null,
         name: projectName,
         estimated_income: contractPrice,
         contract_price: contractPrice,
@@ -512,8 +530,8 @@ export function AdminProjectsTab() {
     });
 
   const externalContactOptions = useMemo(
-    () => pms.filter((pm) => !pm.email.toLowerCase().endsWith("@controlsco.net")),
-    [pms]
+    () => contacts.filter((contact) => !contact.email.toLowerCase().endsWith("@controlsco.net")),
+    [contacts]
   );
 
   const SortIcon = ({ col }: { col: SortKey }) =>
@@ -629,7 +647,7 @@ export function AdminProjectsTab() {
           editingProject={editingProject}
           jobNumberPreview={jobNumberPreview}
           customers={customers}
-          pms={pms}
+          pmProfiles={pmProfiles}
           externalContacts={externalContactOptions}
           values={formValues}
           saving={saving}
@@ -656,7 +674,7 @@ function ProjectModal({
   editingProject,
   jobNumberPreview,
   customers,
-  pms,
+  pmProfiles,
   externalContacts,
   values,
   saving,
@@ -670,8 +688,8 @@ function ProjectModal({
   editingProject: ProjectRow | null;
   jobNumberPreview: string;
   customers: CustomerOption[];
-  pms: PmOption[];
-  externalContacts: PmOption[];
+  pmProfiles: PmProfileOption[];
+  externalContacts: ContactOption[];
   values: ProjectFormValues;
   saving: boolean;
   errors: ProjectFormErrors;
@@ -682,7 +700,7 @@ function ProjectModal({
   onSave: () => void;
 }) {
   const customerOptions = useMemo(() => customers, [customers]);
-  const pmOptions = useMemo(() => pms.filter((pm) => pm.email.toLowerCase().endsWith("@controlsco.net")), [pms]);
+  const pmOptions = useMemo(() => pmProfiles, [pmProfiles]);
   const customerPocOptions = useMemo(() => {
     const options = [...externalContacts];
     const currentValue = values.customerPoc.trim();
@@ -700,9 +718,15 @@ function ProjectModal({
     return options;
   }, [externalContacts, values.customerPoc]);
 
-  function formatContactLabel(pm: PmOption) {
+  function formatContactLabel(pm: ContactOption) {
     const fullName = [pm.first_name, pm.last_name].filter(Boolean).join(" ").trim();
     return fullName ? `${fullName} (${pm.email})` : pm.email;
+  }
+
+  function formatPmProfileLabel(pm: PmProfileOption) {
+    const displayName = pm.full_name?.trim() || pm.email;
+    const roleLabel = pm.role === "ops_manager" ? "Ops Manager" : pm.role === "lead" ? "Lead" : "PM";
+    return `${displayName} (${pm.email}) - ${roleLabel}`;
   }
 
   return (
@@ -775,7 +799,7 @@ function ProjectModal({
                   <option value="">Unassigned</option>
                   {pmOptions.map((pm) => (
                     <option key={pm.id} value={pm.id}>
-                      {formatContactLabel(pm)}
+                      {formatPmProfileLabel(pm)}
                     </option>
                   ))}
                 </select>
