@@ -17,11 +17,11 @@ export default function EstimatingPage() {
               Current Estimating Tool
             </h2>
             <p className="mt-1 text-sm text-text-secondary">
-              The estimating tool is currently running as a separate application.
+              The estimating tool is available at estimates.thecontrolscompany.com.
             </p>
           </div>
           <a
-            href="http://localhost:5173"
+            href="https://estimates.thecontrolscompany.com"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-hover"
@@ -31,7 +31,7 @@ export default function EstimatingPage() {
         </div>
         <p className="mt-4 text-xs text-text-tertiary">
           The estimating module will be integrated into this portal in a future phase.
-          Until then, use the link above to access the current tool.
+          Until then, use the link above to access the tool at estimates.thecontrolscompany.com.
         </p>
       </div>
 
