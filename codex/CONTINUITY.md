@@ -110,6 +110,7 @@ src/
 │       ├── admin/sharepoint-cleanup/ ✅
 │       ├── admin/provision-project-folder/ ✅ (task-014)
 │       └── admin/import-pm-directory/ ✅ (task-015, consent UX task-016)
+│       └── admin/upload-project-document/ ✅ (task-026)
 ├── components/
 │   ├── billing-table.tsx       ✅ TanStack Table with fallback query
 │   ├── admin-projects-tab.tsx  ✅ New/Edit Project modals (task-014)
@@ -148,6 +149,7 @@ public/
 | 4d — UI overhaul (sidebar, nav, shell) | ✅ Complete (task-023) |
 | 4e — Contacts tab CRUD + pre-sign-in roles | ✅ Complete (task-024) |
 | 4f — Audit fixes (billing save, role-routes, layout auth, Zod) | ✅ Complete (task-025) |
+| 4g — SharePoint document uploads (contract, scope, estimate) | ✅ Complete (task-026) |
 | 5 — Quote Requests workflow | ❌ Not yet started |
 | 6 — Estimate → Project lifecycle | ❌ Not started |
 | 7 — Analytics expansion | ❌ Not started |
