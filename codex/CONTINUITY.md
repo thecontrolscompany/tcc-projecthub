@@ -150,6 +150,7 @@ public/
 | 4e — Contacts tab CRUD + pre-sign-in roles | ✅ Complete (task-024) |
 | 4f — Audit fixes (billing save, role-routes, layout auth, Zod) | ✅ Complete (task-025) |
 | 4g — SharePoint document uploads (contract, scope, estimate) | ✅ Complete (task-026) |
+| 4h — Admin "View As" role preview (sessionStorage, amber banner) | ✅ Complete (task-027) |
 | 5 — Quote Requests workflow | ❌ Not yet started |
 | 6 — Estimate → Project lifecycle | ❌ Not started |
 | 7 — Analytics expansion | ❌ Not started |
