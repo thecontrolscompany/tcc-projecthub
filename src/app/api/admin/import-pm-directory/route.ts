@@ -4,7 +4,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { graphFetch, listGraphUsers } from "@/lib/graph/client";
 
 const ADMIN_CONSENT_URL =
-  "https://login.microsoftonline.com/7eec7a09-a47b-4bf1-a877-80fd5323c774/adminconsent?client_id=0777b14d-29c4-4186-8d8e-4a8f43de6589&redirect_uri=https://internal.thecontrolscompany.com/admin";
+  "https://login.microsoftonline.com/7eec7a09-a47b-4bf1-a877-80fd5323c774/adminconsent?client_id=0777b14d-29c4-4186-8d8e-4a8f43de6589&redirect_uri=https://internal.thecontrolscompany.com/auth/callback";
 
 interface GraphErrorBody {
   error?: {
