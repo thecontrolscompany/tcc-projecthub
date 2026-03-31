@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { SidebarNav } from "./sidebar-nav";
 import { getUserInitials, resolvePageTitle, type NavRole } from "./sidebar-nav";
 import { ThemeToggle } from "./theme-toggle";
@@ -44,6 +44,7 @@ export function AppShell({
   userEmail: string;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [viewAsRole, setViewAsRole] = useState<NavRole | null>(null);
   const effectiveRole = viewAsRole ?? (role as NavRole);
@@ -136,14 +137,21 @@ export function AppShell({
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-status-warning/30 bg-status-warning/10 px-4 py-3 text-sm text-status-warning">
               <span>
                 Viewing as: {VIEW_AS_OPTIONS.find((option) => option.value === effectiveRole)?.label ?? effectiveRole}
+                <span className="mt-1 block text-xs text-status-warning/80">
+                  Nav preview only - data reflects your admin account.
+                </span>
               </span>
               <div className="flex items-center gap-2">
-                <a
-                  href={roleHome(effectiveRole)}
+                <button
+                  onClick={() => {
+                    window.sessionStorage.setItem(VIEW_AS_STORAGE_KEY, effectiveRole);
+                    setViewAsRole(effectiveRole);
+                    router.push(roleHome(effectiveRole));
+                  }}
                   className="rounded-lg border border-status-warning/40 px-3 py-1.5 text-xs font-medium transition hover:bg-status-warning/10"
                 >
                   Open Home
-                </a>
+                </button>
                 <button
                   onClick={() => setViewAsRole(null)}
                   className="rounded-lg border border-status-warning/40 px-3 py-1.5 text-xs font-medium transition hover:bg-status-warning/10"
