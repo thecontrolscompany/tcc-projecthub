@@ -24,6 +24,8 @@
 - billing_periods.estimated_income_snapshot synced from projects.estimated_income
 - Projects page: filters z-prefix placeholders, sorts by name
 - Admin Projects tab: New/Edit Project modals, auto YYYY-NNN job number, Billed/Paid logic, SharePoint provisioning (task-014)
+- Admin Projects tab: filter/search/sort, Customer POC dropdown, All Conduit label, form validation warnings
+- Admin Contacts tab: renamed from PM Directory
 - PM auto-link on Microsoft sign-in (auth callback) (task-014)
 - PM Directory: Import from Microsoft button, Graph API GET /users with paging, upserts first/last name, links profile_id (task-015)
 - PM Directory: Add/Edit/Delete CRUD, linked vs external badge (task-019)
