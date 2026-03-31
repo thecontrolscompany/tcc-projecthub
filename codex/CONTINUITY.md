@@ -11,7 +11,7 @@
 - Route protection middleware
 - Admin billing table (TanStack Table, inline editing, roll-forward, POC sync, email gen, Excel export)
 - Admin analytics (Recharts + Power BI embed)
-- Admin user management
+- Admin user management — shows full name/email/role, Edit modal for name and role (task-017)
 - Admin SharePoint migration tool + cleanup tab
 - PM portal (assigned projects, weekly update form)
 - Customer portal (read-only updates + billing history)
