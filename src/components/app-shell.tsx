@@ -3,10 +3,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { SidebarNav } from "./sidebar-nav";
-import { getUserInitials, resolvePageTitle } from "./sidebar-nav";
+import { getUserInitials, resolvePageTitle, type NavRole } from "./sidebar-nav";
 import { ThemeToggle } from "./theme-toggle";
+import { roleHome } from "@/lib/auth/role-routes";
 
 const SIDEBAR_STORAGE_KEY = "tcc-sidebar-collapsed";
+const VIEW_AS_STORAGE_KEY = "tcc-view-as-role";
+const VIEW_AS_OPTIONS: Array<{ value: NavRole; label: string }> = [
+  { value: "admin", label: "Admin" },
+  { value: "pm", label: "PM" },
+  { value: "lead", label: "Lead" },
+  { value: "ops_manager", label: "Ops Manager" },
+  { value: "installer", label: "Installer" },
+  { value: "customer", label: "Customer" },
+];
 
 function ChevronLeftIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -35,21 +45,40 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [viewAsRole, setViewAsRole] = useState<NavRole | null>(null);
+  const effectiveRole = viewAsRole ?? (role as NavRole);
   const title = useMemo(() => resolvePageTitle(pathname), [pathname]);
   const initials = useMemo(() => getUserInitials(userEmail), [userEmail]);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(SIDEBAR_STORAGE_KEY);
     setCollapsed(stored === "true");
+
+    const storedViewAs = window.sessionStorage.getItem(VIEW_AS_STORAGE_KEY);
+    setViewAsRole(storedViewAs ? (storedViewAs as NavRole) : null);
   }, []);
 
   useEffect(() => {
     window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(collapsed));
   }, [collapsed]);
 
+  useEffect(() => {
+    if (viewAsRole) {
+      window.sessionStorage.setItem(VIEW_AS_STORAGE_KEY, viewAsRole);
+    } else {
+      window.sessionStorage.removeItem(VIEW_AS_STORAGE_KEY);
+    }
+  }, [viewAsRole]);
+
   return (
     <>
-      <SidebarNav role={role} userEmail={userEmail} collapsed={collapsed} onToggle={() => setCollapsed((value) => !value)} />
+      <SidebarNav
+        role={role}
+        overrideRole={viewAsRole}
+        userEmail={userEmail}
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((value) => !value)}
+      />
       <header
         className={[
           "fixed top-0 right-0 z-20 flex h-14 items-center justify-between border-b border-border-default bg-surface-raised px-4 transition-[left] duration-200",
@@ -68,6 +97,25 @@ export function AppShell({
         </div>
 
         <div className="flex items-center gap-3">
+          {role === "admin" && (
+            <label className="flex items-center gap-2 rounded-full border border-border-default bg-surface-overlay px-3 py-1.5 text-sm text-text-secondary">
+              <span className="text-xs font-medium uppercase tracking-wide text-text-tertiary">View as</span>
+              <select
+                value={viewAsRole ?? "admin"}
+                onChange={(e) => {
+                  const selected = e.target.value as NavRole;
+                  setViewAsRole(selected === "admin" ? null : selected);
+                }}
+                className="bg-transparent text-sm text-text-primary focus:outline-none"
+              >
+                {VIEW_AS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <ThemeToggle />
           <div className="flex items-center gap-3 rounded-full border border-border-default bg-surface-overlay px-2 py-1.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary/15 text-xs font-semibold text-brand-primary">
@@ -83,7 +131,30 @@ export function AppShell({
           collapsed ? "ml-16" : "ml-56",
         ].join(" ")}
       >
-        <main className="p-6">{children}</main>
+        <main className="p-6">
+          {viewAsRole && (
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-status-warning/30 bg-status-warning/10 px-4 py-3 text-sm text-status-warning">
+              <span>
+                Viewing as: {VIEW_AS_OPTIONS.find((option) => option.value === effectiveRole)?.label ?? effectiveRole}
+              </span>
+              <div className="flex items-center gap-2">
+                <a
+                  href={roleHome(effectiveRole)}
+                  className="rounded-lg border border-status-warning/40 px-3 py-1.5 text-xs font-medium transition hover:bg-status-warning/10"
+                >
+                  Open Home
+                </a>
+                <button
+                  onClick={() => setViewAsRole(null)}
+                  className="rounded-lg border border-status-warning/40 px-3 py-1.5 text-xs font-medium transition hover:bg-status-warning/10"
+                >
+                  Exit
+                </button>
+              </div>
+            </div>
+          )}
+          {children}
+        </main>
       </div>
     </>
   );
