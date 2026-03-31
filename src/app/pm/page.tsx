@@ -1,28 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { format, startOfWeek } from "date-fns";
-import type { Project, WeeklyUpdate, BillingPeriod } from "@/types/database";
+import { createClient } from "@/lib/supabase/client";
+import type { BillingPeriod, ProjectAssignmentRole, WeeklyUpdate } from "@/types/database";
 
 type ViewState = "list" | "update";
 
-interface ProjectWithBilling extends Pick<
-  Project,
-  | "id"
-  | "customer_id"
-  | "pm_id"
-  | "name"
-  | "estimated_income"
-  | "onedrive_path"
-  | "sharepoint_folder"
-  | "sharepoint_item_id"
-  | "job_number"
-  | "migration_status"
-  | "is_active"
-  | "created_at"
-> {
-  customer?: { name: string };
+interface ProjectWithBilling {
+  id: string;
+  customer_id: string | null;
+  pm_id: string | null;
+  name: string;
+  estimated_income: number;
+  onedrive_path: string | null;
+  sharepoint_folder: string | null;
+  sharepoint_item_id: string | null;
+  job_number: string | null;
+  migration_status: "legacy" | "migrated" | "clean" | null;
+  is_active: boolean;
+  created_at: string;
+  assignmentRole: ProjectAssignmentRole;
+  customer?: { name: string } | null;
   current_period?: BillingPeriod;
 }
 
@@ -51,41 +50,98 @@ export default function PmPage() {
       }
     }
 
-    init();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    void init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function loadProjects(pmId: string) {
+  async function loadProjects(profileId: string) {
     const currentMonth = format(new Date(), "yyyy-MM-01");
 
     try {
-      const { data: projectData } = await supabase
-        .from("projects")
-        .select("id, customer_id, pm_id, name, estimated_income, onedrive_path, sharepoint_folder, sharepoint_item_id, job_number, migration_status, is_active, created_at, customer:customers(name)")
-        .eq("pm_id", pmId)
-        .eq("is_active", true)
-        .order("name");
+      const { data: assignmentData } = await supabase
+        .from("project_assignments")
+        .select(`
+          role_on_project,
+          project:projects(
+            id,
+            customer_id,
+            pm_id,
+            name,
+            estimated_income,
+            onedrive_path,
+            sharepoint_folder,
+            sharepoint_item_id,
+            job_number,
+            migration_status,
+            is_active,
+            created_at,
+            customer:customers(name)
+          )
+        `)
+        .eq("profile_id", profileId)
+        .in("role_on_project", ["pm", "lead"]);
 
-      if (!projectData) {
+      const normalizedProjects = (((assignmentData ?? []) as Array<{
+        role_on_project: ProjectAssignmentRole;
+        project:
+          | {
+              id: string;
+              customer_id: string | null;
+              pm_id: string | null;
+              name: string;
+              estimated_income: number;
+              onedrive_path: string | null;
+              sharepoint_folder: string | null;
+              sharepoint_item_id: string | null;
+              job_number: string | null;
+              migration_status: "legacy" | "migrated" | "clean" | null;
+              is_active: boolean;
+              created_at: string;
+              customer?: { name: string } | Array<{ name: string }> | null;
+            }
+          | Array<{
+              id: string;
+              customer_id: string | null;
+              pm_id: string | null;
+              name: string;
+              estimated_income: number;
+              onedrive_path: string | null;
+              sharepoint_folder: string | null;
+              sharepoint_item_id: string | null;
+              job_number: string | null;
+              migration_status: "legacy" | "migrated" | "clean" | null;
+              is_active: boolean;
+              created_at: string;
+              customer?: { name: string } | Array<{ name: string }> | null;
+            }>;
+      }>)
+        .map((assignment) => {
+          const project = Array.isArray(assignment.project) ? assignment.project[0] : assignment.project;
+          if (!project || project.is_active === false) return null;
+          const customer = Array.isArray(project.customer) ? project.customer[0] : project.customer;
+          return {
+            ...project,
+            assignmentRole: assignment.role_on_project,
+            customer: customer ?? null,
+          };
+        })
+        .filter(Boolean) as ProjectWithBilling[])
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      if (!normalizedProjects.length) {
         setProjects([]);
         return;
       }
 
-      const ids = projectData.map((p) => p.id);
+      const ids = normalizedProjects.map((project) => project.id);
       const { data: periods } = await supabase
         .from("billing_periods")
         .select("*")
         .in("project_id", ids)
         .eq("period_month", currentMonth);
 
-      const periodMap = new Map((periods ?? []).map((p) => [p.project_id, p]));
-      const combined: ProjectWithBilling[] = projectData.map((p) => ({
-        ...p,
-        customer: Array.isArray(p.customer) ? p.customer[0] : p.customer,
-        current_period: periodMap.get(p.id),
-      }));
-
-      setProjects(combined);
+      const periodMap = new Map((periods ?? []).map((period) => [period.project_id, period]));
+      setProjects(normalizedProjects.map((project) => ({ ...project, current_period: periodMap.get(project.id) })));
     } catch {
       setProjects([]);
     } finally {
@@ -103,7 +159,10 @@ export default function PmPage() {
         {view === "list" ? (
           <ProjectList
             projects={projects}
-            onSelectProject={(p) => { setSelectedProject(p); setView("update"); }}
+            onSelectProject={(project) => {
+              setSelectedProject(project);
+              setView("update");
+            }}
           />
         ) : selectedProject ? (
           <UpdateForm
@@ -112,7 +171,7 @@ export default function PmPage() {
             onBack={() => {
               setView("list");
               setSelectedProject(null);
-              if (userId) loadProjects(userId);
+              if (userId) void loadProjects(userId);
             }}
           />
         ) : null}
@@ -126,17 +185,29 @@ function ProjectList({
   onSelectProject,
 }: {
   projects: ProjectWithBilling[];
-  onSelectProject: (p: ProjectWithBilling) => void;
+  onSelectProject: (project: ProjectWithBilling) => void;
 }) {
   const fmt = (n: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency", currency: "USD", maximumFractionDigits: 0,
-    }).format(n);
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+
+  const roleBadgeStyles: Record<ProjectAssignmentRole, string> = {
+    pm: "bg-status-info/10 text-status-info border-status-info/20",
+    lead: "bg-status-warning/10 text-status-warning border-status-warning/20",
+    installer: "bg-brand-primary/10 text-brand-primary border-brand-primary/20",
+    ops_manager: "bg-surface-overlay text-text-primary border-border-default",
+  };
+
+  const roleLabels: Record<ProjectAssignmentRole, string> = {
+    pm: "PM",
+    lead: "Lead",
+    installer: "Installer",
+    ops_manager: "Ops Manager",
+  };
 
   if (projects.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border-default p-12 text-center">
-        <p className="text-text-secondary">No active projects assigned to you.</p>
+        <p className="text-text-secondary">No active projects assigned to you as a PM or lead.</p>
       </div>
     );
   }
@@ -150,8 +221,8 @@ function ProjectList({
         </p>
       </div>
 
-      {projects.map((p) => {
-        const period = p.current_period;
+      {projects.map((project) => {
+        const period = project.current_period;
         const pct = period ? period.pct_complete * 100 : null;
         const toBill = period
           ? Math.max(period.estimated_income_snapshot * period.pct_complete - period.prev_billed, 0)
@@ -171,21 +242,24 @@ function ProjectList({
 
         return (
           <button
-            key={p.id}
-            onClick={() => onSelectProject(p)}
+            key={project.id}
+            onClick={() => onSelectProject(project)}
             className="w-full rounded-2xl border border-border-default bg-surface-raised p-5 text-left transition hover:border-status-success/30 hover:bg-surface-overlay"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="font-semibold text-text-primary">
-                  {p.name}
-                  {p.migration_status === "legacy" && (
-                    <span className="ml-2 inline-flex items-center rounded border border-status-warning/20 bg-status-warning/10 px-2 py-0.5 text-xs font-medium text-status-warning">
-                      ⚠ Legacy
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-semibold text-text-primary">{project.name}</p>
+                  <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${roleBadgeStyles[project.assignmentRole]}`}>
+                    {roleLabels[project.assignmentRole]}
+                  </span>
+                  {project.migration_status === "legacy" && (
+                    <span className="inline-flex items-center rounded border border-status-warning/20 bg-status-warning/10 px-2 py-0.5 text-xs font-medium text-status-warning">
+                      Legacy
                     </span>
                   )}
-                </p>
-                <p className="mt-0.5 text-sm text-text-secondary">{p.customer?.name}</p>
+                </div>
+                <p className="mt-0.5 text-sm text-text-secondary">{project.customer?.name}</p>
               </div>
               <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusColor}`}>
                 {statusLabel}
@@ -193,7 +267,7 @@ function ProjectList({
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Stat label="Est. Income" value={fmt(p.estimated_income)} />
+              <Stat label="Est. Income" value={fmt(project.estimated_income)} />
               <Stat label="% Complete" value={pct !== null ? `${pct.toFixed(1)}%` : "-"} />
               <Stat label="Prev. Billed" value={period ? fmt(period.prev_billed) : "-"} />
               <Stat label="To Bill" value={toBill !== null ? fmt(toBill) : "-"} highlight />
@@ -227,9 +301,7 @@ function UpdateForm({
   const thisMonday = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
 
   const [weekOf, setWeekOf] = useState(thisMonday);
-  const [pctComplete, setPctComplete] = useState(
-    project.current_period ? project.current_period.pct_complete * 100 : 0
-  );
+  const [pctComplete, setPctComplete] = useState(project.current_period ? project.current_period.pct_complete * 100 : 0);
   const [notes, setNotes] = useState("");
   const [blockers, setBlockers] = useState("");
   const [saving, setSaving] = useState(false);
@@ -252,12 +324,12 @@ function UpdateForm({
       }
     }
 
-    loadRecentUpdates();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    void loadRecentUpdates();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
     setSaving(true);
 
     try {
@@ -273,14 +345,14 @@ function UpdateForm({
       }, { onConflict: "project_id,week_of" });
 
       if (project.current_period) {
-        await supabase
-          .from("billing_periods")
-          .update({ pct_complete: pctDecimal })
-          .eq("id", project.current_period.id);
+        await supabase.from("billing_periods").update({ pct_complete: pctDecimal }).eq("id", project.current_period.id);
       }
 
       setSaved(true);
-      setTimeout(() => { setSaved(false); onBack(); }, 1500);
+      setTimeout(() => {
+        setSaved(false);
+        onBack();
+      }, 1500);
     } catch {
       setSaved(false);
     } finally {
@@ -381,18 +453,18 @@ function UpdateForm({
       {recentUpdates.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Recent Updates</h3>
-          {recentUpdates.map((u) => (
-            <div key={u.id} className="rounded-xl border border-border-default bg-surface-raised p-4">
+          {recentUpdates.map((update) => (
+            <div key={update.id} className="rounded-xl border border-border-default bg-surface-raised p-4">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-text-tertiary">Week of {u.week_of}</span>
-                {u.pct_complete !== null && (
+                <span className="text-xs text-text-tertiary">Week of {update.week_of}</span>
+                {update.pct_complete !== null && (
                   <span className="text-sm font-semibold text-status-success">
-                    {(u.pct_complete * 100).toFixed(1)}%
+                    {(update.pct_complete * 100).toFixed(1)}%
                   </span>
                 )}
               </div>
-              {u.notes && <p className="mt-1.5 text-sm text-text-secondary">{u.notes}</p>}
-              {u.blockers && <p className="mt-1 text-sm text-status-danger">Blocker: {u.blockers}</p>}
+              {update.notes && <p className="mt-1.5 text-sm text-text-secondary">{update.notes}</p>}
+              {update.blockers && <p className="mt-1 text-sm text-status-danger">Blocker: {update.blockers}</p>}
             </div>
           ))}
         </div>

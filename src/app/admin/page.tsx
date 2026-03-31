@@ -50,6 +50,14 @@ export default function AdminPage() {
             pm_directory?:
               | { id: string; first_name?: string | null; last_name?: string | null; email?: string | null }
               | Array<{ id: string; first_name?: string | null; last_name?: string | null; email?: string | null }>;
+            project_assignments?: Array<{
+              role_on_project?: string | null;
+              profile?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }> | null;
+              pm_directory?:
+                | { first_name?: string | null; last_name?: string | null; email?: string | null }
+                | Array<{ first_name?: string | null; last_name?: string | null; email?: string | null }>
+                | null;
+            }>;
           }
         | Array<{
             id: string;
@@ -61,6 +69,14 @@ export default function AdminPage() {
             pm_directory?:
               | { id: string; first_name?: string | null; last_name?: string | null; email?: string | null }
               | Array<{ id: string; first_name?: string | null; last_name?: string | null; email?: string | null }>;
+            project_assignments?: Array<{
+              role_on_project?: string | null;
+              profile?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }> | null;
+              pm_directory?:
+                | { first_name?: string | null; last_name?: string | null; email?: string | null }
+                | Array<{ first_name?: string | null; last_name?: string | null; email?: string | null }>
+                | null;
+            }>;
           }>;
     }>
   ): BillingRow[] {
@@ -69,6 +85,9 @@ export default function AdminPage() {
       const customer = Array.isArray(project?.customer) ? project.customer[0] : project?.customer;
       const pm = Array.isArray(project?.pm) ? project.pm[0] : project?.pm;
       const pmDirectory = Array.isArray(project?.pm_directory) ? project.pm_directory[0] : project?.pm_directory;
+      const primaryAssignment = (project?.project_assignments ?? []).find((assignment) => assignment?.role_on_project === "pm");
+      const assignmentProfile = Array.isArray(primaryAssignment?.profile) ? primaryAssignment?.profile[0] : primaryAssignment?.profile;
+      const assignmentPmDirectory = Array.isArray(primaryAssignment?.pm_directory) ? primaryAssignment?.pm_directory[0] : primaryAssignment?.pm_directory;
       const estimatedIncome = period.estimated_income_snapshot ?? 0;
       const prevBilled = period.prev_billed ?? 0;
       const projectLabel =
@@ -76,8 +95,11 @@ export default function AdminPage() {
           ? `${project.job_number} - ${project.name}`
           : project?.name ?? "Unknown Project";
       const pmDirectoryName = [pmDirectory?.first_name, pmDirectory?.last_name].filter(Boolean).join(" ").trim();
-      const pmEmail = pm?.email ?? pmDirectory?.email ?? "";
+      const assignmentPmDirectoryName = [assignmentPmDirectory?.first_name, assignmentPmDirectory?.last_name].filter(Boolean).join(" ").trim();
+      const pmEmail = assignmentProfile?.email ?? assignmentPmDirectory?.email ?? pm?.email ?? pmDirectory?.email ?? "";
       const pmName =
+        assignmentProfile?.full_name ??
+        (assignmentPmDirectoryName || assignmentPmDirectory?.email) ??
         pm?.full_name ??
         (pmDirectoryName || pmDirectory?.email || (pm?.email ? pm.email.split("@")[0] : ""));
 
@@ -127,7 +149,12 @@ export default function AdminPage() {
             is_active,
             customer:customers ( name ),
             pm:profiles ( email, full_name ),
-            pm_directory:pm_directory ( id, first_name, last_name, email )
+            pm_directory:pm_directory ( id, first_name, last_name, email ),
+            project_assignments (
+              role_on_project,
+              profile:profiles ( email, full_name ),
+              pm_directory:pm_directory ( first_name, last_name, email )
+            )
           )
         `)
         .eq("period_month", monthStr)
@@ -156,6 +183,14 @@ export default function AdminPage() {
                   pm_directory?:
                     | { id: string; first_name?: string | null; last_name?: string | null; email?: string | null }
                     | Array<{ id: string; first_name?: string | null; last_name?: string | null; email?: string | null }>;
+                  project_assignments?: Array<{
+                    role_on_project?: string | null;
+                    profile?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }> | null;
+                    pm_directory?:
+                      | { first_name?: string | null; last_name?: string | null; email?: string | null }
+                      | Array<{ first_name?: string | null; last_name?: string | null; email?: string | null }>
+                      | null;
+                  }>;
                 }
               | Array<{
                   id: string;
@@ -167,6 +202,14 @@ export default function AdminPage() {
                   pm_directory?:
                     | { id: string; first_name?: string | null; last_name?: string | null; email?: string | null }
                     | Array<{ id: string; first_name?: string | null; last_name?: string | null; email?: string | null }>;
+                  project_assignments?: Array<{
+                    role_on_project?: string | null;
+                    profile?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }> | null;
+                    pm_directory?:
+                      | { first_name?: string | null; last_name?: string | null; email?: string | null }
+                      | Array<{ first_name?: string | null; last_name?: string | null; email?: string | null }>
+                      | null;
+                  }>;
                 }>;
           }>
         ).filter((period) => {

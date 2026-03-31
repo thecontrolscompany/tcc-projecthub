@@ -2,6 +2,7 @@
 
 export type UserRole = "admin" | "pm" | "lead" | "installer" | "ops_manager" | "customer";
 export type InternalContactRole = "pm" | "lead" | "installer" | "ops_manager";
+export type ProjectAssignmentRole = "pm" | "lead" | "installer" | "ops_manager";
 
 export interface Profile {
   id: string;
@@ -92,6 +93,17 @@ export interface PmDirectory {
   intended_role: InternalContactRole | null;
   // joined
   profile?: Profile;
+}
+
+export interface ProjectAssignment {
+  id: string;
+  project_id: string;
+  profile_id: string | null;
+  pm_directory_id: string | null;
+  role_on_project: ProjectAssignmentRole;
+  created_at: string | null;
+  profile?: Profile | null;
+  pm_directory?: PmDirectory | null;
 }
 
 // Billing table row (joined view used in admin table)

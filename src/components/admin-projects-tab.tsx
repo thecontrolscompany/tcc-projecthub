@@ -2,7 +2,18 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { format, startOfMonth } from "date-fns";
+import type { ProjectAssignmentRole } from "@/types/database";
 import { createClient } from "@/lib/supabase/client";
+import {
+  EMPTY_PROJECT_FORM,
+  ProjectModal,
+  type ProjectAssignmentDraft,
+  type ProjectContactOption,
+  type ProjectCustomerOption,
+  type ProjectFormErrors,
+  type ProjectFormValues,
+  type TeamMemberOption,
+} from "@/components/project-modal";
 
 type ProjectRow = {
   id: string;
@@ -34,108 +45,24 @@ type ProjectRow = {
   sharepoint_folder: string | null;
   customer?: { name: string } | null;
   pm_directory?: { id: string; first_name: string | null; last_name: string | null; email: string; profile_id: string | null } | null;
+  project_assignments: AssignmentRow[];
 };
 
-type CustomerOption = {
-  id: string;
-  name: string;
-  contact_email: string | null;
-};
-
-type PmProfileOption = {
+type ProfileOption = {
   id: string;
   full_name: string | null;
   email: string;
-  role: "pm" | "lead" | "ops_manager";
+  role: ProjectAssignmentRole;
 };
 
-type ContactOption = {
+type AssignmentRow = {
   id: string;
-  first_name: string | null;
-  last_name: string | null;
-  email: string;
   profile_id: string | null;
+  pm_directory_id: string | null;
+  role_on_project: ProjectAssignmentRole;
+  profile?: { id: string; full_name: string | null; email: string; role: ProjectAssignmentRole } | null;
+  pm_directory?: { id: string; first_name: string | null; last_name: string | null; email: string; profile_id: string | null } | null;
 };
-
-type AssignedPmOption = {
-  id: string;
-  email: string;
-  displayLabel: string;
-  source: "profile" | "directory";
-  profileId: string | null;
-  pmDirectoryId: string | null;
-};
-
-type ProjectFormErrors = Partial<Record<"form" | "projectName" | "customerId" | "newCustomerName" | "contractPrice", string>>;
-type DocumentType = "contract" | "scope" | "estimate";
-type UploadState = "idle" | "uploading" | "success" | "error";
-
-type UploadStatus = {
-  state: UploadState;
-  message: string;
-  webUrl?: string | null;
-};
-
-type ProjectFormValues = {
-  projectName: string;
-  customerId: string;
-  useNewCustomer: boolean;
-  newCustomerName: string;
-  newCustomerEmail: string;
-  contractPrice: string;
-  customerPoc: string;
-  customerPoNumber: string;
-  siteAddress: string;
-  generalContractor: string;
-  mechanicalContractor: string;
-  electricalContractor: string;
-  assignedPmId: string;
-  notes: string;
-  specialRequirements: string;
-  specialAccess: string;
-  allConduitPlenum: boolean;
-  certifiedPayroll: boolean;
-  buyAmerican: boolean;
-  bondRequired: boolean;
-  billedInFull: boolean;
-  paidInFull: boolean;
-};
-
-const EMPTY_PROJECT_FORM: ProjectFormValues = {
-  projectName: "",
-  customerId: "",
-  useNewCustomer: false,
-  newCustomerName: "",
-  newCustomerEmail: "",
-  contractPrice: "",
-  customerPoc: "",
-  customerPoNumber: "",
-  siteAddress: "",
-  generalContractor: "",
-  mechanicalContractor: "",
-  electricalContractor: "",
-  assignedPmId: "",
-  notes: "",
-  specialRequirements: "",
-  specialAccess: "",
-  allConduitPlenum: false,
-  certifiedPayroll: false,
-  buyAmerican: false,
-  bondRequired: false,
-  billedInFull: false,
-  paidInFull: false,
-};
-
-function normalizeSingle<T>(value: T | T[] | null | undefined): T | null {
-  if (Array.isArray(value)) return value[0] ?? null;
-  return value ?? null;
-}
-
-const inputClassName =
-  "w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none";
-
-const textareaClassName =
-  "w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none";
 
 const PROJECT_SELECT_FIELDS = `
   id,
@@ -167,25 +94,124 @@ const PROJECT_SELECT_FIELDS = `
   sharepoint_folder,
   created_at,
   customer:customers(name),
-  pm_directory:pm_directory(id, first_name, last_name, email, profile_id)
+  pm_directory:pm_directory(id, first_name, last_name, email, profile_id),
+  project_assignments(
+    id,
+    profile_id,
+    pm_directory_id,
+    role_on_project,
+    profile:profiles(id, full_name, email, role),
+    pm_directory:pm_directory(id, first_name, last_name, email, profile_id)
+  )
 `;
-
-const DOCUMENT_OPTIONS: Array<{ type: DocumentType; label: string }> = [
-  { type: "contract", label: "Contract" },
-  { type: "scope", label: "Scope" },
-  { type: "estimate", label: "Estimate" },
-];
 
 type SortKey = "name" | "customer" | "contract_price";
 type SortDir = "asc" | "desc";
 type StatusFilter = "active" | "completed" | "all";
 
+function normalizeSingle<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+function normalizeProject(item: Record<string, unknown>): ProjectRow {
+  return {
+    ...(item as ProjectRow),
+    customer: normalizeSingle(item.customer as ProjectRow["customer"]),
+    pm_directory: normalizeSingle(item.pm_directory as ProjectRow["pm_directory"]),
+    project_assignments: Array.isArray(item.project_assignments)
+      ? item.project_assignments.map((assignment) => ({
+          ...(assignment as AssignmentRow),
+          profile: normalizeSingle((assignment as AssignmentRow).profile),
+          pm_directory: normalizeSingle((assignment as AssignmentRow).pm_directory),
+        }))
+      : [],
+  };
+}
+
+function buildTeamMemberOptions(profiles: ProfileOption[], contacts: ProjectContactOption[]) {
+  const byEmail = new Map<string, TeamMemberOption>();
+
+  for (const profile of profiles) {
+    const email = profile.email.trim().toLowerCase();
+    if (!email) continue;
+
+    byEmail.set(email, {
+      id: `profile:${profile.id}`,
+      email: profile.email,
+      displayLabel: `${profile.full_name?.trim() || profile.email} (${profile.email})`,
+      source: "profile",
+      profileId: profile.id,
+      pmDirectoryId: contacts.find((contact) => contact.email.toLowerCase() === email)?.id ?? null,
+    });
+  }
+
+  for (const contact of contacts) {
+    const email = contact.email.trim().toLowerCase();
+    if (!email || !email.endsWith("@controlsco.net") || contact.profile_id) continue;
+    if (byEmail.has(email)) continue;
+
+    const fullName = [contact.first_name, contact.last_name].filter(Boolean).join(" ").trim();
+    byEmail.set(email, {
+      id: `directory:${contact.id}`,
+      email: contact.email,
+      displayLabel: `${fullName || contact.email} (${contact.email}) - not yet signed in`,
+      source: "directory",
+      profileId: null,
+      pmDirectoryId: contact.id,
+    });
+  }
+
+  return Array.from(byEmail.values()).sort((a, b) => a.displayLabel.localeCompare(b.displayLabel));
+}
+
+function buildAssignmentDrafts(project: ProjectRow, teamOptions: TeamMemberOption[]): ProjectAssignmentDraft[] {
+  const drafts = project.project_assignments.map((assignment): ProjectAssignmentDraft | null => {
+    const personId = assignment.profile_id
+      ? `profile:${assignment.profile_id}`
+      : assignment.pm_directory_id
+        ? `directory:${assignment.pm_directory_id}`
+        : "";
+
+    return {
+      personId,
+      roleOnProject: assignment.role_on_project as ProjectAssignmentRole,
+    };
+  }).filter((assignment): assignment is ProjectAssignmentDraft => Boolean(assignment?.personId));
+
+  if (drafts.length > 0) {
+    return drafts;
+  }
+
+  const fallbackPm = project.pm_id
+    ? `profile:${project.pm_id}`
+    : project.pm_directory_id
+      ? `directory:${project.pm_directory_id}`
+      : "";
+
+  if (fallbackPm && teamOptions.some((option) => option.id === fallbackPm)) {
+    return [{ personId: fallbackPm, roleOnProject: "pm" }];
+  }
+
+  return [];
+}
+
+function getPrimaryPmLabel(project: ProjectRow) {
+  const primaryAssignment = project.project_assignments.find((assignment) => assignment.role_on_project === "pm");
+  if (primaryAssignment?.profile?.full_name) return primaryAssignment.profile.full_name;
+  if (primaryAssignment?.pm_directory) {
+    return [primaryAssignment.pm_directory.first_name, primaryAssignment.pm_directory.last_name].filter(Boolean).join(" ").trim()
+      || primaryAssignment.pm_directory.email;
+  }
+  return project.pm_directory?.first_name ?? project.pm_directory?.email ?? "-";
+}
+
 export function AdminProjectsTab() {
   const supabase = createClient();
   const [projects, setProjects] = useState<ProjectRow[]>([]);
-  const [customers, setCustomers] = useState<CustomerOption[]>([]);
-  const [pmProfiles, setPmProfiles] = useState<PmProfileOption[]>([]);
-  const [contacts, setContacts] = useState<ContactOption[]>([]);
+  const [customers, setCustomers] = useState<ProjectCustomerOption[]>([]);
+  const [profiles, setProfiles] = useState<ProfileOption[]>([]);
+  const [contacts, setContacts] = useState<ProjectContactOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -199,70 +225,27 @@ export function AdminProjectsTab() {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [assignments, setAssignments] = useState<ProjectAssignmentDraft[]>([]);
+  const [pendingTeamMemberId, setPendingTeamMemberId] = useState("");
+  const [pendingRoleOnProject, setPendingRoleOnProject] = useState<ProjectAssignmentRole>("pm");
+
+  const teamMemberOptions = useMemo(() => buildTeamMemberOptions(profiles, contacts), [contacts, profiles]);
+  const externalContactOptions = useMemo(
+    () => contacts.filter((contact) => !contact.email.toLowerCase().endsWith("@controlsco.net")),
+    [contacts]
+  );
 
   useEffect(() => {
-    loadProjects();
-    loadFormLookups();
+    void loadProjects();
+    void loadFormLookups();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  function normalizeProject(item: Record<string, unknown>): ProjectRow {
-    return {
-      ...(item as ProjectRow),
-      customer: normalizeSingle(item.customer as ProjectRow["customer"]),
-      pm_directory: normalizeSingle(item.pm_directory as ProjectRow["pm_directory"]),
-    };
-  }
-
-  const assignedPmOptions = useMemo(() => {
-    const byEmail = new Map<string, AssignedPmOption>();
-
-    for (const profile of pmProfiles) {
-      const email = profile.email.trim().toLowerCase();
-      if (!email) continue;
-
-      const displayName = profile.full_name?.trim() || profile.email;
-      byEmail.set(email, {
-        id: `profile:${profile.id}`,
-        email: profile.email,
-        displayLabel: `${displayName} (${profile.email})`,
-        source: "profile",
-        profileId: profile.id,
-        pmDirectoryId: contacts.find((contact) => contact.email.toLowerCase() === email)?.id ?? null,
-      });
-    }
-
-    for (const contact of contacts) {
-      const email = contact.email.trim().toLowerCase();
-      if (!email || !email.endsWith("@controlsco.net") || contact.profile_id) continue;
-      if (byEmail.has(email)) continue;
-
-      const fullName = [contact.first_name, contact.last_name].filter(Boolean).join(" ").trim();
-      const displayName = fullName || contact.email;
-      byEmail.set(email, {
-        id: `directory:${contact.id}`,
-        email: contact.email,
-        displayLabel: `${displayName} (${contact.email}) - not yet signed in`,
-        source: "directory",
-        profileId: null,
-        pmDirectoryId: contact.id,
-      });
-    }
-
-    return Array.from(byEmail.values()).sort((a, b) => a.displayLabel.localeCompare(b.displayLabel));
-  }, [contacts, pmProfiles]);
 
   async function loadProjects() {
     setLoading(true);
     try {
-      const { data } = await supabase
-        .from("projects")
-        .select(PROJECT_SELECT_FIELDS)
-        .order("name");
-
-      const normalized = (data ?? []).map((item) => normalizeProject(item as Record<string, unknown>));
-
-      setProjects(normalized);
+      const { data } = await supabase.from("projects").select(PROJECT_SELECT_FIELDS).order("name");
+      setProjects((data ?? []).map((item) => normalizeProject(item as Record<string, unknown>)));
     } catch {
       setProjects([]);
     } finally {
@@ -273,30 +256,18 @@ export function AdminProjectsTab() {
   async function loadFormLookups() {
     const [{ data: customerData }, { data: profileData }, { data: contactData }] = await Promise.all([
       supabase.from("customers").select("id, name, contact_email").order("name"),
-      supabase
-        .from("profiles")
-        .select("id, full_name, email, role")
-        .in("role", ["pm", "lead", "ops_manager"])
-        .order("full_name"),
+      supabase.from("profiles").select("id, full_name, email, role").in("role", ["pm", "lead", "installer", "ops_manager"]).order("full_name"),
       supabase.from("pm_directory").select("id, first_name, last_name, email, profile_id").order("email"),
     ]);
 
-    setCustomers((customerData as CustomerOption[]) ?? []);
-    setPmProfiles((profileData as PmProfileOption[]) ?? []);
-    setContacts((contactData as ContactOption[]) ?? []);
+    setCustomers((customerData as ProjectCustomerOption[]) ?? []);
+    setProfiles((profileData as ProfileOption[]) ?? []);
+    setContacts((contactData as ProjectContactOption[]) ?? []);
   }
 
   async function fetchProjectById(projectId: string) {
-    const { data, error } = await supabase
-      .from("projects")
-      .select(PROJECT_SELECT_FIELDS)
-      .eq("id", projectId)
-      .single();
-
-    if (error || !data) {
-      return null;
-    }
-
+    const { data, error } = await supabase.from("projects").select(PROJECT_SELECT_FIELDS).eq("id", projectId).single();
+    if (error || !data) return null;
     return normalizeProject(data as Record<string, unknown>);
   }
 
@@ -332,12 +303,27 @@ export function AdminProjectsTab() {
     return `${year}-${String(sequence).padStart(3, "0")}`;
   }
 
+  function resetEditorState() {
+    setShowModal(false);
+    setEditingProject(null);
+    setIsNewProjectFlow(false);
+    setIsWaitingForSharePointFolder(false);
+    setFormValues(EMPTY_PROJECT_FORM);
+    setValidationErrors({});
+    setAssignments([]);
+    setPendingTeamMemberId("");
+    setPendingRoleOnProject("pm");
+  }
+
   async function openNewProjectModal() {
     const nextJobNumber = await getNextJobNumber();
     setEditingProject(null);
     setIsNewProjectFlow(true);
     setIsWaitingForSharePointFolder(false);
     setFormValues(EMPTY_PROJECT_FORM);
+    setAssignments([]);
+    setPendingTeamMemberId("");
+    setPendingRoleOnProject("pm");
     setValidationErrors({});
     setJobNumberPreview(nextJobNumber);
     setShowModal(true);
@@ -363,11 +349,6 @@ export function AdminProjectsTab() {
       generalContractor: project.general_contractor ?? "",
       mechanicalContractor: project.mechanical_contractor ?? "",
       electricalContractor: project.electrical_contractor ?? "",
-      assignedPmId: project.pm_id
-        ? `profile:${project.pm_id}`
-        : project.pm_directory_id
-          ? `directory:${project.pm_directory_id}`
-          : "",
       notes: project.notes ?? "",
       specialRequirements: project.special_requirements ?? "",
       specialAccess: project.special_access ?? "",
@@ -378,6 +359,9 @@ export function AdminProjectsTab() {
       billedInFull: project.billed_in_full ?? false,
       paidInFull: project.paid_in_full ?? false,
     });
+    setAssignments(buildAssignmentDrafts(project, teamMemberOptions));
+    setPendingTeamMemberId("");
+    setPendingRoleOnProject("pm");
     setValidationErrors({});
     setShowModal(true);
   }
@@ -387,45 +371,70 @@ export function AdminProjectsTab() {
     setValidationErrors((current) => {
       const next = { ...current };
       delete next.form;
-
       if (field === "projectName") delete next.projectName;
       if (field === "contractPrice") delete next.contractPrice;
       if (field === "customerId" || field === "useNewCustomer") delete next.customerId;
       if (field === "newCustomerName" || field === "useNewCustomer") delete next.newCustomerName;
-
       return next;
     });
+  }
+
+  function addAssignment() {
+    if (!pendingTeamMemberId) return;
+    setAssignments((current) => {
+      if (current.some((assignment) => assignment.personId === pendingTeamMemberId && assignment.roleOnProject === pendingRoleOnProject)) {
+        return current;
+      }
+      return [...current, { personId: pendingTeamMemberId, roleOnProject: pendingRoleOnProject }];
+    });
+    setPendingTeamMemberId("");
+    setPendingRoleOnProject("pm");
+  }
+
+  function removeAssignment(personId: string, roleOnProject: ProjectAssignmentRole) {
+    setAssignments((current) => current.filter((assignment) => !(assignment.personId === personId && assignment.roleOnProject === roleOnProject)));
+  }
+
+  async function syncAssignments(projectId: string, nextAssignments: ProjectAssignmentDraft[]) {
+    const rows = nextAssignments
+      .map((assignment) => {
+        const option = teamMemberOptions.find((item) => item.id === assignment.personId);
+        if (!option) return null;
+        return {
+          project_id: projectId,
+          profile_id: option.profileId,
+          pm_directory_id: option.pmDirectoryId,
+          role_on_project: assignment.roleOnProject,
+        };
+      })
+      .filter(Boolean);
+
+    const { error: deleteError } = await supabase.from("project_assignments").delete().eq("project_id", projectId);
+    if (deleteError) throw deleteError;
+
+    if (rows.length > 0) {
+      const { error: insertError } = await supabase.from("project_assignments").insert(rows);
+      if (insertError) throw insertError;
+    }
   }
 
   async function handleSaveProject() {
     const errors: ProjectFormErrors = {};
 
-    if (!formValues.projectName.trim()) {
-      errors.projectName = "Project name is required";
-    }
-
+    if (!formValues.projectName.trim()) errors.projectName = "Project name is required";
     if (formValues.useNewCustomer) {
-      if (!formValues.newCustomerName.trim()) {
-        errors.newCustomerName = "New customer name is required";
-      }
+      if (!formValues.newCustomerName.trim()) errors.newCustomerName = "New customer name is required";
     } else if (!formValues.customerId) {
       errors.customerId = "Customer is required";
     }
-
-    if (!formValues.contractPrice.trim()) {
-      errors.contractPrice = "Contract price is required";
-    }
+    if (!formValues.contractPrice.trim()) errors.contractPrice = "Contract price is required";
 
     if (Object.keys(errors).length > 0) {
-      setValidationErrors({
-        ...errors,
-        form: "Please fill in all required fields before saving.",
-      });
+      setValidationErrors({ ...errors, form: "Please fill in all required fields before saving." });
       return;
     }
 
     setValidationErrors({});
-
     setSaving(true);
 
     try {
@@ -434,10 +443,7 @@ export function AdminProjectsTab() {
       if (formValues.useNewCustomer) {
         const { data: newCustomer, error: customerError } = await supabase
           .from("customers")
-          .insert({
-            name: formValues.newCustomerName.trim(),
-            contact_email: formValues.newCustomerEmail.trim() || null,
-          })
+          .insert({ name: formValues.newCustomerName.trim(), contact_email: formValues.newCustomerEmail.trim() || null })
           .select("id")
           .single();
 
@@ -445,19 +451,17 @@ export function AdminProjectsTab() {
         customerId = newCustomer.id;
       }
 
-      const selectedAssignedPm = assignedPmOptions.find((pm) => pm.id === formValues.assignedPmId) ?? null;
       const contractPrice = Number(formValues.contractPrice);
       const billedAndPaid = formValues.billedInFull && formValues.paidInFull;
       const effectiveJobNumber = editingProject?.job_number ?? jobNumberPreview;
       const projectName = `${effectiveJobNumber} - ${formValues.projectName.trim()}`;
+      const primaryPm = assignments.find((assignment) => assignment.roleOnProject === "pm");
+      const primaryPmOption = primaryPm ? teamMemberOptions.find((option) => option.id === primaryPm.personId) ?? null : null;
 
       const payload = {
         customer_id: customerId || null,
-        pm_directory_id:
-          selectedAssignedPm?.source === "directory"
-            ? selectedAssignedPm.pmDirectoryId
-            : selectedAssignedPm?.pmDirectoryId ?? null,
-        pm_id: selectedAssignedPm?.source === "profile" ? selectedAssignedPm.profileId : null,
+        pm_directory_id: primaryPmOption?.pmDirectoryId ?? null,
+        pm_id: primaryPmOption?.profileId ?? null,
         name: projectName,
         estimated_income: contractPrice,
         contract_price: contractPrice,
@@ -481,12 +485,10 @@ export function AdminProjectsTab() {
       };
 
       if (editingProject) {
-        const { error } = await supabase
-          .from("projects")
-          .update(payload)
-          .eq("id", editingProject.id);
-
+        const { error } = await supabase.from("projects").update(payload).eq("id", editingProject.id);
         if (error) throw error;
+
+        await syncAssignments(editingProject.id, assignments);
 
         if ((editingProject.contract_price ?? editingProject.estimated_income) !== contractPrice) {
           await supabase
@@ -496,23 +498,17 @@ export function AdminProjectsTab() {
             .is("actual_billed", null);
         }
 
-        setShowModal(false);
-        setEditingProject(null);
-        setIsNewProjectFlow(false);
-        setIsWaitingForSharePointFolder(false);
-        setFormValues(EMPTY_PROJECT_FORM);
-        setValidationErrors({});
+        resetEditorState();
       } else {
         const { data: insertedProject, error } = await supabase
           .from("projects")
-          .insert({
-            ...payload,
-            job_number: jobNumberPreview,
-          })
+          .insert({ ...payload, job_number: jobNumberPreview })
           .select("id, job_number")
           .single();
 
         if (error) throw error;
+
+        await syncAssignments(insertedProject.id, assignments);
 
         await supabase.from("billing_periods").insert({
           project_id: insertedProject.id,
@@ -549,29 +545,32 @@ export function AdminProjectsTab() {
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else { setSortKey(key); setSortDir("asc"); }
+    else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
   }
 
   const visibleProjects = projects
-    .filter((p) => {
-      if (statusFilter === "active" && !p.is_active) return false;
-      if (statusFilter === "completed" && p.is_active) return false;
+    .filter((project) => {
+      if (statusFilter === "active" && !project.is_active) return false;
+      if (statusFilter === "completed" && project.is_active) return false;
       if (search) {
-        const q = search.toLowerCase();
+        const query = search.toLowerCase();
         return (
-          p.name.toLowerCase().includes(q) ||
-          (p.customer?.name ?? "").toLowerCase().includes(q) ||
-          (p.pm_directory?.first_name ?? "").toLowerCase().includes(q) ||
-          (p.pm_directory?.email ?? "").toLowerCase().includes(q)
+          project.name.toLowerCase().includes(query) ||
+          (project.customer?.name ?? "").toLowerCase().includes(query) ||
+          getPrimaryPmLabel(project).toLowerCase().includes(query)
         );
       }
       return true;
     })
     .sort((a, b) => {
-      let av = "", bv = "";
+      let av = "";
+      let bv = "";
       if (sortKey === "name") { av = a.name; bv = b.name; }
       else if (sortKey === "customer") { av = a.customer?.name ?? ""; bv = b.customer?.name ?? ""; }
-      else if (sortKey === "contract_price") {
+      else {
         const an = a.contract_price ?? a.estimated_income ?? 0;
         const bn = b.contract_price ?? b.estimated_income ?? 0;
         return sortDir === "asc" ? an - bn : bn - an;
@@ -579,21 +578,15 @@ export function AdminProjectsTab() {
       return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
     });
 
-  const externalContactOptions = useMemo(
-    () => contacts.filter((contact) => !contact.email.toLowerCase().endsWith("@controlsco.net")),
-    [contacts]
-  );
-
   const SortIcon = ({ col }: { col: SortKey }) =>
-    sortKey !== col ? <span className="ml-1 opacity-30">↕</span> :
-    sortDir === "asc" ? <span className="ml-1">↑</span> : <span className="ml-1">↓</span>;
+    sortKey !== col ? <span className="ml-1 opacity-30">↕</span> : sortDir === "asc" ? <span className="ml-1">↑</span> : <span className="ml-1">↓</span>;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-text-primary">Projects</h2>
         <button
-          onClick={openNewProjectModal}
+          onClick={() => void openNewProjectModal()}
           className="rounded-xl bg-brand-primary px-4 py-1.5 text-sm font-semibold text-text-inverse hover:bg-brand-hover"
         >
           + New Project
@@ -601,28 +594,28 @@ export function AdminProjectsTab() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex rounded-xl border border-border-default overflow-hidden text-sm">
-          {(["active", "completed", "all"] as StatusFilter[]).map((s) => (
+        <div className="flex overflow-hidden rounded-xl border border-border-default text-sm">
+          {(["active", "completed", "all"] as StatusFilter[]).map((status) => (
             <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
+              key={status}
+              onClick={() => setStatusFilter(status)}
               className={[
                 "px-3 py-1.5 capitalize",
-                statusFilter === s
+                statusFilter === status
                   ? "bg-brand-primary text-text-inverse font-semibold"
                   : "text-text-secondary hover:bg-surface-overlay",
               ].join(" ")}
             >
-              {s}
+              {status}
             </button>
           ))}
         </div>
         <input
           type="search"
-          placeholder="Search projects, customer, PM…"
+          placeholder="Search projects, customer, PM..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="rounded-xl border border-border-default bg-surface-overlay px-3 py-1.5 text-sm text-text-primary focus:border-brand-primary focus:outline-none w-64"
+          className="w-64 rounded-xl border border-border-default bg-surface-overlay px-3 py-1.5 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
         />
         <span className="text-xs text-text-tertiary">{visibleProjects.length} project{visibleProjects.length !== 1 ? "s" : ""}</span>
       </div>
@@ -634,52 +627,43 @@ export function AdminProjectsTab() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border-default bg-surface-raised/80">
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary cursor-pointer select-none hover:text-text-primary" onClick={() => toggleSort("name")}>Project <SortIcon col="name" /></th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary cursor-pointer select-none hover:text-text-primary" onClick={() => toggleSort("customer")}>Customer <SortIcon col="customer" /></th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">PM</th>
-                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary cursor-pointer select-none hover:text-text-primary" onClick={() => toggleSort("contract_price")}>Contract <SortIcon col="contract_price" /></th>
+                <th className="cursor-pointer select-none px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary hover:text-text-primary" onClick={() => toggleSort("name")}>Project <SortIcon col="name" /></th>
+                <th className="cursor-pointer select-none px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary hover:text-text-primary" onClick={() => toggleSort("customer")}>Customer <SortIcon col="customer" /></th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Primary PM</th>
+                <th className="cursor-pointer select-none px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary hover:text-text-primary" onClick={() => toggleSort("contract_price")}>Contract <SortIcon col="contract_price" /></th>
                 <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
                 <th className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">B / P</th>
                 <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary"></th>
               </tr>
             </thead>
             <tbody>
-              {visibleProjects.map((p) => (
-                <tr key={p.id} className="border-b border-border-default hover:bg-surface-raised">
+              {visibleProjects.map((project) => (
+                <tr key={project.id} className="border-b border-border-default hover:bg-surface-raised">
                   <td className="px-3 py-2 font-medium text-text-primary">
-                    {p.name}
-                    {p.migration_status === "legacy" && (
+                    {project.name}
+                    {project.migration_status === "legacy" && (
                       <span className="ml-2 inline-flex items-center rounded border border-status-warning/20 bg-status-warning/10 px-1.5 py-0.5 text-xs font-medium text-status-warning">
                         Legacy
                       </span>
                     )}
                   </td>
                   <td className="px-3 py-2 text-text-secondary">
-                    <div>{p.customer?.name ?? "-"}</div>
-                    {p.customer_poc && <div className="text-xs text-text-tertiary">{p.customer_poc}</div>}
+                    <div>{project.customer?.name ?? "-"}</div>
+                    {project.customer_poc && <div className="text-xs text-text-tertiary">{project.customer_poc}</div>}
                   </td>
-                  <td className="px-3 py-2 text-text-secondary">
-                    {p.pm_directory ? (p.pm_directory.first_name ?? p.pm_directory.email) : "-"}
-                  </td>
-                  <td className="px-3 py-2 text-right text-text-secondary">{fmt(p.contract_price ?? p.estimated_income ?? 0)}</td>
+                  <td className="px-3 py-2 text-text-secondary">{getPrimaryPmLabel(project)}</td>
+                  <td className="px-3 py-2 text-right text-text-secondary">{fmt(project.contract_price ?? project.estimated_income ?? 0)}</td>
                   <td className="px-3 py-2 text-center">
-                    <span
-                      className={[
-                        "rounded-full px-2 py-0.5 text-xs font-medium",
-                        p.is_active ? "bg-status-success/10 text-status-success" : "bg-surface-overlay text-text-secondary",
-                      ].join(" ")}
-                    >
-                      {p.is_active ? "Active" : "Completed"}
+                    <span className={["rounded-full px-2 py-0.5 text-xs font-medium", project.is_active ? "bg-status-success/10 text-status-success" : "bg-surface-overlay text-text-secondary"].join(" ")}>
+                      {project.is_active ? "Active" : "Completed"}
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-center">
-                    <span className="text-xs text-text-secondary">
-                      {p.billed_in_full ? "B" : "·"} / {p.paid_in_full ? "P" : "·"}
-                    </span>
+                  <td className="px-3 py-2 text-center text-xs text-text-secondary">
+                    {project.billed_in_full ? "B" : "·"} / {project.paid_in_full ? "P" : "·"}
                   </td>
                   <td className="px-3 py-2 text-right">
                     <button
-                      onClick={() => openEditProjectModal(p)}
+                      onClick={() => openEditProjectModal(project)}
                       className="rounded-lg border border-border-default px-3 py-1 text-xs text-text-secondary hover:bg-surface-overlay hover:text-text-primary"
                     >
                       Edit
@@ -697,446 +681,25 @@ export function AdminProjectsTab() {
           editingProject={editingProject}
           jobNumberPreview={jobNumberPreview}
           customers={customers}
-          assignedPmOptions={assignedPmOptions}
+          teamMemberOptions={teamMemberOptions}
           externalContacts={externalContactOptions}
+          assignments={assignments}
+          pendingTeamMemberId={pendingTeamMemberId}
+          pendingRoleOnProject={pendingRoleOnProject}
           values={formValues}
           saving={saving}
           errors={validationErrors}
-          onClose={() => {
-            setShowModal(false);
-            setEditingProject(null);
-            setIsNewProjectFlow(false);
-            setIsWaitingForSharePointFolder(false);
-            setFormValues(EMPTY_PROJECT_FORM);
-            setValidationErrors({});
-          }}
+          onClose={resetEditorState}
           onChange={updateFormValue}
+          onPendingTeamMemberChange={setPendingTeamMemberId}
+          onPendingRoleChange={setPendingRoleOnProject}
+          onAddAssignment={addAssignment}
+          onRemoveAssignment={removeAssignment}
           onSave={handleSaveProject}
           isNewProjectFlow={isNewProjectFlow}
           isWaitingForSharePointFolder={isWaitingForSharePointFolder}
         />
       )}
     </div>
-  );
-}
-
-function ProjectModal({
-  editingProject,
-  jobNumberPreview,
-  customers,
-  assignedPmOptions,
-  externalContacts,
-  values,
-  saving,
-  errors,
-  isNewProjectFlow,
-  isWaitingForSharePointFolder,
-  onClose,
-  onChange,
-  onSave,
-}: {
-  editingProject: ProjectRow | null;
-  jobNumberPreview: string;
-  customers: CustomerOption[];
-  assignedPmOptions: AssignedPmOption[];
-  externalContacts: ContactOption[];
-  values: ProjectFormValues;
-  saving: boolean;
-  errors: ProjectFormErrors;
-  isNewProjectFlow: boolean;
-  isWaitingForSharePointFolder: boolean;
-  onClose: () => void;
-  onChange: <K extends keyof ProjectFormValues>(field: K, value: ProjectFormValues[K]) => void;
-  onSave: () => void;
-}) {
-  const customerOptions = useMemo(() => customers, [customers]);
-  const pmOptions = useMemo(() => assignedPmOptions, [assignedPmOptions]);
-  const customerPocOptions = useMemo(() => {
-    const options = [...externalContacts];
-    const currentValue = values.customerPoc.trim();
-
-    if (currentValue && !options.some((pm) => formatContactLabel(pm) === currentValue)) {
-      options.unshift({
-        id: "__current__",
-        first_name: currentValue,
-        last_name: null,
-        email: currentValue,
-        profile_id: null,
-      });
-    }
-
-    return options;
-  }, [externalContacts, values.customerPoc]);
-
-  function formatContactLabel(pm: ContactOption) {
-    const fullName = [pm.first_name, pm.last_name].filter(Boolean).join(" ").trim();
-    return fullName ? `${fullName} (${pm.email})` : pm.email;
-  }
-
-  return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4 py-8">
-      <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-border-default bg-surface-base shadow-xl">
-        <div className="flex items-start justify-between border-b border-border-default px-6 py-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">
-              {editingProject ? "Edit Project" : "New Project"}
-            </p>
-            <h3 className="font-heading text-xl font-bold text-text-primary">
-              {jobNumberPreview || "Pending Job Number"}
-            </h3>
-          </div>
-          <button onClick={onClose} className="text-text-secondary hover:text-text-primary">
-            x
-          </button>
-        </div>
-
-        <div className="space-y-6 px-6 py-6">
-          {errors.form && (
-            <div className="rounded-xl border border-status-danger/30 bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
-              {errors.form}
-            </div>
-          )}
-
-          <section className="space-y-4">
-            <h4 className="font-heading text-lg font-semibold text-text-primary">Project Info</h4>
-            <div className="grid gap-4 md:grid-cols-2">
-              <FormField label="Project Name *" error={errors.projectName}>
-                <input value={values.projectName} onChange={(e) => onChange("projectName", e.target.value)} className={inputClassName} />
-              </FormField>
-
-              <FormField label="Customer *" error={values.useNewCustomer ? errors.newCustomerName : errors.customerId}>
-                <div className="space-y-2">
-                  <select
-                    value={values.useNewCustomer ? "__new__" : values.customerId}
-                    onChange={(e) =>
-                      {
-                        const useNewCustomer = e.target.value === "__new__";
-                        onChange("useNewCustomer", useNewCustomer);
-                        onChange("customerId", useNewCustomer ? "" : e.target.value);
-                      }
-                    }
-                    className={inputClassName}
-                  >
-                    <option value="">Select customer</option>
-                    {customerOptions.map((customer) => (
-                      <option key={customer.id} value={customer.id}>
-                        {customer.name}
-                      </option>
-                    ))}
-                    <option value="__new__">Add new customer</option>
-                  </select>
-                  {values.useNewCustomer && (
-                    <div className="grid gap-2 md:grid-cols-2">
-                      <input placeholder="New customer name" value={values.newCustomerName} onChange={(e) => onChange("newCustomerName", e.target.value)} className={inputClassName} />
-                      <input placeholder="Customer email" value={values.newCustomerEmail} onChange={(e) => onChange("newCustomerEmail", e.target.value)} className={inputClassName} />
-                    </div>
-                  )}
-                </div>
-              </FormField>
-
-              <FormField label="Contract Price *" error={errors.contractPrice}>
-                <input type="number" min="0" step="0.01" value={values.contractPrice} onChange={(e) => onChange("contractPrice", e.target.value)} className={inputClassName} />
-              </FormField>
-
-              <FormField label="Assigned PM">
-                <select value={values.assignedPmId} onChange={(e) => onChange("assignedPmId", e.target.value)} className={inputClassName}>
-                  <option value="">Unassigned</option>
-                  {pmOptions.map((pm) => (
-                    <option key={pm.id} value={pm.id}>
-                      {pm.displayLabel}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-
-              <FormField label="Customer POC">
-                <select
-                  value={values.customerPoc}
-                  onChange={(e) => onChange("customerPoc", e.target.value)}
-                  className={inputClassName}
-                >
-                  <option value="">Select customer contact</option>
-                  {customerPocOptions.map((pm) => {
-                    const label = formatContactLabel(pm);
-                    return (
-                      <option key={pm.id} value={label}>
-                        {label}
-                      </option>
-                    );
-                  })}
-                </select>
-              </FormField>
-              <FormField label="Customer PO Number">
-                <input value={values.customerPoNumber} onChange={(e) => onChange("customerPoNumber", e.target.value)} className={inputClassName} />
-              </FormField>
-              <FormField label="Site Address">
-                <input value={values.siteAddress} onChange={(e) => onChange("siteAddress", e.target.value)} className={inputClassName} />
-              </FormField>
-              <FormField label="General Contractor">
-                <input value={values.generalContractor} onChange={(e) => onChange("generalContractor", e.target.value)} className={inputClassName} />
-              </FormField>
-              <FormField label="Mechanical Contractor">
-                <input value={values.mechanicalContractor} onChange={(e) => onChange("mechanicalContractor", e.target.value)} className={inputClassName} />
-              </FormField>
-              <FormField label="Electrical Contractor">
-                <input value={values.electricalContractor} onChange={(e) => onChange("electricalContractor", e.target.value)} className={inputClassName} />
-              </FormField>
-            </div>
-
-            <FormField label="Notes">
-              <textarea rows={3} value={values.notes} onChange={(e) => onChange("notes", e.target.value)} className={textareaClassName} />
-            </FormField>
-            <FormField label="Special Requirements">
-              <textarea rows={3} value={values.specialRequirements} onChange={(e) => onChange("specialRequirements", e.target.value)} className={textareaClassName} />
-            </FormField>
-            <FormField label="Special Access">
-              <input value={values.specialAccess} onChange={(e) => onChange("specialAccess", e.target.value)} className={inputClassName} />
-            </FormField>
-          </section>
-
-          <section className="space-y-4">
-            <h4 className="font-heading text-lg font-semibold text-text-primary">Compliance</h4>
-            <div className="grid gap-3 md:grid-cols-2">
-              <CheckboxField label="All Conduit" checked={values.allConduitPlenum} onChange={(checked) => onChange("allConduitPlenum", checked)} />
-              <CheckboxField label="Certified Payroll" checked={values.certifiedPayroll} onChange={(checked) => onChange("certifiedPayroll", checked)} />
-              <CheckboxField label="Buy American" checked={values.buyAmerican} onChange={(checked) => onChange("buyAmerican", checked)} />
-              <CheckboxField label="Bond Required" checked={values.bondRequired} onChange={(checked) => onChange("bondRequired", checked)} />
-            </div>
-          </section>
-
-          {editingProject && (
-            <section className="space-y-4">
-              <h4 className="font-heading text-lg font-semibold text-text-primary">Completion Status</h4>
-              <div className="grid gap-3 md:grid-cols-2">
-                <CheckboxField label="Billed in Full" checked={values.billedInFull} onChange={(checked) => onChange("billedInFull", checked)} />
-                <CheckboxField label="Paid in Full" checked={values.paidInFull} onChange={(checked) => onChange("paidInFull", checked)} />
-              </div>
-            </section>
-          )}
-
-          {editingProject && (
-            <ProjectDocumentUploads
-              project={editingProject}
-              isNewProjectFlow={isNewProjectFlow}
-              isWaitingForSharePointFolder={isWaitingForSharePointFolder}
-            />
-          )}
-        </div>
-
-        <div className="flex items-center justify-end gap-3 border-t border-border-default px-6 py-4">
-          <button onClick={onClose} className="rounded-xl bg-surface-overlay px-4 py-2 text-sm text-text-secondary hover:bg-surface-overlay">Cancel</button>
-          <button onClick={onSave} disabled={saving} className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-brand-hover disabled:opacity-50">
-            {saving ? "Saving..." : editingProject ? "Save Changes" : "Create Project"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ProjectDocumentUploads({
-  project,
-  isNewProjectFlow,
-  isWaitingForSharePointFolder,
-}: {
-  project: ProjectRow;
-  isNewProjectFlow: boolean;
-  isWaitingForSharePointFolder: boolean;
-}) {
-  const [selectedFiles, setSelectedFiles] = useState<Record<DocumentType, File | null>>({
-    contract: null,
-    scope: null,
-    estimate: null,
-  });
-  const [statuses, setStatuses] = useState<Record<DocumentType, UploadStatus>>({
-    contract: { state: "idle", message: "No file selected" },
-    scope: { state: "idle", message: "No file selected" },
-    estimate: { state: "idle", message: "No file selected" },
-  });
-
-  useEffect(() => {
-    setSelectedFiles({
-      contract: null,
-      scope: null,
-      estimate: null,
-    });
-    setStatuses({
-      contract: { state: "idle", message: "No file selected" },
-      scope: { state: "idle", message: "No file selected" },
-      estimate: { state: "idle", message: "No file selected" },
-    });
-  }, [project.id]);
-
-  async function handleUpload(documentType: DocumentType) {
-    const file = selectedFiles[documentType];
-
-    if (!file) {
-      setStatuses((current) => ({
-        ...current,
-        [documentType]: { state: "error", message: "Choose a file before uploading." },
-      }));
-      return;
-    }
-
-    setStatuses((current) => ({
-      ...current,
-      [documentType]: { state: "uploading", message: `Uploading ${file.name}...` },
-    }));
-
-    try {
-      const formData = new FormData();
-      formData.append("projectId", project.id);
-      formData.append("documentType", documentType);
-      formData.append("file", file);
-
-      const res = await fetch("/api/admin/upload-project-document", {
-        method: "POST",
-        body: formData,
-      });
-      const json = await res.json();
-
-      if (!res.ok) {
-        throw new Error(typeof json?.error === "string" ? json.error : "Upload failed.");
-      }
-
-      setStatuses((current) => ({
-        ...current,
-        [documentType]: {
-          state: "success",
-          message: `Uploaded: ${file.name}`,
-          webUrl: typeof json?.webUrl === "string" ? json.webUrl : null,
-        },
-      }));
-      setSelectedFiles((current) => ({ ...current, [documentType]: null }));
-    } catch (error) {
-      setStatuses((current) => ({
-        ...current,
-        [documentType]: {
-          state: "error",
-          message: error instanceof Error ? error.message : "Upload failed.",
-        },
-      }));
-    }
-  }
-
-  const uploadsEnabled = Boolean(project.sharepoint_folder);
-
-  return (
-    <section className="space-y-4">
-      <div className="space-y-1">
-        <h4 className="font-heading text-lg font-semibold text-text-primary">Uploads</h4>
-        <p className="text-sm text-text-secondary">
-          Upload contract, scope, or estimate files directly into the project SharePoint folder.
-        </p>
-        {isNewProjectFlow && (
-          <p className="text-sm text-text-tertiary">
-            SharePoint folder is being provisioned - uploads available shortly after saving.
-          </p>
-        )}
-        {!uploadsEnabled && !isNewProjectFlow && (
-          <p className="text-sm text-status-warning">
-            SharePoint folder not yet provisioned for this project.
-          </p>
-        )}
-        {isWaitingForSharePointFolder && (
-          <p className="text-sm text-brand-primary">Checking SharePoint folder availability...</p>
-        )}
-      </div>
-
-      <div className="space-y-3 rounded-2xl border border-border-default bg-surface-raised p-4">
-        {DOCUMENT_OPTIONS.map((document) => {
-          const selectedFile = selectedFiles[document.type];
-          const status = statuses[document.type];
-
-          return (
-            <div key={document.type} className="grid gap-3 rounded-xl border border-border-default bg-surface-base px-4 py-3 md:grid-cols-[140px,1fr,120px,1fr] md:items-center">
-              <div className="text-sm font-medium text-text-primary">{document.label}</div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <label className="inline-flex cursor-pointer items-center rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-secondary transition hover:bg-surface-base hover:text-text-primary">
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] ?? null;
-                      setSelectedFiles((current) => ({ ...current, [document.type]: file }));
-                      setStatuses((current) => ({
-                        ...current,
-                        [document.type]: {
-                          state: "idle",
-                          message: file ? `Ready: ${file.name}` : "No file selected",
-                        },
-                      }));
-                    }}
-                  />
-                  Choose File
-                </label>
-                <span className="text-xs text-text-tertiary">
-                  {selectedFile?.name ?? "PDF, DOCX, XLSX, or other file"}
-                </span>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => void handleUpload(document.type)}
-                disabled={!uploadsEnabled || !selectedFile || status.state === "uploading"}
-                className="rounded-lg bg-brand-primary px-3 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {status.state === "uploading" ? "Uploading..." : "Upload"}
-              </button>
-
-              <div
-                className={[
-                  "text-sm",
-                  status.state === "error"
-                    ? "text-status-danger"
-                    : status.state === "success"
-                      ? "text-status-success"
-                      : status.state === "uploading"
-                        ? "text-brand-primary"
-                        : "text-text-secondary",
-                ].join(" ")}
-              >
-                {status.webUrl && status.state === "success" ? (
-                  <a href={status.webUrl} target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">
-                    {status.message}
-                  </a>
-                ) : (
-                  status.message
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function FormField({ label, children, error }: { label: string; children: React.ReactNode; error?: string }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-sm font-medium text-text-secondary">{label}</span>
-      {children}
-      {error && <span className="mt-1 block text-sm text-status-danger">{error}</span>}
-    </label>
-  );
-}
-
-function CheckboxField({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <label className="flex items-center gap-3 rounded-xl border border-border-default bg-surface-raised px-4 py-3 text-sm text-text-primary">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 accent-[var(--color-brand-primary)]" />
-      {label}
-    </label>
   );
 }

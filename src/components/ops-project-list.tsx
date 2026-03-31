@@ -152,8 +152,8 @@ function buildTeamMemberOptions(profiles: ProfileOption[], contacts: ProjectCont
   return Array.from(byEmail.values()).sort((a, b) => a.displayLabel.localeCompare(b.displayLabel));
 }
 
-function buildAssignmentDrafts(project: ProjectEditorRow, teamOptions: TeamMemberOption[]) {
-  const drafts = project.project_assignments.map((assignment) => {
+function buildAssignmentDrafts(project: ProjectEditorRow, teamOptions: TeamMemberOption[]): ProjectAssignmentDraft[] {
+  const drafts = project.project_assignments.map((assignment): ProjectAssignmentDraft | null => {
     const personId = assignment.profile_id
       ? `profile:${assignment.profile_id}`
       : assignment.pm_directory_id
@@ -162,9 +162,9 @@ function buildAssignmentDrafts(project: ProjectEditorRow, teamOptions: TeamMembe
 
     return {
       personId,
-      roleOnProject: assignment.role_on_project,
+      roleOnProject: assignment.role_on_project as ProjectAssignmentRole,
     };
-  }).filter((assignment) => assignment.personId);
+  }).filter((assignment): assignment is ProjectAssignmentDraft => Boolean(assignment?.personId));
 
   if (drafts.length > 0) return drafts;
 
