@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(56, 189, 248, 0.35);
+  color: white;
+}
+
+/* Light theme (default) */
+:root {
+  /* Brand */
+  --color-brand-primary:     #017a6f;  /* TCC teal - buttons, links, active states */
+  --color-brand-primary-hover: #019487;
+  --color-brand-accent:      #00b4a0;  /* lighter teal for highlights */
+
+  /* Surfaces */
+  --color-surface-base:      #ffffff;  /* page background */
+  --color-surface-raised:    #f8fafc;  /* card background */
+  --color-surface-overlay:   #f1f5f9;  /* subtle grouping */
+
+  /* Borders */
+  --color-border-default:    #e2e8f0;
+  --color-border-strong:     #cbd5e1;
+
+  /* Text */
+  --color-text-primary:      #0f172a;  /* headings, data */
+  --color-text-secondary:    #475569;  /* labels, supporting */
+  --color-text-tertiary:     #94a3b8;  /* placeholders, captions */
+  --color-text-inverse:      #ffffff;  /* on brand-colored backgrounds */
+
+  /* Status */
+  --color-success:           #16a34a;
+  --color-warning:           #d97706;
+  --color-danger:            #dc2626;
+  --color-info:              #0284c7;
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  /* Brand - same primary, adapted for dark bg */
+  --color-brand-primary:     #00c4b0;  /* brighter teal on dark */
+  --color-brand-primary-hover: #00d9c4;
+  --color-brand-accent:      #017a6f;
+
+  /* Surfaces */
+  --color-surface-base:      #0f172a;  /* slate-950 - matches current dark */
+  --color-surface-raised:    #1e293b;  /* slate-800 */
+  --color-surface-overlay:   #334155;  /* slate-700 */
+
+  /* Borders */
+  --color-border-default:    rgba(255,255,255,0.1);
+  --color-border-strong:     rgba(255,255,255,0.2);
+
+  /* Text */
+  --color-text-primary:      #f1f5f9;
+  --color-text-secondary:    #94a3b8;
+  --color-text-tertiary:     #475569;
+  --color-text-inverse:      #0f172a;
+
+  /* Status - same as light, dark backgrounds make these pop */
+  --color-success:           #4ade80;
+  --color-warning:           #fbbf24;
+  --color-danger:            #f87171;
+  --color-info:              #38bdf8;
+}
+
+@font-face {
+  font-family: "Raleway";
+  src: url("/fonts/raleway-regular.woff2") format("woff2"),
+       url("/fonts/raleway-regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Raleway";
+  src: url("/fonts/raleway-medium.woff2") format("woff2"),
+       url("/fonts/raleway-medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Raleway";
+  src: url("/fonts/raleway-semibold.woff2") format("woff2"),
+       url("/fonts/raleway-semibold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Raleway";
+  src: url("/fonts/raleway-bold.woff2") format("woff2"),
+       url("/fonts/raleway-bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

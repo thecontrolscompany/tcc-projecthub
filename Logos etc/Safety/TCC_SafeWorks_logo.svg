@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <!-- Background -->
+  <rect x="0" y="0" width="800" height="800" fill="#000000"/>
+
+  <!-- Bars (Safety → Training → Operations) -->
+  <!-- Colors approximated from provided logo -->
+  <g id="mark" transform="translate(0,0)">
+    <!-- Bar 1 (Safety) -->
+    <rect x="320" y="267" width="40" height="82" rx="20" ry="20" fill="#64B000"/>
+    <!-- Bar 2 (Training) -->
+    <rect x="389" y="200" width="40" height="149" rx="20" ry="20" fill="#00A7A5"/>
+    <!-- Bar 3 (Operations) -->
+    <rect x="458" y="131" width="40" height="218" rx="20" ry="20" fill="#00A7A5"/>
+  </g>
+
+  <!-- Text -->
+  <g id="type" fill="#FFFFFF" font-family="Inter, Montserrat, Arial, sans-serif" text-anchor="middle">
+    <text x="400" y="520" font-size="110" font-weight="800" letter-spacing="0.5">TCC</text>
+    <text x="400" y="640" font-size="120" font-weight="800" letter-spacing="0.3">SafeWorks</text>
+  </g>
+</svg>

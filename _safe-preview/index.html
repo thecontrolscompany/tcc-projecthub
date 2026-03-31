@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TCC ProjectHub Preview</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div>
+          <p class="eyebrow">The Controls Company</p>
+          <h1>TCC ProjectHub</h1>
+          <p class="muted">Safe mock preview</p>
+        </div>
+
+        <nav class="nav">
+          <button class="nav-btn active" data-view="home">Home</button>
+          <button class="nav-btn" data-view="admin">Admin</button>
+          <button class="nav-btn" data-view="pm">PM</button>
+          <button class="nav-btn" data-view="customer">Customer</button>
+        </nav>
+
+        <div class="note">
+          <strong>Why this exists</strong>
+          <p>This is a throwaway static preview so the real app stays untouched while Claude is away.</p>
+        </div>
+      </aside>
+
+      <main class="content">
+        <section class="view active" id="home">
+          <div class="hero">
+            <p class="eyebrow">Replacing the Excel billing tracker</p>
+            <h2>A single portal for project updates, billing, and customer visibility.</h2>
+            <p>
+              This mock is based on the routes and UI direction already present in the project:
+              Admin, PM, and Customer views with billing centered on percent complete.
+            </p>
+          </div>
+
+          <div class="grid three">
+            <article class="card">
+              <h3>Admin</h3>
+              <p>Billing table, roll-forward, PM email drafts, analytics, and user management.</p>
+            </article>
+            <article class="card">
+              <h3>Project Managers</h3>
+              <p>Assigned project list, weekly updates, blockers, and % complete changes.</p>
+            </article>
+            <article class="card">
+              <h3>Customers</h3>
+              <p>Read-only project status timeline and billing history.</p>
+            </article>
+          </div>
+
+          <div class="grid two">
+            <article class="card callout">
+              <p class="label">Legacy billing rule</p>
+              <p class="formula">To Bill This Period = MAX(Estimated Income x % Complete - Previously Billed, 0)</p>
+            </article>
+            <article class="card">
+              <p class="label">What’s already in code</p>
+              <ul>
+                <li>Supabase auth and role-based routing</li>
+                <li>Admin analytics and billing export hooks</li>
+                <li>Graph API stubs for OneDrive and Outlook</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" id="admin">
+          <header class="panel-header">
+            <div>
+              <p class="eyebrow blue">Admin Portal</p>
+              <h2>Billing Overview</h2>
+            </div>
+            <div class="pill-row">
+              <span class="pill">March 2026</span>
+              <span class="pill action">Roll Forward</span>
+              <span class="pill action">Sync POC Sheets</span>
+              <span class="pill action">Export Excel</span>
+            </div>
+          </header>
+
+          <div class="grid four">
+            <article class="metric">
+              <span>Active Projects</span>
+              <strong>18</strong>
+            </article>
+            <article class="metric">
+              <span>Projected This Month</span>
+              <strong>$412K</strong>
+            </article>
+            <article class="metric">
+              <span>Actual Billed</span>
+              <strong>$288K</strong>
+            </article>
+            <article class="metric">
+              <span>Total Backlog</span>
+              <strong>$1.42M</strong>
+            </article>
+          </div>
+
+          <article class="card table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Project</th>
+                  <th>PM</th>
+                  <th>Est. Income</th>
+                  <th>% Complete</th>
+                  <th>Prev. Billed</th>
+                  <th>To Bill</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Crestview K-8</td>
+                  <td>HVAC Renovation</td>
+                  <td>Alex</td>
+                  <td>$185,000</td>
+                  <td>50.0%</td>
+                  <td>$64,750</td>
+                  <td class="accent">$27,750</td>
+                </tr>
+                <tr>
+                  <td>Mobile Arena</td>
+                  <td>Controls Upgrade</td>
+                  <td>Jordan</td>
+                  <td>$320,000</td>
+                  <td>30.0%</td>
+                  <td>$64,000</td>
+                  <td class="accent">$32,000</td>
+                </tr>
+                <tr>
+                  <td>Westside Medical</td>
+                  <td>BAS Integration</td>
+                  <td>Alex</td>
+                  <td>$97,500</td>
+                  <td>25.0%</td>
+                  <td>$9,750</td>
+                  <td class="accent">$14,625</td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+        </section>
+
+        <section class="view" id="pm">
+          <header class="panel-header">
+            <div>
+              <p class="eyebrow green">Project Manager Portal</p>
+              <h2>My Projects</h2>
+            </div>
+            <span class="pill">2 active projects</span>
+          </header>
+
+          <div class="grid two">
+            <article class="card">
+              <h3>Crestview K-8 HVAC Renovation</h3>
+              <p class="muted">Crestview K-8</p>
+              <div class="progress"><span style="width: 50%"></span></div>
+              <div class="stat-row">
+                <span>Est. Income: $185,000</span>
+                <span>To Bill: $27,750</span>
+              </div>
+            </article>
+            <article class="card">
+              <h3>Westside Med BAS Integration</h3>
+              <p class="muted">Westside Medical Center</p>
+              <div class="progress"><span style="width: 25%"></span></div>
+              <div class="stat-row">
+                <span>Est. Income: $97,500</span>
+                <span>To Bill: $14,625</span>
+              </div>
+            </article>
+          </div>
+
+          <article class="card form-card">
+            <p class="label">Weekly update preview</p>
+            <div class="form-grid">
+              <div class="input">
+                <label>Week of</label>
+                <div>2026-03-30</div>
+              </div>
+              <div class="input">
+                <label>Overall % Complete</label>
+                <div>50.0%</div>
+              </div>
+              <div class="input wide">
+                <label>Work completed this week</label>
+                <div>Installed VAV controllers in east wing and verified graphics checkout.</div>
+              </div>
+              <div class="input wide">
+                <label>Blockers</label>
+                <div>Waiting on owner-approved access window for classroom tie-ins.</div>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="view" id="customer">
+          <header class="panel-header">
+            <div>
+              <p class="eyebrow violet">Customer Portal</p>
+              <h2>Project Updates</h2>
+            </div>
+            <span class="pill">Read-only view</span>
+          </header>
+
+          <div class="grid two">
+            <article class="card">
+              <h3>Crestview K-8 HVAC Renovation</h3>
+              <p class="muted">Overall progress</p>
+              <div class="progress"><span style="width: 50%"></span></div>
+              <p class="big">50.0%</p>
+            </article>
+            <article class="card">
+              <p class="label">Latest update</p>
+              <p>Field devices installed in the east wing. Startup remains on track after trim-out.</p>
+              <p class="muted">Week of Mar 30, 2026</p>
+            </article>
+          </div>
+
+          <article class="card table-card">
+            <p class="label">Billing history preview</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>Period</th>
+                  <th>% Complete</th>
+                  <th>Actual Billed</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>January 2026</td>
+                  <td>35.0%</td>
+                  <td>$22,500</td>
+                </tr>
+                <tr>
+                  <td>February 2026</td>
+                  <td>42.0%</td>
+                  <td>$18,250</td>
+                </tr>
+                <tr>
+                  <td>March 2026</td>
+                  <td>50.0%</td>
+                  <td>$27,750</td>
+                </tr>
+              </tbody>
+            </table>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="./preview.js"></script>
+  </body>
+</html>

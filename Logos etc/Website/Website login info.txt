@@ -1,0 +1,18 @@
+admin
+V$CV5#9afZ
+
+A new installation of WordPress 5.8 has been completed. The details of the installation are shown below:
+Path : /home3/mpbuilde/public_html/thecontrolscompany
+URL : https://thecontrolscompany.com
+Admin URL : https://thecontrolscompany.com/wp-admin/
+Admin Username : admin
+Admin Password : ********
+Admin Email: tim@thecontrolscompany.com
+MySQL Database : mpbuilde_wp640
+MySQL DB User : mpbuilde_wp640
+MySQL DB Host : localhost
+MySQL DB Password : ********
+Update Notification : Enabled
+Auto Upgrade : Enabled (Major and Minor) Automated Backups : Disabled Time of Installation : August 10, 2021, 7:50 am
+
+If you wish to unsubscribe from such emails, go to your Control Panel -> Softaculous -> Email Settings
