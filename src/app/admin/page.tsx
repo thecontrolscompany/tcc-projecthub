@@ -18,9 +18,20 @@ export default function AdminPage() {
   const [rows, setRows] = useState<BillingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionStatus, setActionStatus] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<UserRole>("admin");
   const supabase = createClient();
 
   const monthLabel = format(periodMonth, "MMMM yyyy");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase.from("profiles").select("role").eq("id", user.id).single().then(({ data }) => {
+        if (data?.role) setUserRole(data.role as UserRole);
+      });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (tab !== "billing") return;
@@ -353,7 +364,7 @@ export default function AdminPage() {
               { id: "billing", label: "Billing Table" },
               { id: "projects", label: "Projects" },
               { id: "contacts", label: "Contacts" },
-              { id: "users", label: "User Management" },
+              ...(userRole === "admin" ? [{ id: "users" as Tab, label: "User Management" }] : []),
             ] as { id: Tab; label: string }[]
           ).map(({ id, label }) => (
             <button

@@ -131,9 +131,10 @@ function ChevronLeftIcon({ className = "h-4 w-4" }: IconProps) {
 
 export const NAV_LINKS: NavItem[] = [
   { label: "Admin", href: "/admin", roles: ["admin"], icon: GridIcon },
-  { label: "Admin", href: "/ops", roles: ["ops_manager"], icon: GridIcon },
-  { label: "Quotes", href: "/quotes", roles: ["admin", "customer"], icon: DocumentIcon },
-  { label: "Estimating", href: "/estimating", roles: ["admin"], icon: CalculatorIcon },
+  { label: "Operations", href: "/ops", roles: ["ops_manager"], icon: GridIcon },
+  { label: "Billing", href: "/admin", roles: ["ops_manager"], icon: DollarIcon },
+  { label: "Quotes", href: "/quotes", roles: ["admin", "ops_manager", "customer"], icon: DocumentIcon },
+  { label: "Estimating", href: "/estimating", roles: ["admin", "ops_manager"], icon: CalculatorIcon },
   { label: "Projects", href: "/projects", roles: ["pm", "lead"], icon: FolderIcon },
   { label: "PM Portal", href: "/pm", roles: ["pm", "lead", "ops_manager"], icon: ClipboardIcon },
   { label: "Installer", href: "/installer", roles: ["installer"], icon: WrenchIcon },

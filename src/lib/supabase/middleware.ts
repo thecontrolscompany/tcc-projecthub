@@ -63,10 +63,13 @@ export async function updateSession(request: NextRequest) {
       .single();
 
     const role = profile?.role;
+    const opsManagerAdminBlocked =
+      role === "ops_manager" &&
+      (pathname.startsWith("/admin/users") || pathname.startsWith("/admin/migrate-sharepoint"));
     if (
       pathname.startsWith("/admin") &&
       role !== "admin" &&
-      !(role === "ops_manager" && pathname.startsWith("/admin/analytics"))
+      !(role === "ops_manager" && !opsManagerAdminBlocked)
     ) {
       const url = request.nextUrl.clone();
       url.pathname = roleHome(role);
