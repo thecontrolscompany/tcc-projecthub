@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { format, startOfWeek } from "date-fns";
+import { format, startOfWeek, addDays } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import type { BillingPeriod, ProjectAssignmentRole, WeeklyUpdate } from "@/types/database";
 
@@ -309,9 +309,9 @@ function UpdateForm({
   onBack: () => void;
 }) {
   const supabase = createClient();
-  const thisMonday = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
+  const thisSaturday = format(addDays(startOfWeek(new Date(), { weekStartsOn: 0 }), 6), "yyyy-MM-dd");
 
-  const [weekOf, setWeekOf] = useState(thisMonday);
+  const [weekOf, setWeekOf] = useState(thisSaturday);
   const [pctComplete, setPctComplete] = useState(project.current_period ? project.current_period.pct_complete * 100 : 0);
   const [notes, setNotes] = useState("");
   const [blockers, setBlockers] = useState("");
