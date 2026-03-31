@@ -33,7 +33,7 @@ type ProjectRow = {
   pm_id: string | null;
   sharepoint_folder: string | null;
   customer?: { name: string } | null;
-  pm_directory?: { id: string; first_name: string | null; email: string; profile_id: string | null } | null;
+  pm_directory?: { id: string; first_name: string | null; last_name: string | null; email: string; profile_id: string | null } | null;
 };
 
 type CustomerOption = {
@@ -45,9 +45,12 @@ type CustomerOption = {
 type PmOption = {
   id: string;
   first_name: string | null;
+  last_name: string | null;
   email: string;
   profile_id: string | null;
 };
+
+type ProjectFormErrors = Partial<Record<"form" | "projectName" | "customerId" | "newCustomerName" | "contractPrice", string>>;
 
 type ProjectFormValues = {
   projectName: string;
@@ -125,6 +128,7 @@ export function AdminProjectsTab() {
   const [editingProject, setEditingProject] = useState<ProjectRow | null>(null);
   const [jobNumberPreview, setJobNumberPreview] = useState("");
   const [formValues, setFormValues] = useState<ProjectFormValues>(EMPTY_PROJECT_FORM);
+  const [validationErrors, setValidationErrors] = useState<ProjectFormErrors>({});
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("name");
@@ -171,7 +175,7 @@ export function AdminProjectsTab() {
           sharepoint_folder,
           created_at,
           customer:customers(name),
-          pm_directory:pm_directory(id, first_name, email, profile_id)
+          pm_directory:pm_directory(id, first_name, last_name, email, profile_id)
         `)
         .order("name");
 
@@ -192,7 +196,7 @@ export function AdminProjectsTab() {
   async function loadFormLookups() {
     const [{ data: customerData }, { data: pmData }] = await Promise.all([
       supabase.from("customers").select("id, name, contact_email").order("name"),
-      supabase.from("pm_directory").select("id, first_name, email, profile_id").ilike("email", "%@controlsco.net").order("email"),
+      supabase.from("pm_directory").select("id, first_name, last_name, email, profile_id").order("email"),
     ]);
 
     setCustomers((customerData as CustomerOption[]) ?? []);
@@ -217,6 +221,7 @@ export function AdminProjectsTab() {
     const nextJobNumber = await getNextJobNumber();
     setEditingProject(null);
     setFormValues(EMPTY_PROJECT_FORM);
+    setValidationErrors({});
     setJobNumberPreview(nextJobNumber);
     setShowModal(true);
   }
@@ -250,14 +255,53 @@ export function AdminProjectsTab() {
       billedInFull: project.billed_in_full ?? false,
       paidInFull: project.paid_in_full ?? false,
     });
+    setValidationErrors({});
     setShowModal(true);
   }
 
+  function updateFormValue<K extends keyof ProjectFormValues>(field: K, value: ProjectFormValues[K]) {
+    setFormValues((current) => ({ ...current, [field]: value }));
+    setValidationErrors((current) => {
+      const next = { ...current };
+      delete next.form;
+
+      if (field === "projectName") delete next.projectName;
+      if (field === "contractPrice") delete next.contractPrice;
+      if (field === "customerId" || field === "useNewCustomer") delete next.customerId;
+      if (field === "newCustomerName" || field === "useNewCustomer") delete next.newCustomerName;
+
+      return next;
+    });
+  }
+
   async function handleSaveProject() {
-    if (!formValues.projectName.trim()) return;
-    if (!formValues.useNewCustomer && !formValues.customerId) return;
-    if (formValues.useNewCustomer && !formValues.newCustomerName.trim()) return;
-    if (!formValues.contractPrice.trim()) return;
+    const errors: ProjectFormErrors = {};
+
+    if (!formValues.projectName.trim()) {
+      errors.projectName = "Project name is required";
+    }
+
+    if (formValues.useNewCustomer) {
+      if (!formValues.newCustomerName.trim()) {
+        errors.newCustomerName = "New customer name is required";
+      }
+    } else if (!formValues.customerId) {
+      errors.customerId = "Customer is required";
+    }
+
+    if (!formValues.contractPrice.trim()) {
+      errors.contractPrice = "Contract price is required";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors({
+        ...errors,
+        form: "Please fill in all required fields before saving.",
+      });
+      return;
+    }
+
+    setValidationErrors({});
 
     setSaving(true);
 
@@ -359,6 +403,7 @@ export function AdminProjectsTab() {
       setShowModal(false);
       setEditingProject(null);
       setFormValues(EMPTY_PROJECT_FORM);
+      setValidationErrors({});
       await loadProjects();
     } finally {
       setSaving(false);
@@ -399,6 +444,11 @@ export function AdminProjectsTab() {
       }
       return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
     });
+
+  const externalContactOptions = useMemo(
+    () => pms.filter((pm) => !pm.email.toLowerCase().endsWith("@controlsco.net")),
+    [pms]
+  );
 
   const SortIcon = ({ col }: { col: SortKey }) =>
     sortKey !== col ? <span className="ml-1 opacity-30">↕</span> :
@@ -514,14 +564,17 @@ export function AdminProjectsTab() {
           jobNumberPreview={jobNumberPreview}
           customers={customers}
           pms={pms}
+          externalContacts={externalContactOptions}
           values={formValues}
           saving={saving}
+          errors={validationErrors}
           onClose={() => {
             setShowModal(false);
             setEditingProject(null);
             setFormValues(EMPTY_PROJECT_FORM);
+            setValidationErrors({});
           }}
-          onChange={setFormValues}
+          onChange={updateFormValue}
           onSave={handleSaveProject}
         />
       )}
@@ -534,8 +587,10 @@ function ProjectModal({
   jobNumberPreview,
   customers,
   pms,
+  externalContacts,
   values,
   saving,
+  errors,
   onClose,
   onChange,
   onSave,
@@ -544,14 +599,37 @@ function ProjectModal({
   jobNumberPreview: string;
   customers: CustomerOption[];
   pms: PmOption[];
+  externalContacts: PmOption[];
   values: ProjectFormValues;
   saving: boolean;
+  errors: ProjectFormErrors;
   onClose: () => void;
-  onChange: React.Dispatch<React.SetStateAction<ProjectFormValues>>;
+  onChange: <K extends keyof ProjectFormValues>(field: K, value: ProjectFormValues[K]) => void;
   onSave: () => void;
 }) {
   const customerOptions = useMemo(() => customers, [customers]);
-  const pmOptions = useMemo(() => pms, [pms]);
+  const pmOptions = useMemo(() => pms.filter((pm) => pm.email.toLowerCase().endsWith("@controlsco.net")), [pms]);
+  const customerPocOptions = useMemo(() => {
+    const options = [...externalContacts];
+    const currentValue = values.customerPoc.trim();
+
+    if (currentValue && !options.some((pm) => formatContactLabel(pm) === currentValue)) {
+      options.unshift({
+        id: "__current__",
+        first_name: currentValue,
+        last_name: null,
+        email: currentValue,
+        profile_id: null,
+      });
+    }
+
+    return options;
+  }, [externalContacts, values.customerPoc]);
+
+  function formatContactLabel(pm: PmOption) {
+    const fullName = [pm.first_name, pm.last_name].filter(Boolean).join(" ").trim();
+    return fullName ? `${fullName} (${pm.email})` : pm.email;
+  }
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4 py-8">
@@ -571,23 +649,29 @@ function ProjectModal({
         </div>
 
         <div className="space-y-6 px-6 py-6">
+          {errors.form && (
+            <div className="rounded-xl border border-status-danger/30 bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
+              {errors.form}
+            </div>
+          )}
+
           <section className="space-y-4">
             <h4 className="font-heading text-lg font-semibold text-text-primary">Project Info</h4>
             <div className="grid gap-4 md:grid-cols-2">
-              <FormField label="Project Name *">
-                <input value={values.projectName} onChange={(e) => onChange((current) => ({ ...current, projectName: e.target.value }))} className={inputClassName} />
+              <FormField label="Project Name *" error={errors.projectName}>
+                <input value={values.projectName} onChange={(e) => onChange("projectName", e.target.value)} className={inputClassName} />
               </FormField>
 
-              <FormField label="Customer *">
+              <FormField label="Customer *" error={values.useNewCustomer ? errors.newCustomerName : errors.customerId}>
                 <div className="space-y-2">
                   <select
                     value={values.useNewCustomer ? "__new__" : values.customerId}
                     onChange={(e) =>
-                      onChange((current) => ({
-                        ...current,
-                        useNewCustomer: e.target.value === "__new__",
-                        customerId: e.target.value === "__new__" ? "" : e.target.value,
-                      }))
+                      {
+                        const useNewCustomer = e.target.value === "__new__";
+                        onChange("useNewCustomer", useNewCustomer);
+                        onChange("customerId", useNewCustomer ? "" : e.target.value);
+                      }
                     }
                     className={inputClassName}
                   >
@@ -601,66 +685,80 @@ function ProjectModal({
                   </select>
                   {values.useNewCustomer && (
                     <div className="grid gap-2 md:grid-cols-2">
-                      <input placeholder="New customer name" value={values.newCustomerName} onChange={(e) => onChange((current) => ({ ...current, newCustomerName: e.target.value }))} className={inputClassName} />
-                      <input placeholder="Customer email" value={values.newCustomerEmail} onChange={(e) => onChange((current) => ({ ...current, newCustomerEmail: e.target.value }))} className={inputClassName} />
+                      <input placeholder="New customer name" value={values.newCustomerName} onChange={(e) => onChange("newCustomerName", e.target.value)} className={inputClassName} />
+                      <input placeholder="Customer email" value={values.newCustomerEmail} onChange={(e) => onChange("newCustomerEmail", e.target.value)} className={inputClassName} />
                     </div>
                   )}
                 </div>
               </FormField>
 
-              <FormField label="Contract Price *">
-                <input type="number" min="0" step="0.01" value={values.contractPrice} onChange={(e) => onChange((current) => ({ ...current, contractPrice: e.target.value }))} className={inputClassName} />
+              <FormField label="Contract Price *" error={errors.contractPrice}>
+                <input type="number" min="0" step="0.01" value={values.contractPrice} onChange={(e) => onChange("contractPrice", e.target.value)} className={inputClassName} />
               </FormField>
 
               <FormField label="Assigned PM">
-                <select value={values.assignedPmId} onChange={(e) => onChange((current) => ({ ...current, assignedPmId: e.target.value }))} className={inputClassName}>
+                <select value={values.assignedPmId} onChange={(e) => onChange("assignedPmId", e.target.value)} className={inputClassName}>
                   <option value="">Unassigned</option>
                   {pmOptions.map((pm) => (
                     <option key={pm.id} value={pm.id}>
-                      {(pm.first_name ?? "PM")} ({pm.email})
+                      {formatContactLabel(pm)}
                     </option>
                   ))}
                 </select>
               </FormField>
 
               <FormField label="Customer POC">
-                <input value={values.customerPoc} onChange={(e) => onChange((current) => ({ ...current, customerPoc: e.target.value }))} className={inputClassName} />
+                <select
+                  value={values.customerPoc}
+                  onChange={(e) => onChange("customerPoc", e.target.value)}
+                  className={inputClassName}
+                >
+                  <option value="">Select customer contact</option>
+                  {customerPocOptions.map((pm) => {
+                    const label = formatContactLabel(pm);
+                    return (
+                      <option key={pm.id} value={label}>
+                        {label}
+                      </option>
+                    );
+                  })}
+                </select>
               </FormField>
               <FormField label="Customer PO Number">
-                <input value={values.customerPoNumber} onChange={(e) => onChange((current) => ({ ...current, customerPoNumber: e.target.value }))} className={inputClassName} />
+                <input value={values.customerPoNumber} onChange={(e) => onChange("customerPoNumber", e.target.value)} className={inputClassName} />
               </FormField>
               <FormField label="Site Address">
-                <input value={values.siteAddress} onChange={(e) => onChange((current) => ({ ...current, siteAddress: e.target.value }))} className={inputClassName} />
+                <input value={values.siteAddress} onChange={(e) => onChange("siteAddress", e.target.value)} className={inputClassName} />
               </FormField>
               <FormField label="General Contractor">
-                <input value={values.generalContractor} onChange={(e) => onChange((current) => ({ ...current, generalContractor: e.target.value }))} className={inputClassName} />
+                <input value={values.generalContractor} onChange={(e) => onChange("generalContractor", e.target.value)} className={inputClassName} />
               </FormField>
               <FormField label="Mechanical Contractor">
-                <input value={values.mechanicalContractor} onChange={(e) => onChange((current) => ({ ...current, mechanicalContractor: e.target.value }))} className={inputClassName} />
+                <input value={values.mechanicalContractor} onChange={(e) => onChange("mechanicalContractor", e.target.value)} className={inputClassName} />
               </FormField>
               <FormField label="Electrical Contractor">
-                <input value={values.electricalContractor} onChange={(e) => onChange((current) => ({ ...current, electricalContractor: e.target.value }))} className={inputClassName} />
+                <input value={values.electricalContractor} onChange={(e) => onChange("electricalContractor", e.target.value)} className={inputClassName} />
               </FormField>
             </div>
 
             <FormField label="Notes">
-              <textarea rows={3} value={values.notes} onChange={(e) => onChange((current) => ({ ...current, notes: e.target.value }))} className={textareaClassName} />
+              <textarea rows={3} value={values.notes} onChange={(e) => onChange("notes", e.target.value)} className={textareaClassName} />
             </FormField>
             <FormField label="Special Requirements">
-              <textarea rows={3} value={values.specialRequirements} onChange={(e) => onChange((current) => ({ ...current, specialRequirements: e.target.value }))} className={textareaClassName} />
+              <textarea rows={3} value={values.specialRequirements} onChange={(e) => onChange("specialRequirements", e.target.value)} className={textareaClassName} />
             </FormField>
             <FormField label="Special Access">
-              <input value={values.specialAccess} onChange={(e) => onChange((current) => ({ ...current, specialAccess: e.target.value }))} className={inputClassName} />
+              <input value={values.specialAccess} onChange={(e) => onChange("specialAccess", e.target.value)} className={inputClassName} />
             </FormField>
           </section>
 
           <section className="space-y-4">
             <h4 className="font-heading text-lg font-semibold text-text-primary">Compliance</h4>
             <div className="grid gap-3 md:grid-cols-2">
-              <CheckboxField label="All Conduit/Plenum" checked={values.allConduitPlenum} onChange={(checked) => onChange((current) => ({ ...current, allConduitPlenum: checked }))} />
-              <CheckboxField label="Certified Payroll" checked={values.certifiedPayroll} onChange={(checked) => onChange((current) => ({ ...current, certifiedPayroll: checked }))} />
-              <CheckboxField label="Buy American" checked={values.buyAmerican} onChange={(checked) => onChange((current) => ({ ...current, buyAmerican: checked }))} />
-              <CheckboxField label="Bond Required" checked={values.bondRequired} onChange={(checked) => onChange((current) => ({ ...current, bondRequired: checked }))} />
+              <CheckboxField label="All Conduit" checked={values.allConduitPlenum} onChange={(checked) => onChange("allConduitPlenum", checked)} />
+              <CheckboxField label="Certified Payroll" checked={values.certifiedPayroll} onChange={(checked) => onChange("certifiedPayroll", checked)} />
+              <CheckboxField label="Buy American" checked={values.buyAmerican} onChange={(checked) => onChange("buyAmerican", checked)} />
+              <CheckboxField label="Bond Required" checked={values.bondRequired} onChange={(checked) => onChange("bondRequired", checked)} />
             </div>
           </section>
 
@@ -668,8 +766,8 @@ function ProjectModal({
             <section className="space-y-4">
               <h4 className="font-heading text-lg font-semibold text-text-primary">Completion Status</h4>
               <div className="grid gap-3 md:grid-cols-2">
-                <CheckboxField label="Billed in Full" checked={values.billedInFull} onChange={(checked) => onChange((current) => ({ ...current, billedInFull: checked }))} />
-                <CheckboxField label="Paid in Full" checked={values.paidInFull} onChange={(checked) => onChange((current) => ({ ...current, paidInFull: checked }))} />
+                <CheckboxField label="Billed in Full" checked={values.billedInFull} onChange={(checked) => onChange("billedInFull", checked)} />
+                <CheckboxField label="Paid in Full" checked={values.paidInFull} onChange={(checked) => onChange("paidInFull", checked)} />
               </div>
             </section>
           )}
@@ -686,11 +784,12 @@ function ProjectModal({
   );
 }
 
-function FormField({ label, children }: { label: string; children: React.ReactNode }) {
+function FormField({ label, children, error }: { label: string; children: React.ReactNode; error?: string }) {
   return (
     <label className="block">
       <span className="mb-1 block text-sm font-medium text-text-secondary">{label}</span>
       {children}
+      {error && <span className="mt-1 block text-sm text-status-danger">{error}</span>}
     </label>
   );
 }

@@ -9,7 +9,7 @@ import { BillingTable } from "@/components/billing-table";
 import { calcToBill, generatePmEmailDrafts, rollForwardRows } from "@/lib/billing/calculations";
 import type { BillingRow, BillingPeriod, Profile, UserRole } from "@/types/database";
 
-type Tab = "billing" | "projects" | "pm-directory" | "users";
+type Tab = "billing" | "projects" | "contacts" | "users";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("billing");
@@ -289,7 +289,7 @@ export default function AdminPage() {
             [
               { id: "billing", label: "Billing Table" },
               { id: "projects", label: "Projects" },
-              { id: "pm-directory", label: "PM Directory" },
+              { id: "contacts", label: "Contacts" },
               { id: "users", label: "User Management" },
             ] as { id: Tab; label: string }[]
           ).map(({ id, label }) => (
@@ -379,7 +379,7 @@ export default function AdminPage() {
         )}
 
         {tab === "projects" && <AdminProjectsTab />}
-        {tab === "pm-directory" && <PmDirectoryTab />}
+        {tab === "contacts" && <PmDirectoryTab />}
 
         {tab === "users" && <UsersTab />}
       </main>
@@ -698,7 +698,7 @@ function PmDirectoryTab() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
-          <h2 className="text-2xl font-bold text-text-primary">PM Directory</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Contacts</h2>
           <p className="text-sm text-text-secondary">
             Stores both internal TCC PMs and external customer-side contacts. Linked portal accounts are shown when `profile_id` is present.
           </p>
@@ -813,7 +813,7 @@ function PmDirectoryTab() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h3 className="text-lg font-semibold text-text-primary">
-                  {editingPm ? "Edit PM Directory Entry" : "Add PM Directory Entry"}
+                  {editingPm ? "Edit Contact Entry" : "Add Contact Entry"}
                 </h3>
                 <p className="mt-1 text-sm text-text-secondary">
                   {editingPm?.profile_id
