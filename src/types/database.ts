@@ -5,6 +5,7 @@ export type InternalContactRole = "pm" | "lead" | "installer" | "ops_manager";
 export type ProjectAssignmentRole = "pm" | "lead" | "installer" | "ops_manager";
 export type QuoteRequestStatus = "new" | "reviewing" | "quoted" | "won" | "lost";
 export type WeeklyUpdateStatus = "draft" | "submitted";
+export type ChangeOrderStatus = "pending" | "approved" | "rejected" | "void";
 
 export interface Profile {
   id: string;
@@ -199,6 +200,24 @@ export interface CustomerFeedback {
   message: string;
   submitted_at: string;
   reviewed: boolean;
+}
+
+export interface ChangeOrder {
+  id: string;
+  project_id: string;
+  co_number: string;
+  title: string;
+  description: string | null;
+  amount: number;
+  status: ChangeOrderStatus;
+  submitted_date: string | null;
+  approved_date: string | null;
+  submitted_by: string | null;
+  approved_by: string | null;
+  reference_doc: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 // Billing table row (joined view used in admin table)
