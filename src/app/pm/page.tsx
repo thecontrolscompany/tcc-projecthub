@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { format, startOfWeek, addDays } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
+import { ViewReportLink } from "@/components/view-report-link";
 import type { BillingPeriod, CrewLogEntry, PocLineItem, ProjectAssignmentRole, WeeklyUpdate } from "@/types/database";
 
 type ViewState = "list" | "update";
@@ -742,7 +743,10 @@ function UpdateForm({
           {recentUpdates.map((update) => (
             <div key={update.id} className="rounded-xl border border-border-default bg-surface-raised p-4">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-text-tertiary">Week of {update.week_of}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-text-tertiary">Week of {update.week_of}</span>
+                  <ViewReportLink updateId={update.id} />
+                </div>
                 {update.pct_complete !== null && (
                   <span className="text-sm font-semibold text-status-success">
                     {(update.pct_complete * 100).toFixed(1)}%

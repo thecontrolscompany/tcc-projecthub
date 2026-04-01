@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
+import { ViewReportLink } from "@/components/view-report-link";
 import type { PocLineItem, Profile, ProjectAssignmentRole, ProjectCustomerContact } from "@/types/database";
 
 export type ProjectCustomerOption = {
@@ -1081,9 +1082,12 @@ function WeeklyUpdatesSection({ projectId }: { projectId: string }) {
           {updates.map((u) => (
             <div key={u.id} className="rounded-xl border border-border-default bg-surface-raised p-4">
               <div className="flex items-center justify-between gap-4">
-                <span className="text-xs font-medium text-text-secondary">
-                  Week of {format(new Date(u.week_of), "MMM d, yyyy")}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-medium text-text-secondary">
+                    Week of {format(new Date(u.week_of), "MMM d, yyyy")}
+                  </span>
+                  <ViewReportLink updateId={u.id} />
+                </div>
                 {u.pct_complete !== null && (
                   <span className="shrink-0 text-sm font-semibold text-brand-primary">
                     {(u.pct_complete * 100).toFixed(1)}%

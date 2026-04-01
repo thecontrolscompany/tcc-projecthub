@@ -15,6 +15,7 @@ import {
   YAxis,
 } from "recharts";
 import { createClient } from "@/lib/supabase/client";
+import { ViewReportLink } from "@/components/view-report-link";
 import type { BillingPeriod, CrewLogEntry, WeeklyUpdate } from "@/types/database";
 
 interface CustomerProject {
@@ -782,6 +783,10 @@ function WeeklyUpdateCard({ update }: { update: WeeklyUpdate }) {
             {(update.pct_complete * 100).toFixed(1)}%
           </span>
         )}
+      </div>
+
+      <div className="mt-3">
+        <ViewReportLink updateId={update.id} />
       </div>
 
       {update.notes && <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700">{update.notes}</p>}
