@@ -82,7 +82,7 @@ export async function GET(request: Request) {
           other_remarks
         `)
         .in("project_id", projectIds)
-        .order("submitted_at", { ascending: false })
+        .order("week_of", { ascending: false })
         .limit(100),
       adminClient
         .from("project_assignments")
