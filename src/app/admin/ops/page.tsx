@@ -1,15 +1,15 @@
-import { AppShell } from "@/components/app-shell";
-import { AdminUsersPage } from "@/components/admin-users-page";
-import { getShellIdentity } from "@/lib/auth/get-shell-identity";
-
 export const dynamic = "force-dynamic";
 
-export default async function UserManagementPage() {
+import { AppShell } from "@/components/app-shell";
+import { getShellIdentity } from "@/lib/auth/get-shell-identity";
+import { AdminOpsView } from "@/components/admin-ops-view";
+
+export default async function AdminOpsPage() {
   const identity = await getShellIdentity("admin");
 
   return (
     <AppShell role={identity.role} userEmail={identity.email}>
-      <AdminUsersPage />
+      <AdminOpsView />
     </AppShell>
   );
 }
