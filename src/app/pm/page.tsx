@@ -77,93 +77,18 @@ export default function PmPage() {
   }, []);
 
   async function loadProjects(profileId: string) {
-    const currentMonth = format(new Date(), "yyyy-MM-01");
-
     try {
-      const { data: assignmentData } = await supabase
-        .from("project_assignments")
-        .select(`
-          role_on_project,
-          project:projects(
-            id,
-            customer_id,
-            pm_id,
-            name,
-            estimated_income,
-            onedrive_path,
-            sharepoint_folder,
-            sharepoint_item_id,
-            job_number,
-            migration_status,
-            is_active,
-            created_at,
-            customer:customers(name)
-          )
-        `)
-        .eq("profile_id", profileId)
-        .in("role_on_project", ["pm", "lead", "ops_manager"]);
+      const res = await fetch("/api/pm/projects", {
+        credentials: "include",
+      });
+      const json = await res.json();
 
-      const normalizedProjects = (((assignmentData ?? []) as Array<{
-        role_on_project: ProjectAssignmentRole;
-        project:
-          | {
-              id: string;
-              customer_id: string | null;
-              pm_id: string | null;
-              name: string;
-              estimated_income: number;
-              onedrive_path: string | null;
-              sharepoint_folder: string | null;
-              sharepoint_item_id: string | null;
-              job_number: string | null;
-              migration_status: "legacy" | "migrated" | "clean" | null;
-              is_active: boolean;
-              created_at: string;
-              customer?: { name: string } | Array<{ name: string }> | null;
-            }
-          | Array<{
-              id: string;
-              customer_id: string | null;
-              pm_id: string | null;
-              name: string;
-              estimated_income: number;
-              onedrive_path: string | null;
-              sharepoint_folder: string | null;
-              sharepoint_item_id: string | null;
-              job_number: string | null;
-              migration_status: "legacy" | "migrated" | "clean" | null;
-              is_active: boolean;
-              created_at: string;
-              customer?: { name: string } | Array<{ name: string }> | null;
-            }>;
-      }>)
-        .map((assignment) => {
-          const project = Array.isArray(assignment.project) ? assignment.project[0] : assignment.project;
-          if (!project || project.is_active === false) return null;
-          const customer = Array.isArray(project.customer) ? project.customer[0] : project.customer;
-          return {
-            ...project,
-            assignmentRole: assignment.role_on_project,
-            customer: customer ?? null,
-          };
-        })
-        .filter(Boolean) as ProjectWithBilling[])
-        .sort((a, b) => a.name.localeCompare(b.name));
-
-      if (!normalizedProjects.length) {
+      if (!res.ok) {
         setProjects([]);
         return;
       }
 
-      const ids = normalizedProjects.map((project) => project.id);
-      const { data: periods } = await supabase
-        .from("billing_periods")
-        .select("*")
-        .in("project_id", ids)
-        .eq("period_month", currentMonth);
-
-      const periodMap = new Map((periods ?? []).map((period) => [period.project_id, period]));
-      setProjects(normalizedProjects.map((project) => ({ ...project, current_period: periodMap.get(project.id) })));
+      setProjects(((json?.projects as ProjectWithBilling[]) ?? []).sort((a, b) => a.name.localeCompare(b.name)));
     } catch {
       setProjects([]);
     } finally {
