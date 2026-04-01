@@ -343,7 +343,11 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
         paidInFull: project.paid_in_full ?? false,
       });
       setAssignments(buildAssignmentDrafts(project, teamMemberOptions));
-      const matchingPrimaryOption = teamMemberOptions.find((option) => option.profileId === project.pm_id);
+      const matchingPrimaryOption = project.pm_id
+        ? teamMemberOptions.find((option) => option.profileId === project.pm_id)
+        : project.pm_directory_id
+          ? teamMemberOptions.find((option) => option.pmDirectoryId === project.pm_directory_id)
+          : undefined;
       setPrimaryPersonId(matchingPrimaryOption?.id ?? null);
       setShowModal(true);
     } catch {

@@ -398,7 +398,12 @@ export function AdminProjectsTab() {
       paidInFull: project.paid_in_full ?? false,
     });
     setAssignments(buildAssignmentDrafts(project, teamMemberOptions));
-    const matchingPrimaryOption = teamMemberOptions.find((option) => option.profileId === project.pm_id);
+    const matchingPrimaryOption = project.pm_id
+      ? teamMemberOptions.find((option) => option.profileId === project.pm_id)
+      : project.pm_directory_id
+        ? teamMemberOptions.find((option) => option.pmDirectoryId === project.pm_directory_id)
+        : undefined;
+    console.log("[open-edit] project.pm_id:", project.pm_id, "pm_directory_id:", project.pm_directory_id, "matched:", matchingPrimaryOption?.id ?? null);
     setPrimaryPersonId(matchingPrimaryOption?.id ?? null);
     setPendingTeamMemberId("");
     setPendingRoleOnProject("pm");
@@ -478,6 +483,9 @@ export function AdminProjectsTab() {
           };
         })
         .filter(Boolean);
+
+      console.log("[save-project] primaryPersonId:", primaryPersonId);
+      console.log("[save-project] resolvedAssignments:", JSON.stringify(resolvedAssignments));
 
       const prevContractPrice = editingProject
         ? (editingProject.contract_price ?? editingProject.estimated_income ?? null)
