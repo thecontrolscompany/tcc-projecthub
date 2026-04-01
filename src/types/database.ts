@@ -4,6 +4,7 @@ export type UserRole = "admin" | "pm" | "lead" | "installer" | "ops_manager" | "
 export type InternalContactRole = "pm" | "lead" | "installer" | "ops_manager";
 export type ProjectAssignmentRole = "pm" | "lead" | "installer" | "ops_manager";
 export type QuoteRequestStatus = "new" | "reviewing" | "quoted" | "won" | "lost";
+export type WeeklyUpdateStatus = "draft" | "submitted";
 
 export interface Profile {
   id: string;
@@ -101,6 +102,7 @@ export interface WeeklyUpdate {
   project_id: string;
   pm_id: string | null;
   week_of: string; // ISO date string
+  status: WeeklyUpdateStatus;
   pct_complete: number | null;
   notes: string | null;
   blockers: string | null;
@@ -118,6 +120,15 @@ export interface WeeklyUpdate {
   project?: Project;
   pm?: Profile;
 }
+
+export type WeeklyUpdateEdit = {
+  id: string;
+  weekly_update_id: string;
+  edited_by_profile_id: string | null;
+  edited_at: string;
+  editor_name: string | null;
+  note: string | null;
+};
 
 export interface PmDirectory {
   id: string;

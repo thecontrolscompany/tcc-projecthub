@@ -302,6 +302,7 @@ export async function GET(request: Request) {
         week_of,
         pct_complete,
         blockers,
+        status,
         submitted_at,
         pm:profiles(full_name, email),
         project:projects(

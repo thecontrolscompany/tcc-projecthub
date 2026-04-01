@@ -63,6 +63,7 @@ export default async function PublicStatusPage({ params }: PageProps) {
       .from("weekly_updates")
       .select("week_of")
       .eq("project_id", normalizedProject.id)
+      .eq("status", "submitted")
       .order("week_of", { ascending: false })
       .limit(1)
       .maybeSingle(),

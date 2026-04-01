@@ -82,6 +82,7 @@ export async function GET(request: Request) {
           other_remarks
         `)
         .in("project_id", projectIds)
+        .eq("status", "submitted")
         .order("week_of", { ascending: false })
         .limit(100),
       adminClient

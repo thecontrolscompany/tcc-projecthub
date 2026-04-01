@@ -1241,6 +1241,7 @@ type WeeklyUpdatesAdminRow = {
   week_of: string;
   pct_complete: number | null;
   blockers: string | null;
+  status: "draft" | "submitted";
   submitted_at: string | null;
   project?: {
     name: string;
@@ -1338,7 +1339,7 @@ function WeeklyUpdatesTab() {
         <div className="space-y-1">
           <h2 className="text-2xl font-bold text-text-primary">Weekly Updates</h2>
           <p className="text-sm text-text-secondary">
-            Review the latest submitted field activity across all projects.
+            Review draft and submitted field activity across all projects.
           </p>
         </div>
 
@@ -1377,6 +1378,7 @@ function WeeklyUpdatesTab() {
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Customer</th>
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">PM</th>
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Week Of</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
                 <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">% Complete</th>
                 <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">Has Blockers</th>
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Submitted At</th>
@@ -1409,6 +1411,18 @@ function WeeklyUpdatesTab() {
                     <td className="px-4 py-3 text-text-secondary">{customer?.name ?? "-"}</td>
                     <td className="px-4 py-3 text-text-secondary">{pmName}</td>
                     <td className="px-4 py-3 text-text-secondary">{format(new Date(update.week_of), "MMM d, yyyy")}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={[
+                          "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
+                          update.status === "draft"
+                            ? "bg-status-warning/10 text-status-warning"
+                            : "bg-status-success/10 text-status-success",
+                        ].join(" ")}
+                      >
+                        {update.status === "draft" ? "Draft" : "Submitted"}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-right text-text-primary">
                       {update.pct_complete !== null ? `${(update.pct_complete * 100).toFixed(1)}%` : "-"}
                     </td>
@@ -1428,7 +1442,7 @@ function WeeklyUpdatesTab() {
                       {update.submitted_at ? format(new Date(update.submitted_at), "MMM d, yyyy h:mm a") : "-"}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <ViewReportLink updateId={update.id} />
+                      {update.status === "submitted" ? <ViewReportLink updateId={update.id} /> : <span className="text-xs text-text-tertiary">Draft only</span>}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {isConfirming ? (

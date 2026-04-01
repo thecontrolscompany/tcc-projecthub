@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
+import type { WeeklyUpdateEdit } from "@/types/database";
 
 export async function GET(request: Request) {
   const supabase = await createServerClient();
@@ -35,7 +36,7 @@ export async function GET(request: Request) {
     const [updatesResult, pocResult] = await Promise.all([
       adminClient
         .from("weekly_updates")
-        .select("*")
+        .select("id, project_id, pm_id, week_of, pct_complete, notes, blockers, poc_snapshot, crew_log, material_delivered, equipment_set, safety_incidents, inspections_tests, delays_impacts, other_remarks, imported_from, status, submitted_at")
         .eq("project_id", projectId)
         .order("week_of", { ascending: false }),
       adminClient
@@ -54,9 +55,24 @@ export async function GET(request: Request) {
       }, { status: 500 });
     }
 
+    const updates = updatesResult.data ?? [];
+    const latestUpdate = updates[0] ?? null;
+    let editHistory: WeeklyUpdateEdit[] = [];
+
+    if (latestUpdate) {
+      const { data: edits } = await adminClient
+        .from("weekly_update_edits")
+        .select("id, weekly_update_id, edited_by_profile_id, edited_at, editor_name, note")
+        .eq("weekly_update_id", latestUpdate.id)
+        .order("edited_at", { ascending: false });
+
+      editHistory = (edits as WeeklyUpdateEdit[] | null) ?? [];
+    }
+
     return NextResponse.json({
-      updates: updatesResult.data ?? [],
+      updates,
       pocItems: pocResult.data ?? [],
+      editHistory,
     });
   }
 

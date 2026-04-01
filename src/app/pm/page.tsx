@@ -1,11 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { format, startOfWeek, addDays } from "date-fns";
+import { addDays, format, startOfWeek } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ViewReportLink } from "@/components/view-report-link";
-import type { BillingPeriod, CrewLogEntry, PocLineItem, ProjectAssignmentRole, WeeklyUpdate } from "@/types/database";
+import type {
+  BillingPeriod,
+  CrewLogEntry,
+  PocLineItem,
+  ProjectAssignmentRole,
+  WeeklyUpdate,
+  WeeklyUpdateEdit,
+} from "@/types/database";
 
 type ViewState = "list" | "update";
 
@@ -47,6 +54,12 @@ const EMPTY_PLACEHOLDERS: LastUpdatePlaceholders = {
   otherRemarks: "",
 };
 
+const DAYS: CrewLogEntry["day"][] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+function emptyCrewLog(): CrewLogEntry[] {
+  return DAYS.map((day) => ({ day, men: 0, hours: 0, activities: "" }));
+}
+
 export default function PmPage() {
   const supabase = createClient();
   const [view, setView] = useState<ViewState>("list");
@@ -58,7 +71,9 @@ export default function PmPage() {
   useEffect(() => {
     async function init() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (user) {
           setUserId(user.id);
           await loadProjects(user.id);
@@ -121,7 +136,6 @@ export default function PmPage() {
           ) : selectedProject ? (
             <UpdateForm
               project={selectedProject}
-              pmId={userId!}
               onBack={() => {
                 setView("list");
                 setSelectedProject(null);
@@ -207,10 +221,14 @@ function ProjectList({
                   <p className="font-semibold text-text-primary">{project.name}</p>
                   {project.sharepoint_folder && (
                     <a
-                      href={`https://controlsco.sharepoint.com/sites/TCCProjects/Shared%20Documents/${project.sharepoint_folder.split("/").filter(Boolean).map(encodeURIComponent).join("/")}`}
+                      href={`https://controlsco.sharepoint.com/sites/TCCProjects/Shared%20Documents/${project.sharepoint_folder
+                        .split("/")
+                        .filter(Boolean)
+                        .map(encodeURIComponent)
+                        .join("/")}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(event) => event.stopPropagation()}
                       className="inline-flex items-center gap-1 rounded border border-brand-primary/20 bg-brand-primary/10 px-2 py-0.5 text-xs font-medium text-brand-primary hover:bg-brand-primary/20"
                     >
                       SharePoint
@@ -219,11 +237,6 @@ function ProjectList({
                   <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${roleBadgeStyles[project.assignmentRole]}`}>
                     {roleLabels[project.assignmentRole]}
                   </span>
-                  {project.migration_status === "legacy" && (
-                    <span className="inline-flex items-center rounded border border-status-warning/20 bg-status-warning/10 px-2 py-0.5 text-xs font-medium text-status-warning">
-                      Legacy
-                    </span>
-                  )}
                 </div>
                 <p className="mt-0.5 text-sm text-text-secondary">{project.customer?.name}</p>
               </div>
@@ -238,15 +251,6 @@ function ProjectList({
               <Stat label="Prev. Billed" value={period ? fmt(period.prev_billed) : "-"} />
               <Stat label="To Bill" value={toBill !== null ? fmt(toBill) : "-"} highlight />
             </div>
-
-            {period && (
-              <div className="mt-3 overflow-hidden rounded-full bg-surface-overlay">
-                <div
-                  className="h-1.5 rounded-full bg-status-success transition-all"
-                  style={{ width: `${Math.min(period.pct_complete * 100, 100)}%` }}
-                />
-              </div>
-            )}
           </button>
         );
       })}
@@ -254,24 +258,14 @@ function ProjectList({
   );
 }
 
-const DAYS: CrewLogEntry["day"][] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-function emptyCrewLog(): CrewLogEntry[] {
-  return DAYS.map((day) => ({ day, men: 0, hours: 0, activities: "" }));
-}
-
 function UpdateForm({
   project,
-  pmId,
   onBack,
 }: {
   project: ProjectWithBilling;
-  pmId: string;
   onBack: () => void;
 }) {
-  const supabase = createClient();
   const thisSaturday = format(addDays(startOfWeek(new Date(), { weekStartsOn: 0 }), 6), "yyyy-MM-dd");
-
   const [weekOf, setWeekOf] = useState(thisSaturday);
   const [notes, setNotes] = useState("");
   const [blockers, setBlockers] = useState("");
@@ -282,90 +276,156 @@ function UpdateForm({
   const [inspectionsTests, setInspectionsTests] = useState("");
   const [delaysImpacts, setDelaysImpacts] = useState("");
   const [otherRemarks, setOtherRemarks] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState<"draft" | "submit" | false>(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [recentUpdates, setRecentUpdates] = useState<WeeklyUpdate[]>([]);
   const [pocItems, setPocItems] = useState<PocLineItem[]>([]);
-  const [pocPcts, setPocPcts] = useState<Record<string, number>>({}); // id -> pct 0-100
+  const [pocPcts, setPocPcts] = useState<Record<string, number>>({});
   const [placeholders, setPlaceholders] = useState<LastUpdatePlaceholders>(EMPTY_PLACEHOLDERS);
+  const [draftUpdateId, setDraftUpdateId] = useState<string | null>(null);
+  const [submittedUpdateId, setSubmittedUpdateId] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editHistory, setEditHistory] = useState<WeeklyUpdateEdit[]>([]);
+  const [editNote, setEditNote] = useState("");
   const [manualOverride, setManualOverride] = useState<string>(() =>
     project.current_period ? (project.current_period.pct_complete * 100).toFixed(1) : ""
   );
 
-  // Derived overall % from POC line items (weighted)
   const totalWeight = pocItems.reduce((sum, item) => sum + item.weight, 0);
-  const pocPctDecimal = totalWeight > 0
-    ? pocItems.reduce((sum, item) => sum + item.weight * ((pocPcts[item.id] ?? item.pct_complete * 100) / 100), 0) / totalWeight
-    : null;
-  // Manual override takes precedence if set; otherwise use weighted POC; fallback to period value
-  const pctComplete = manualOverride !== ""
-    ? Number(manualOverride)
-    : pocPctDecimal !== null
-      ? pocPctDecimal * 100
-      : (project.current_period ? project.current_period.pct_complete * 100 : 0);
+  const pocPctDecimal =
+    totalWeight > 0
+      ? pocItems.reduce((sum, item) => sum + item.weight * ((pocPcts[item.id] ?? item.pct_complete * 100) / 100), 0) / totalWeight
+      : null;
+  const pctComplete =
+    manualOverride !== ""
+      ? Number(manualOverride)
+      : pocPctDecimal !== null
+        ? pocPctDecimal * 100
+        : project.current_period
+          ? project.current_period.pct_complete * 100
+          : 0;
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const response = await fetch(`/api/pm/projects?section=project-data&projectId=${encodeURIComponent(project.id)}`, {
-          credentials: "include",
-        });
-        const json = await response.json();
-        const updatesData = (response.ok ? json?.updates : []) as WeeklyUpdate[];
-        const pocData = (response.ok ? json?.pocItems : []) as PocLineItem[];
+  function seedFromLatest(latestUpdate: WeeklyUpdate | null) {
+    const latestCrewLog = latestUpdate?.crew_log ?? [];
+    const previousCrewByDay = new Map(latestCrewLog.map((row) => [row.day, row]));
 
-        setRecentUpdates(updatesData ?? []);
-        const latestUpdate = (updatesData ?? [])[0] ?? null;
-        const latestCrewLog = latestUpdate?.crew_log ?? [];
-        const previousCrewByDay = new Map(latestCrewLog.map((row) => [row.day, row]));
+    setPlaceholders({
+      notes: latestUpdate?.notes ?? "",
+      materialDelivered: latestUpdate?.material_delivered ?? "",
+      equipmentSet: latestUpdate?.equipment_set ?? "",
+      safetyIncidents: latestUpdate?.safety_incidents ?? "",
+      inspectionsTests: latestUpdate?.inspections_tests ?? "",
+      delaysImpacts: latestUpdate?.delays_impacts ?? "",
+      otherRemarks: latestUpdate?.other_remarks ?? "",
+    });
 
-        setPlaceholders({
-          notes: latestUpdate?.notes ?? "",
-          materialDelivered: latestUpdate?.material_delivered ?? "",
-          equipmentSet: latestUpdate?.equipment_set ?? "",
-          safetyIncidents: latestUpdate?.safety_incidents ?? "",
-          inspectionsTests: latestUpdate?.inspections_tests ?? "",
-          delaysImpacts: latestUpdate?.delays_impacts ?? "",
-          otherRemarks: latestUpdate?.other_remarks ?? "",
-        });
-        setCrewLog(
-          emptyCrewLog().map((row) => ({
-            ...row,
-            men: previousCrewByDay.get(row.day)?.men ?? 0,
-            hours: 0,
-            activities: "",
-          }))
-        );
-
-        const items = pocData ?? [];
-        setPocItems(items);
-        // Initialize editable values from current DB values
-        const initPcts: Record<string, number> = {};
-        items.forEach((item) => { initPcts[item.id] = item.pct_complete * 100; });
-        setPocPcts(initPcts);
-      } catch {
-        setRecentUpdates([]);
-      }
-    }
-
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function updateCrewRow(index: number, field: keyof CrewLogEntry, value: string | number) {
-    setCrewLog((prev) => prev.map((row, i) => i === index ? { ...row, [field]: value } : row));
+    setCrewLog(
+      emptyCrewLog().map((row) => ({
+        ...row,
+        men: previousCrewByDay.get(row.day)?.men ?? 0,
+        hours: 0,
+        activities: "",
+      }))
+    );
   }
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    setSaving(true);
+  function populateFromUpdate(update: WeeklyUpdate) {
+    setWeekOf(update.week_of);
+    setNotes(update.notes ?? "");
+    setBlockers(update.blockers ?? "");
+    setCrewLog(update.crew_log && update.crew_log.length > 0 ? update.crew_log : emptyCrewLog());
+    setMaterialDelivered(update.material_delivered ?? "");
+    setEquipmentSet(update.equipment_set ?? "");
+    setSafetyIncidents(update.safety_incidents ?? "");
+    setInspectionsTests(update.inspections_tests ?? "");
+    setDelaysImpacts(update.delays_impacts ?? "");
+    setOtherRemarks(update.other_remarks ?? "");
+    setManualOverride(update.pct_complete !== null ? (update.pct_complete * 100).toFixed(1) : "");
+  }
+
+  function resetForNewWeek(latestUpdate: WeeklyUpdate | null) {
+    setWeekOf(thisSaturday);
+    setNotes("");
+    setBlockers("");
+    setMaterialDelivered("");
+    setEquipmentSet("");
+    setSafetyIncidents("");
+    setInspectionsTests("");
+    setDelaysImpacts("");
+    setOtherRemarks("");
+    setManualOverride(project.current_period ? (project.current_period.pct_complete * 100).toFixed(1) : "");
+    setDraftUpdateId(null);
+    setSubmittedUpdateId(null);
+    setIsEditing(false);
+    setEditHistory([]);
+    setEditNote("");
+    seedFromLatest(latestUpdate);
+  }
+
+  async function loadData() {
+    try {
+      const response = await fetch(`/api/pm/projects?section=project-data&projectId=${encodeURIComponent(project.id)}`, {
+        credentials: "include",
+      });
+      const json = await response.json();
+      const updatesData = (response.ok ? json?.updates : []) as WeeklyUpdate[];
+      const pocData = (response.ok ? json?.pocItems : []) as PocLineItem[];
+      const editHistoryData = (response.ok ? json?.editHistory : []) as WeeklyUpdateEdit[];
+
+      setRecentUpdates(updatesData ?? []);
+
+      const items = pocData ?? [];
+      setPocItems(items);
+      const initPcts: Record<string, number> = {};
+      items.forEach((item) => {
+        initPcts[item.id] = item.pct_complete * 100;
+      });
+      setPocPcts(initPcts);
+
+      const latestUpdate = updatesData[0] ?? null;
+      const currentWeekUpdate = updatesData.find((update) => update.week_of === thisSaturday) ?? null;
+
+      if (currentWeekUpdate) {
+        seedFromLatest(latestUpdate);
+        populateFromUpdate(currentWeekUpdate);
+        if (currentWeekUpdate.status === "draft") {
+          setDraftUpdateId(currentWeekUpdate.id);
+          setSubmittedUpdateId(null);
+        } else {
+          setDraftUpdateId(null);
+          setSubmittedUpdateId(currentWeekUpdate.id);
+        }
+        setIsEditing(false);
+        setEditHistory(currentWeekUpdate.id === latestUpdate?.id ? editHistoryData : []);
+      } else {
+        resetForNewWeek(latestUpdate);
+      }
+    } catch {
+      setRecentUpdates([]);
+      resetForNewWeek(null);
+    }
+  }
+
+  useEffect(() => {
+    void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project.id]);
+
+  function updateCrewRow(index: number, field: keyof CrewLogEntry, value: string | number) {
+    setCrewLog((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
+  }
+
+  async function saveWeeklyUpdate(nextStatus: "draft" | "submitted", options?: { stayOnForm?: boolean }) {
+    const activeUpdateId = draftUpdateId ?? submittedUpdateId;
+    const isSubmittedEdit = Boolean(submittedUpdateId && isEditing);
+
+    setSaving(nextStatus === "draft" ? "draft" : "submit");
     setSaveError(null);
+    setStatusMessage(null);
 
     try {
       const pctDecimal = Math.min(Math.max(pctComplete / 100, 0), 1);
-
-      // Build POC snapshot for the weekly update record
       const pocSnapshot = pocItems.length > 0
         ? pocItems.map((item) => ({
             id: item.id,
@@ -375,45 +435,58 @@ function UpdateForm({
           }))
         : null;
 
-      const { error: updateError } = await supabase.from("weekly_updates").insert({
-        project_id: project.id,
-        pm_id: pmId,
-        week_of: weekOf,
-        pct_complete: pctDecimal,
-        poc_snapshot: pocSnapshot,
-        notes: notes || null,
-        blockers: blockers || null,
-        crew_log: crewLog,
-        material_delivered: materialDelivered || null,
-        equipment_set: equipmentSet || null,
-        safety_incidents: safetyIncidents || null,
-        inspections_tests: inspectionsTests || null,
-        delays_impacts: delaysImpacts || null,
-        other_remarks: otherRemarks || null,
+      const response = await fetch("/api/pm/weekly-update", {
+        method: activeUpdateId ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          updateId: activeUpdateId,
+          projectId: project.id,
+          weekOf,
+          status: nextStatus,
+          pctComplete: pctDecimal,
+          pocSnapshot,
+          crewLog,
+          notes: notes || null,
+          blockers: blockers || null,
+          materialDelivered: materialDelivered || null,
+          equipmentSet: equipmentSet || null,
+          safetyIncidents: safetyIncidents || null,
+          inspectionsTests: inspectionsTests || null,
+          delaysImpacts: delaysImpacts || null,
+          otherRemarks: otherRemarks || null,
+          pocUpdates: pocItems.map((item) => ({
+            id: item.id,
+            pct_complete: Math.min(Math.max((pocPcts[item.id] ?? item.pct_complete * 100) / 100, 0), 1),
+          })),
+          billingPeriodId: nextStatus === "submitted" ? project.current_period?.id ?? null : null,
+          editNote: isSubmittedEdit ? editNote || null : null,
+        }),
       });
 
-      if (updateError) throw new Error(updateError.message);
-
-      // Write updated POC % values back to poc_line_items (live values)
-      if (pocItems.length > 0) {
-        for (const item of pocItems) {
-          const newPct = Math.min(Math.max((pocPcts[item.id] ?? item.pct_complete * 100) / 100, 0), 1);
-          await supabase
-            .from("poc_line_items")
-            .update({ pct_complete: newPct })
-            .eq("id", item.id);
-        }
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(json?.error ?? "Save failed. Please try again.");
       }
 
-      if (project.current_period) {
-        await supabase.from("billing_periods").update({ pct_complete: pctDecimal }).eq("id", project.current_period.id);
+      await loadData();
+
+      if (nextStatus === "draft") {
+        setStatusMessage("Draft saved.");
+        return;
       }
 
-      setSaved(true);
+      if (isSubmittedEdit || options?.stayOnForm) {
+        setEditNote("");
+        setIsEditing(false);
+        setStatusMessage(json?.editLogged ? "Edit saved and logged." : "Weekly update submitted.");
+        return;
+      }
+
+      setStatusMessage("Weekly update submitted.");
       setTimeout(() => {
-        setSaved(false);
         onBack();
-      }, 1500);
+      }, 1200);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Save failed. Please try again.");
     } finally {
@@ -421,8 +494,36 @@ function UpdateForm({
     }
   }
 
-  const inputCls = "w-full rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm text-text-primary placeholder-text-tertiary focus:border-status-success/50 focus:outline-none";
+  async function handleSaveDraft() {
+    await saveWeeklyUpdate("draft", { stayOnForm: true });
+  }
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    await saveWeeklyUpdate("submitted");
+  }
+
+  function handleSelectExistingUpdate(update: WeeklyUpdate) {
+    populateFromUpdate(update);
+    setSaveError(null);
+    setStatusMessage(null);
+    setEditNote("");
+    if (update.status === "draft") {
+      setDraftUpdateId(update.id);
+      setSubmittedUpdateId(null);
+      setIsEditing(false);
+    } else {
+      setDraftUpdateId(null);
+      setSubmittedUpdateId(update.id);
+      setIsEditing(false);
+    }
+    setEditHistory([]);
+  }
+
+  const inputCls =
+    "w-full rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm text-text-primary placeholder-text-tertiary focus:border-status-success/50 focus:outline-none";
   const labelCls = "mb-1.5 block text-sm font-medium text-text-secondary";
+  const isReadOnlySubmitted = Boolean(submittedUpdateId && !isEditing);
 
   return (
     <div className="space-y-6">
@@ -436,31 +537,131 @@ function UpdateForm({
         <p className="text-sm text-text-secondary">{project.customer?.name}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Header row */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <label className={labelCls}>Week of (ending Saturday)</label>
-            <input
-              type="date"
-              value={weekOf}
-              onChange={(e) => setWeekOf(e.target.value)}
-              className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
-            />
+      {draftUpdateId && weekOf === thisSaturday && (
+        <div className="rounded-xl border border-status-warning/30 bg-status-warning/10 px-4 py-3 text-sm text-status-warning">
+          You have a saved draft for this week. Pick up where you left off.
+        </div>
+      )}
+
+      {saveError && (
+        <div className="rounded-xl bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
+          {saveError}
+        </div>
+      )}
+
+      {statusMessage && (
+        <div className="rounded-xl bg-status-success/10 px-4 py-3 text-sm font-medium text-status-success">
+          {statusMessage}
+        </div>
+      )}
+
+      {isReadOnlySubmitted ? (
+        <div className="space-y-4 rounded-2xl border border-border-default bg-surface-raised p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Submitted Report</p>
+              <p className="mt-1 text-sm text-text-secondary">Week of {format(new Date(weekOf), "MMMM d, yyyy")}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              {submittedUpdateId && <ViewReportLink updateId={submittedUpdateId} />}
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm font-semibold text-text-primary transition hover:bg-surface-base"
+              >
+                Edit
+              </button>
+            </div>
           </div>
-          <div className="rounded-xl border border-status-success/20 bg-status-success/5 px-5 py-3">
-            <p className="text-xs text-text-tertiary mb-1">Overall % Complete</p>
-            <p className="text-2xl font-bold text-status-success mb-1">{pctComplete.toFixed(1)}%</p>
-            {pocItems.length > 0 ? (
-              <div className="space-y-3">
-                <div>
-                  <p className="text-xs text-text-tertiary">Calculated from POC</p>
-                  <p className="text-lg font-semibold text-text-primary">
-                    {pocPctDecimal !== null ? `${(pocPctDecimal * 100).toFixed(1)}%` : "Not configured"}
-                  </p>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <SummaryField label="Overall % Complete" value={`${pctComplete.toFixed(1)}%`} />
+            <SummaryField label="Blockers" value={blockers} />
+            <SummaryField label="Material Delivered" value={materialDelivered} />
+            <SummaryField label="Equipment Set" value={equipmentSet} />
+            <SummaryField label="Safety Incidents" value={safetyIncidents} />
+            <SummaryField label="Inspections & Tests" value={inspectionsTests} />
+            <SummaryField label="Delays / Impacts" value={delaysImpacts} />
+            <SummaryField label="Other Remarks" value={otherRemarks} />
+          </div>
+
+          <SummaryField label="Additional Notes" value={notes} />
+
+          <div className="overflow-x-auto rounded-xl border border-border-default">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border-default bg-surface-overlay text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                  <th className="px-3 py-2">Day</th>
+                  <th className="px-3 py-2 text-center"># of Men</th>
+                  <th className="px-3 py-2 text-center">Hours</th>
+                  <th className="px-3 py-2">Activities</th>
+                </tr>
+              </thead>
+              <tbody>
+                {crewLog.map((row) => (
+                  <tr key={row.day} className="border-b border-border-default last:border-0">
+                    <td className="px-3 py-2 text-text-secondary">{row.day}</td>
+                    <td className="px-3 py-2 text-center text-text-primary">{row.men || "-"}</td>
+                    <td className="px-3 py-2 text-center text-text-primary">{row.hours || "-"}</td>
+                    <td className="px-3 py-2 text-text-primary">{row.activities || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <label className={labelCls}>Week of (ending Saturday)</label>
+              <input
+                type="date"
+                value={weekOf}
+                onChange={(e) => setWeekOf(e.target.value)}
+                className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+              />
+            </div>
+            <div className="rounded-xl border border-status-success/20 bg-status-success/5 px-5 py-3">
+              <p className="mb-1 text-xs text-text-tertiary">Overall % Complete</p>
+              <p className="mb-1 text-2xl font-bold text-status-success">{pctComplete.toFixed(1)}%</p>
+              {pocItems.length > 0 ? (
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs text-text-tertiary">Calculated from POC</p>
+                    <p className="text-lg font-semibold text-text-primary">
+                      {pocPctDecimal !== null ? `${(pocPctDecimal * 100).toFixed(1)}%` : "Not configured"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-text-secondary">Override calculated value</label>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={0.1}
+                        value={manualOverride}
+                        onChange={(e) => setManualOverride(e.target.value)}
+                        placeholder={project.current_period ? (project.current_period.pct_complete * 100).toFixed(1) : "0.0"}
+                        className="w-28 rounded-lg border border-border-default bg-surface-base px-3 py-1.5 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+                      />
+                      <span className="text-xs text-text-tertiary">Clear to use the calculated value above.</span>
+                      {manualOverride !== "" && (
+                        <button
+                          type="button"
+                          onClick={() => setManualOverride("")}
+                          className="text-xs font-medium text-status-danger hover:underline"
+                        >
+                          Clear override
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-text-secondary">Override calculated value</label>
+              ) : (
+                <div className="mt-3 rounded-xl border border-dashed border-status-success/30 bg-white/50 p-4">
+                  <label className="mb-1 block text-sm font-medium text-text-primary">Enter % Complete</label>
                   <div className="flex flex-wrap items-center gap-2">
                     <input
                       type="number"
@@ -470,242 +671,262 @@ function UpdateForm({
                       value={manualOverride}
                       onChange={(e) => setManualOverride(e.target.value)}
                       placeholder={project.current_period ? (project.current_period.pct_complete * 100).toFixed(1) : "0.0"}
-                      className="w-28 rounded-lg border border-border-default bg-surface-base px-3 py-1.5 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+                      className="w-32 rounded-lg border border-border-default bg-surface-base px-3 py-2 text-center text-sm font-semibold text-text-primary focus:border-status-success/50 focus:outline-none"
                     />
-                    <span className="text-xs text-text-tertiary">Clear to use the calculated value above.</span>
-                    {manualOverride !== "" && (
-                      <button
-                        type="button"
-                        onClick={() => setManualOverride("")}
-                        className="text-xs font-medium text-status-danger hover:underline"
-                      >
-                        Clear override
-                      </button>
-                    )}
+                    <span className="text-sm text-text-secondary">Manual override is used when no POC categories are configured.</span>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="mt-3 rounded-xl border border-dashed border-status-success/30 bg-white/50 p-4">
-                <label className="mb-1 block text-sm font-medium text-text-primary">Enter % Complete</label>
-                <div className="flex flex-wrap items-center gap-2">
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={0.1}
-                    value={manualOverride}
-                    onChange={(e) => setManualOverride(e.target.value)}
-                    placeholder={project.current_period ? (project.current_period.pct_complete * 100).toFixed(1) : "0.0"}
-                    className="w-32 rounded-lg border border-border-default bg-surface-base px-3 py-2 text-center text-sm font-semibold text-text-primary focus:border-status-success/50 focus:outline-none"
-                  />
-                  <span className="text-sm text-text-secondary">Manual override is used when no POC categories are configured.</span>
+              )}
+            </div>
+          </div>
+
+          {pocItems.length > 0 ? (
+            <div>
+              <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <h3 className="text-sm font-semibold text-text-primary">
+                  % Complete by Category
+                  <span className="ml-2 text-xs font-normal text-text-tertiary">(weights sum to {totalWeight})</span>
+                </h3>
+                <div className="rounded-xl border border-status-success/20 bg-status-success/5 px-3 py-2 text-sm">
+                  <p className="text-xs uppercase tracking-wide text-text-tertiary">Live Weighted Total</p>
+                  <p className="font-semibold text-status-success">
+                    {pocPctDecimal !== null ? `${(pocPctDecimal * 100).toFixed(1)}%` : "0.0%"}
+                  </p>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* POC Line Items */}
-        {pocItems.length > 0 ? (
-          <div>
-            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <h3 className="text-sm font-semibold text-text-primary">
-                % Complete by Category
-                <span className="ml-2 text-xs font-normal text-text-tertiary">(weights sum to {totalWeight})</span>
-              </h3>
-              <div className="rounded-xl border border-status-success/20 bg-status-success/5 px-3 py-2 text-sm">
-                <p className="text-xs uppercase tracking-wide text-text-tertiary">Live Weighted Total</p>
-                <p className="font-semibold text-status-success">
-                  {pocPctDecimal !== null ? `${(pocPctDecimal * 100).toFixed(1)}%` : "0.0%"}
-                </p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {pocItems.map((item) => {
-                const val = pocPcts[item.id] ?? item.pct_complete * 100;
-                const contribution = totalWeight > 0 ? (item.weight * (val / 100) / totalWeight) * 100 : 0;
-                return (
-                  <div key={item.id} className="rounded-xl border border-border-default bg-surface-raised p-4">
-                    <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <span className="text-sm font-medium text-text-primary">{item.category}</span>
-                        <p className="mt-1 text-xs text-text-tertiary">
-                          Weight {item.weight} • contributes {contribution.toFixed(1)} points
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1">
-                          <input
-                            type="number"
-                            min={0}
-                            max={100}
-                            step={0.1}
-                            value={val.toFixed(1)}
-                            onChange={(e) => setPocPcts((prev) => ({ ...prev, [item.id]: Number(e.target.value) }))}
-                            className="w-16 rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-center text-sm font-semibold text-status-success focus:border-status-success/50 focus:outline-none"
-                          />
-                          <span className="text-sm text-text-tertiary">%</span>
+              <div className="space-y-3">
+                {pocItems.map((item) => {
+                  const val = pocPcts[item.id] ?? item.pct_complete * 100;
+                  const contribution = totalWeight > 0 ? (item.weight * (val / 100) / totalWeight) * 100 : 0;
+                  return (
+                    <div key={item.id} className="rounded-xl border border-border-default bg-surface-raised p-4">
+                      <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <span className="text-sm font-medium text-text-primary">{item.category}</span>
+                          <p className="mt-1 text-xs text-text-tertiary">
+                            Weight {item.weight} - contributes {contribution.toFixed(1)} points
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              step={0.1}
+                              value={val.toFixed(1)}
+                              onChange={(e) => setPocPcts((prev) => ({ ...prev, [item.id]: Number(e.target.value) }))}
+                              className="w-16 rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-center text-sm font-semibold text-status-success focus:border-status-success/50 focus:outline-none"
+                            />
+                            <span className="text-sm text-text-tertiary">%</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-surface-overlay">
-                        <div className="h-full rounded-full bg-status-success/40 transition-all" style={{ width: `${Math.min(val, 100)}%` }} />
+                      <div className="space-y-2">
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-surface-overlay">
+                          <div className="h-full rounded-full bg-status-success/40 transition-all" style={{ width: `${Math.min(val, 100)}%` }} />
+                        </div>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-overlay">
+                          <div className="h-full rounded-full bg-brand-primary/60 transition-all" style={{ width: `${Math.min(contribution, 100)}%` }} />
+                        </div>
+                        <p className="text-[11px] text-text-tertiary">
+                          Top bar = category progress. Bottom bar = weighted contribution to the overall total.
+                        </p>
                       </div>
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-overlay">
-                        <div className="h-full rounded-full bg-brand-primary/60 transition-all" style={{ width: `${Math.min(contribution, 100)}%` }} />
-                      </div>
-                      <p className="text-[11px] text-text-tertiary">
-                        Top bar = category progress. Bottom bar = weighted contribution to the overall total.
-                      </p>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="rounded-xl border border-dashed border-border-default p-4 text-center text-sm text-text-tertiary">
-            No POC line items configured for this project yet.{" "}
-            <span className="text-text-secondary">Use the manual % complete input above, or ask admin to set up POC categories later.</span>
-          </div>
-        )}
+          ) : (
+            <div className="rounded-xl border border-dashed border-border-default p-4 text-center text-sm text-text-tertiary">
+              No POC line items configured for this project yet.{" "}
+              <span className="text-text-secondary">Use the manual % complete input above, or ask admin to set up POC categories later.</span>
+            </div>
+          )}
 
-        {/* Daily crew log */}
-        <div>
-          <h3 className="mb-3 text-sm font-semibold text-text-primary">Daily Crew Log</h3>
-          <div className="overflow-x-auto rounded-xl border border-border-default">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border-default bg-surface-overlay text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">
-                  <th className="px-3 py-2 w-28">Day</th>
-                  <th className="px-3 py-2 w-20 text-center"># of Men</th>
-                  <th className="px-3 py-2 w-20 text-center">Hours</th>
-                  <th className="px-3 py-2">Activities</th>
-                </tr>
-              </thead>
-              <tbody>
-                {crewLog.map((row, i) => (
-                  <tr key={row.day} className="border-b border-border-default last:border-0">
-                    <td className="px-3 py-2 font-medium text-text-secondary">{row.day}</td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="number"
-                        min={0}
-                        value={row.men === 0 ? "" : row.men}
-                        onChange={(e) => updateCrewRow(i, "men", Number(e.target.value))}
-                        className="w-16 rounded-lg border border-border-default bg-surface-base px-2 py-1 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="number"
-                        min={0}
-                        value={row.hours === 0 ? "" : row.hours}
-                        onChange={(e) => updateCrewRow(i, "hours", Number(e.target.value))}
-                        className="w-16 rounded-lg border border-border-default bg-surface-base px-2 py-1 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
-                      />
-                    </td>
-                    <td className="px-3 py-2">
-                      <input
-                        type="text"
-                        value={row.activities}
-                        onChange={(e) => updateCrewRow(i, "activities", e.target.value)}
-                        placeholder="Work performed..."
-                        className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-1 text-sm text-text-primary placeholder-text-tertiary focus:border-status-success/50 focus:outline-none"
-                      />
-                    </td>
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-text-primary">Daily Crew Log</h3>
+            <div className="overflow-x-auto rounded-xl border border-border-default">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border-default bg-surface-overlay text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                    <th className="w-28 px-3 py-2">Day</th>
+                    <th className="w-20 px-3 py-2 text-center"># of Men</th>
+                    <th className="w-20 px-3 py-2 text-center">Hours</th>
+                    <th className="px-3 py-2">Activities</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Notes section */}
-        <div>
-          <h3 className="mb-3 text-sm font-semibold text-text-primary">Notes</h3>
-          <div className="space-y-3">
-            <div>
-              <label className={labelCls}>Material Delivered</label>
-              <input type="text" value={materialDelivered} onChange={(e) => setMaterialDelivered(e.target.value)}
-                placeholder={placeholders.materialDelivered || "e.g. Actuators and VFDs"} className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>Equipment Set</label>
-              <input type="text" value={equipmentSet} onChange={(e) => setEquipmentSet(e.target.value)}
-                placeholder={placeholders.equipmentSet} className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>Safety Incidents</label>
-              <input type="text" value={safetyIncidents} onChange={(e) => setSafetyIncidents(e.target.value)}
-                placeholder={placeholders.safetyIncidents || "None"} className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>Inspections &amp; Tests</label>
-              <input type="text" value={inspectionsTests} onChange={(e) => setInspectionsTests(e.target.value)}
-                placeholder={placeholders.inspectionsTests} className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>Delays / Impacts</label>
-              <input type="text" value={delaysImpacts} onChange={(e) => setDelaysImpacts(e.target.value)}
-                placeholder={placeholders.delaysImpacts} className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>Other Remarks</label>
-              <textarea value={otherRemarks} onChange={(e) => setOtherRemarks(e.target.value)}
-                rows={2} placeholder={placeholders.otherRemarks} className={inputCls} />
+                </thead>
+                <tbody>
+                  {crewLog.map((row, i) => (
+                    <tr key={row.day} className="border-b border-border-default last:border-0">
+                      <td className="px-3 py-2 font-medium text-text-secondary">{row.day}</td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="number"
+                          min={0}
+                          value={row.men === 0 ? "" : row.men}
+                          onChange={(e) => updateCrewRow(i, "men", Number(e.target.value))}
+                          className="w-16 rounded-lg border border-border-default bg-surface-base px-2 py-1 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="number"
+                          min={0}
+                          value={row.hours === 0 ? "" : row.hours}
+                          onChange={(e) => updateCrewRow(i, "hours", Number(e.target.value))}
+                          className="w-16 rounded-lg border border-border-default bg-surface-base px-2 py-1 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="text"
+                          value={row.activities}
+                          onChange={(e) => updateCrewRow(i, "activities", e.target.value)}
+                          placeholder="Work performed..."
+                          className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-1 text-sm text-text-primary placeholder-text-tertiary focus:border-status-success/50 focus:outline-none"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-        </div>
 
-        {/* Blockers (internal — not on printed report) */}
-        <div>
-          <label className={labelCls}>
-            Blockers <span className="text-text-tertiary">(internal — not on report)</span>
-          </label>
-          <textarea
-            value={blockers}
-            onChange={(e) => setBlockers(e.target.value)}
-            rows={2}
-            placeholder="Issues or items needing admin attention?"
-            className={inputCls}
-          />
-        </div>
-
-        {/* General notes */}
-        <div>
-          <label className={labelCls}>Additional Notes</label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={2}
-            placeholder={placeholders.notes || "Any other context..."}
-            className={inputCls}
-          />
-        </div>
-
-        {saveError && (
-          <div className="rounded-xl bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
-            {saveError}
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-text-primary">Notes</h3>
+            <div className="space-y-3">
+              <div>
+                <label className={labelCls}>Material Delivered</label>
+                <input
+                  type="text"
+                  value={materialDelivered}
+                  onChange={(e) => setMaterialDelivered(e.target.value)}
+                  placeholder={placeholders.materialDelivered || "e.g. Actuators and VFDs"}
+                  className={inputCls}
+                />
+              </div>
+              <div>
+                <label className={labelCls}>Equipment Set</label>
+                <input type="text" value={equipmentSet} onChange={(e) => setEquipmentSet(e.target.value)} placeholder={placeholders.equipmentSet} className={inputCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Safety Incidents</label>
+                <input type="text" value={safetyIncidents} onChange={(e) => setSafetyIncidents(e.target.value)} placeholder={placeholders.safetyIncidents || "None"} className={inputCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Inspections &amp; Tests</label>
+                <input type="text" value={inspectionsTests} onChange={(e) => setInspectionsTests(e.target.value)} placeholder={placeholders.inspectionsTests} className={inputCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Delays / Impacts</label>
+                <input type="text" value={delaysImpacts} onChange={(e) => setDelaysImpacts(e.target.value)} placeholder={placeholders.delaysImpacts} className={inputCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Other Remarks</label>
+                <textarea value={otherRemarks} onChange={(e) => setOtherRemarks(e.target.value)} rows={2} placeholder={placeholders.otherRemarks} className={inputCls} />
+              </div>
+            </div>
           </div>
-        )}
 
-        {saved ? (
-          <div className="rounded-xl bg-status-success/10 px-4 py-3 text-center text-sm font-medium text-status-success">
-            Update saved!
+          <div>
+            <label className={labelCls}>
+              Blockers <span className="text-text-tertiary">(internal - not on report)</span>
+            </label>
+            <textarea
+              value={blockers}
+              onChange={(e) => setBlockers(e.target.value)}
+              rows={2}
+              placeholder="Issues or items needing admin attention?"
+              className={inputCls}
+            />
           </div>
-        ) : (
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full rounded-xl bg-status-success px-4 py-2.5 text-sm font-semibold text-text-inverse transition hover:bg-status-success disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Submit Weekly Update"}
-          </button>
-        )}
-      </form>
+
+          <div>
+            <label className={labelCls}>Additional Notes</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              placeholder={placeholders.notes || "Any other context..."}
+              className={inputCls}
+            />
+          </div>
+
+          {submittedUpdateId && isEditing && (
+            <div>
+              <label className={labelCls}>Reason for edit (optional)</label>
+              <input
+                type="text"
+                value={editNote}
+                onChange={(e) => setEditNote(e.target.value)}
+                placeholder="What changed?"
+                className={inputCls}
+              />
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            {submittedUpdateId && isEditing ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => void saveWeeklyUpdate("submitted", { stayOnForm: true })}
+                  disabled={!!saving}
+                  className="flex-1 rounded-xl bg-status-success px-4 py-2.5 text-sm font-semibold text-text-inverse transition hover:opacity-90 disabled:opacity-50"
+                >
+                  {saving === "submit" ? "Saving..." : "Save Edit"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditNote("");
+                    setSaveError(null);
+                  }}
+                  className="flex-1 rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-semibold text-text-primary transition hover:bg-surface-raised"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => void handleSaveDraft()}
+                  disabled={!!saving}
+                  className="flex-1 rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-semibold text-text-primary transition hover:bg-surface-raised disabled:opacity-50"
+                >
+                  {saving === "draft" ? "Saving..." : "Save Draft"}
+                </button>
+                <button
+                  type="submit"
+                  disabled={!!saving}
+                  className="flex-1 rounded-xl bg-status-success px-4 py-2.5 text-sm font-semibold text-text-inverse transition hover:opacity-90 disabled:opacity-50"
+                >
+                  {saving === "submit" ? "Submitting..." : "Submit Weekly Update"}
+                </button>
+              </>
+            )}
+          </div>
+        </form>
+      )}
+
+      {editHistory.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Edit History</h3>
+          {editHistory.map((edit) => (
+            <div key={edit.id} className="rounded-xl border border-border-default bg-surface-raised px-4 py-2 text-xs text-text-secondary">
+              <span className="font-medium text-text-primary">{edit.editor_name ?? "Unknown"}</span>
+              {" - "}
+              {format(new Date(edit.edited_at), "MMM d, yyyy h:mm a")}
+              {edit.note && <p className="mt-0.5 text-text-tertiary">{edit.note}</p>}
+            </div>
+          ))}
+        </div>
+      )}
 
       {recentUpdates.length > 0 && (
         <div className="space-y-3">
@@ -715,17 +936,34 @@ function UpdateForm({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-text-tertiary">Week of {update.week_of}</span>
-                  <ViewReportLink updateId={update.id} />
-                </div>
-                {update.pct_complete !== null && (
-                  <span className="text-sm font-semibold text-status-success">
-                    {(update.pct_complete * 100).toFixed(1)}%
+                  <span
+                    className={[
+                      "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
+                      update.status === "draft" ? "bg-status-warning/10 text-status-warning" : "bg-status-success/10 text-status-success",
+                    ].join(" ")}
+                  >
+                    {update.status === "draft" ? "Draft" : "Submitted"}
                   </span>
-                )}
+                  {update.status === "submitted" && <ViewReportLink updateId={update.id} />}
+                </div>
+                <div className="flex items-center gap-3">
+                  {update.pct_complete !== null && (
+                    <span className="text-sm font-semibold text-status-success">
+                      {(update.pct_complete * 100).toFixed(1)}%
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleSelectExistingUpdate(update)}
+                    className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-surface-base hover:text-text-primary"
+                  >
+                    {update.status === "draft" ? "Open Draft" : "Edit"}
+                  </button>
+                </div>
               </div>
               {update.notes && <p className="mt-1.5 text-sm text-text-secondary">{update.notes}</p>}
               {update.blockers && <p className="mt-1 text-sm text-status-danger">Blocker: {update.blockers}</p>}
-              {update.crew_log && update.crew_log.length > 0 && update.crew_log.some((r) => r.men > 0 || r.hours > 0) && (
+              {update.crew_log && update.crew_log.length > 0 && update.crew_log.some((row) => row.men > 0 || row.hours > 0 || row.activities) && (
                 <div className="mt-2 overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
@@ -737,14 +975,16 @@ function UpdateForm({
                       </tr>
                     </thead>
                     <tbody>
-                      {update.crew_log.filter((r) => r.men > 0 || r.hours > 0 || r.activities).map((row) => (
-                        <tr key={row.day} className="text-text-secondary">
-                          <td className="pr-3">{row.day}</td>
-                          <td className="pr-3 text-center">{row.men}</td>
-                          <td className="pr-3 text-center">{row.hours}</td>
-                          <td>{row.activities}</td>
-                        </tr>
-                      ))}
+                      {update.crew_log
+                        .filter((row) => row.men > 0 || row.hours > 0 || row.activities)
+                        .map((row) => (
+                          <tr key={row.day} className="text-text-secondary">
+                            <td className="pr-3">{row.day}</td>
+                            <td className="pr-3 text-center">{row.men}</td>
+                            <td className="pr-3 text-center">{row.hours}</td>
+                            <td>{row.activities}</td>
+                          </tr>
+                        ))}
                     </tbody>
                   </table>
                 </div>
@@ -756,6 +996,15 @@ function UpdateForm({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function SummaryField({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div className="rounded-xl border border-border-default bg-surface-base p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{label}</p>
+      <p className="mt-2 whitespace-pre-wrap text-sm text-text-primary">{value?.trim() ? value : "None"}</p>
     </div>
   );
 }
