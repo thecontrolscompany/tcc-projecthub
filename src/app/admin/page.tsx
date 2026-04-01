@@ -1274,6 +1274,8 @@ function WeeklyUpdatesTab() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [blockersOnly, setBlockersOnly] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     void loadUpdates();
@@ -1294,6 +1296,24 @@ function WeeklyUpdatesTab() {
     }
 
     setLoading(false);
+  }
+
+  async function handleDelete(updateId: string) {
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/admin/weekly-update", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ updateId }),
+      });
+      if (res.ok) {
+        setUpdates((prev) => prev.filter((u) => u.id !== updateId));
+      }
+    } finally {
+      setDeleting(false);
+      setConfirmDeleteId(null);
+    }
   }
 
   const filteredUpdates = updates.filter((update) => {
@@ -1361,6 +1381,7 @@ function WeeklyUpdatesTab() {
                 <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">Has Blockers</th>
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Submitted At</th>
                 <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Report</th>
+                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Delete</th>
               </tr>
             </thead>
             <tbody>
@@ -1380,6 +1401,7 @@ function WeeklyUpdatesTab() {
                   pm?.email ||
                   "-";
                 const hasBlockers = Boolean(update.blockers?.trim());
+                const isConfirming = confirmDeleteId === update.id;
 
                 return (
                   <tr key={update.id} className="border-b border-border-default hover:bg-surface-raised">
@@ -1407,6 +1429,32 @@ function WeeklyUpdatesTab() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <ViewReportLink updateId={update.id} />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {isConfirming ? (
+                        <span className="inline-flex items-center gap-1">
+                          <button
+                            onClick={() => void handleDelete(update.id)}
+                            disabled={deleting}
+                            className="rounded-lg bg-status-danger px-2 py-1 text-xs font-semibold text-white hover:opacity-80 disabled:opacity-50"
+                          >
+                            {deleting ? "..." : "Confirm"}
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="rounded-lg bg-surface-overlay px-2 py-1 text-xs text-text-secondary hover:bg-surface-overlay"
+                          >
+                            Cancel
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDeleteId(update.id)}
+                          className="rounded-lg px-2 py-1 text-xs text-text-tertiary hover:bg-status-danger/10 hover:text-status-danger"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
