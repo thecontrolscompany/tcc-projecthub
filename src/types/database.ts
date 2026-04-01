@@ -73,6 +73,30 @@ export interface BillingPeriod {
   project?: Project;
 }
 
+export interface PocLineItem {
+  id: string;
+  project_id: string;
+  category: string;
+  weight: number;
+  pct_complete: number; // 0–1
+  sort_order: number;
+  created_at: string;
+}
+
+export interface PocSnapshotEntry {
+  id: string;
+  category: string;
+  weight: number;
+  pct_complete: number;
+}
+
+export interface CrewLogEntry {
+  day: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
+  men: number;
+  hours: number;
+  activities: string;
+}
+
 export interface WeeklyUpdate {
   id: string;
   project_id: string;
@@ -81,6 +105,14 @@ export interface WeeklyUpdate {
   pct_complete: number | null;
   notes: string | null;
   blockers: string | null;
+  poc_snapshot: PocSnapshotEntry[] | null;
+  crew_log: CrewLogEntry[] | null;
+  material_delivered: string | null;
+  equipment_set: string | null;
+  safety_incidents: string | null;
+  inspections_tests: string | null;
+  delays_impacts: string | null;
+  other_remarks: string | null;
   submitted_at: string;
   // joined
   project?: Project;

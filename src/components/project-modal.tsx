@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
-import type { ProjectAssignmentRole } from "@/types/database";
+import type { PocLineItem, ProjectAssignmentRole } from "@/types/database";
 
 export type ProjectCustomerOption = {
   id: string;
@@ -466,6 +466,10 @@ export function ProjectModal({
           )}
 
           {editingProject && (
+            <PocSetupSection projectId={editingProject.id} />
+          )}
+
+          {editingProject && (
             <WeeklyUpdatesSection projectId={editingProject.id} />
           )}
         </div>
@@ -700,6 +704,142 @@ type UpdateRow = {
   notes: string | null;
   blockers: string | null;
 };
+
+function PocSetupSection({ projectId }: { projectId: string }) {
+  const supabase = createClient();
+  const [items, setItems] = useState<PocLineItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [newCategory, setNewCategory] = useState("");
+  const [newWeight, setNewWeight] = useState("10");
+  const [adding, setAdding] = useState(false);
+  const [saving, setSaving] = useState<string | null>(null); // id being saved
+
+  useEffect(() => {
+    supabase
+      .from("poc_line_items")
+      .select("*")
+      .eq("project_id", projectId)
+      .order("sort_order")
+      .then(({ data }) => {
+        setItems((data as PocLineItem[]) ?? []);
+        setLoading(false);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
+  const totalWeight = items.reduce((sum, i) => sum + i.weight, 0);
+
+  async function handleAdd() {
+    if (!newCategory.trim() || !newWeight) return;
+    setAdding(true);
+    const { data, error } = await supabase
+      .from("poc_line_items")
+      .insert({
+        project_id: projectId,
+        category: newCategory.trim(),
+        weight: Number(newWeight),
+        pct_complete: 0,
+        sort_order: items.length,
+      })
+      .select()
+      .single();
+    if (!error && data) {
+      setItems((prev) => [...prev, data as PocLineItem]);
+      setNewCategory("");
+      setNewWeight("10");
+    }
+    setAdding(false);
+  }
+
+  async function handleDelete(id: string) {
+    await supabase.from("poc_line_items").delete().eq("id", id);
+    setItems((prev) => prev.filter((i) => i.id !== id));
+  }
+
+  async function handleWeightChange(id: string, weight: number) {
+    setItems((prev) => prev.map((i) => i.id === id ? { ...i, weight } : i));
+    setSaving(id);
+    await supabase.from("poc_line_items").update({ weight }).eq("id", id);
+    setSaving(null);
+  }
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h4 className="font-heading text-lg font-semibold text-text-primary">POC Line Items</h4>
+        {totalWeight > 0 && (
+          <span className="text-xs text-text-tertiary">Total weight: {totalWeight}</span>
+        )}
+      </div>
+      <p className="text-xs text-text-secondary">
+        Define the categories and relative weights for the % complete calculation. PMs update each category&apos;s completion in their weekly report.
+      </p>
+
+      {loading ? (
+        <p className="text-sm text-text-tertiary">Loading...</p>
+      ) : (
+        <div className="space-y-2">
+          {items.length === 0 && (
+            <p className="text-sm text-text-tertiary">No POC line items yet. Add categories below.</p>
+          )}
+          {items.map((item) => (
+            <div key={item.id} className="flex items-center gap-3 rounded-xl border border-border-default bg-surface-raised px-4 py-2.5">
+              <span className="flex-1 text-sm text-text-primary">{item.category}</span>
+              <span className="text-xs text-text-tertiary">
+                {totalWeight > 0 ? `${((item.weight / totalWeight) * 100).toFixed(0)}%` : "—"} of total
+              </span>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-text-tertiary">weight</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={item.weight}
+                  onChange={(e) => handleWeightChange(item.id, Number(e.target.value))}
+                  className="w-16 rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-center text-sm text-text-primary focus:border-brand-primary/50 focus:outline-none"
+                />
+                {saving === item.id && <span className="text-xs text-text-tertiary">saving...</span>}
+              </div>
+              <span className="text-xs font-medium text-status-success">{(item.pct_complete * 100).toFixed(0)}%</span>
+              <button
+                onClick={() => handleDelete(item.id)}
+                className="text-xs text-status-danger hover:underline"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+
+          {/* Add new item */}
+          <div className="flex items-center gap-2 pt-1">
+            <input
+              type="text"
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void handleAdd(); } }}
+              placeholder="Category name (e.g. AHU's)"
+              className="flex-1 rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary placeholder-text-tertiary focus:border-brand-primary/50 focus:outline-none"
+            />
+            <input
+              type="number"
+              min={1}
+              value={newWeight}
+              onChange={(e) => setNewWeight(e.target.value)}
+              placeholder="Weight"
+              className="w-20 rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-center text-sm text-text-primary focus:border-brand-primary/50 focus:outline-none"
+            />
+            <button
+              onClick={() => void handleAdd()}
+              disabled={adding || !newCategory.trim()}
+              className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-brand-hover disabled:opacity-50"
+            >
+              {adding ? "Adding..." : "Add"}
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
 
 function WeeklyUpdatesSection({ projectId }: { projectId: string }) {
   const supabase = createClient();
