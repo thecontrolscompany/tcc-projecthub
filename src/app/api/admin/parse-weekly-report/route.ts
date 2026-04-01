@@ -127,7 +127,7 @@ function parseWorksheet(ws: ExcelJS.Worksheet): ParsedWeeklyUpdate {
     equipmentSet: findLabeledRow(ws, "Equipment Set") ? getCellText(findLabeledRow(ws, "Equipment Set")?.getCell(3).value) || null : null,
     safetyIncidents: findLabeledRow(ws, "Safety Incidents") ? getCellText(findLabeledRow(ws, "Safety Incidents")?.getCell(3).value) || null : null,
     inspectionsTests: findLabeledRow(ws, "Inspections & Tests") ? getCellText(findLabeledRow(ws, "Inspections & Tests")?.getCell(3).value) || null : null,
-    otherRemarks: getCellText(ws.getRow(7).getCell(3).value) || getCellText(findLabeledRow(ws, "Other Remarks")?.getCell(3).value) || null,
+    otherRemarks: getCellText(ws.getRow(27).getCell(3).value) || getCellText(findLabeledRow(ws, "Other Remarks")?.getCell(3).value) || null,
     totalMen: crewLog.reduce((sum, row) => sum + row.men, 0),
     totalHours: crewLog.reduce((sum, row) => sum + row.hours, 0),
     alreadyExists: false,
