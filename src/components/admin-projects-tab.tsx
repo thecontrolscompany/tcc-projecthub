@@ -107,7 +107,7 @@ const PROJECT_SELECT_FIELDS = `
   )
 `;
 
-type SortKey = "name" | "customer" | "contract_price";
+type SortKey = "job_number" | "name" | "customer" | "contract_price";
 type SortDir = "asc" | "desc";
 type StatusFilter = "active" | "completed" | "all";
 
@@ -225,7 +225,7 @@ export function AdminProjectsTab() {
   const [validationErrors, setValidationErrors] = useState<ProjectFormErrors>({});
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
   const [search, setSearch] = useState("");
-  const [sortKey, setSortKey] = useState<SortKey>("name");
+  const [sortKey, setSortKey] = useState<SortKey>("job_number");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [assignments, setAssignments] = useState<ProjectAssignmentDraft[]>([]);
   const [pendingTeamMemberId, setPendingTeamMemberId] = useState("");
@@ -587,7 +587,12 @@ export function AdminProjectsTab() {
     .sort((a, b) => {
       let av = "";
       let bv = "";
-      if (sortKey === "name") { av = a.name; bv = b.name; }
+      if (sortKey === "job_number") { av = a.job_number ?? ""; bv = b.job_number ?? ""; }
+      else if (sortKey === "name") {
+        // Sort by the project description only, stripping the "YYYY-NNN - " prefix
+        av = a.job_number && a.name.startsWith(`${a.job_number} - `) ? a.name.slice(a.job_number.length + 3).toLowerCase() : a.name.toLowerCase();
+        bv = b.job_number && b.name.startsWith(`${b.job_number} - `) ? b.name.slice(b.job_number.length + 3).toLowerCase() : b.name.toLowerCase();
+      }
       else if (sortKey === "customer") { av = a.customer?.name ?? ""; bv = b.customer?.name ?? ""; }
       else {
         const an = a.contract_price ?? a.estimated_income ?? 0;
@@ -646,7 +651,11 @@ export function AdminProjectsTab() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border-default bg-surface-raised/80">
-                <th className="cursor-pointer select-none px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary hover:text-text-primary" onClick={() => toggleSort("name")}>Project <SortIcon col="name" /></th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                  <span className="cursor-pointer select-none hover:text-text-primary" onClick={() => toggleSort("job_number")}># <SortIcon col="job_number" /></span>
+                  <span className="mx-1 text-text-tertiary">/</span>
+                  <span className="cursor-pointer select-none hover:text-text-primary" onClick={() => toggleSort("name")}>Name <SortIcon col="name" /></span>
+                </th>
                 <th className="cursor-pointer select-none px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary hover:text-text-primary" onClick={() => toggleSort("customer")}>Customer <SortIcon col="customer" /></th>
                 <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Primary PM</th>
                 <th className="cursor-pointer select-none px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary hover:text-text-primary" onClick={() => toggleSort("contract_price")}>Contract <SortIcon col="contract_price" /></th>

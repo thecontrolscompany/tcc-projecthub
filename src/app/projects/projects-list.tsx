@@ -59,16 +59,65 @@ function DetailRow({ project }: { project: ProjectListItem }) {
   );
 }
 
+type SortField = "job_number" | "name";
+type SortDir = "asc" | "desc";
+
+function SortIndicator({ field, active, dir }: { field: string; active: boolean; dir: SortDir }) {
+  return (
+    <span className={["ml-1 inline-block text-xs", active ? "text-brand-primary" : "text-text-tertiary"].join(" ")}>
+      {active ? (dir === "asc" ? "▲" : "▼") : "⇅"}
+    </span>
+  );
+}
+
 function ProjectTable({ projects }: { projects: ProjectListItem[] }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<SortField>("job_number");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+  function handleSort(field: SortField) {
+    if (sortField === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  }
+
+  const sorted = useMemo(() => {
+    return [...projects].sort((a, b) => {
+      let aVal: string;
+      let bVal: string;
+      if (sortField === "job_number") {
+        aVal = a.job_number ?? "";
+        bVal = b.job_number ?? "";
+      } else {
+        aVal = a.name.toLowerCase();
+        bVal = b.name.toLowerCase();
+      }
+      return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+    });
+  }, [projects, sortField, sortDir]);
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border-default bg-surface-raised">
       <table className="w-full min-w-[980px] text-sm">
         <thead>
           <tr className="border-b border-border-default bg-surface-overlay">
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Job Number</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Project Name</th>
+            <th
+              className="cursor-pointer select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary hover:text-text-primary"
+              onClick={() => handleSort("job_number")}
+            >
+              Job Number
+              <SortIndicator field="job_number" active={sortField === "job_number"} dir={sortDir} />
+            </th>
+            <th
+              className="cursor-pointer select-none px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary hover:text-text-primary"
+              onClick={() => handleSort("name")}
+            >
+              Project Name
+              <SortIndicator field="name" active={sortField === "name"} dir={sortDir} />
+            </th>
             <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
             <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Legacy</th>
             <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Billed in Full</th>
@@ -77,7 +126,7 @@ function ProjectTable({ projects }: { projects: ProjectListItem[] }) {
           </tr>
         </thead>
         <tbody>
-          {projects.map((project) => {
+          {sorted.map((project) => {
             const isExpanded = expandedId === project.id;
             return (
               <Fragment key={project.id}>
