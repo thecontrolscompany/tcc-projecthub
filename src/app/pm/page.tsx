@@ -26,6 +26,26 @@ interface ProjectWithBilling {
   current_period?: BillingPeriod;
 }
 
+type LastUpdatePlaceholders = {
+  notes: string;
+  materialDelivered: string;
+  equipmentSet: string;
+  safetyIncidents: string;
+  inspectionsTests: string;
+  delaysImpacts: string;
+  otherRemarks: string;
+};
+
+const EMPTY_PLACEHOLDERS: LastUpdatePlaceholders = {
+  notes: "",
+  materialDelivered: "",
+  equipmentSet: "",
+  safetyIncidents: "",
+  inspectionsTests: "",
+  delaysImpacts: "",
+  otherRemarks: "",
+};
+
 export default function PmPage() {
   const supabase = createClient();
   const [view, setView] = useState<ViewState>("list");
@@ -334,6 +354,7 @@ function UpdateForm({
   const [recentUpdates, setRecentUpdates] = useState<WeeklyUpdate[]>([]);
   const [pocItems, setPocItems] = useState<PocLineItem[]>([]);
   const [pocPcts, setPocPcts] = useState<Record<string, number>>({}); // id -> pct 0-100
+  const [placeholders, setPlaceholders] = useState<LastUpdatePlaceholders>(EMPTY_PLACEHOLDERS);
   const [manualOverride, setManualOverride] = useState<string>(() =>
     project.current_period ? (project.current_period.pct_complete * 100).toFixed(1) : ""
   );
@@ -367,6 +388,27 @@ function UpdateForm({
         ]);
 
         setRecentUpdates((updatesData as WeeklyUpdate[]) ?? []);
+        const latestUpdate = ((updatesData as WeeklyUpdate[]) ?? [])[0] ?? null;
+        const latestCrewLog = latestUpdate?.crew_log ?? [];
+        const previousCrewByDay = new Map(latestCrewLog.map((row) => [row.day, row]));
+
+        setPlaceholders({
+          notes: latestUpdate?.notes ?? "",
+          materialDelivered: latestUpdate?.material_delivered ?? "",
+          equipmentSet: latestUpdate?.equipment_set ?? "",
+          safetyIncidents: latestUpdate?.safety_incidents ?? "",
+          inspectionsTests: latestUpdate?.inspections_tests ?? "",
+          delaysImpacts: latestUpdate?.delays_impacts ?? "",
+          otherRemarks: latestUpdate?.other_remarks ?? "",
+        });
+        setCrewLog(
+          emptyCrewLog().map((row) => ({
+            ...row,
+            men: previousCrewByDay.get(row.day)?.men ?? 0,
+            hours: 0,
+            activities: "",
+          }))
+        );
 
         const items = (pocData as PocLineItem[]) ?? [];
         setPocItems(items);
@@ -623,7 +665,7 @@ function UpdateForm({
                       <input
                         type="number"
                         min={0}
-                        value={row.men}
+                        value={row.men === 0 ? "" : row.men}
                         onChange={(e) => updateCrewRow(i, "men", Number(e.target.value))}
                         className="w-16 rounded-lg border border-border-default bg-surface-base px-2 py-1 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
                       />
@@ -632,7 +674,7 @@ function UpdateForm({
                       <input
                         type="number"
                         min={0}
-                        value={row.hours}
+                        value={row.hours === 0 ? "" : row.hours}
                         onChange={(e) => updateCrewRow(i, "hours", Number(e.target.value))}
                         className="w-16 rounded-lg border border-border-default bg-surface-base px-2 py-1 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
                       />
@@ -660,32 +702,32 @@ function UpdateForm({
             <div>
               <label className={labelCls}>Material Delivered</label>
               <input type="text" value={materialDelivered} onChange={(e) => setMaterialDelivered(e.target.value)}
-                placeholder="e.g. Actuators and VFDs" className={inputCls} />
+                placeholder={placeholders.materialDelivered || "e.g. Actuators and VFDs"} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Equipment Set</label>
               <input type="text" value={equipmentSet} onChange={(e) => setEquipmentSet(e.target.value)}
-                placeholder="" className={inputCls} />
+                placeholder={placeholders.equipmentSet} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Safety Incidents</label>
               <input type="text" value={safetyIncidents} onChange={(e) => setSafetyIncidents(e.target.value)}
-                placeholder="None" className={inputCls} />
+                placeholder={placeholders.safetyIncidents || "None"} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Inspections &amp; Tests</label>
               <input type="text" value={inspectionsTests} onChange={(e) => setInspectionsTests(e.target.value)}
-                placeholder="" className={inputCls} />
+                placeholder={placeholders.inspectionsTests} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Delays / Impacts</label>
               <input type="text" value={delaysImpacts} onChange={(e) => setDelaysImpacts(e.target.value)}
-                placeholder="" className={inputCls} />
+                placeholder={placeholders.delaysImpacts} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Other Remarks</label>
               <textarea value={otherRemarks} onChange={(e) => setOtherRemarks(e.target.value)}
-                rows={2} placeholder="" className={inputCls} />
+                rows={2} placeholder={placeholders.otherRemarks} className={inputCls} />
             </div>
           </div>
         </div>
@@ -711,7 +753,7 @@ function UpdateForm({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={2}
-            placeholder="Any other context..."
+            placeholder={placeholders.notes || "Any other context..."}
             className={inputCls}
           />
         </div>
