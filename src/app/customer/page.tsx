@@ -187,13 +187,6 @@ export default function CustomerPage() {
                 </p>
                 <h1 className="text-3xl font-bold text-white">Project Portal</h1>
               </div>
-              <Image
-                src="/sdvosb.jpg"
-                alt="Service Disabled Veteran Owned Small Business"
-                width={144}
-                height={32}
-                className="h-8 w-auto rounded border border-white/20 bg-white object-cover"
-              />
             </div>
           </div>
 

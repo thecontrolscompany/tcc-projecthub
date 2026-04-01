@@ -322,13 +322,15 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
           }
 
           .logo {
-            width: 118px;
-            height: auto;
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
           }
 
           .badge {
             width: 120px;
-            height: auto;
+            height: 120px;
+            object-fit: contain;
             border: 1px solid #d1d5db;
           }
 
