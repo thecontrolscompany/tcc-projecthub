@@ -6,10 +6,11 @@ import { format, startOfMonth, subMonths, addMonths, subDays } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { AdminProjectsTab } from "@/components/admin-projects-tab";
 import { BillingTable } from "@/components/billing-table";
+import { ViewReportLink } from "@/components/view-report-link";
 import { calcToBill, generatePmEmailDrafts, rollForwardRows } from "@/lib/billing/calculations";
 import type { BillingRow, BillingPeriod, CustomerFeedback, InternalContactRole, Profile, UserRole } from "@/types/database";
 
-type Tab = "billing" | "projects" | "contacts" | "feedback" | "users";
+type Tab = "billing" | "projects" | "weekly-updates" | "contacts" | "feedback" | "users";
 const INTERNAL_CONTACT_ROLES: InternalContactRole[] = ["pm", "lead", "installer", "ops_manager"];
 
 export default function AdminPage() {
@@ -388,6 +389,7 @@ export default function AdminPage() {
             [
               { id: "billing", label: "Billing Table" },
               { id: "projects", label: "Projects" },
+              { id: "weekly-updates", label: "Weekly Updates" },
               { id: "contacts", label: "Contacts" },
               { id: "feedback", label: "Feedback" },
               ...(userRole === "admin" ? [{ id: "users" as Tab, label: "User Management" }] : []),
@@ -479,6 +481,7 @@ export default function AdminPage() {
         )}
 
         {tab === "projects" && <AdminProjectsTab />}
+        {tab === "weekly-updates" && <WeeklyUpdatesTab />}
 
         {tab === "feedback" && <FeedbackTab />}
         {tab === "contacts" && <PmDirectoryTab />}
@@ -1201,6 +1204,207 @@ function FeedbackTab() {
                           {savingId === item.id ? "Saving..." : "Mark Reviewed"}
                         </button>
                       )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type WeeklyUpdatesAdminRow = {
+  id: string;
+  week_of: string;
+  pct_complete: number | null;
+  blockers: string | null;
+  submitted_at: string | null;
+  project?: {
+    name: string;
+    customer?: { name: string } | Array<{ name: string }> | null;
+    project_assignments?: Array<{
+      role_on_project?: string | null;
+      profile?: { full_name?: string | null; email?: string | null } | Array<{ full_name?: string | null; email?: string | null }> | null;
+      pm_directory?:
+        | { first_name?: string | null; last_name?: string | null; email?: string | null }
+        | Array<{ first_name?: string | null; last_name?: string | null; email?: string | null }>
+        | null;
+    }>;
+  } | Array<{
+    name: string;
+    customer?: { name: string } | Array<{ name: string }> | null;
+    project_assignments?: Array<{
+      role_on_project?: string | null;
+      profile?: { full_name?: string | null; email?: string | null } | Array<{ full_name?: string | null; email?: string | null }> | null;
+      pm_directory?:
+        | { first_name?: string | null; last_name?: string | null; email?: string | null }
+        | Array<{ first_name?: string | null; last_name?: string | null; email?: string | null }>
+        | null;
+    }>;
+  }> | null;
+  pm?: { full_name?: string | null; email?: string | null } | Array<{ full_name?: string | null; email?: string | null }> | null;
+};
+
+function WeeklyUpdatesTab() {
+  const supabase = createClient();
+  const [updates, setUpdates] = useState<WeeklyUpdatesAdminRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [blockersOnly, setBlockersOnly] = useState(false);
+
+  useEffect(() => {
+    void loadUpdates();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function loadUpdates() {
+    setLoading(true);
+
+    const { data, error } = await supabase
+      .from("weekly_updates")
+      .select(`
+        id,
+        week_of,
+        pct_complete,
+        blockers,
+        submitted_at,
+        pm:profiles(full_name, email),
+        project:projects(
+          name,
+          customer:customers(name),
+          project_assignments(
+            role_on_project,
+            profile:profiles(full_name, email),
+            pm_directory:pm_directory(first_name, last_name, email)
+          )
+        )
+      `)
+      .order("submitted_at", { ascending: false })
+      .limit(200);
+
+    if (error) {
+      setUpdates([]);
+    } else {
+      setUpdates((data as WeeklyUpdatesAdminRow[]) ?? []);
+    }
+
+    setLoading(false);
+  }
+
+  const filteredUpdates = updates.filter((update) => {
+    const project = Array.isArray(update.project) ? update.project[0] : update.project;
+    const projectName = project?.name ?? "";
+    const hasBlockers = Boolean(update.blockers?.trim());
+
+    if (blockersOnly && !hasBlockers) {
+      return false;
+    }
+
+    if (search.trim()) {
+      return projectName.toLowerCase().includes(search.trim().toLowerCase());
+    }
+
+    return true;
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-bold text-text-primary">Weekly Updates</h2>
+          <p className="text-sm text-text-secondary">
+            Review the latest submitted field activity across all projects.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search project name"
+            className="w-64 rounded-xl border border-border-default bg-surface-raised px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+          />
+          <label className="inline-flex items-center gap-3 rounded-xl border border-border-default bg-surface-raised px-4 py-2 text-sm text-text-primary">
+            <input
+              type="checkbox"
+              checked={blockersOnly}
+              onChange={(event) => setBlockersOnly(event.target.checked)}
+              className="h-4 w-4 accent-[var(--color-brand-primary)]"
+            />
+            Blockers only
+          </label>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="py-10 text-center text-text-tertiary">Loading...</div>
+      ) : filteredUpdates.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border-default px-6 py-10 text-center text-sm text-text-secondary">
+          No weekly updates match the current filters.
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-2xl border border-border-default">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border-default bg-surface-raised/80">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Project</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Customer</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">PM</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Week Of</th>
+                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">% Complete</th>
+                <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">Has Blockers</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Submitted At</th>
+                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Report</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUpdates.map((update) => {
+                const project = Array.isArray(update.project) ? update.project[0] : update.project;
+                const customer = Array.isArray(project?.customer) ? project.customer[0] : project?.customer;
+                const pm = Array.isArray(update.pm) ? update.pm[0] : update.pm;
+                const primaryAssignment = (project?.project_assignments ?? []).find((assignment) => assignment?.role_on_project === "pm");
+                const assignmentProfile = Array.isArray(primaryAssignment?.profile) ? primaryAssignment?.profile[0] : primaryAssignment?.profile;
+                const assignmentDirectory = Array.isArray(primaryAssignment?.pm_directory) ? primaryAssignment?.pm_directory[0] : primaryAssignment?.pm_directory;
+                const assignmentDirectoryName = [assignmentDirectory?.first_name, assignmentDirectory?.last_name].filter(Boolean).join(" ").trim();
+                const pmName =
+                  pm?.full_name?.trim() ||
+                  assignmentProfile?.full_name?.trim() ||
+                  assignmentDirectoryName ||
+                  assignmentDirectory?.email ||
+                  pm?.email ||
+                  "-";
+                const hasBlockers = Boolean(update.blockers?.trim());
+
+                return (
+                  <tr key={update.id} className="border-b border-border-default hover:bg-surface-raised">
+                    <td className="px-4 py-3 font-medium text-text-primary">{project?.name ?? "-"}</td>
+                    <td className="px-4 py-3 text-text-secondary">{customer?.name ?? "-"}</td>
+                    <td className="px-4 py-3 text-text-secondary">{pmName}</td>
+                    <td className="px-4 py-3 text-text-secondary">{format(new Date(update.week_of), "MMM d, yyyy")}</td>
+                    <td className="px-4 py-3 text-right text-text-primary">
+                      {update.pct_complete !== null ? `${(update.pct_complete * 100).toFixed(1)}%` : "-"}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span
+                        className={[
+                          "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
+                          hasBlockers
+                            ? "bg-status-danger/10 text-status-danger"
+                            : "bg-status-success/10 text-status-success",
+                        ].join(" ")}
+                      >
+                        {hasBlockers ? "Yes" : "No"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-text-secondary">
+                      {update.submitted_at ? format(new Date(update.submitted_at), "MMM d, yyyy h:mm a") : "-"}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <ViewReportLink updateId={update.id} />
                     </td>
                   </tr>
                 );
