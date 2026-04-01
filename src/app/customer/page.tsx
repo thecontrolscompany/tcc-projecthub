@@ -38,6 +38,7 @@ export default function CustomerPage() {
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<CustomerProject | null>(null);
   const [userEmail, setUserEmail] = useState("");
+  const [userId, setUserId] = useState("");
 
   useEffect(() => {
     void loadProjects();
@@ -56,6 +57,7 @@ export default function CustomerPage() {
       }
 
       setUserEmail(user.email ?? "");
+      setUserId(user.id);
 
       const { data: contactRows } = await supabase
         .from("project_customer_contacts")
@@ -225,7 +227,7 @@ export default function CustomerPage() {
             </p>
           </div>
         ) : selectedProject ? (
-          <ProjectDetail project={selectedProject} onBack={() => setSelectedProject(null)} />
+          <ProjectDetail project={selectedProject} userId={userId} onBack={() => setSelectedProject(null)} />
         ) : (
           <ProjectList projects={projects} onSelect={setSelectedProject} />
         )}
@@ -317,12 +319,19 @@ function ProjectList({
 
 function ProjectDetail({
   project,
+  userId,
   onBack,
 }: {
   project: CustomerProject;
+  userId: string;
   onBack: () => void;
 }) {
+  const supabase = createClient();
   const [view, setView] = useState<"updates" | "billing">("updates");
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackSaving, setFeedbackSaving] = useState(false);
+  const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null);
   const latestPeriod = project.billing_periods[0];
 
   const progressChartData = useMemo(
@@ -543,6 +552,92 @@ function ProjectDetail({
           </table>
         </div>
       </section>
+
+      <div className="customer-print-hide fixed bottom-6 right-6 z-30 flex flex-col items-end gap-3">
+        {feedbackStatus && (
+          <div className="rounded-2xl border border-status-success/20 bg-white px-4 py-3 text-sm text-status-success shadow-lg">
+            {feedbackStatus}
+          </div>
+        )}
+
+        <div
+          className={[
+            "w-full max-w-md overflow-hidden rounded-3xl border bg-white shadow-[0_20px_50px_rgba(1,122,111,0.18)] transition-all duration-300",
+            showFeedback ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0",
+          ].join(" ")}
+          style={{ borderColor: BORDER }}
+        >
+          <div className="space-y-3 p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.14em]" style={{ color: HEADER_BG }}>
+                  Project Feedback
+                </p>
+                <h3 className="text-lg font-bold" style={{ color: CHARCOAL }}>Questions or feedback</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowFeedback(false)}
+                className="rounded-full border border-slate-200 px-2 py-1 text-xs text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+              >
+                Close
+              </button>
+            </div>
+
+            <textarea
+              rows={5}
+              value={feedbackMessage}
+              onChange={(event) => setFeedbackMessage(event.target.value)}
+              placeholder="Your feedback or questions"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 focus:border-[color:#20b2aa] focus:outline-none"
+            />
+
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs text-slate-500">Messages are sent to The Controls Company team for follow-up.</p>
+              <button
+                type="button"
+                disabled={feedbackSaving || !feedbackMessage.trim() || !userId}
+                onClick={async () => {
+                  setFeedbackSaving(true);
+                  setFeedbackStatus(null);
+                  const { error } = await supabase.from("customer_feedback").insert({
+                    project_id: project.id,
+                    profile_id: userId,
+                    message: feedbackMessage.trim(),
+                  });
+
+                  if (!error) {
+                    setFeedbackMessage("");
+                    setShowFeedback(false);
+                    setFeedbackStatus("Feedback sent. Thank you.");
+                    window.setTimeout(() => setFeedbackStatus(null), 3000);
+                  } else {
+                    setFeedbackStatus(error.message);
+                  }
+
+                  setFeedbackSaving(false);
+                }}
+                className="rounded-full px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60"
+                style={{ backgroundColor: HEADER_BG }}
+              >
+                {feedbackSaving ? "Sending..." : "Submit"}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setFeedbackStatus(null);
+            setShowFeedback((current) => !current);
+          }}
+          className="rounded-full px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:opacity-90"
+          style={{ backgroundColor: HEADER_BG }}
+        >
+          Leave Feedback
+        </button>
+      </div>
     </div>
   );
 }

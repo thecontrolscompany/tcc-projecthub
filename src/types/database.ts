@@ -179,6 +179,15 @@ export type QuoteRequest = {
   project_id: string | null;
 };
 
+export interface CustomerFeedback {
+  id: string;
+  project_id: string;
+  profile_id: string;
+  message: string;
+  submitted_at: string;
+  reviewed: boolean;
+}
+
 // Billing table row (joined view used in admin table)
 export interface BillingRow {
   billing_period_id: string;
