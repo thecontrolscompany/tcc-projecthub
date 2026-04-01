@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { format, startOfMonth } from "date-fns";
+import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 
 type ResolvedAssignment = {
   profile_id: string | null;
@@ -17,8 +18,8 @@ export async function POST(request: Request) {
 
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (!["admin", "ops_manager"].includes(profile?.role ?? "")) {
+  const resolvedProfile = await resolveUserRole(user);
+  if (!["admin", "ops_manager"].includes(resolvedProfile?.role ?? "")) {
     return NextResponse.json({ error: "Access denied." }, { status: 403 });
   }
 
@@ -27,7 +28,11 @@ export async function POST(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "Invalid request payload." }, { status: 400 });
+  }
+
   const {
     projectId,
     jobNumberPreview,
@@ -64,6 +69,18 @@ export async function POST(request: Request) {
     };
     resolvedAssignments: ResolvedAssignment[];
   } = body;
+
+  if (!jobNumberPreview || typeof jobNumberPreview !== "string") {
+    return NextResponse.json({ error: "Missing job number." }, { status: 400 });
+  }
+
+  if (!formValues || typeof formValues !== "object") {
+    return NextResponse.json({ error: "Missing project form values." }, { status: 400 });
+  }
+
+  if (!Array.isArray(resolvedAssignments)) {
+    return NextResponse.json({ error: "Assignments payload is invalid." }, { status: 400 });
+  }
 
   try {
     let customerId = formValues.customerId;
@@ -167,6 +184,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, projectId: savedProjectId, jobNumber: savedJobNumber });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Save failed.";
+    console.error("Failed to save project:", err);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
