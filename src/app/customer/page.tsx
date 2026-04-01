@@ -29,6 +29,7 @@ interface CustomerProject {
   customer_name: string | null;
   billing_periods: BillingPeriod[];
   weekly_updates: WeeklyUpdate[];
+  team_members: ProjectTeamMember[];
 }
 
 type ProjectTeamMember = {
@@ -73,61 +74,33 @@ export default function CustomerPage() {
       setUserEmail(user.email ?? "");
       setUserId(user.id);
 
-      const { data: contactRows } = await supabase
-        .from("project_customer_contacts")
-        .select("project_id")
-        .eq("profile_id", user.id)
-        .eq("portal_access", true);
+      const response = await fetch("/api/customer/data?section=projects", {
+        credentials: "include",
+      });
+      const json = await response.json();
 
-      const projectIds = (contactRows ?? []).map((row) => row.project_id);
-      if (!projectIds.length) {
+      if (!response.ok) {
         setProjects([]);
         return;
       }
 
-      const { data: projectData } = await supabase
-        .from("projects")
-        .select("id, name, estimated_income, job_number, site_address, general_contractor, customer:customers(name)")
-        .in("id", projectIds)
-        .eq("is_active", true)
-        .order("name");
+      const projectData = (json?.projects ?? []) as Array<{
+        id: string;
+        name: string;
+        estimated_income: number;
+        job_number: string | null;
+        site_address: string | null;
+        general_contractor: string | null;
+        customer?: { name: string } | { name: string }[] | null;
+      }>;
+      const periods = (json?.billingPeriods ?? []) as BillingPeriod[];
+      const updates = (json?.weeklyUpdates ?? []) as WeeklyUpdate[];
+      const assignments = (json?.assignments ?? []) as Array<ProjectTeamMember & { project_id: string }>;
 
       if (!projectData?.length) {
         setProjects([]);
         return;
       }
-
-      const ids = projectData.map((project) => project.id);
-
-      const [{ data: periods }, { data: updates }] = await Promise.all([
-        supabase
-          .from("billing_periods")
-          .select("*")
-          .in("project_id", ids)
-          .order("period_month", { ascending: false }),
-        supabase
-          .from("weekly_updates")
-          .select(`
-            id,
-            project_id,
-            pm_id,
-            week_of,
-            pct_complete,
-            notes,
-            blockers,
-            submitted_at,
-            crew_log,
-            material_delivered,
-            equipment_set,
-            safety_incidents,
-            inspections_tests,
-            delays_impacts,
-            other_remarks
-          `)
-          .in("project_id", ids)
-          .order("week_of", { ascending: false })
-          .limit(100),
-      ]);
 
       const combined = projectData.map((project) => {
         const customer = Array.isArray(project.customer) ? project.customer[0] : project.customer;
@@ -142,6 +115,7 @@ export default function CustomerPage() {
           customer_name: customer?.name ?? null,
           billing_periods: ((periods ?? []).filter((period) => period.project_id === project.id) as BillingPeriod[]),
           weekly_updates: ((updates ?? []).filter((update) => update.project_id === project.id) as WeeklyUpdate[]),
+          team_members: assignments.filter((assignment) => assignment.project_id === project.id),
         };
       });
 
@@ -363,39 +337,13 @@ function ProjectDetail({
 }) {
   const supabase = createClient();
   const [view, setView] = useState<"updates" | "billing">("updates");
-  const [teamMembers, setTeamMembers] = useState<ProjectTeamMember[]>([]);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackSaving, setFeedbackSaving] = useState(false);
   const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null);
   const [statusLinkMessage, setStatusLinkMessage] = useState<string | null>(null);
-  const [teamLoading, setTeamLoading] = useState(true);
   const latestPeriod = project.billing_periods[0];
   const publicStatusPath = project.job_number ? `/status/${encodeURIComponent(project.job_number)}` : null;
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadTeam() {
-      setTeamLoading(true);
-      const { data } = await supabase
-        .from("project_assignments")
-        .select("role_on_project, profile:profiles(full_name, email), pm_directory:pm_directory(first_name, last_name, email, phone)")
-        .eq("project_id", project.id)
-        .in("role_on_project", ["pm", "lead"]);
-
-      if (active) {
-        setTeamMembers((data as ProjectTeamMember[] | null) ?? []);
-        setTeamLoading(false);
-      }
-    }
-
-    void loadTeam();
-
-    return () => {
-      active = false;
-    };
-  }, [project.id, supabase]);
 
   const progressChartData = useMemo(
     () =>
@@ -510,9 +458,7 @@ function ProjectDetail({
         </div>
       </section>
 
-      {teamLoading ? (
-        <ProjectDetailSkeleton />
-      ) : teamMembers.length > 0 && (
+      {project.team_members.length > 0 && (
         <section className="customer-print-card rounded-3xl border bg-white p-6 shadow-sm" style={{ borderColor: BORDER }}>
           <div className="mb-4">
             <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: HEADER_BG }}>
@@ -521,7 +467,7 @@ function ProjectDetail({
             <h3 className="text-xl font-bold" style={{ color: CHARCOAL }}>Who to contact</h3>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            {teamMembers.map((member, index) => {
+            {project.team_members.map((member, index) => {
               const profile = Array.isArray(member.profile) ? member.profile[0] : member.profile;
               const directory = Array.isArray(member.pm_directory) ? member.pm_directory[0] : member.pm_directory;
               const name =
