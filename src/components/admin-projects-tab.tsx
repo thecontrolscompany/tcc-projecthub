@@ -199,13 +199,37 @@ function buildAssignmentDrafts(project: ProjectRow, teamOptions: TeamMemberOptio
 }
 
 function getPrimaryPmLabel(project: ProjectRow) {
-  const primaryAssignment = project.project_assignments.find((assignment) => assignment.role_on_project === "pm");
-  if (primaryAssignment?.profile?.full_name) return primaryAssignment.profile.full_name;
-  if (primaryAssignment?.pm_directory) {
-    return [primaryAssignment.pm_directory.first_name, primaryAssignment.pm_directory.last_name].filter(Boolean).join(" ").trim()
-      || primaryAssignment.pm_directory.email;
+  // Use pm_id / pm_directory_id as the canonical primary PM pointers
+  if (project.pm_id) {
+    const assignment = project.project_assignments.find(
+      (a) => a.profile_id === project.pm_id
+    );
+    if (assignment?.profile?.full_name) return assignment.profile.full_name;
+    if (assignment?.profile?.email) return assignment.profile.email;
   }
-  return project.pm_directory?.first_name ?? project.pm_directory?.email ?? "-";
+  if (project.pm_directory_id) {
+    const assignment = project.project_assignments.find(
+      (a) => a.pm_directory_id === project.pm_directory_id
+    );
+    if (assignment?.pm_directory) {
+      return (
+        [assignment.pm_directory.first_name, assignment.pm_directory.last_name]
+          .filter(Boolean)
+          .join(" ")
+          .trim() || assignment.pm_directory.email
+      );
+    }
+    // Fall back to the joined pm_directory on the project row itself
+    if (project.pm_directory) {
+      return (
+        [project.pm_directory.first_name, project.pm_directory.last_name]
+          .filter(Boolean)
+          .join(" ")
+          .trim() || project.pm_directory.email
+      );
+    }
+  }
+  return "-";
 }
 
 export function AdminProjectsTab() {
@@ -403,7 +427,6 @@ export function AdminProjectsTab() {
       : project.pm_directory_id
         ? teamMemberOptions.find((option) => option.pmDirectoryId === project.pm_directory_id)
         : undefined;
-    console.log("[open-edit] project.pm_id:", project.pm_id, "pm_directory_id:", project.pm_directory_id, "matched:", matchingPrimaryOption?.id ?? null);
     setPrimaryPersonId(matchingPrimaryOption?.id ?? null);
     setPendingTeamMemberId("");
     setPendingRoleOnProject("pm");
@@ -483,9 +506,6 @@ export function AdminProjectsTab() {
           };
         })
         .filter(Boolean);
-
-      console.log("[save-project] primaryPersonId:", primaryPersonId);
-      console.log("[save-project] resolvedAssignments:", JSON.stringify(resolvedAssignments));
 
       const prevContractPrice = editingProject
         ? (editingProject.contract_price ?? editingProject.estimated_income ?? null)
