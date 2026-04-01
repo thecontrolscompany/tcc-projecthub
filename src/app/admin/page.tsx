@@ -18,6 +18,8 @@ export default function AdminPage() {
   const [periodMonth, setPeriodMonth] = useState<Date>(startOfMonth(new Date()));
   const [rows, setRows] = useState<BillingRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [actionStatus, setActionStatus] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<UserRole>("admin");
   const supabase = createClient();
@@ -25,20 +27,56 @@ export default function AdminPage() {
   const monthLabel = format(periodMonth, "MMMM yyyy");
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      supabase.from("profiles").select("role").eq("id", user.id).single().then(({ data }) => {
-        if (data?.role) setUserRole(data.role as UserRole);
-      });
+    let active = true;
+
+    async function bootstrapAuth() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (!active) return;
+
+      if (error || !data.user) {
+        setAuthError("Your browser session is not ready yet. Please refresh or sign in again.");
+        setAuthReady(false);
+        setLoading(false);
+        return;
+      }
+
+      setAuthReady(true);
+      setAuthError(null);
+
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
+      if (profile?.role && active) {
+        setUserRole(profile.role as UserRole);
+      }
+    }
+
+    void bootstrapAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      if (session?.user) {
+        setAuthReady(true);
+        setAuthError(null);
+      } else {
+        setAuthReady(false);
+        setAuthError("Your browser session is not ready yet. Please refresh or sign in again.");
+      }
     });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (tab !== "billing") return;
+    if (!authReady || tab !== "billing") return;
     loadBillingData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, periodMonth]);
+  }, [authReady, tab, periodMonth]);
 
   function mapFallbackBillingRows(
     periods: Array<{
@@ -412,6 +450,16 @@ export default function AdminPage() {
       </div>
 
       <main className="mx-auto max-w-screen-2xl px-6 py-6">
+        {!authReady && authError ? (
+          <div className="rounded-2xl border border-status-warning/30 bg-status-warning/10 px-6 py-5 text-sm text-status-warning">
+            {authError}
+          </div>
+        ) : null}
+
+        {!authReady ? (
+          <div className="py-16 text-center text-text-tertiary">Loading admin data...</div>
+        ) : (
+          <>
         {tab === "billing" && (
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3">
@@ -487,6 +535,8 @@ export default function AdminPage() {
         {tab === "contacts" && <PmDirectoryTab />}
 
         {tab === "users" && <UsersTab />}
+          </>
+        )}
       </main>
     </div>
   );
