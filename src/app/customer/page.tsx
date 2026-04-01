@@ -6,9 +6,12 @@ import { format } from "date-fns";
 import {
   Bar,
   BarChart,
+  Cell,
   CartesianGrid,
   Line,
   LineChart,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -252,6 +255,35 @@ function ProjectList({
   projects: CustomerProject[];
   onSelect: (project: CustomerProject) => void;
 }) {
+  const summary = useMemo(() => {
+    const totalContracts = projects.reduce((sum, project) => sum + (project.estimated_income ?? 0), 0);
+    const totalBilled = projects.reduce((sum, project) => sum + getProjectBilledToDate(project), 0);
+    const totalBacklog = Math.max(totalContracts - totalBilled, 0);
+
+    const financialChartData = projects.map((project) => {
+      const billed = getProjectBilledToDate(project);
+      return {
+        name: getProjectChartLabel(project),
+        contractValue: project.estimated_income ?? 0,
+        billed,
+        backlog: Math.max((project.estimated_income ?? 0) - billed, 0),
+      };
+    });
+
+    const mixChartData = [
+      { name: "Billed", value: totalBilled, color: HEADER_BG },
+      { name: "Backlog", value: totalBacklog, color: ACCENT },
+    ].filter((item) => item.value > 0);
+
+    return {
+      totalContracts,
+      totalBilled,
+      totalBacklog,
+      financialChartData,
+      mixChartData,
+    };
+  }, [projects]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
@@ -266,6 +298,81 @@ function ProjectList({
         <p className="text-sm text-slate-600">
           {projects.length} active project{projects.length !== 1 ? "s" : ""}
         </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <MetricCard label="Total Contracts" value={currency(summary.totalContracts)} />
+        <MetricCard label="Total Billed" value={currency(summary.totalBilled)} />
+        <MetricCard label="Backlog" value={currency(summary.totalBacklog)} />
+      </div>
+
+      <div className="customer-print-chart grid gap-5 lg:grid-cols-[1.3fr_0.9fr]">
+        <ChartCard title="Financial Snapshot by Project">
+          {summary.financialChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={summary.financialChartData} margin={{ top: 8, right: 12, left: -8, bottom: 8 }}>
+                <CartesianGrid vertical={false} stroke="#dbe7e5" />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fill: "#475569", fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tickFormatter={(value) => compactCurrency(value)}
+                  tick={{ fill: "#475569", fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip content={<PortfolioTooltip />} />
+                <Bar dataKey="contractValue" fill="#b2dfdb" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="billed" fill={HEADER_BG} radius={[8, 8, 0, 0]} />
+                <Bar dataKey="backlog" fill={ACCENT} radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyChartMessage message="Contract and billing totals will appear here as project data is recorded." />
+          )}
+        </ChartCard>
+
+        <ChartCard title="Billed vs Backlog">
+          {summary.mixChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={summary.mixChartData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={68}
+                  outerRadius={104}
+                  paddingAngle={2}
+                >
+                  {summary.mixChartData.map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip content={<PortfolioMixTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyChartMessage message="Billed and backlog totals will appear once billing records are available." />
+          )}
+          {summary.mixChartData.length > 0 && (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {summary.mixChartData.map((entry) => (
+                <div key={entry.name} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{entry.name}</p>
+                  </div>
+                  <p className="mt-2 text-lg font-bold" style={{ color: CHARCOAL }}>
+                    {currency(entry.value)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </ChartCard>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
@@ -983,6 +1090,53 @@ function BillingTooltip({
   );
 }
 
+function PortfolioTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: Array<{ name: string; value: number }>;
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+
+  const labels: Record<string, string> = {
+    contractValue: "Contract Value",
+    billed: "Billed",
+    backlog: "Backlog",
+  };
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-lg">
+      <p className="font-semibold text-slate-800">{label}</p>
+      {payload.map((entry) => (
+        <p key={entry.name} className="text-slate-600">
+          {labels[entry.name] ?? entry.name}: {currency(entry.value)}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+function PortfolioMixTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: { name: string; value: number } }>;
+}) {
+  if (!active || !payload?.length) return null;
+  const item = payload[0].payload;
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-lg">
+      <p className="font-semibold text-slate-800">{item.name}</p>
+      <p className="text-slate-600">{currency(item.value)}</p>
+    </div>
+  );
+}
+
 function SignOutButton() {
   const supabase = createClient();
 
@@ -1014,6 +1168,22 @@ function compactCurrency(value: number) {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(value);
+}
+
+function getProjectBilledToDate(project: CustomerProject) {
+  return project.billing_periods.reduce((sum, period) => sum + (period.actual_billed ?? 0), 0);
+}
+
+function getProjectChartLabel(project: CustomerProject) {
+  if (project.job_number) {
+    return project.job_number;
+  }
+
+  if (project.name.length <= 18) {
+    return project.name;
+  }
+
+  return `${project.name.slice(0, 15)}...`;
 }
 
 function PackageIcon() {
