@@ -12,6 +12,7 @@ type ParsedWeeklyUpdate = {
   equipmentSet: string | null;
   safetyIncidents: string | null;
   inspectionsTests: string | null;
+  otherRemarks: string | null;
   totalMen: number;
   totalHours: number;
   alreadyExists: boolean;
@@ -86,7 +87,7 @@ export async function POST(request: Request) {
           equipment_set: row.equipmentSet,
           safety_incidents: row.safetyIncidents,
           inspections_tests: row.inspectionsTests,
-          notes: null,
+          notes: row.otherRemarks ?? null,
           imported_from: filename,
           submitted_at: new Date().toISOString(),
         });
