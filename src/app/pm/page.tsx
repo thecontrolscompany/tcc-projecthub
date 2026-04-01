@@ -333,7 +333,9 @@ function UpdateForm({
   const [recentUpdates, setRecentUpdates] = useState<WeeklyUpdate[]>([]);
   const [pocItems, setPocItems] = useState<PocLineItem[]>([]);
   const [pocPcts, setPocPcts] = useState<Record<string, number>>({}); // id -> pct 0-100
-  const [manualOverride, setManualOverride] = useState<string>(""); // empty = use POC calc
+  const [manualOverride, setManualOverride] = useState<string>(() =>
+    project.current_period ? (project.current_period.pct_complete * 100).toFixed(1) : ""
+  );
 
   // Derived overall % from POC line items (weighted)
   const totalWeight = pocItems.reduce((sum, item) => sum + item.weight, 0);
@@ -465,7 +467,7 @@ function UpdateForm({
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Header row */}
-        <div className="flex items-end gap-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <label className={labelCls}>Week of (ending Saturday)</label>
             <input
@@ -478,31 +480,58 @@ function UpdateForm({
           <div className="rounded-xl border border-status-success/20 bg-status-success/5 px-5 py-3">
             <p className="text-xs text-text-tertiary mb-1">Overall % Complete</p>
             <p className="text-2xl font-bold text-status-success mb-1">{pctComplete.toFixed(1)}%</p>
-            {pocItems.length > 0 && manualOverride === "" && (
-              <p className="text-xs text-text-tertiary mb-2">calculated from POC</p>
+            {pocItems.length > 0 ? (
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs text-text-tertiary">Calculated from POC</p>
+                  <p className="text-lg font-semibold text-text-primary">
+                    {pocPctDecimal !== null ? `${(pocPctDecimal * 100).toFixed(1)}%` : "Not configured"}
+                  </p>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">Override calculated value</label>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={0.1}
+                      value={manualOverride}
+                      onChange={(e) => setManualOverride(e.target.value)}
+                      placeholder={project.current_period ? (project.current_period.pct_complete * 100).toFixed(1) : "0.0"}
+                      className="w-28 rounded-lg border border-border-default bg-surface-base px-3 py-1.5 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+                    />
+                    <span className="text-xs text-text-tertiary">Clear to use the calculated value above.</span>
+                    {manualOverride !== "" && (
+                      <button
+                        type="button"
+                        onClick={() => setManualOverride("")}
+                        className="text-xs font-medium text-status-danger hover:underline"
+                      >
+                        Clear override
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-3 rounded-xl border border-dashed border-status-success/30 bg-white/50 p-4">
+                <label className="mb-1 block text-sm font-medium text-text-primary">Enter % Complete</label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.1}
+                    value={manualOverride}
+                    onChange={(e) => setManualOverride(e.target.value)}
+                    placeholder={project.current_period ? (project.current_period.pct_complete * 100).toFixed(1) : "0.0"}
+                    className="w-32 rounded-lg border border-border-default bg-surface-base px-3 py-2 text-center text-sm font-semibold text-text-primary focus:border-status-success/50 focus:outline-none"
+                  />
+                  <span className="text-sm text-text-secondary">Manual override is used when no POC categories are configured.</span>
+                </div>
+              </div>
             )}
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min={0}
-                max={100}
-                step={0.1}
-                value={manualOverride}
-                onChange={(e) => setManualOverride(e.target.value)}
-                placeholder={pctComplete.toFixed(1)}
-                className="w-20 rounded-lg border border-border-default bg-surface-base px-2 py-1 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
-              />
-              <span className="text-xs text-text-tertiary">manual override</span>
-              {manualOverride !== "" && (
-                <button
-                  type="button"
-                  onClick={() => setManualOverride("")}
-                  className="text-xs text-status-danger hover:underline"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
           </div>
         </div>
 
@@ -547,8 +576,8 @@ function UpdateForm({
           </div>
         ) : (
           <div className="rounded-xl border border-dashed border-border-default p-4 text-center text-sm text-text-tertiary">
-            No POC line items configured for this project.{" "}
-            <span className="text-text-secondary">Ask admin to set up POC categories in the project settings.</span>
+            No POC line items configured for this project yet.{" "}
+            <span className="text-text-secondary">Use the manual % complete input above, or ask admin to set up POC categories later.</span>
           </div>
         )}
 
