@@ -439,30 +439,29 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Missing project id." }, { status: 400 });
     }
 
-    const [contactResult, profileResult] = await Promise.all([
+    const [contactResult, availableContactsResult] = await Promise.all([
       adminClient
         .from("project_customer_contacts")
         .select("*, profile:profiles(*)")
         .eq("project_id", projectId),
       adminClient
-        .from("profiles")
-        .select("*")
-        .eq("role", "customer")
+        .from("pm_directory")
+        .select("id, email, first_name, last_name, profile_id")
         .order("email"),
     ]);
 
-    if (contactResult.error || profileResult.error) {
+    if (contactResult.error || availableContactsResult.error) {
       return NextResponse.json({
         error:
           contactResult.error?.message ||
-          profileResult.error?.message ||
+          availableContactsResult.error?.message ||
           "Failed to load customer contacts.",
       }, { status: 500 });
     }
 
     return NextResponse.json({
       contacts: contactResult.data ?? [],
-      profiles: profileResult.data ?? [],
+      availableContacts: availableContactsResult.data ?? [],
     });
   }
 
