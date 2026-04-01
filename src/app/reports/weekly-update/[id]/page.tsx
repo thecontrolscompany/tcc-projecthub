@@ -4,6 +4,8 @@ import { format } from "date-fns";
 import { notFound, redirect } from "next/navigation";
 import { PrintButton } from "@/app/reports/weekly-update/[id]/PrintButton";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import type { CrewLogEntry, PocSnapshotEntry, UserRole } from "@/types/database";
 
 type PageProps = {
@@ -161,8 +163,9 @@ async function resolvePmName(
 
 export default async function WeeklyUpdateReportPage({ params }: PageProps) {
   const { id } = await params;
-  const supabase = await createClient();
 
+  // Auth check — cookie client only for session verification
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -171,15 +174,16 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
+  // Use service-role client for all data fetching (avoids RLS issues with SSO sessions)
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
-  const role = (profile?.role ?? "customer") as UserRole;
+  const resolvedProfile = await resolveUserRole(user);
+  const role = (resolvedProfile?.role ?? "customer") as UserRole;
 
-  const { data: updateLookup } = await supabase
+  const { data: updateLookup } = await admin
     .from("weekly_updates")
     .select("id, project_id")
     .eq("id", id)
@@ -189,12 +193,12 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
     notFound();
   }
 
-  const allowed = await canAccessReport(supabase, role, user.id, updateLookup.project_id);
+  const allowed = await canAccessReport(admin, role, user.id, updateLookup.project_id);
   if (!allowed) {
     redirect("/login");
   }
 
-  const { data } = await supabase
+  const { data } = await admin
     .from("weekly_updates")
     .select(`
       id,
@@ -238,7 +242,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
   }
 
   const customer = normalizeSingle(project.customer);
-  const pmName = await resolvePmName(supabase, project.id, update.pm);
+  const pmName = await resolvePmName(admin, project.id, update.pm);
 
   const crewLog = update.crew_log && update.crew_log.length > 0 ? update.crew_log : emptyCrewLog();
   const totalManHours = crewLog.reduce((sum, row) => sum + (Number(row.men) || 0) * (Number(row.hours) || 0), 0);
