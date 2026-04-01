@@ -32,13 +32,15 @@ export default function CustomerPage() {
         return;
       }
 
-      const { data: customer } = await supabase
-        .from("customers")
-        .select("id")
-        .eq("contact_email", user.email)
-        .single();
+      // Find projects where this profile has portal_access = true
+      const { data: contactRows } = await supabase
+        .from("project_customer_contacts")
+        .select("project_id")
+        .eq("profile_id", user.id)
+        .eq("portal_access", true);
 
-      if (!customer) {
+      const projectIds = (contactRows ?? []).map((r) => r.project_id);
+      if (!projectIds.length) {
         setProjects([]);
         return;
       }
@@ -46,9 +48,8 @@ export default function CustomerPage() {
       const { data: projectData } = await supabase
         .from("projects")
         .select("id, name, estimated_income")
-        .eq("customer_id", customer.id)
+        .in("id", projectIds)
         .eq("is_active", true)
-        .eq("customer_portal_access", true)
         .order("name");
 
       if (!projectData?.length) {

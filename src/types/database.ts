@@ -130,6 +130,17 @@ export interface PmDirectory {
   profile?: Profile;
 }
 
+export interface ProjectCustomerContact {
+  id: string;
+  project_id: string;
+  profile_id: string;
+  portal_access: boolean;
+  email_digest: boolean;
+  created_at: string;
+  // joined
+  profile?: Profile;
+}
+
 export interface ProjectAssignment {
   id: string;
   project_id: string;

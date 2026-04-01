@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
-import type { PocLineItem, ProjectAssignmentRole } from "@/types/database";
+import type { PocLineItem, Profile, ProjectAssignmentRole, ProjectCustomerContact } from "@/types/database";
 
 export type ProjectCustomerOption = {
   id: string;
@@ -331,26 +331,9 @@ export function ProjectModal({
             </FormField>
           </section>
 
-          <section className="space-y-4">
-            <div>
-              <h4 className="font-heading text-lg font-semibold text-text-primary">Customer Notifications</h4>
-              <p className="mt-1 text-sm text-text-secondary">
-                Control whether the customer can see this project in the portal and receive digest updates.
-              </p>
-            </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              <CheckboxField
-                label="Portal Access — Customer can log in and view this project in the customer portal"
-                checked={values.customerPortalAccess}
-                onChange={(checked) => onChange("customerPortalAccess", checked)}
-              />
-              <CheckboxField
-                label="Email Digest — Customer receives periodic email progress updates"
-                checked={values.customerEmailDigest}
-                onChange={(checked) => onChange("customerEmailDigest", checked)}
-              />
-            </div>
-          </section>
+          {editingProject && (
+            <CustomerContactsSection projectId={editingProject.id} />
+          )}
 
           <section className="space-y-4">
             <div>
@@ -704,6 +687,140 @@ type UpdateRow = {
   notes: string | null;
   blockers: string | null;
 };
+
+function CustomerContactsSection({ projectId }: { projectId: string }) {
+  const supabase = createClient();
+  const [contacts, setContacts] = useState<(ProjectCustomerContact & { profile: Profile })[]>([]);
+  const [allCustomers, setAllCustomers] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [selectedProfileId, setSelectedProfileId] = useState("");
+
+  useEffect(() => {
+    async function load() {
+      const [{ data: contactData }, { data: profileData }] = await Promise.all([
+        supabase
+          .from("project_customer_contacts")
+          .select("*, profile:profiles(*)")
+          .eq("project_id", projectId),
+        supabase
+          .from("profiles")
+          .select("*")
+          .eq("role", "customer")
+          .order("email"),
+      ]);
+      setContacts((contactData ?? []) as (ProjectCustomerContact & { profile: Profile })[]);
+      setAllCustomers((profileData as Profile[]) ?? []);
+      setLoading(false);
+    }
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
+  const existingIds = new Set(contacts.map((c) => c.profile_id));
+  const availableToAdd = allCustomers.filter((p) => !existingIds.has(p.id));
+
+  async function handleAdd() {
+    if (!selectedProfileId) return;
+    setAdding(true);
+    const { data, error } = await supabase
+      .from("project_customer_contacts")
+      .insert({ project_id: projectId, profile_id: selectedProfileId, portal_access: false, email_digest: false })
+      .select("*, profile:profiles(*)")
+      .single();
+    if (!error && data) {
+      setContacts((prev) => [...prev, data as ProjectCustomerContact & { profile: Profile }]);
+      setSelectedProfileId("");
+    }
+    setAdding(false);
+  }
+
+  async function handleToggle(id: string, field: "portal_access" | "email_digest", value: boolean) {
+    setContacts((prev) => prev.map((c) => c.id === id ? { ...c, [field]: value } : c));
+    await supabase.from("project_customer_contacts").update({ [field]: value }).eq("id", id);
+  }
+
+  async function handleRemove(id: string) {
+    await supabase.from("project_customer_contacts").delete().eq("id", id);
+    setContacts((prev) => prev.filter((c) => c.id !== id));
+  }
+
+  return (
+    <section className="space-y-3">
+      <h4 className="font-heading text-lg font-semibold text-text-primary">Customer Portal Access</h4>
+      <p className="text-xs text-text-secondary">
+        Add customer accounts and set whether they can view this project in the portal and/or receive email digests.
+      </p>
+
+      {loading ? (
+        <p className="text-sm text-text-tertiary">Loading...</p>
+      ) : (
+        <div className="space-y-2">
+          {contacts.length === 0 && (
+            <p className="text-sm text-text-tertiary">No customer contacts added yet.</p>
+          )}
+          {contacts.map((c) => (
+            <div key={c.id} className="flex items-center gap-3 rounded-xl border border-border-default bg-surface-raised px-4 py-2.5">
+              <div className="flex-1 min-w-0">
+                <p className="truncate text-sm font-medium text-text-primary">{c.profile?.full_name || c.profile?.email}</p>
+                <p className="truncate text-xs text-text-tertiary">{c.profile?.email}</p>
+              </div>
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={c.portal_access}
+                  onChange={(e) => void handleToggle(c.id, "portal_access", e.target.checked)}
+                  className="h-4 w-4 rounded accent-brand-primary"
+                />
+                <span className="text-xs text-text-secondary">Portal</span>
+              </label>
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={c.email_digest}
+                  onChange={(e) => void handleToggle(c.id, "email_digest", e.target.checked)}
+                  className="h-4 w-4 rounded accent-brand-primary"
+                />
+                <span className="text-xs text-text-secondary">Email</span>
+              </label>
+              <button onClick={() => void handleRemove(c.id)} className="text-xs text-status-danger hover:underline shrink-0">
+                Remove
+              </button>
+            </div>
+          ))}
+
+          {availableToAdd.length > 0 && (
+            <div className="flex items-center gap-2 pt-1">
+              <select
+                value={selectedProfileId}
+                onChange={(e) => setSelectedProfileId(e.target.value)}
+                className="flex-1 rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary/50 focus:outline-none"
+              >
+                <option value="">Select a customer account...</option>
+                {availableToAdd.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.full_name ? `${p.full_name} (${p.email})` : p.email}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => void handleAdd()}
+                disabled={adding || !selectedProfileId}
+                className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-brand-hover disabled:opacity-50"
+              >
+                {adding ? "Adding..." : "Add"}
+              </button>
+            </div>
+          )}
+
+          {availableToAdd.length === 0 && allCustomers.length === 0 && (
+            <p className="text-xs text-text-tertiary">No customer accounts exist yet. Create one at Admin → User Management.</p>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
 
 function PocSetupSection({ projectId }: { projectId: string }) {
   const supabase = createClient();

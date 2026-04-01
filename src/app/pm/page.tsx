@@ -333,15 +333,19 @@ function UpdateForm({
   const [recentUpdates, setRecentUpdates] = useState<WeeklyUpdate[]>([]);
   const [pocItems, setPocItems] = useState<PocLineItem[]>([]);
   const [pocPcts, setPocPcts] = useState<Record<string, number>>({}); // id -> pct 0-100
+  const [manualOverride, setManualOverride] = useState<string>(""); // empty = use POC calc
 
-  // Derived overall % from POC line items (weighted), falls back to period value
+  // Derived overall % from POC line items (weighted)
   const totalWeight = pocItems.reduce((sum, item) => sum + item.weight, 0);
   const pocPctDecimal = totalWeight > 0
     ? pocItems.reduce((sum, item) => sum + item.weight * ((pocPcts[item.id] ?? item.pct_complete * 100) / 100), 0) / totalWeight
     : null;
-  const pctComplete = pocPctDecimal !== null
-    ? pocPctDecimal * 100
-    : (project.current_period ? project.current_period.pct_complete * 100 : 0);
+  // Manual override takes precedence if set; otherwise use weighted POC; fallback to period value
+  const pctComplete = manualOverride !== ""
+    ? Number(manualOverride)
+    : pocPctDecimal !== null
+      ? pocPctDecimal * 100
+      : (project.current_period ? project.current_period.pct_complete * 100 : 0);
 
   useEffect(() => {
     async function loadData() {
@@ -471,10 +475,34 @@ function UpdateForm({
               className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
             />
           </div>
-          <div className="rounded-xl border border-status-success/20 bg-status-success/5 px-5 py-3 text-center">
-            <p className="text-xs text-text-tertiary">Overall % Complete</p>
-            <p className="text-2xl font-bold text-status-success">{pctComplete.toFixed(1)}%</p>
-            {pocItems.length > 0 && <p className="text-xs text-text-tertiary">calculated from POC</p>}
+          <div className="rounded-xl border border-status-success/20 bg-status-success/5 px-5 py-3">
+            <p className="text-xs text-text-tertiary mb-1">Overall % Complete</p>
+            <p className="text-2xl font-bold text-status-success mb-1">{pctComplete.toFixed(1)}%</p>
+            {pocItems.length > 0 && manualOverride === "" && (
+              <p className="text-xs text-text-tertiary mb-2">calculated from POC</p>
+            )}
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={0.1}
+                value={manualOverride}
+                onChange={(e) => setManualOverride(e.target.value)}
+                placeholder={pctComplete.toFixed(1)}
+                className="w-20 rounded-lg border border-border-default bg-surface-base px-2 py-1 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+              />
+              <span className="text-xs text-text-tertiary">manual override</span>
+              {manualOverride !== "" && (
+                <button
+                  type="button"
+                  onClick={() => setManualOverride("")}
+                  className="text-xs text-status-danger hover:underline"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -509,15 +537,9 @@ function UpdateForm({
                         </div>
                       </div>
                     </div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={Math.round(val)}
-                      onChange={(e) => setPocPcts((prev) => ({ ...prev, [item.id]: Number(e.target.value) }))}
-                      className="h-2 w-full cursor-pointer appearance-none rounded-full bg-surface-overlay accent-status-success"
-                    />
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-surface-overlay">
+                      <div className="h-full rounded-full bg-status-success/40 transition-all" style={{ width: `${Math.round(val)}%` }} />
+                    </div>
                   </div>
                 );
               })}
