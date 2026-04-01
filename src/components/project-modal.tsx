@@ -1053,20 +1053,44 @@ function PocSetupSection({ projectId }: { projectId: string }) {
 }
 
 function WeeklyUpdatesSection({ projectId }: { projectId: string }) {
-  const supabase = createClient();
   const [updates, setUpdates] = useState<UpdateRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from("weekly_updates")
-      .select("id, week_of, pct_complete, notes, blockers")
-      .eq("project_id", projectId)
-      .order("week_of", { ascending: false })
-      .then(({ data }) => {
-        setUpdates((data as UpdateRow[]) ?? []);
-        setLoading(false);
-      });
+    let active = true;
+
+    async function loadUpdates() {
+      setLoading(true);
+
+      try {
+        const res = await fetch(`/api/admin/data?section=project-weekly-updates&projectId=${encodeURIComponent(projectId)}`, {
+          credentials: "include",
+        });
+        const json = await res.json();
+
+        if (!active) return;
+
+        if (!res.ok) {
+          setUpdates([]);
+        } else {
+          setUpdates((json?.updates as UpdateRow[]) ?? []);
+        }
+      } catch {
+        if (active) {
+          setUpdates([]);
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadUpdates();
+
+    return () => {
+      active = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 

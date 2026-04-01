@@ -14,9 +14,7 @@ export async function GET(request: Request) {
   }
 
   const resolvedProfile = await resolveUserRole(user);
-  if (resolvedProfile?.role !== "admin") {
-    return NextResponse.json({ error: "Admin access required." }, { status: 403 });
-  }
+  const requesterRole = resolvedProfile?.role ?? "customer";
 
   const adminClient = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,6 +25,9 @@ export async function GET(request: Request) {
   const section = searchParams.get("section");
 
   if (section === "billing") {
+    if (requesterRole !== "admin") {
+      return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+    }
     const month = searchParams.get("month");
     if (!month) {
       return NextResponse.json({ error: "Missing month." }, { status: 400 });
@@ -70,6 +71,9 @@ export async function GET(request: Request) {
   }
 
   if (section === "projects") {
+    if (requesterRole !== "admin") {
+      return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+    }
     const { data, error } = await adminClient
       .from("projects")
       .select(`
@@ -123,6 +127,9 @@ export async function GET(request: Request) {
   }
 
   if (section === "project") {
+    if (requesterRole !== "admin") {
+      return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+    }
     const id = searchParams.get("id");
     if (!id) {
       return NextResponse.json({ error: "Missing project id." }, { status: 400 });
@@ -182,6 +189,9 @@ export async function GET(request: Request) {
   }
 
   if (section === "project-lookups") {
+    if (requesterRole !== "admin") {
+      return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+    }
     const [customersResult, profilesResult, contactsResult] = await Promise.all([
       adminClient.from("customers").select("id, name, contact_email").order("name"),
       adminClient.from("profiles").select("id, full_name, email, role").in("role", ["pm", "lead", "installer", "ops_manager"]).order("full_name"),
@@ -206,6 +216,9 @@ export async function GET(request: Request) {
   }
 
   if (section === "contacts") {
+    if (requesterRole !== "admin") {
+      return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+    }
     const [contactResult, profileResult] = await Promise.all([
       adminClient
         .from("pm_directory")
@@ -227,6 +240,9 @@ export async function GET(request: Request) {
   }
 
   if (section === "weekly-updates") {
+    if (requesterRole !== "admin") {
+      return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+    }
     const { data, error } = await adminClient
       .from("weekly_updates")
       .select(`
@@ -257,6 +273,9 @@ export async function GET(request: Request) {
   }
 
   if (section === "feedback") {
+    if (requesterRole !== "admin") {
+      return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+    }
     const showUnreviewedOnly = searchParams.get("unreviewedOnly") === "true";
     let query = adminClient
       .from("customer_feedback")
@@ -276,6 +295,9 @@ export async function GET(request: Request) {
   }
 
   if (section === "users") {
+    if (requesterRole !== "admin") {
+      return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+    }
     const { data, error } = await adminClient
       .from("profiles")
       .select("id, full_name, email, role")
@@ -287,6 +309,29 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ users: data ?? [] });
+  }
+
+  if (section === "project-weekly-updates") {
+    if (!["admin", "ops_manager"].includes(requesterRole)) {
+      return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });
+    }
+
+    const projectId = searchParams.get("projectId");
+    if (!projectId) {
+      return NextResponse.json({ error: "Missing project id." }, { status: 400 });
+    }
+
+    const { data, error } = await adminClient
+      .from("weekly_updates")
+      .select("id, week_of, pct_complete, notes, blockers")
+      .eq("project_id", projectId)
+      .order("week_of", { ascending: false });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ updates: data ?? [] });
   }
 
   return NextResponse.json({ error: "Unknown section." }, { status: 400 });
