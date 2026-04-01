@@ -124,6 +124,7 @@ export interface PmDirectory {
   first_name: string | null;
   last_name: string | null;
   email: string;
+  phone: string | null;
   intended_role: InternalContactRole | null;
   // joined
   profile?: Profile;

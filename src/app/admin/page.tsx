@@ -603,6 +603,7 @@ function PmDirectoryTab() {
     email: string;
     first_name: string | null;
     last_name: string | null;
+    phone: string | null;
     profile_id: string | null;
     intended_role: InternalContactRole | null;
     profile?: { full_name: string | null } | null;
@@ -618,6 +619,7 @@ function PmDirectoryTab() {
   const [formEmail, setFormEmail] = useState("");
   const [formFirstName, setFormFirstName] = useState("");
   const [formLastName, setFormLastName] = useState("");
+  const [formPhone, setFormPhone] = useState("");
   const [formRole, setFormRole] = useState<InternalContactRole>("pm");
   const [savingPm, setSavingPm] = useState(false);
   const [deletingPmId, setDeletingPmId] = useState<string | null>(null);
@@ -629,7 +631,7 @@ function PmDirectoryTab() {
       const [{ data: contactData }, { data: profileData }] = await Promise.all([
         supabase
           .from("pm_directory")
-          .select("id, email, first_name, last_name, profile_id, intended_role, profile:profiles(full_name)")
+          .select("id, email, first_name, last_name, phone, profile_id, intended_role, profile:profiles(full_name)")
           .order("email"),
         supabase
           .from("profiles")
@@ -670,6 +672,7 @@ function PmDirectoryTab() {
     setFormEmail("");
     setFormFirstName("");
     setFormLastName("");
+    setFormPhone("");
     setFormRole("pm");
   }
 
@@ -685,6 +688,7 @@ function PmDirectoryTab() {
     setFormEmail(pm.email);
     setFormFirstName(pm.first_name ?? "");
     setFormLastName(pm.last_name ?? "");
+    setFormPhone(pm.phone ?? "");
     setFormRole(
       pm.matchedProfileRole && INTERNAL_CONTACT_ROLES.includes(pm.matchedProfileRole as InternalContactRole)
         ? (pm.matchedProfileRole as InternalContactRole)
@@ -734,6 +738,7 @@ function PmDirectoryTab() {
             email: normalizedEmail,
             first_name: formFirstName.trim() || null,
             last_name: formLastName.trim() || null,
+            phone: formPhone.trim() || null,
             intended_role: isInternalContact ? intendedRole : null,
           })
           .eq("id", editingPm.id);
@@ -748,6 +753,7 @@ function PmDirectoryTab() {
             email: normalizedEmail,
             first_name: formFirstName.trim() || null,
             last_name: formLastName.trim() || null,
+            phone: formPhone.trim() || null,
             intended_role: isInternalContact ? intendedRole : null,
           });
 
@@ -902,6 +908,7 @@ function PmDirectoryTab() {
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Email</th>
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">First Name</th>
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Last Name</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Phone</th>
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Portal Link</th>
                 <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actions</th>
               </tr>
@@ -912,6 +919,7 @@ function PmDirectoryTab() {
                   <td className="px-4 py-2.5 text-text-primary">{pm.email}</td>
                   <td className="px-4 py-2.5 text-text-secondary">{pm.first_name ?? "-"}</td>
                   <td className="px-4 py-2.5 text-text-secondary">{pm.last_name ?? "-"}</td>
+                  <td className="px-4 py-2.5 text-text-secondary">{pm.phone ?? "-"}</td>
                   <td className="px-4 py-2.5">
                     {pm.profile_id ? (
                       <div className="flex flex-col gap-1">
@@ -1013,6 +1021,15 @@ function PmDirectoryTab() {
                     type="text"
                     value={formLastName}
                     onChange={(e) => setFormLastName(e.target.value)}
+                    className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">Phone</label>
+                  <input
+                    type="tel"
+                    value={formPhone}
+                    onChange={(e) => setFormPhone(e.target.value)}
                     className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
                   />
                 </div>

@@ -21,10 +21,22 @@ interface CustomerProject {
   id: string;
   name: string;
   estimated_income: number;
+  job_number: string | null;
+  site_address: string | null;
+  general_contractor: string | null;
   customer_name: string | null;
   billing_periods: BillingPeriod[];
   weekly_updates: WeeklyUpdate[];
 }
+
+type ProjectTeamMember = {
+  role_on_project: "pm" | "lead";
+  profile?: { full_name: string | null; email: string } | { full_name: string | null; email: string }[] | null;
+  pm_directory?:
+    | { first_name: string | null; last_name: string | null; email: string; phone: string | null }
+    | { first_name: string | null; last_name: string | null; email: string; phone: string | null }[]
+    | null;
+};
 
 const PAGE_BG = "#f0faf9";
 const HEADER_BG = "#017a6f";
@@ -73,7 +85,7 @@ export default function CustomerPage() {
 
       const { data: projectData } = await supabase
         .from("projects")
-        .select("id, name, estimated_income, customer:customers(name)")
+        .select("id, name, estimated_income, job_number, site_address, general_contractor, customer:customers(name)")
         .in("id", projectIds)
         .eq("is_active", true)
         .order("name");
@@ -122,6 +134,9 @@ export default function CustomerPage() {
           id: project.id,
           name: project.name,
           estimated_income: project.estimated_income,
+          job_number: project.job_number ?? null,
+          site_address: project.site_address ?? null,
+          general_contractor: project.general_contractor ?? null,
           customer_name: customer?.name ?? null,
           billing_periods: ((periods ?? []).filter((period) => period.project_id === project.id) as BillingPeriod[]),
           weekly_updates: ((updates ?? []).filter((update) => update.project_id === project.id) as WeeklyUpdate[]),
@@ -328,11 +343,34 @@ function ProjectDetail({
 }) {
   const supabase = createClient();
   const [view, setView] = useState<"updates" | "billing">("updates");
+  const [teamMembers, setTeamMembers] = useState<ProjectTeamMember[]>([]);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackSaving, setFeedbackSaving] = useState(false);
   const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null);
   const latestPeriod = project.billing_periods[0];
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadTeam() {
+      const { data } = await supabase
+        .from("project_assignments")
+        .select("role_on_project, profile:profiles(full_name, email), pm_directory:pm_directory(first_name, last_name, email, phone)")
+        .eq("project_id", project.id)
+        .in("role_on_project", ["pm", "lead"]);
+
+      if (active) {
+        setTeamMembers((data as ProjectTeamMember[] | null) ?? []);
+      }
+    }
+
+    void loadTeam();
+
+    return () => {
+      active = false;
+    };
+  }, [project.id, supabase]);
 
   const progressChartData = useMemo(
     () =>
@@ -383,6 +421,15 @@ function ProjectDetail({
                 {project.name}
               </h2>
               <p className="mt-1 text-sm text-slate-500">{project.customer_name || "Customer project"}</p>
+              {project.site_address && (
+                <div className="mt-2 flex items-start gap-2 text-sm text-slate-600">
+                  <LocationPinIcon />
+                  <span>{project.site_address}</span>
+                </div>
+              )}
+              {project.general_contractor && (
+                <p className="text-sm text-slate-600">GC: {project.general_contractor}</p>
+              )}
             </div>
             {latestPeriod && (
               <div className="max-w-xl">
@@ -414,6 +461,60 @@ function ProjectDetail({
           </div>
         </div>
       </section>
+
+      {teamMembers.length > 0 && (
+        <section className="customer-print-card rounded-3xl border bg-white p-6 shadow-sm" style={{ borderColor: BORDER }}>
+          <div className="mb-4">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: HEADER_BG }}>
+              Your Project Team
+            </p>
+            <h3 className="text-xl font-bold" style={{ color: CHARCOAL }}>Who to contact</h3>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {teamMembers.map((member, index) => {
+              const profile = Array.isArray(member.profile) ? member.profile[0] : member.profile;
+              const directory = Array.isArray(member.pm_directory) ? member.pm_directory[0] : member.pm_directory;
+              const name =
+                profile?.full_name ??
+                [directory?.first_name, directory?.last_name].filter(Boolean).join(" ").trim() ??
+                directory?.email ??
+                "Team member";
+              const email = profile?.email ?? directory?.email ?? null;
+              const phone = directory?.phone ?? null;
+
+              return (
+                <div
+                  key={`${member.role_on_project}-${email ?? index}`}
+                  className="rounded-2xl border-l-4 border bg-white p-4 shadow-sm"
+                  style={{ borderColor: BORDER, borderLeftColor: HEADER_BG }}
+                >
+                  <span
+                    className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase"
+                    style={{ backgroundColor: "#e6f6f4", color: HEADER_BG }}
+                  >
+                    {member.role_on_project === "pm" ? "PM" : "Lead"}
+                  </span>
+                  <p className="mt-3 text-lg font-bold" style={{ color: CHARCOAL }}>
+                    {name}
+                  </p>
+                  <div className="mt-2 space-y-1 text-sm text-slate-500">
+                    {email && (
+                      <a href={`mailto:${email}`} className="block hover:underline">
+                        {email}
+                      </a>
+                    )}
+                    {phone && (
+                      <a href={`tel:${phone}`} className="block hover:underline">
+                        {phone}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <div className="customer-print-chart grid gap-5 lg:grid-cols-2">
         <ChartCard title="Progress Over Time">
@@ -639,6 +740,15 @@ function ProjectDetail({
         </button>
       </div>
     </div>
+  );
+}
+
+function LocationPinIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mt-0.5 shrink-0">
+      <path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Z" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
   );
 }
 
