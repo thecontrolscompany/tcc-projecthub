@@ -322,8 +322,8 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
           }
 
           .logo {
-            width: 120px;
-            height: 120px;
+            width: 160px;
+            height: 160px;
             object-fit: contain;
           }
 
