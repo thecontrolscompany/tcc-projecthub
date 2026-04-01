@@ -182,35 +182,12 @@ export default function AdminPage() {
     const monthStr = format(periodMonth, "yyyy-MM-dd");
 
     try {
-      const { data, error } = await supabase
-        .from("billing_periods")
-        .select(`
-          id,
-          period_month,
-          pct_complete,
-          prior_pct,
-          prev_billed,
-          actual_billed,
-          estimated_income_snapshot,
-          notes,
-          synced_from_onedrive,
-          project:projects (
-            id,
-            name,
-            job_number,
-            is_active,
-            customer:customers ( name ),
-            pm:profiles ( email, full_name ),
-            pm_directory:pm_directory ( id, first_name, last_name, email ),
-            project_assignments (
-              role_on_project,
-              profile:profiles ( email, full_name ),
-              pm_directory:pm_directory ( first_name, last_name, email )
-            )
-          )
-        `)
-        .eq("period_month", monthStr)
-        .order("period_month");
+      const res = await fetch(`/api/admin/data?section=billing&month=${encodeURIComponent(monthStr)}`, {
+        credentials: "include",
+      });
+      const json = await res.json();
+      const data = json?.periods;
+      const error = !res.ok ? { message: json?.error ?? "Failed to load billing data." } : null;
 
       if (!error && data) {
         const activePeriods = (
@@ -681,15 +658,12 @@ function PmDirectoryTab() {
     setLoading(true);
 
     try {
-      const [{ data: contactData }, { data: profileData }] = await Promise.all([
-        supabase
-          .from("pm_directory")
-          .select("id, email, first_name, last_name, phone, profile_id, intended_role, profile:profiles(full_name)")
-          .order("email"),
-        supabase
-          .from("profiles")
-          .select("email, role"),
-      ]);
+      const res = await fetch("/api/admin/data?section=contacts", {
+        credentials: "include",
+      });
+      const json = await res.json();
+      const contactData = res.ok ? json?.contacts : null;
+      const profileData = res.ok ? json?.profiles : null;
 
       const profileRoleByEmail = new Map(
         ((profileData as Array<{ email: string; role: UserRole }> | null) ?? []).map((profile) => [
@@ -1163,21 +1137,14 @@ function FeedbackTab() {
 
   async function loadFeedback() {
     setLoading(true);
-
-    const query = supabase
-      .from("customer_feedback")
-      .select("id, project_id, profile_id, message, submitted_at, reviewed, project:projects(name), profile:profiles(email)")
-      .order("submitted_at", { ascending: false });
-
-    if (showUnreviewedOnly) {
-      query.eq("reviewed", false);
-    }
-
-    const { data, error } = await query;
-    if (error) {
+    const res = await fetch(`/api/admin/data?section=feedback&unreviewedOnly=${showUnreviewedOnly ? "true" : "false"}`, {
+      credentials: "include",
+    });
+    const json = await res.json();
+    if (!res.ok) {
       setFeedback([]);
     } else {
-      setFeedback((data as typeof feedback) ?? []);
+      setFeedback((json?.feedback as typeof feedback) ?? []);
     }
     setLoading(false);
   }
@@ -1312,33 +1279,15 @@ function WeeklyUpdatesTab() {
 
   async function loadUpdates() {
     setLoading(true);
+    const res = await fetch("/api/admin/data?section=weekly-updates", {
+      credentials: "include",
+    });
+    const json = await res.json();
 
-    const { data, error } = await supabase
-      .from("weekly_updates")
-      .select(`
-        id,
-        week_of,
-        pct_complete,
-        blockers,
-        submitted_at,
-        pm:profiles(full_name, email),
-        project:projects(
-          name,
-          customer:customers(name),
-          project_assignments(
-            role_on_project,
-            profile:profiles(full_name, email),
-            pm_directory:pm_directory(first_name, last_name, email)
-          )
-        )
-      `)
-      .order("submitted_at", { ascending: false })
-      .limit(200);
-
-    if (error) {
+    if (!res.ok) {
       setUpdates([]);
     } else {
-      setUpdates((data as WeeklyUpdatesAdminRow[]) ?? []);
+      setUpdates((json?.updates as WeeklyUpdatesAdminRow[]) ?? []);
     }
 
     setLoading(false);
@@ -1487,17 +1436,16 @@ function UsersTab() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, role")
-        .order("role")
-        .order("email");
+      const res = await fetch("/api/admin/data?section=users", {
+        credentials: "include",
+      });
+      const json = await res.json();
 
-      if (error) {
-        throw error;
+      if (!res.ok) {
+        throw new Error(json?.error ?? "Failed to load users.");
       }
 
-      setProfiles((data as Profile[]) ?? []);
+      setProfiles((json?.users as Profile[]) ?? []);
     } catch {
       setProfiles([]);
     } finally {

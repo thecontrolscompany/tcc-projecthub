@@ -246,8 +246,14 @@ export function AdminProjectsTab() {
   async function loadProjects() {
     setLoading(true);
     try {
-      const { data } = await supabase.from("projects").select(PROJECT_SELECT_FIELDS).order("name");
-      setProjects((data ?? []).map((item) => normalizeProject(item as Record<string, unknown>)));
+      const res = await fetch("/api/admin/data?section=projects", {
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json?.error ?? "Failed to load projects.");
+      }
+      setProjects(((json?.projects as Array<Record<string, unknown>> | null) ?? []).map((item) => normalizeProject(item)));
     } catch {
       setProjects([]);
     } finally {
@@ -256,21 +262,30 @@ export function AdminProjectsTab() {
   }
 
   async function loadFormLookups() {
-    const [{ data: customerData }, { data: profileData }, { data: contactData }] = await Promise.all([
-      supabase.from("customers").select("id, name, contact_email").order("name"),
-      supabase.from("profiles").select("id, full_name, email, role").in("role", ["pm", "lead", "installer", "ops_manager"]).order("full_name"),
-      supabase.from("pm_directory").select("id, first_name, last_name, email, profile_id").order("email"),
-    ]);
+    const res = await fetch("/api/admin/data?section=project-lookups", {
+      credentials: "include",
+    });
+    const json = await res.json();
 
-    setCustomers((customerData as ProjectCustomerOption[]) ?? []);
-    setProfiles((profileData as ProfileOption[]) ?? []);
-    setContacts((contactData as ProjectContactOption[]) ?? []);
+    if (!res.ok) {
+      setCustomers([]);
+      setProfiles([]);
+      setContacts([]);
+      return;
+    }
+
+    setCustomers((json?.customers as ProjectCustomerOption[]) ?? []);
+    setProfiles((json?.profiles as ProfileOption[]) ?? []);
+    setContacts((json?.contacts as ProjectContactOption[]) ?? []);
   }
 
   async function fetchProjectById(projectId: string) {
-    const { data, error } = await supabase.from("projects").select(PROJECT_SELECT_FIELDS).eq("id", projectId).single();
-    if (error || !data) return null;
-    return normalizeProject(data as Record<string, unknown>);
+    const res = await fetch(`/api/admin/data?section=project&id=${encodeURIComponent(projectId)}`, {
+      credentials: "include",
+    });
+    const json = await res.json();
+    if (!res.ok || !json?.project) return null;
+    return normalizeProject(json.project as Record<string, unknown>);
   }
 
   async function pollForSharePointFolder(projectId: string) {
