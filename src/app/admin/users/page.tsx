@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import type { Profile, UserRole } from "@/types/database";
 
 export default function UserManagementPage() {
-  const supabase = createClient();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
   useEffect(() => {
@@ -16,14 +15,29 @@ export default function UserManagementPage() {
   }, []);
 
   async function loadProfiles() {
-    const { data } = await supabase.from("profiles").select("*").order("role").order("email");
-    if (data) setProfiles(data as Profile[]);
+    setLoadError(null);
+    const response = await fetch("/api/admin/data?section=users", {
+      credentials: "include",
+    });
+    const json = await response.json();
+    if (!response.ok) setLoadError(json?.error ?? "Failed to load users.");
+    if (response.ok) setProfiles((json?.users as Profile[]) ?? []);
     setLoading(false);
   }
 
   async function handleUpdateRole(userId: string, newRole: UserRole) {
-    await supabase.from("profiles").update({ role: newRole }).eq("id", userId);
-    loadProfiles();
+    const response = await fetch("/api/admin/update-user-role", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ userId, role: newRole }),
+    });
+    const json = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setLoadError(json?.error ?? "Failed to update user role.");
+      return;
+    }
+    void loadProfiles();
   }
 
   const roleBadge = (role: UserRole) => {
@@ -51,7 +65,7 @@ export default function UserManagementPage() {
           onClick={() => setShowCreateForm(true)}
           className="shrink-0 rounded-xl bg-brand-primary px-4 py-1.5 text-sm font-semibold text-text-inverse hover:bg-brand-hover"
         >
-          + Create Customer Account
+          + Create Account
         </button>
       </div>
 
@@ -63,6 +77,10 @@ export default function UserManagementPage() {
             loadProfiles();
           }}
         />
+      )}
+
+      {loadError && (
+        <div className="rounded-xl bg-status-danger/10 px-4 py-3 text-sm text-status-danger">{loadError}</div>
       )}
 
       {loading ? (
@@ -122,6 +140,7 @@ function CreateCustomerForm({
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<UserRole>("customer");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -133,7 +152,7 @@ function CreateCustomerForm({
     const res = await fetch("/api/admin/create-user", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, fullName, password, role: "customer" }),
+      body: JSON.stringify({ email, fullName, password, role }),
     });
 
     const json = await res.json();
@@ -147,7 +166,7 @@ function CreateCustomerForm({
 
   return (
     <div className="rounded-2xl border border-border-default bg-surface-raised p-5">
-      <h3 className="mb-4 font-semibold text-text-primary">Create Customer Account</h3>
+      <h3 className="mb-4 font-semibold text-text-primary">Create Account</h3>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
@@ -171,8 +190,23 @@ function CreateCustomerForm({
           </div>
         </div>
         <div>
+          <label className="mb-1 block text-xs font-medium text-text-secondary">Role</label>
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value as UserRole)}
+            className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+          >
+            <option value="customer">customer</option>
+            <option value="pm">pm</option>
+            <option value="lead">lead</option>
+            <option value="installer">installer</option>
+            <option value="ops_manager">ops_manager</option>
+            <option value="admin">admin</option>
+          </select>
+        </div>
+        <div>
           <label className="mb-1 block text-xs font-medium text-text-secondary">
-            Temporary password <span className="text-text-tertiary">(customer will be prompted to change)</span>
+            Temporary password
           </label>
           <input
             type="text"
