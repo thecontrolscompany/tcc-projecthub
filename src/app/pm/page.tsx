@@ -538,27 +538,39 @@ function UpdateForm({
         {/* POC Line Items */}
         {pocItems.length > 0 ? (
           <div>
-            <h3 className="mb-3 text-sm font-semibold text-text-primary">
-              % Complete by Category
-              <span className="ml-2 text-xs font-normal text-text-tertiary">(weights sum to {totalWeight})</span>
-            </h3>
+            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <h3 className="text-sm font-semibold text-text-primary">
+                % Complete by Category
+                <span className="ml-2 text-xs font-normal text-text-tertiary">(weights sum to {totalWeight})</span>
+              </h3>
+              <div className="rounded-xl border border-status-success/20 bg-status-success/5 px-3 py-2 text-sm">
+                <p className="text-xs uppercase tracking-wide text-text-tertiary">Live Weighted Total</p>
+                <p className="font-semibold text-status-success">
+                  {pocPctDecimal !== null ? `${(pocPctDecimal * 100).toFixed(1)}%` : "0.0%"}
+                </p>
+              </div>
+            </div>
             <div className="space-y-3">
               {pocItems.map((item) => {
                 const val = pocPcts[item.id] ?? item.pct_complete * 100;
-                const contrib = (item.weight * val / 100 / totalWeight * 100).toFixed(1);
+                const contribution = totalWeight > 0 ? (item.weight * (val / 100) / totalWeight) * 100 : 0;
                 return (
                   <div key={item.id} className="rounded-xl border border-border-default bg-surface-raised p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-text-primary">{item.category}</span>
+                    <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <span className="text-sm font-medium text-text-primary">{item.category}</span>
+                        <p className="mt-1 text-xs text-text-tertiary">
+                          Weight {item.weight} • contributes {contribution.toFixed(1)} points
+                        </p>
+                      </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-xs text-text-tertiary">weight {item.weight} → {contrib}%</span>
                         <div className="flex items-center gap-1">
                           <input
                             type="number"
                             min={0}
                             max={100}
-                            step={1}
-                            value={Math.round(val)}
+                            step={0.1}
+                            value={val.toFixed(1)}
                             onChange={(e) => setPocPcts((prev) => ({ ...prev, [item.id]: Number(e.target.value) }))}
                             className="w-16 rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-center text-sm font-semibold text-status-success focus:border-status-success/50 focus:outline-none"
                           />
@@ -566,8 +578,16 @@ function UpdateForm({
                         </div>
                       </div>
                     </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-surface-overlay">
-                      <div className="h-full rounded-full bg-status-success/40 transition-all" style={{ width: `${Math.round(val)}%` }} />
+                    <div className="space-y-2">
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-surface-overlay">
+                        <div className="h-full rounded-full bg-status-success/40 transition-all" style={{ width: `${Math.min(val, 100)}%` }} />
+                      </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-overlay">
+                        <div className="h-full rounded-full bg-brand-primary/60 transition-all" style={{ width: `${Math.min(contribution, 100)}%` }} />
+                      </div>
+                      <p className="text-[11px] text-text-tertiary">
+                        Top bar = category progress. Bottom bar = weighted contribution to the overall total.
+                      </p>
                     </div>
                   </div>
                 );

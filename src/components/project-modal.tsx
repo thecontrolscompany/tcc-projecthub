@@ -847,7 +847,7 @@ function PocSetupSection({ projectId }: { projectId: string }) {
   const [newCategory, setNewCategory] = useState("");
   const [newWeight, setNewWeight] = useState("10");
   const [adding, setAdding] = useState(false);
-  const [saving, setSaving] = useState<string | null>(null); // id being saved
+  const [saving, setSaving] = useState<string | null>(null);
 
   useEffect(() => {
     supabase
@@ -862,7 +862,15 @@ function PocSetupSection({ projectId }: { projectId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
-  const totalWeight = items.reduce((sum, i) => sum + i.weight, 0);
+  const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+
+  async function persistSortOrder(nextItems: PocLineItem[]) {
+    await Promise.all(
+      nextItems.map((item, index) =>
+        supabase.from("poc_line_items").update({ sort_order: index }).eq("id", item.id)
+      )
+    );
+  }
 
   async function handleAdd() {
     if (!newCategory.trim() || !newWeight) return;
@@ -888,13 +896,30 @@ function PocSetupSection({ projectId }: { projectId: string }) {
 
   async function handleDelete(id: string) {
     await supabase.from("poc_line_items").delete().eq("id", id);
-    setItems((prev) => prev.filter((i) => i.id !== id));
+    const nextItems = items.filter((item) => item.id !== id).map((item, index) => ({ ...item, sort_order: index }));
+    setItems(nextItems);
+    await persistSortOrder(nextItems);
   }
 
   async function handleWeightChange(id: string, weight: number) {
-    setItems((prev) => prev.map((i) => i.id === id ? { ...i, weight } : i));
+    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, weight } : item)));
     setSaving(id);
     await supabase.from("poc_line_items").update({ weight }).eq("id", id);
+    setSaving(null);
+  }
+
+  async function moveItem(id: string, direction: -1 | 1) {
+    const currentIndex = items.findIndex((item) => item.id === id);
+    const nextIndex = currentIndex + direction;
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= items.length) return;
+
+    const reordered = [...items];
+    const [movedItem] = reordered.splice(currentIndex, 1);
+    reordered.splice(nextIndex, 0, movedItem);
+    const nextItems = reordered.map((item, index) => ({ ...item, sort_order: index }));
+    setItems(nextItems);
+    setSaving(id);
+    await persistSortOrder(nextItems);
     setSaving(null);
   }
 
@@ -902,9 +927,7 @@ function PocSetupSection({ projectId }: { projectId: string }) {
     <section className="space-y-3">
       <div className="flex items-center justify-between">
         <h4 className="font-heading text-lg font-semibold text-text-primary">POC Line Items</h4>
-        {totalWeight > 0 && (
-          <span className="text-xs text-text-tertiary">Total weight: {totalWeight}</span>
-        )}
+        {totalWeight > 0 && <span className="text-xs text-text-tertiary">Total weight: {totalWeight}</span>}
       </div>
       <p className="text-xs text-text-secondary">
         Define the categories and relative weights for the % complete calculation. PMs update each category&apos;s completion in their weekly report.
@@ -917,40 +940,92 @@ function PocSetupSection({ projectId }: { projectId: string }) {
           {items.length === 0 && (
             <p className="text-sm text-text-tertiary">No POC line items yet. Add categories below.</p>
           )}
-          {items.map((item) => (
-            <div key={item.id} className="flex items-center gap-3 rounded-xl border border-border-default bg-surface-raised px-4 py-2.5">
-              <span className="flex-1 text-sm text-text-primary">{item.category}</span>
-              <span className="text-xs text-text-tertiary">
-                {totalWeight > 0 ? `${((item.weight / totalWeight) * 100).toFixed(0)}%` : "—"} of total
-              </span>
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-text-tertiary">weight</span>
-                <input
-                  type="number"
-                  min={1}
-                  value={item.weight}
-                  onChange={(e) => handleWeightChange(item.id, Number(e.target.value))}
-                  className="w-16 rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-center text-sm text-text-primary focus:border-brand-primary/50 focus:outline-none"
-                />
-                {saving === item.id && <span className="text-xs text-text-tertiary">saving...</span>}
-              </div>
-              <span className="text-xs font-medium text-status-success">{(item.pct_complete * 100).toFixed(0)}%</span>
-              <button
-                onClick={() => handleDelete(item.id)}
-                className="text-xs text-status-danger hover:underline"
-              >
-                Remove
-              </button>
-            </div>
-          ))}
+          {items.map((item, index) => {
+            const currentPercent = item.pct_complete * 100;
+            const percentOfTotal = totalWeight > 0 ? (item.weight / totalWeight) * 100 : 0;
+            const contribution = totalWeight > 0 ? (item.weight * item.pct_complete) / totalWeight * 100 : 0;
+            const badgeClass =
+              currentPercent > 50
+                ? "bg-status-success/10 text-status-success"
+                : currentPercent >= 20
+                  ? "bg-status-warning/10 text-status-warning"
+                  : "bg-surface-overlay text-text-secondary";
 
-          {/* Add new item */}
+            return (
+              <div key={item.id} className="rounded-xl border border-border-default bg-surface-raised px-4 py-3">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-medium text-text-primary">{item.category}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${badgeClass}`}>
+                        {currentPercent.toFixed(0)}%
+                      </span>
+                      <span className="text-xs text-text-tertiary">{percentOfTotal.toFixed(0)}% of total weight</span>
+                    </div>
+                    <div className="mt-2 space-y-1">
+                      <div className="flex items-center justify-between text-xs text-text-tertiary">
+                        <span>Weighted contribution</span>
+                        <span>{contribution.toFixed(1)} points</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-surface-overlay">
+                        <div
+                          className="h-full rounded-full bg-brand-primary/60 transition-all"
+                          style={{ width: `${Math.min(contribution, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => void moveItem(item.id, -1)}
+                        disabled={index === 0}
+                        className="rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-xs text-text-secondary transition hover:bg-surface-base hover:text-text-primary disabled:opacity-40"
+                      >
+                        Up
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void moveItem(item.id, 1)}
+                        disabled={index === items.length - 1}
+                        className="rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-xs text-text-secondary transition hover:bg-surface-base hover:text-text-primary disabled:opacity-40"
+                      >
+                        Down
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-text-tertiary">weight</span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={item.weight}
+                        onChange={(e) => handleWeightChange(item.id, Number(e.target.value))}
+                        className="w-16 rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-center text-sm text-text-primary focus:border-brand-primary/50 focus:outline-none"
+                      />
+                    </div>
+                    {saving === item.id && <span className="text-xs text-text-tertiary">saving...</span>}
+                    <button onClick={() => handleDelete(item.id)} className="text-xs text-status-danger hover:underline">
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
           <div className="flex items-center gap-2 pt-1">
             <input
               type="text"
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void handleAdd(); } }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void handleAdd();
+                }
+              }}
               placeholder="Category name (e.g. AHU's)"
               className="flex-1 rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary placeholder-text-tertiary focus:border-brand-primary/50 focus:outline-none"
             />
