@@ -680,71 +680,6 @@ function UpdateForm({
             </div>
           </div>
 
-          {pocItems.length > 0 ? (
-            <div>
-              <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <h3 className="text-sm font-semibold text-text-primary">
-                  % Complete by Category
-                  <span className="ml-2 text-xs font-normal text-text-tertiary">(weights sum to {totalWeight})</span>
-                </h3>
-                <div className="rounded-xl border border-status-success/20 bg-status-success/5 px-3 py-2 text-sm">
-                  <p className="text-xs uppercase tracking-wide text-text-tertiary">Live Weighted Total</p>
-                  <p className="font-semibold text-status-success">
-                    {pocPctDecimal !== null ? `${(pocPctDecimal * 100).toFixed(1)}%` : "0.0%"}
-                  </p>
-                </div>
-              </div>
-              <div className="space-y-3">
-                {pocItems.map((item) => {
-                  const val = pocPcts[item.id] ?? item.pct_complete * 100;
-                  const contribution = totalWeight > 0 ? (item.weight * (val / 100) / totalWeight) * 100 : 0;
-                  return (
-                    <div key={item.id} className="rounded-xl border border-border-default bg-surface-raised p-4">
-                      <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <span className="text-sm font-medium text-text-primary">{item.category}</span>
-                          <p className="mt-1 text-xs text-text-tertiary">
-                            Weight {item.weight} - contributes {contribution.toFixed(1)} points
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="number"
-                              min={0}
-                              max={100}
-                              step={0.1}
-                              value={val.toFixed(1)}
-                              onChange={(e) => setPocPcts((prev) => ({ ...prev, [item.id]: Number(e.target.value) }))}
-                              className="w-16 rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-center text-sm font-semibold text-status-success focus:border-status-success/50 focus:outline-none"
-                            />
-                            <span className="text-sm text-text-tertiary">%</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="h-2 w-full overflow-hidden rounded-full bg-surface-overlay">
-                          <div className="h-full rounded-full bg-status-success/40 transition-all" style={{ width: `${Math.min(val, 100)}%` }} />
-                        </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-overlay">
-                          <div className="h-full rounded-full bg-brand-primary/60 transition-all" style={{ width: `${Math.min(contribution, 100)}%` }} />
-                        </div>
-                        <p className="text-[11px] text-text-tertiary">
-                          Top bar = category progress. Bottom bar = weighted contribution to the overall total.
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-dashed border-border-default p-4 text-center text-sm text-text-tertiary">
-              No POC line items configured for this project yet.{" "}
-              <span className="text-text-secondary">Use the manual % complete input above, or ask admin to set up POC categories later.</span>
-            </div>
-          )}
-
           <div>
             <h3 className="mb-3 text-sm font-semibold text-text-primary">Daily Crew Log</h3>
             <div className="overflow-x-auto rounded-xl border border-border-default">
@@ -865,6 +800,73 @@ function UpdateForm({
                 placeholder="What changed?"
                 className={inputCls}
               />
+            </div>
+          )}
+
+          {pocItems.length > 0 ? (
+            <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
+              <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-text-primary">
+                    % Complete by Category
+                    <span className="ml-2 text-xs font-normal text-text-tertiary">(weights sum to {totalWeight})</span>
+                  </h3>
+                  <p className="mt-1 text-xs text-text-tertiary">
+                    Update these near the end after crew log and written notes are complete.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-status-success/20 bg-status-success/5 px-3 py-2 text-right">
+                  <p className="text-[11px] uppercase tracking-wide text-text-tertiary">Live Weighted Total</p>
+                  <p className="text-base font-semibold text-status-success">
+                    {pocPctDecimal !== null ? `${(pocPctDecimal * 100).toFixed(1)}%` : "0.0%"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {pocItems.map((item) => {
+                  const val = pocPcts[item.id] ?? item.pct_complete * 100;
+                  const contribution = totalWeight > 0 ? (item.weight * (val / 100) / totalWeight) * 100 : 0;
+
+                  return (
+                    <div key={item.id} className="rounded-xl border border-border-default bg-surface-base px-3 py-2.5">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-text-primary">{item.category}</p>
+                          <p className="text-[11px] text-text-tertiary">
+                            Weight {item.weight} • {contribution.toFixed(1)} pts
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2 self-start sm:self-center">
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={0.1}
+                            value={val.toFixed(1)}
+                            onChange={(e) => setPocPcts((prev) => ({ ...prev, [item.id]: Number(e.target.value) }))}
+                            className="w-20 rounded-lg border border-border-default bg-surface-overlay px-2 py-1.5 text-center text-sm font-semibold text-status-success focus:border-status-success/50 focus:outline-none"
+                          />
+                          <span className="text-xs text-text-tertiary">%</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-overlay">
+                        <div
+                          className="h-full rounded-full bg-status-success/50 transition-all"
+                          style={{ width: `${Math.min(val, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-border-default p-4 text-sm text-text-tertiary">
+              No POC line items configured for this project yet.{" "}
+              <span className="text-text-secondary">Use the manual % complete input above, or ask admin to set up POC categories later.</span>
             </div>
           )}
 
