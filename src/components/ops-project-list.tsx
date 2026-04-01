@@ -194,6 +194,7 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
   const [pendingTeamMemberId, setPendingTeamMemberId] = useState("");
   const [pendingRoleOnProject, setPendingRoleOnProject] = useState<ProjectAssignmentRole>("pm");
   const [validationErrors, setValidationErrors] = useState<ProjectFormErrors>({});
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const teamMemberOptions = useMemo(() => buildTeamMemberOptions(profiles, contacts), [contacts, profiles]);
   const externalContacts = useMemo(
@@ -250,6 +251,7 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
     setSelectedProject(null);
     setLoadingProjectId(null);
     setModalError(null);
+    setSaveError(null);
     setFormValues(EMPTY_PROJECT_FORM);
     setAssignments([]);
     setPendingTeamMemberId("");
@@ -380,69 +382,46 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
 
     setSaving(true);
     setValidationErrors({});
+    setSaveError(null);
 
     try {
-      let customerId = formValues.customerId;
-      if (formValues.useNewCustomer) {
-        const { data: newCustomer, error: customerError } = await supabase
-          .from("customers")
-          .insert({ name: formValues.newCustomerName.trim(), contact_email: formValues.newCustomerEmail.trim() || null })
-          .select("id")
-          .single();
-        if (customerError) throw customerError;
-        customerId = newCustomer.id;
-      }
-
-      const contractPrice = Number(formValues.contractPrice);
-      const billedAndPaid = formValues.billedInFull && formValues.paidInFull;
-      const projectName = `${selectedProject.job_number} - ${formValues.projectName.trim()}`;
-      const primaryPm = assignments.find((assignment) => assignment.roleOnProject === "pm");
-      const primaryPmOption = primaryPm ? teamMemberOptions.find((option) => option.id === primaryPm.personId) ?? null : null;
-
-      const { error } = await supabase
-        .from("projects")
-        .update({
-          customer_id: customerId || null,
-          pm_directory_id: primaryPmOption?.pmDirectoryId ?? null,
-          pm_id: primaryPmOption?.profileId ?? null,
-          name: projectName,
-          estimated_income: contractPrice,
-          contract_price: contractPrice,
-          customer_poc: formValues.customerPoc.trim() || null,
-          customer_po_number: formValues.customerPoNumber.trim() || null,
-          site_address: formValues.siteAddress.trim() || null,
-          general_contractor: formValues.generalContractor.trim() || null,
-          mechanical_contractor: formValues.mechanicalContractor.trim() || null,
-          electrical_contractor: formValues.electricalContractor.trim() || null,
-          all_conduit_plenum: formValues.allConduitPlenum,
-          certified_payroll: formValues.certifiedPayroll,
-          buy_american: formValues.buyAmerican,
-          bond_required: formValues.bondRequired,
-          source_estimate_id: formValues.sourceEstimateId.trim() || null,
-          special_requirements: formValues.specialRequirements.trim() || null,
-          special_access: formValues.specialAccess.trim() || null,
-          notes: formValues.notes.trim() || null,
-          billed_in_full: formValues.billedInFull,
-          paid_in_full: formValues.paidInFull,
-          is_active: !billedAndPaid,
-          completed_at: billedAndPaid ? new Date().toISOString() : null,
+      const resolvedAssignments = assignments
+        .map((assignment) => {
+          const option = teamMemberOptions.find((item) => item.id === assignment.personId);
+          if (!option) return null;
+          return {
+            profile_id: option.profileId,
+            pm_directory_id: option.pmDirectoryId,
+            role_on_project: assignment.roleOnProject,
+          };
         })
-        .eq("id", selectedProject.id);
+        .filter(Boolean);
 
-      if (error) throw error;
+      const prevContractPrice = selectedProject.contract_price ?? selectedProject.estimated_income ?? null;
 
-      await syncAssignments(selectedProject.id, assignments);
+      const response = await fetch("/api/admin/save-project", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          projectId: selectedProject.id,
+          jobNumberPreview: selectedProject.job_number ?? "",
+          prevContractPrice,
+          formValues,
+          resolvedAssignments,
+        }),
+      });
+      const json = await response.json();
 
-      if ((selectedProject.contract_price ?? selectedProject.estimated_income) !== contractPrice) {
-        await supabase
-          .from("billing_periods")
-          .update({ estimated_income_snapshot: contractPrice })
-          .eq("project_id", selectedProject.id)
-          .is("actual_billed", null);
+      if (!response.ok) {
+        throw new Error(json?.error ?? "Save failed.");
       }
 
       resetModal();
       window.location.reload();
+    } catch (err) {
+      console.error("Failed to save project from ops modal:", err);
+      setSaveError(err instanceof Error ? err.message : "Save failed.");
     } finally {
       setSaving(false);
     }
@@ -560,6 +539,7 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
           values={formValues}
           saving={saving}
           errors={validationErrors}
+          saveError={saveError}
           onClose={resetModal}
           onChange={updateFormValue}
           onPendingTeamMemberChange={setPendingTeamMemberId}

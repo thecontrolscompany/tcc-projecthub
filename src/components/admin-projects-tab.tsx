@@ -398,6 +398,7 @@ export function AdminProjectsTab() {
     setPendingTeamMemberId("");
     setPendingRoleOnProject("pm");
     setValidationErrors({});
+    setSaveError(null);
     setShowModal(true);
   }
 
@@ -507,6 +508,7 @@ export function AdminProjectsTab() {
 
       await loadProjects();
     } catch (err) {
+      console.error("Failed to save project from admin modal:", err);
       setSaveError(err instanceof Error ? err.message : "Save failed.");
     } finally {
       setSaving(false);
