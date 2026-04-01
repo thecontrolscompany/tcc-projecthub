@@ -316,7 +316,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
 
           .brand-row {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
             gap: 16px;
           }
@@ -331,11 +331,15 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
             width: 120px;
             height: 120px;
             object-fit: contain;
-            border: 1px solid #d1d5db;
+          }
+
+          .brand-copy {
+            flex: 1;
+            text-align: center;
           }
 
           .brand-copy h1 {
-            margin: 12px 0 4px;
+            margin: 0 0 4px;
             font-size: 20px;
             color: #017a6f;
             letter-spacing: 0.04em;
@@ -477,8 +481,8 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
 
           <article className="report">
             <div className="brand-row">
+              <img src="/logo.png" alt="The Controls Company" className="logo" />
               <div className="brand-copy">
-                <img src="/logo.png" alt="The Controls Company" className="logo" />
                 <h1>THE CONTROLS COMPANY, LLC</h1>
                 <p>Service Disabled Veteran Owned Small Business</p>
               </div>
