@@ -255,6 +255,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
         <style>{`
           :root {
             color-scheme: light;
+            --tw-prose-body: #111827;
           }
 
           * {
@@ -268,10 +269,14 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
 
           body {
             margin: 0;
-            background: #f4f7f6;
-            color: #111827;
+            background: #f4f7f6 !important;
+            color: #111827 !important;
             font-family: Arial, Helvetica, sans-serif;
             line-height: 1.4;
+          }
+
+          body, body * {
+            color: #111827;
           }
 
           .page {
