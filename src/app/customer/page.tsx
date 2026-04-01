@@ -349,7 +349,9 @@ function ProjectDetail({
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackSaving, setFeedbackSaving] = useState(false);
   const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null);
+  const [statusLinkMessage, setStatusLinkMessage] = useState<string | null>(null);
   const latestPeriod = project.billing_periods[0];
+  const publicStatusPath = project.job_number ? `/status/${encodeURIComponent(project.job_number)}` : null;
 
   useEffect(() => {
     let active = true;
@@ -422,6 +424,29 @@ function ProjectDetail({
                 {project.name}
               </h2>
               <p className="mt-1 text-sm text-slate-500">{project.customer_name || "Customer project"}</p>
+              {publicStatusPath && (
+                <div className="customer-print-hide mt-3 flex flex-wrap items-center gap-2 text-sm">
+                  <span className="font-medium text-slate-600">Public Status Link:</span>
+                  <code className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">{publicStatusPath}</code>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(`${window.location.origin}${publicStatusPath}`);
+                        setStatusLinkMessage("Copied public status link.");
+                        window.setTimeout(() => setStatusLinkMessage(null), 2500);
+                      } catch {
+                        setStatusLinkMessage("Unable to copy link.");
+                        window.setTimeout(() => setStatusLinkMessage(null), 2500);
+                      }
+                    }}
+                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-800"
+                  >
+                    Copy
+                  </button>
+                  {statusLinkMessage && <span className="text-xs text-slate-500">{statusLinkMessage}</span>}
+                </div>
+              )}
               {project.site_address && (
                 <div className="mt-2 flex items-start gap-2 text-sm text-slate-600">
                   <LocationPinIcon />
