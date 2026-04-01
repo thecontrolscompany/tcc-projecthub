@@ -59,21 +59,47 @@ async function getRouteContext(): Promise<RouteContext> {
 async function canReadProject(admin: ReturnType<typeof adminClient>, projectId: string, userId: string, role: UserRole) {
   if (role === "admin" || role === "ops_manager") return true;
 
+  const { data: directRows, error: directError } = await admin
+    .from("project_assignments")
+    .select("profile_id")
+    .eq("project_id", projectId)
+    .eq("profile_id", userId)
+    .limit(1);
+
+  if (directError) {
+    throw directError;
+  }
+
+  if ((directRows?.length ?? 0) > 0) return true;
+
   const { data: assignmentRows, error: assignmentError } = await admin
     .from("project_assignments")
-    .select("profile_id, pm_directory:pm_directory(profile_id)")
-    .eq("project_id", projectId);
+    .select("pm_directory_id")
+    .eq("project_id", projectId)
+    .not("pm_directory_id", "is", null);
 
   if (assignmentError) {
     throw assignmentError;
   }
 
-  const hasAssignment = (assignmentRows ?? []).some((row) => {
-    const directory = Array.isArray(row.pm_directory) ? row.pm_directory[0] : row.pm_directory;
-    return row.profile_id === userId || directory?.profile_id === userId;
-  });
+  const directoryIds = (assignmentRows ?? [])
+    .map((row) => row.pm_directory_id)
+    .filter(Boolean) as string[];
 
-  if (hasAssignment) return true;
+  if (directoryIds.length > 0) {
+    const { data: dirRows, error: directoryError } = await admin
+      .from("pm_directory")
+      .select("id")
+      .in("id", directoryIds)
+      .eq("profile_id", userId)
+      .limit(1);
+
+    if (directoryError) {
+      throw directoryError;
+    }
+
+    if ((dirRows?.length ?? 0) > 0) return true;
+  }
 
   const { data: customerContactRows, error: customerContactError } = await admin
     .from("project_customer_contacts")

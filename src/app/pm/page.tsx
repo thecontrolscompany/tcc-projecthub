@@ -290,6 +290,7 @@ function UpdateForm({
   const [editHistory, setEditHistory] = useState<WeeklyUpdateEdit[]>([]);
   const [editNote, setEditNote] = useState("");
   const [changeOrders, setChangeOrders] = useState<ChangeOrder[]>([]);
+  const [coError, setCoError] = useState<string | null>(null);
   const [manualOverride, setManualOverride] = useState<string>(() =>
     project.current_period ? (project.current_period.pct_complete * 100).toFixed(1) : ""
   );
@@ -375,6 +376,11 @@ function UpdateForm({
       if (coResponse.ok) {
         const coJson = await coResponse.json();
         setChangeOrders((coJson?.changeOrders as ChangeOrder[]) ?? []);
+        setCoError(null);
+      } else {
+        const coJson = await coResponse.json().catch(() => null);
+        setCoError(coJson?.error ?? "Failed to load change orders.");
+        setChangeOrders([]);
       }
       const updatesData = (response.ok ? json?.updates : []) as WeeklyUpdate[];
       const pocData = (response.ok ? json?.pocItems : []) as PocLineItem[];
@@ -410,6 +416,8 @@ function UpdateForm({
       }
     } catch {
       setRecentUpdates([]);
+      setChangeOrders([]);
+      setCoError("Failed to load change orders.");
       resetForNewWeek(null);
     }
   }
@@ -937,22 +945,32 @@ function UpdateForm({
         </div>
       )}
 
-      {changeOrders.filter((co) => co.status !== "void").length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Change Orders</h3>
-          {changeOrders.filter((co) => co.status !== "void").map((co) => (
+      <div className="space-y-3">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Change Orders</h3>
+        {coError ? (
+          <p className="text-sm text-status-danger">{coError}</p>
+        ) : changeOrders.filter((co) => co.status !== "void").length === 0 ? (
+          <p className="text-sm text-text-tertiary">No change orders on file.</p>
+        ) : (
+          changeOrders.filter((co) => co.status !== "void").map((co) => (
             <div key={co.id} className="flex items-center justify-between rounded-xl border border-border-default bg-surface-raised px-4 py-2.5 text-sm">
               <div className="space-y-0.5">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium text-text-primary">{co.co_number}</span>
-                  <span className="text-text-secondary">—</span>
+                  <span className="text-text-secondary">-</span>
                   <span className="text-text-primary">{co.title}</span>
-                  <span className={[
-                    "rounded-full px-2 py-0.5 text-xs font-medium capitalize",
-                    co.status === "approved" ? "bg-status-success/10 text-status-success" :
-                    co.status === "rejected" ? "bg-status-danger/10 text-status-danger" :
-                    "bg-status-warning/10 text-status-warning",
-                  ].join(" ")}>{co.status}</span>
+                  <span
+                    className={[
+                      "rounded-full px-2 py-0.5 text-xs font-medium capitalize",
+                      co.status === "approved"
+                        ? "bg-status-success/10 text-status-success"
+                        : co.status === "rejected"
+                          ? "bg-status-danger/10 text-status-danger"
+                          : "bg-status-warning/10 text-status-warning",
+                    ].join(" ")}
+                  >
+                    {co.status}
+                  </span>
                 </div>
                 {co.reference_doc && <p className="text-xs text-text-tertiary">Ref: {co.reference_doc}</p>}
               </div>
@@ -961,9 +979,9 @@ function UpdateForm({
                 {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(co.amount)}
               </span>
             </div>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
 
       {recentUpdates.length > 0 && (
         <div className="space-y-3">
