@@ -242,7 +242,7 @@ export default function CustomerPage() {
         className="customer-print-shell border-t py-5 text-center text-sm text-white"
         style={{ backgroundColor: HEADER_BG, borderColor: "rgba(255,255,255,0.15)" }}
       >
-        The Controls Company, LLC | Service Disabled Veteran Owned Small Business | thecontrolsco.com
+        The Controls Company, LLC | Service Disabled Veteran Owned Small Business | TheControlsCompany.com
       </footer>
     </div>
   );
@@ -1171,7 +1171,14 @@ function compactCurrency(value: number) {
 }
 
 function getProjectBilledToDate(project: CustomerProject) {
-  return project.billing_periods.reduce((sum, period) => sum + (period.actual_billed ?? 0), 0);
+  // Use the most recent period's prev_billed (cumulative billed before this period)
+  // plus its actual_billed if recorded, otherwise fall back to prev_billed alone.
+  // billing_periods are ordered by period_month descending (most recent first).
+  const latest = project.billing_periods[0];
+  if (!latest) return 0;
+  return latest.actual_billed !== null
+    ? latest.prev_billed + latest.actual_billed
+    : latest.prev_billed;
 }
 
 function getProjectChartLabel(project: CustomerProject) {
