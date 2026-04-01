@@ -15,6 +15,7 @@ import {
   YAxis,
 } from "recharts";
 import { createClient } from "@/lib/supabase/client";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { ViewReportLink } from "@/components/view-report-link";
 import type { BillingPeriod, CrewLogEntry, WeeklyUpdate } from "@/types/database";
 
@@ -155,7 +156,9 @@ export default function CustomerPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-slate-600" style={{ backgroundColor: PAGE_BG }}>
-        Loading your projects...
+        <div className="w-full max-w-6xl px-6">
+          <CustomerProjectListSkeleton />
+        </div>
       </div>
     );
   }
@@ -230,23 +233,39 @@ export default function CustomerPage() {
       </header>
 
       <main className="customer-print-shell mx-auto max-w-6xl px-6 py-8">
-        {projects.length === 0 ? (
-          <div
-            className="customer-print-card rounded-3xl border border-dashed px-10 py-16 text-center shadow-sm"
-            style={{ borderColor: BORDER, backgroundColor: "#ffffff" }}
-          >
-            <p className="text-lg font-semibold" style={{ color: CHARCOAL }}>
-              No active projects found for your account.
-            </p>
-            <p className="mt-2 text-sm text-slate-600">
-              Contact The Controls Company if you believe this is an error.
-            </p>
-          </div>
-        ) : selectedProject ? (
-          <ProjectDetail project={selectedProject} userId={userId} onBack={() => setSelectedProject(null)} />
-        ) : (
-          <ProjectList projects={projects} onSelect={setSelectedProject} />
-        )}
+        <ErrorBoundary theme="light">
+          {projects.length === 0 ? (
+            <div
+              className="customer-print-card flex flex-col items-center rounded-3xl border border-dashed px-10 py-16 text-center shadow-sm"
+              style={{ borderColor: BORDER, backgroundColor: "#ffffff" }}
+            >
+              <Image
+                src="/logo.png"
+                alt="The Controls Company"
+                width={64}
+                height={64}
+                className="mb-5 h-16 w-16 rounded-xl border border-slate-200 bg-white p-2"
+              />
+              <p className="text-2xl font-bold" style={{ color: CHARCOAL }}>
+                No projects found
+              </p>
+              <p className="mt-3 max-w-xl text-sm text-slate-600">
+                Your project access hasn&apos;t been set up yet. Contact The Controls Company to get started.
+              </p>
+              <a
+                href="mailto:info@thecontrolsco.com"
+                className="mt-6 inline-flex items-center rounded-full px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+                style={{ backgroundColor: HEADER_BG }}
+              >
+                Contact Us
+              </a>
+            </div>
+          ) : selectedProject ? (
+            <ProjectDetail project={selectedProject} userId={userId} onBack={() => setSelectedProject(null)} />
+          ) : (
+            <ProjectList projects={projects} onSelect={setSelectedProject} />
+          )}
+        </ErrorBoundary>
       </main>
 
       <footer
@@ -350,6 +369,7 @@ function ProjectDetail({
   const [feedbackSaving, setFeedbackSaving] = useState(false);
   const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null);
   const [statusLinkMessage, setStatusLinkMessage] = useState<string | null>(null);
+  const [teamLoading, setTeamLoading] = useState(true);
   const latestPeriod = project.billing_periods[0];
   const publicStatusPath = project.job_number ? `/status/${encodeURIComponent(project.job_number)}` : null;
 
@@ -357,6 +377,7 @@ function ProjectDetail({
     let active = true;
 
     async function loadTeam() {
+      setTeamLoading(true);
       const { data } = await supabase
         .from("project_assignments")
         .select("role_on_project, profile:profiles(full_name, email), pm_directory:pm_directory(first_name, last_name, email, phone)")
@@ -365,6 +386,7 @@ function ProjectDetail({
 
       if (active) {
         setTeamMembers((data as ProjectTeamMember[] | null) ?? []);
+        setTeamLoading(false);
       }
     }
 
@@ -488,7 +510,9 @@ function ProjectDetail({
         </div>
       </section>
 
-      {teamMembers.length > 0 && (
+      {teamLoading ? (
+        <ProjectDetailSkeleton />
+      ) : teamMembers.length > 0 && (
         <section className="customer-print-card rounded-3xl border bg-white p-6 shadow-sm" style={{ borderColor: BORDER }}>
           <div className="mb-4">
             <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: HEADER_BG }}>
@@ -766,6 +790,54 @@ function ProjectDetail({
         </button>
       </div>
     </div>
+  );
+}
+
+function CustomerProjectListSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <div className="h-4 w-32 animate-pulse rounded bg-white/70" />
+        <div className="h-8 w-72 animate-pulse rounded bg-white/80" />
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        {[0, 1, 2, 3].map((index) => (
+          <div key={index} className="rounded-3xl border border-[#d8ebe7] bg-white p-6 shadow-sm">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <div className="h-6 w-48 animate-pulse rounded bg-slate-100" />
+                <div className="h-4 w-28 animate-pulse rounded bg-slate-100" />
+                <div className="h-3 w-24 animate-pulse rounded bg-slate-100" />
+              </div>
+              <div className="h-20 w-20 animate-pulse rounded-full bg-slate-100" />
+            </div>
+            <div className="mt-5 h-16 animate-pulse rounded-2xl bg-slate-100" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProjectDetailSkeleton() {
+  return (
+    <section className="customer-print-card rounded-3xl border bg-white p-6 shadow-sm" style={{ borderColor: BORDER }}>
+      <div className="space-y-3">
+        <div className="h-4 w-32 animate-pulse rounded bg-slate-100" />
+        <div className="h-7 w-48 animate-pulse rounded bg-slate-100" />
+      </div>
+      <div className="mt-5 grid gap-4 md:grid-cols-2">
+        {[0, 1].map((index) => (
+          <div key={index} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="h-5 w-20 animate-pulse rounded bg-slate-100" />
+            <div className="mt-4 h-5 w-40 animate-pulse rounded bg-slate-100" />
+            <div className="mt-2 h-4 w-32 animate-pulse rounded bg-slate-100" />
+            <div className="mt-2 h-4 w-24 animate-pulse rounded bg-slate-100" />
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 

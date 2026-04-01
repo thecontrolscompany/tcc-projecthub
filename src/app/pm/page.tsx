@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { format, startOfWeek, addDays } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { ViewReportLink } from "@/components/view-report-link";
 import type { BillingPeriod, CrewLogEntry, PocLineItem, ProjectAssignmentRole, WeeklyUpdate } from "@/types/database";
 
@@ -171,31 +172,39 @@ export default function PmPage() {
   }
 
   if (loading) {
-    return <CenteredMsg>Loading your projects...</CenteredMsg>;
+    return (
+      <div className="min-h-screen bg-surface-base text-text-primary">
+        <main className="mx-auto max-w-4xl px-6 py-6">
+          <PmProjectListSkeleton />
+        </main>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-surface-base text-text-primary">
       <main className="mx-auto max-w-4xl px-6 py-6">
-        {view === "list" ? (
-          <ProjectList
-            projects={projects}
-            onSelectProject={(project) => {
-              setSelectedProject(project);
-              setView("update");
-            }}
-          />
-        ) : selectedProject ? (
-          <UpdateForm
-            project={selectedProject}
-            pmId={userId!}
-            onBack={() => {
-              setView("list");
-              setSelectedProject(null);
-              if (userId) void loadProjects(userId);
-            }}
-          />
-        ) : null}
+        <ErrorBoundary theme="dark">
+          {view === "list" ? (
+            <ProjectList
+              projects={projects}
+              onSelectProject={(project) => {
+                setSelectedProject(project);
+                setView("update");
+              }}
+            />
+          ) : selectedProject ? (
+            <UpdateForm
+              project={selectedProject}
+              pmId={userId!}
+              onBack={() => {
+                setView("list");
+                setSelectedProject(null);
+                if (userId) void loadProjects(userId);
+              }}
+            />
+          ) : null}
+        </ErrorBoundary>
       </main>
     </div>
   );
@@ -845,6 +854,37 @@ function CenteredMsg({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface-base text-text-secondary">
       {children}
+    </div>
+  );
+}
+
+function PmProjectListSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <div className="h-7 w-40 animate-pulse rounded bg-surface-raised" />
+        <div className="h-4 w-64 animate-pulse rounded bg-surface-raised" />
+      </div>
+
+      {[0, 1, 2].map((index) => (
+        <div key={index} className="rounded-2xl border border-border-default bg-surface-raised p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
+              <div className="h-5 w-52 animate-pulse rounded bg-surface-overlay" />
+              <div className="h-4 w-36 animate-pulse rounded bg-surface-overlay" />
+            </div>
+            <div className="h-6 w-20 animate-pulse rounded-full bg-surface-overlay" />
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[0, 1, 2, 3].map((item) => (
+              <div key={item} className="space-y-2">
+                <div className="h-3 w-16 animate-pulse rounded bg-surface-overlay" />
+                <div className="h-4 w-20 animate-pulse rounded bg-surface-overlay" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
