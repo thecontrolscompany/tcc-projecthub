@@ -694,6 +694,7 @@ function CustomerContactsSection({ projectId }: { projectId: string }) {
   const [allCustomers, setAllCustomers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
   const [selectedProfileId, setSelectedProfileId] = useState("");
 
   useEffect(() => {
@@ -723,12 +724,15 @@ function CustomerContactsSection({ projectId }: { projectId: string }) {
   async function handleAdd() {
     if (!selectedProfileId) return;
     setAdding(true);
+    setAddError(null);
     const { data, error } = await supabase
       .from("project_customer_contacts")
       .insert({ project_id: projectId, profile_id: selectedProfileId, portal_access: false, email_digest: false })
       .select("*, profile:profiles(*)")
       .single();
-    if (!error && data) {
+    if (error) {
+      setAddError(error.message);
+    } else if (data) {
       setContacts((prev) => [...prev, data as ProjectCustomerContact & { profile: Profile }]);
       setSelectedProfileId("");
     }
@@ -811,6 +815,10 @@ function CustomerContactsSection({ projectId }: { projectId: string }) {
                 {adding ? "Adding..." : "Add"}
               </button>
             </div>
+          )}
+
+          {addError && (
+            <p className="text-xs text-status-danger">{addError}</p>
           )}
 
           {availableToAdd.length === 0 && allCustomers.length === 0 && (
