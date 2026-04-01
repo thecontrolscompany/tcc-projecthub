@@ -127,8 +127,8 @@ export async function GET(request: Request) {
   }
 
   if (section === "project") {
-    if (requesterRole !== "admin") {
-      return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+    if (!["admin", "ops_manager"].includes(requesterRole)) {
+      return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });
     }
     const id = searchParams.get("id");
     if (!id) {
@@ -189,8 +189,8 @@ export async function GET(request: Request) {
   }
 
   if (section === "project-lookups") {
-    if (requesterRole !== "admin") {
-      return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+    if (!["admin", "ops_manager"].includes(requesterRole)) {
+      return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });
     }
     const [customersResult, profilesResult, contactsResult] = await Promise.all([
       adminClient.from("customers").select("id, name, contact_email").order("name"),

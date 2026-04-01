@@ -184,6 +184,8 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
   const [selectedProject, setSelectedProject] = useState<ProjectEditorRow | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null);
+  const [modalError, setModalError] = useState<string | null>(null);
   const [customers, setCustomers] = useState<ProjectCustomerOption[]>([]);
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
   const [contacts, setContacts] = useState<ProjectContactOption[]>([]);
@@ -222,23 +224,32 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
 
   useEffect(() => {
     async function loadLookups() {
-      const [{ data: customerData }, { data: profileData }, { data: contactData }] = await Promise.all([
-        supabase.from("customers").select("id, name, contact_email").order("name"),
-        supabase.from("profiles").select("id, full_name, email, role").in("role", ["pm", "lead", "installer", "ops_manager"]).order("full_name"),
-        supabase.from("pm_directory").select("id, first_name, last_name, email, profile_id").order("email"),
-      ]);
+      try {
+        const response = await fetch("/api/admin/data?section=project-lookups", {
+          credentials: "include",
+        });
+        const json = await response.json();
+        if (!response.ok) {
+          setModalError(json?.error ?? "Failed to load project lookups.");
+          return;
+        }
 
-      setCustomers((customerData as ProjectCustomerOption[]) ?? []);
-      setProfiles((profileData as ProfileOption[]) ?? []);
-      setContacts((contactData as ProjectContactOption[]) ?? []);
+        setCustomers((json?.customers as ProjectCustomerOption[]) ?? []);
+        setProfiles((json?.profiles as ProfileOption[]) ?? []);
+        setContacts((json?.contacts as ProjectContactOption[]) ?? []);
+      } catch {
+        setModalError("Failed to load project lookups.");
+      }
     }
 
     void loadLookups();
-  }, [supabase]);
+  }, []);
 
   function resetModal() {
     setShowModal(false);
     setSelectedProject(null);
+    setLoadingProjectId(null);
+    setModalError(null);
     setFormValues(EMPTY_PROJECT_FORM);
     setAssignments([]);
     setPendingTeamMemberId("");
@@ -276,39 +287,55 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
   }
 
   async function openProject(projectId: string) {
-    const { data, error } = await supabase.from("projects").select(PROJECT_SELECT_FIELDS).eq("id", projectId).single();
-    if (error || !data) return;
+    setLoadingProjectId(projectId);
+    setModalError(null);
 
-    const project = normalizeProject(data as Record<string, unknown>);
-    setSelectedProject(project);
-    setFormValues({
-      projectName: project.name.startsWith(`${project.job_number} - `) && project.job_number
-        ? project.name.slice(project.job_number.length + 3)
-        : project.name,
-      customerId: project.customer_id ?? "",
-      useNewCustomer: false,
-      newCustomerName: "",
-      newCustomerEmail: "",
-      contractPrice: String(project.contract_price ?? project.estimated_income ?? ""),
-      customerPoc: project.customer_poc ?? "",
-      customerPoNumber: project.customer_po_number ?? "",
-      siteAddress: project.site_address ?? "",
-      generalContractor: project.general_contractor ?? "",
-      mechanicalContractor: project.mechanical_contractor ?? "",
-      electricalContractor: project.electrical_contractor ?? "",
-      notes: project.notes ?? "",
-      sourceEstimateId: project.source_estimate_id ?? "",
-      specialRequirements: project.special_requirements ?? "",
-      specialAccess: project.special_access ?? "",
-      allConduitPlenum: project.all_conduit_plenum ?? false,
-      certifiedPayroll: project.certified_payroll ?? false,
-      buyAmerican: project.buy_american ?? false,
-      bondRequired: project.bond_required ?? false,
-      billedInFull: project.billed_in_full ?? false,
-      paidInFull: project.paid_in_full ?? false,
-    });
-    setAssignments(buildAssignmentDrafts(project, teamMemberOptions));
-    setShowModal(true);
+    try {
+      const response = await fetch(`/api/admin/data?section=project&id=${encodeURIComponent(projectId)}`, {
+        credentials: "include",
+      });
+      const json = await response.json();
+
+      if (!response.ok || !json?.project) {
+        setModalError(json?.error ?? "Failed to load project details.");
+        return;
+      }
+
+      const project = normalizeProject(json.project as Record<string, unknown>);
+      setSelectedProject(project);
+      setFormValues({
+        projectName: project.name.startsWith(`${project.job_number} - `) && project.job_number
+          ? project.name.slice(project.job_number.length + 3)
+          : project.name,
+        customerId: project.customer_id ?? "",
+        useNewCustomer: false,
+        newCustomerName: "",
+        newCustomerEmail: "",
+        contractPrice: String(project.contract_price ?? project.estimated_income ?? ""),
+        customerPoc: project.customer_poc ?? "",
+        customerPoNumber: project.customer_po_number ?? "",
+        siteAddress: project.site_address ?? "",
+        generalContractor: project.general_contractor ?? "",
+        mechanicalContractor: project.mechanical_contractor ?? "",
+        electricalContractor: project.electrical_contractor ?? "",
+        notes: project.notes ?? "",
+        sourceEstimateId: project.source_estimate_id ?? "",
+        specialRequirements: project.special_requirements ?? "",
+        specialAccess: project.special_access ?? "",
+        allConduitPlenum: project.all_conduit_plenum ?? false,
+        certifiedPayroll: project.certified_payroll ?? false,
+        buyAmerican: project.buy_american ?? false,
+        bondRequired: project.bond_required ?? false,
+        billedInFull: project.billed_in_full ?? false,
+        paidInFull: project.paid_in_full ?? false,
+      });
+      setAssignments(buildAssignmentDrafts(project, teamMemberOptions));
+      setShowModal(true);
+    } catch {
+      setModalError("Failed to load project details.");
+    } finally {
+      setLoadingProjectId(null);
+    }
   }
 
   async function syncAssignments(projectId: string, nextAssignments: ProjectAssignmentDraft[]) {
@@ -423,6 +450,12 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
 
   return (
     <div className="space-y-6">
+      {modalError && (
+        <div className="rounded-xl border border-status-danger/30 bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
+          {modalError}
+        </div>
+      )}
+
       <label className="inline-flex items-center gap-3 rounded-xl border border-border-default bg-surface-raised px-4 py-3 text-sm text-text-primary">
         <input
           type="checkbox"
@@ -476,6 +509,9 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
                         <td className="px-4 py-2.5 font-medium text-text-primary">
                           <div className="flex items-center gap-2">
                             <span>{project.name}</span>
+                            {loadingProjectId === project.id && (
+                              <span className="text-xs font-medium text-text-tertiary">Loading…</span>
+                            )}
                             {project.sharepointFolder && (
                               <a
                                 href={`https://controlsco.sharepoint.com/sites/TCCProjects/Shared%20Documents/${project.sharepointFolder.split("/").filter(Boolean).map(encodeURIComponent).join("/")}`}
