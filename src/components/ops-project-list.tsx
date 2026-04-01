@@ -58,8 +58,6 @@ type ProjectEditorRow = {
   notes: string | null;
   pm_directory_id: string | null;
   pm_id: string | null;
-  customer_portal_access: boolean;
-  customer_email_digest: boolean;
   sharepoint_folder: string | null;
   customer?: { name: string } | null;
   project_assignments: AssignmentRow[];
@@ -91,8 +89,6 @@ const PROJECT_SELECT_FIELDS = `
   notes,
   pm_directory_id,
   pm_id,
-  customer_portal_access,
-  customer_email_digest,
   sharepoint_folder,
   customer:customers(name),
   project_assignments(
@@ -304,8 +300,6 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
       sourceEstimateId: project.source_estimate_id ?? "",
       specialRequirements: project.special_requirements ?? "",
       specialAccess: project.special_access ?? "",
-      customerPortalAccess: project.customer_portal_access ?? true,
-      customerEmailDigest: project.customer_email_digest ?? false,
       allConduitPlenum: project.all_conduit_plenum ?? false,
       certifiedPayroll: project.certified_payroll ?? false,
       buyAmerican: project.buy_american ?? false,
@@ -401,8 +395,6 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
           special_requirements: formValues.specialRequirements.trim() || null,
           special_access: formValues.specialAccess.trim() || null,
           notes: formValues.notes.trim() || null,
-          customer_portal_access: formValues.customerPortalAccess,
-          customer_email_digest: formValues.customerEmailDigest,
           billed_in_full: formValues.billedInFull,
           paid_in_full: formValues.paidInFull,
           is_active: !billedAndPaid,

@@ -52,8 +52,6 @@ export type ProjectFormValues = {
   sourceEstimateId: string;
   specialRequirements: string;
   specialAccess: string;
-  customerPortalAccess: boolean;
-  customerEmailDigest: boolean;
   allConduitPlenum: boolean;
   certifiedPayroll: boolean;
   buyAmerican: boolean;
@@ -84,8 +82,6 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   sourceEstimateId: "",
   specialRequirements: "",
   specialAccess: "",
-  customerPortalAccess: true,
-  customerEmailDigest: false,
   allConduitPlenum: false,
   certifiedPayroll: false,
   buyAmerican: false,

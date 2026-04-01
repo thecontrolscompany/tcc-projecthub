@@ -48,8 +48,6 @@ export interface Project {
   special_access: string | null;
   notes: string | null;
   pm_directory_id: string | null;
-  customer_portal_access: boolean;
-  customer_email_digest: boolean;
   is_active: boolean;
   created_at: string;
   // joined
