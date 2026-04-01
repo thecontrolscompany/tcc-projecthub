@@ -109,6 +109,21 @@ type UploadStatus = {
   webUrl?: string | null;
 };
 
+type ParsedWeeklyUpdate = {
+  sheetName: string;
+  weekOf: string | null;
+  pmName: string | null;
+  crewLog: Array<{ day: string; men: number; hours: number; activities: string }>;
+  materialDelivered: string | null;
+  equipmentSet: string | null;
+  safetyIncidents: string | null;
+  inspectionsTests: string | null;
+  totalMen: number;
+  totalHours: number;
+  alreadyExists: boolean;
+  parseError: string | null;
+};
+
 const DOCUMENT_OPTIONS: Array<{ type: DocumentType; label: string }> = [
   { type: "contract", label: "Contract" },
   { type: "scope", label: "Scope" },
@@ -183,6 +198,7 @@ export function ProjectModal({
   onSave: () => void;
 }) {
   const customerOptions = useMemo(() => customers, [customers]);
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const customerPocOptions = useMemo(() => {
     const options = [...externalContacts];
     const currentValue = values.customerPoc.trim();
@@ -509,12 +525,34 @@ export function ProjectModal({
         </div>
 
         <div className="flex items-center justify-end gap-3 border-t border-border-default px-6 py-4">
-          <button onClick={onClose} className="rounded-xl bg-surface-overlay px-4 py-2 text-sm text-text-secondary hover:bg-surface-overlay">Cancel</button>
-          <button onClick={onSave} disabled={saving} className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-brand-hover disabled:opacity-50">
-            {saving ? "Saving..." : editingProject ? "Save Changes" : "Create Project"}
-          </button>
+          <div className="flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              {editingProject && (
+                <button
+                  type="button"
+                  onClick={() => setShowImportDialog(true)}
+                  className="text-sm text-text-secondary underline hover:text-text-primary"
+                >
+                  Import Weekly Reports from Excel…
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <button onClick={onClose} className="rounded-xl bg-surface-overlay px-4 py-2 text-sm text-text-secondary hover:bg-surface-overlay">Cancel</button>
+              <button onClick={onSave} disabled={saving} className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-brand-hover disabled:opacity-50">
+                {saving ? "Saving..." : editingProject ? "Save Changes" : "Create Project"}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+
+      {showImportDialog && editingProject && (
+        <WeeklyReportImportDialog
+          projectId={editingProject.id}
+          onClose={() => setShowImportDialog(false)}
+        />
+      )}
     </div>
   );
 }
@@ -971,6 +1009,225 @@ type UpdateRow = {
   notes: string | null;
   blockers: string | null;
 };
+
+type WeeklyReportImportDialogProps = {
+  projectId: string;
+  onClose: () => void;
+};
+
+function WeeklyReportImportDialog({ projectId, onClose }: WeeklyReportImportDialogProps) {
+  const [file, setFile] = useState<File | null>(null);
+  const [parsing, setParsing] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [parsedRows, setParsedRows] = useState<ParsedWeeklyUpdate[] | null>(null);
+  const [filename, setFilename] = useState("");
+  const [result, setResult] = useState<{ imported: number; skipped: number } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const importableRows = (parsedRows ?? []).filter((row) => row.weekOf && !row.alreadyExists && !row.parseError);
+
+  async function handleParse() {
+    if (!file) return;
+
+    setParsing(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("projectId", projectId);
+
+      const response = await fetch("/api/admin/parse-weekly-report", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(json?.error ?? "Failed to parse weekly report.");
+      }
+
+      setParsedRows((json?.rows as ParsedWeeklyUpdate[]) ?? []);
+      setFilename((json?.filename as string) ?? file.name);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to parse weekly report.");
+    } finally {
+      setParsing(false);
+    }
+  }
+
+  async function handleImport() {
+    if (!parsedRows) return;
+
+    setImporting(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/admin/import-weekly-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          projectId,
+          rows: parsedRows,
+          filename,
+        }),
+      });
+      const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(json?.error ?? "Failed to import weekly reports.");
+      }
+
+      if (Array.isArray(json?.errors) && json.errors.length > 0) {
+        setError(json.errors.join(" | "));
+      }
+
+      setResult({
+        imported: typeof json?.imported === "number" ? json.imported : 0,
+        skipped: typeof json?.skipped === "number" ? json.skipped : 0,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to import weekly reports.");
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8">
+      <div className="w-full max-w-2xl rounded-2xl border border-border-default bg-surface-base shadow-xl">
+        <div className="flex items-start justify-between border-b border-border-default px-6 py-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Weekly Report Import</p>
+            <h3 className="mt-1 text-xl font-bold text-text-primary">Import Excel Reports</h3>
+          </div>
+          <button onClick={onClose} className="text-text-secondary hover:text-text-primary">x</button>
+        </div>
+
+        <div className="space-y-4 px-6 py-6">
+          {error && (
+            <div className="rounded-xl border border-status-danger/30 bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
+              {error}
+            </div>
+          )}
+
+          {!parsedRows && !result && (
+            <div className="space-y-4">
+              <p className="text-sm text-text-secondary">
+                Select a Weekly Report file (.xlsx or .xlsm) to import.
+              </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <input
+                  type="file"
+                  accept=".xlsx,.xlsm"
+                  onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                  className="text-sm text-text-secondary"
+                />
+                <span className="text-sm text-text-tertiary">{file?.name ?? "No file chosen"}</span>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => void handleParse()}
+                  disabled={!file || parsing}
+                  className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:opacity-50"
+                >
+                  {parsing ? "Parsing..." : "Parse File"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {parsedRows && !result && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm text-text-secondary">{importableRows.length} new reports will be imported</p>
+                <p className="text-xs text-text-tertiary">{filename}</p>
+              </div>
+
+              <div className="max-h-[420px] overflow-auto rounded-2xl border border-border-default">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border-default bg-surface-raised">
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Sheet Name</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Week Of</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Days Active</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Hours</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsedRows.map((row) => {
+                      const statusText = row.parseError
+                        ? `⚠ Parse error: ${row.parseError}`
+                        : row.alreadyExists
+                          ? "Already imported"
+                          : "New ✓";
+                      const rowClass = row.parseError
+                        ? "bg-status-danger/5"
+                        : row.alreadyExists
+                          ? "opacity-60"
+                          : "bg-status-success/5";
+
+                      return (
+                        <tr key={`${row.sheetName}-${row.weekOf ?? "unknown"}`} className={`border-b border-border-default ${rowClass}`}>
+                          <td className="px-4 py-2.5 text-text-primary">{row.sheetName}</td>
+                          <td className="px-4 py-2.5 text-text-secondary">{row.weekOf ?? "—"}</td>
+                          <td className="px-4 py-2.5 text-right text-text-secondary">{row.crewLog.length || "—"}</td>
+                          <td className="px-4 py-2.5 text-right text-text-secondary">{row.totalHours || "—"}</td>
+                          <td className="px-4 py-2.5 text-text-secondary">{statusText}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-xl bg-surface-overlay px-4 py-2 text-sm text-text-secondary hover:bg-surface-overlay"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleImport()}
+                  disabled={importableRows.length === 0 || importing}
+                  className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:opacity-50"
+                >
+                  {importing ? "Importing..." : `Import ${importableRows.length} Reports`}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {result && (
+            <div className="space-y-4">
+              <p className="text-base font-semibold text-text-primary">Import complete.</p>
+              <div className="space-y-2 text-sm text-text-secondary">
+                <p>✓ {result.imported} reports imported</p>
+                <p>— {result.skipped} already existed or were skipped</p>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function CustomerContactsSection({ projectId }: { projectId: string }) {
   const supabase = createClient();

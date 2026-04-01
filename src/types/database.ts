@@ -99,7 +99,7 @@ export interface CrewLogEntry {
 export interface WeeklyUpdate {
   id: string;
   project_id: string;
-  pm_id: string;
+  pm_id: string | null;
   week_of: string; // ISO date string
   pct_complete: number | null;
   notes: string | null;
@@ -112,6 +112,7 @@ export interface WeeklyUpdate {
   inspections_tests: string | null;
   delays_impacts: string | null;
   other_remarks: string | null;
+  imported_from?: string | null;
   submitted_at: string;
   // joined
   project?: Project;
