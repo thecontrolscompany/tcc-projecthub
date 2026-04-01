@@ -1023,8 +1023,20 @@ function WeeklyReportImportDialog({ projectId, onClose }: WeeklyReportImportDial
   const [filename, setFilename] = useState("");
   const [result, setResult] = useState<{ imported: number; skipped: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [overwriteDates, setOverwriteDates] = useState<Set<string>>(new Set());
 
   const importableRows = (parsedRows ?? []).filter((row) => row.weekOf && !row.alreadyExists && !row.parseError);
+  const overwriteRows = (parsedRows ?? []).filter((row) => row.weekOf && row.alreadyExists && overwriteDates.has(row.weekOf));
+  const totalToImport = importableRows.length + overwriteRows.length;
+
+  function toggleOverwrite(weekOf: string) {
+    setOverwriteDates((prev) => {
+      const next = new Set(prev);
+      if (next.has(weekOf)) next.delete(weekOf);
+      else next.add(weekOf);
+      return next;
+    });
+  }
 
   async function handleParse() {
     if (!file) return;
@@ -1072,6 +1084,7 @@ function WeeklyReportImportDialog({ projectId, onClose }: WeeklyReportImportDial
           projectId,
           rows: parsedRows,
           filename,
+          overwriteDates: Array.from(overwriteDates),
         }),
       });
       const json = await response.json();
@@ -1143,7 +1156,9 @@ function WeeklyReportImportDialog({ projectId, onClose }: WeeklyReportImportDial
           {parsedRows && !result && (
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm text-text-secondary">{importableRows.length} new reports will be imported</p>
+                <p className="text-sm text-text-secondary">
+                  {importableRows.length} new{overwriteRows.length > 0 ? `, ${overwriteRows.length} overwrite` : ""}
+                </p>
                 <p className="text-xs text-text-tertiary">{filename}</p>
               </div>
 
@@ -1160,16 +1175,31 @@ function WeeklyReportImportDialog({ projectId, onClose }: WeeklyReportImportDial
                   </thead>
                   <tbody>
                     {parsedRows.map((row) => {
-                      const statusText = row.parseError
-                        ? `⚠ Parse error: ${row.parseError}`
+                      const isOverwriteChecked = !!row.weekOf && overwriteDates.has(row.weekOf);
+                      const statusCell = row.parseError
+                        ? <span className="text-status-danger">⚠ Parse error: {row.parseError}</span>
                         : row.alreadyExists
-                          ? "Already imported"
-                          : "New ✓";
+                          ? (
+                            <label className="flex cursor-pointer items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={isOverwriteChecked}
+                                onChange={() => row.weekOf && toggleOverwrite(row.weekOf)}
+                                className="h-3.5 w-3.5 rounded accent-brand-primary"
+                              />
+                              <span className={isOverwriteChecked ? "text-status-warning font-medium" : "text-text-tertiary"}>
+                                {isOverwriteChecked ? "Will overwrite" : "Already imported"}
+                              </span>
+                            </label>
+                          )
+                          : <span className="text-status-success">New ✓</span>;
                       const rowClass = row.parseError
                         ? "bg-status-danger/5"
-                        : row.alreadyExists
-                          ? "opacity-60"
-                          : "bg-status-success/5";
+                        : isOverwriteChecked
+                          ? "bg-status-warning/5"
+                          : row.alreadyExists
+                            ? "opacity-50"
+                            : "bg-status-success/5";
 
                       return (
                         <tr key={`${row.sheetName}-${row.weekOf ?? "unknown"}`} className={`border-b border-border-default ${rowClass}`}>
@@ -1177,7 +1207,7 @@ function WeeklyReportImportDialog({ projectId, onClose }: WeeklyReportImportDial
                           <td className="px-4 py-2.5 text-text-secondary">{row.weekOf ?? "—"}</td>
                           <td className="px-4 py-2.5 text-right text-text-secondary">{row.crewLog.length || "—"}</td>
                           <td className="px-4 py-2.5 text-right text-text-secondary">{row.totalHours || "—"}</td>
-                          <td className="px-4 py-2.5 text-text-secondary">{statusText}</td>
+                          <td className="px-4 py-2.5">{statusCell}</td>
                         </tr>
                       );
                     })}
@@ -1196,10 +1226,10 @@ function WeeklyReportImportDialog({ projectId, onClose }: WeeklyReportImportDial
                 <button
                   type="button"
                   onClick={() => void handleImport()}
-                  disabled={importableRows.length === 0 || importing}
+                  disabled={totalToImport === 0 || importing}
                   className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:opacity-50"
                 >
-                  {importing ? "Importing..." : `Import ${importableRows.length} Reports`}
+                  {importing ? "Importing..." : `Import ${totalToImport} Report${totalToImport !== 1 ? "s" : ""}`}
                 </button>
               </div>
             </div>

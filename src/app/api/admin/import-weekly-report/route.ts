@@ -37,6 +37,7 @@ export async function POST(request: Request) {
   const projectId = typeof body?.projectId === "string" ? body.projectId : "";
   const filename = typeof body?.filename === "string" ? body.filename : "";
   const rows = Array.isArray(body?.rows) ? (body.rows as ParsedWeeklyUpdate[]) : [];
+  const overwriteDates = new Set<string>(Array.isArray(body?.overwriteDates) ? body.overwriteDates : []);
 
   if (!projectId || !filename) {
     return NextResponse.json({ error: "Missing project ID or filename." }, { status: 400 });
@@ -52,12 +53,28 @@ export async function POST(request: Request) {
   const errors: string[] = [];
 
   for (const row of rows) {
-    if (!row.weekOf || row.alreadyExists || row.parseError) {
+    if (!row.weekOf || row.parseError) {
+      skipped += 1;
+      continue;
+    }
+
+    const shouldOverwrite = row.alreadyExists && overwriteDates.has(row.weekOf);
+
+    if (row.alreadyExists && !shouldOverwrite) {
       skipped += 1;
       continue;
     }
 
     try {
+      if (shouldOverwrite) {
+        const { error: deleteError } = await adminClient
+          .from("weekly_updates")
+          .delete()
+          .eq("project_id", projectId)
+          .eq("week_of", row.weekOf);
+        if (deleteError) throw deleteError;
+      }
+
       const { error } = await adminClient
         .from("weekly_updates")
         .insert({
