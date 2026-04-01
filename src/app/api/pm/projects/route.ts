@@ -26,6 +26,15 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const section = searchParams.get("section");
 
+  if (user.email) {
+    const normalizedEmail = user.email.trim().toLowerCase();
+    await adminClient
+      .from("pm_directory")
+      .update({ profile_id: user.id })
+      .eq("email", normalizedEmail)
+      .is("profile_id", null);
+  }
+
   if (section === "project-data") {
     const projectId = searchParams.get("projectId");
 
@@ -79,7 +88,17 @@ export async function GET(request: Request) {
   const currentMonth = new Date();
   const currentMonthStr = `${currentMonth.getUTCFullYear()}-${String(currentMonth.getUTCMonth() + 1).padStart(2, "0")}-01`;
 
-  const { data: assignmentData, error: assignmentError } = await adminClient
+  const { data: pmDirectoryRows, error: pmDirectoryError } = await adminClient
+    .from("pm_directory")
+    .select("id")
+    .eq("profile_id", user.id);
+
+  if (pmDirectoryError) {
+    return NextResponse.json({ error: pmDirectoryError.message }, { status: 500 });
+  }
+
+  const linkedPmDirectoryIds = (pmDirectoryRows ?? []).map((row) => row.id);
+  const assignmentQuery = adminClient
     .from("project_assignments")
     .select(`
       role_on_project,
@@ -99,8 +118,11 @@ export async function GET(request: Request) {
         customer:customers(name)
       )
     `)
-    .eq("profile_id", user.id)
     .in("role_on_project", ["pm", "lead", "ops_manager"]);
+
+  const { data: assignmentData, error: assignmentError } = linkedPmDirectoryIds.length
+    ? await assignmentQuery.or(`profile_id.eq.${user.id},pm_directory_id.in.(${linkedPmDirectoryIds.join(",")})`)
+    : await assignmentQuery.eq("profile_id", user.id);
 
   if (assignmentError) {
     return NextResponse.json({ error: assignmentError.message }, { status: 500 });
