@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +55,27 @@ export default async function InstallerPage() {
     return <div className="py-10 text-text-secondary">Please sign in.</div>;
   }
 
-  const { data: assignments } = await supabase
+  const adminClient = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  if (user.email) {
+    const normalizedEmail = user.email.trim().toLowerCase();
+    await adminClient
+      .from("pm_directory")
+      .update({ profile_id: user.id })
+      .eq("email", normalizedEmail)
+      .is("profile_id", null);
+  }
+
+  const { data: pmDirectoryRows } = await adminClient
+    .from("pm_directory")
+    .select("id")
+    .eq("profile_id", user.id);
+
+  const linkedPmDirectoryIds = (pmDirectoryRows ?? []).map((row) => row.id);
+  const assignmentsQuery = adminClient
     .from("project_assignments")
     .select(`
       project:projects(
@@ -67,8 +88,11 @@ export default async function InstallerPage() {
         customer:customers(name)
       )
     `)
-    .eq("profile_id", user.id)
     .eq("role_on_project", "installer");
+
+  const { data: assignments } = linkedPmDirectoryIds.length
+    ? await assignmentsQuery.or(`profile_id.eq.${user.id},pm_directory_id.in.(${linkedPmDirectoryIds.join(",")})`)
+    : await assignmentsQuery.eq("profile_id", user.id);
 
   const baseProjects = ((assignments ?? []) as InstallerAssignmentRow[])
     .map((assignment) => normalizeSingle(assignment.project))

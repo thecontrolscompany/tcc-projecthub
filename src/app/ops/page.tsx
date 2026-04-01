@@ -53,29 +53,48 @@ export default async function OpsPage() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  if (user.email) {
+    const normalizedEmail = user.email.trim().toLowerCase();
+    await adminClient
+      .from("pm_directory")
+      .update({ profile_id: user.id })
+      .eq("email", normalizedEmail)
+      .is("profile_id", null);
+  }
+
+  const { data: linkedPmDirectoryRows } = await adminClient
+    .from("pm_directory")
+    .select("id")
+    .eq("profile_id", user.id);
+
+  const linkedPmDirectoryIds = (linkedPmDirectoryRows ?? []).map((row) => row.id);
+
   const currentMonth = format(new Date(), "yyyy-MM-01");
 
-  const [{ data: assignedProjects }, { data: allProjects }, { data: periods }] = await Promise.all([
-    adminClient
-      .from("project_assignments")
-      .select(`
-        project:projects(
-          id,
-          name,
-          is_active,
-          sharepoint_folder,
-          customer:customers(name),
-          pm:profiles(full_name, email),
-          pm_directory:pm_directory(first_name, last_name, email),
-          project_assignments(
-            role_on_project,
-            profile:profiles(full_name, email),
-            pm_directory:pm_directory(first_name, last_name, email)
-          )
+  const assignedProjectsQuery = adminClient
+    .from("project_assignments")
+    .select(`
+      project:projects(
+        id,
+        name,
+        is_active,
+        sharepoint_folder,
+        customer:customers(name),
+        pm:profiles(full_name, email),
+        pm_directory:pm_directory(first_name, last_name, email),
+        project_assignments(
+          role_on_project,
+          profile:profiles(full_name, email),
+          pm_directory:pm_directory(first_name, last_name, email)
         )
-      `)
-      .eq("profile_id", user.id)
-      .eq("role_on_project", "ops_manager"),
+      )
+    `)
+    .eq("role_on_project", "ops_manager");
+
+  const [{ data: assignedProjects }, { data: allProjects }, { data: periods }] = await Promise.all([
+    linkedPmDirectoryIds.length
+      ? assignedProjectsQuery.or(`profile_id.eq.${user.id},pm_directory_id.in.(${linkedPmDirectoryIds.join(",")})`)
+      : assignedProjectsQuery.eq("profile_id", user.id),
     profile?.role === "ops_manager"
       ? adminClient
           .from("projects")
