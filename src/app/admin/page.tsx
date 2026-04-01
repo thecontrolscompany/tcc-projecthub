@@ -1,17 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { format, startOfMonth, subMonths, addMonths } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { AdminProjectsTab } from "@/components/admin-projects-tab";
 import { BillingTable } from "@/components/billing-table";
+import { OpsProjectList } from "@/components/ops-project-list";
 import { ViewReportLink } from "@/components/view-report-link";
 import { calcToBill, generatePmEmailDrafts, rollForwardRows } from "@/lib/billing/calculations";
 import type { BillingRow, BillingPeriod, CustomerFeedback, InternalContactRole, Profile, UserRole } from "@/types/database";
+import type { OpsProjectListItem } from "@/app/ops/page";
 
-type Tab = "billing" | "projects" | "weekly-updates" | "contacts" | "feedback" | "users";
+type Tab = "billing" | "projects" | "ops" | "backfill" | "weekly-updates" | "contacts" | "feedback" | "users";
 const INTERNAL_CONTACT_ROLES: InternalContactRole[] = ["pm", "lead", "installer", "ops_manager"];
+type ProjectOption = { id: string; name: string };
+type BillingPeriodRow = {
+  id: string;
+  period_month: string;
+  estimated_income_snapshot: number;
+  prior_pct: number;
+  pct_complete: number;
+  prev_billed: number;
+  actual_billed: number | null;
+  notes: string | null;
+};
 
 function formatPhone(raw: string): string {
   const digits = raw.replace(/\D/g, "").slice(0, 10);
@@ -24,6 +37,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("billing");
   const [periodMonth, setPeriodMonth] = useState<Date>(startOfMonth(new Date()));
   const [rows, setRows] = useState<BillingRow[]>([]);
+  const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -95,6 +109,33 @@ export default function AdminPage() {
     loadBillingData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authReady, tab, periodMonth]);
+
+  useEffect(() => {
+    if (!authReady) return;
+    void loadProjectOptions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authReady]);
+
+  async function loadProjectOptions() {
+    try {
+      const response = await fetch("/api/admin/data?section=projects", {
+        credentials: "include",
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        setProjectOptions([]);
+        return;
+      }
+
+      const nextProjects = (((json?.projects as Array<{ id: string; name: string }> | undefined) ?? [])).map((project) => ({
+        id: project.id,
+        name: project.name,
+      }));
+      setProjectOptions(nextProjects.sort((a, b) => a.name.localeCompare(b.name)));
+    } catch {
+      setProjectOptions([]);
+    }
+  }
 
   function mapFallbackBillingRows(
     periods: Array<{
@@ -408,6 +449,8 @@ export default function AdminPage() {
             [
               { id: "billing", label: "Billing Table" },
               { id: "projects", label: "Projects" },
+              { id: "ops", label: "Ops View" },
+              { id: "backfill", label: "Billing History" },
               { id: "weekly-updates", label: "Weekly Updates" },
               { id: "contacts", label: "Contacts" },
               { id: "feedback", label: "Feedback" },
@@ -510,6 +553,8 @@ export default function AdminPage() {
         )}
 
         {tab === "projects" && <AdminProjectsTab />}
+        {tab === "ops" && <OpsViewTab />}
+        {tab === "backfill" && <BillingBackfillTab projects={projectOptions} />}
         {tab === "weekly-updates" && <WeeklyUpdatesTab />}
 
         {tab === "feedback" && <FeedbackTab />}
@@ -520,6 +565,341 @@ export default function AdminPage() {
         )}
       </main>
     </div>
+  );
+}
+
+function OpsViewTab() {
+  const [projects, setProjects] = useState<OpsProjectListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadOpsProjects() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch("/api/admin/data?section=ops-projects", {
+          credentials: "include",
+        });
+        const json = await response.json();
+
+        if (!response.ok) {
+          throw new Error(json?.error ?? "Failed to load ops projects.");
+        }
+
+        setProjects((json?.projects as OpsProjectListItem[]) ?? []);
+      } catch (err) {
+        setProjects([]);
+        setError(err instanceof Error ? err.message : "Failed to load ops projects.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void loadOpsProjects();
+  }, []);
+
+  if (loading) {
+    return <div className="py-10 text-center text-text-tertiary">Loading ops view...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-status-danger/30 bg-status-danger/10 px-6 py-5 text-sm text-status-danger">
+        {error}
+      </div>
+    );
+  }
+
+  return <OpsProjectList projects={projects} />;
+}
+
+function BillingBackfillTab({ projects }: { projects: ProjectOption[] }) {
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const [periods, setPeriods] = useState<BillingPeriodRow[]>([]);
+  const [dirty, setDirty] = useState<Set<string>>(new Set());
+  const [saving, setSaving] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [newPeriodMonth, setNewPeriodMonth] = useState(format(startOfMonth(new Date()), "yyyy-MM"));
+
+  useEffect(() => {
+    if (!selectedProjectId) {
+      setPeriods([]);
+      setDirty(new Set());
+      return;
+    }
+    void loadPeriods(selectedProjectId);
+  }, [selectedProjectId]);
+
+  async function loadPeriods(projectId: string) {
+    setLoading(true);
+    setStatus(null);
+    try {
+      const response = await fetch(`/api/admin/billing-backfill?projectId=${encodeURIComponent(projectId)}`, {
+        credentials: "include",
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json?.error ?? "Failed to load billing history.");
+      }
+
+      setPeriods((json?.periods as BillingPeriodRow[]) ?? []);
+      setDirty(new Set());
+    } catch (err) {
+      setPeriods([]);
+      setStatus({ type: "error", message: err instanceof Error ? err.message : "Failed to load billing history." });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function markDirty(id: string) {
+    setDirty((current) => {
+      const next = new Set(current);
+      next.add(id);
+      return next;
+    });
+  }
+
+  function updatePeriod<K extends keyof BillingPeriodRow>(id: string, field: K, value: BillingPeriodRow[K]) {
+    setPeriods((current) =>
+      current.map((period) => (period.id === id ? { ...period, [field]: value } : period))
+    );
+    markDirty(id);
+  }
+
+  async function handleAddPeriod() {
+    if (!selectedProjectId) return;
+
+    setAdding(true);
+    setStatus(null);
+    try {
+      const periodMonth = `${newPeriodMonth}-01`;
+      const response = await fetch("/api/admin/billing-backfill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ projectId: selectedProjectId, periodMonth }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json?.error ?? "Failed to add billing period.");
+      }
+
+      const nextPeriod = json?.period as BillingPeriodRow | undefined;
+      if (nextPeriod) {
+        setPeriods((current) =>
+          [...current, nextPeriod].sort((a, b) => a.period_month.localeCompare(b.period_month))
+        );
+      }
+      setStatus({ type: "success", message: "Billing period added." });
+    } catch (err) {
+      setStatus({ type: "error", message: err instanceof Error ? err.message : "Failed to add billing period." });
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  async function handleSaveChanges() {
+    const updates = periods
+      .filter((period) => dirty.has(period.id))
+      .map((period) => ({
+        id: period.id,
+        estimated_income_snapshot: period.estimated_income_snapshot,
+        prior_pct: period.prior_pct,
+        pct_complete: period.pct_complete,
+        prev_billed: period.prev_billed,
+        actual_billed: period.actual_billed,
+        notes: period.notes,
+      }));
+
+    if (updates.length === 0) return;
+
+    setSaving(true);
+    setStatus(null);
+    try {
+      const response = await fetch("/api/admin/billing-backfill", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ updates }),
+      });
+      const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(json?.error ?? "Failed to save billing history.");
+      }
+
+      setDirty(new Set());
+      setStatus({ type: "success", message: "Billing history saved." });
+    } catch (err) {
+      setStatus({ type: "error", message: err instanceof Error ? err.message : "Failed to save billing history." });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const selectedProjectName = useMemo(
+    () => projects.find((project) => project.id === selectedProjectId)?.name ?? "",
+    [projects, selectedProjectId]
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <h2 className="text-2xl font-bold text-text-primary">Billing History</h2>
+        <p className="text-sm text-text-secondary">
+          Backfill historical billing periods so analytics and backlog trend data stay complete.
+        </p>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr),180px,140px]">
+        <select
+          value={selectedProjectId}
+          onChange={(event) => setSelectedProjectId(event.target.value)}
+          className="rounded-xl border border-border-default bg-surface-raised px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+        >
+          <option value="">Select project</option>
+          {projects.map((project) => (
+            <option key={project.id} value={project.id}>
+              {project.name}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="month"
+          value={newPeriodMonth}
+          onChange={(event) => setNewPeriodMonth(event.target.value)}
+          className="rounded-xl border border-border-default bg-surface-raised px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+        />
+
+        <button
+          type="button"
+          onClick={() => void handleAddPeriod()}
+          disabled={!selectedProjectId || adding}
+          className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:opacity-50"
+        >
+          {adding ? "Adding..." : "Add Period"}
+        </button>
+      </div>
+
+      {status && (
+        <div
+          className={[
+            "rounded-xl border px-4 py-2.5 text-sm",
+            status.type === "success"
+              ? "border-status-success/30 bg-status-success/10 text-status-success"
+              : "border-status-danger/30 bg-status-danger/10 text-status-danger",
+          ].join(" ")}
+        >
+          {status.message}
+        </div>
+      )}
+
+      {!selectedProjectId ? (
+        <div className="rounded-2xl border border-dashed border-border-default px-6 py-10 text-center text-sm text-text-secondary">
+          Select a project to load billing history.
+        </div>
+      ) : loading ? (
+        <div className="py-10 text-center text-text-tertiary">Loading billing history...</div>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-text-primary">{selectedProjectName}</p>
+              <p className="text-xs text-text-tertiary">{periods.length} billing period{periods.length === 1 ? "" : "s"}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleSaveChanges()}
+              disabled={dirty.size === 0 || saving}
+              className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:opacity-50"
+            >
+              {saving ? "Saving..." : `Save Changes${dirty.size > 0 ? ` (${dirty.size})` : ""}`}
+            </button>
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-border-default">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border-default bg-surface-raised/80">
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Period Month</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Est. Income</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Prior %</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">% Complete</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Prev Billed</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actual Billed</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {periods.map((period) => (
+                  <tr key={period.id} className="border-b border-border-default hover:bg-surface-raised">
+                    <td className="px-4 py-2.5 text-text-primary">{format(new Date(period.period_month), "MMM yyyy")}</td>
+                    <td className="px-4 py-2.5">
+                      <NumericCell value={period.estimated_income_snapshot} onChange={(value) => updatePeriod(period.id, "estimated_income_snapshot", value ?? 0)} />
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <NumericCell value={period.prior_pct} onChange={(value) => updatePeriod(period.id, "prior_pct", value ?? 0)} step={0.0001} />
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <NumericCell value={period.pct_complete} onChange={(value) => updatePeriod(period.id, "pct_complete", value ?? 0)} step={0.0001} />
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <NumericCell value={period.prev_billed} onChange={(value) => updatePeriod(period.id, "prev_billed", value ?? 0)} />
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <NumericCell value={period.actual_billed ?? null} onChange={(value) => updatePeriod(period.id, "actual_billed", value)} allowBlank />
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <input
+                        type="text"
+                        value={period.notes ?? ""}
+                        onChange={(event) => updatePeriod(period.id, "notes", event.target.value || null)}
+                        className="w-full min-w-[220px] rounded-lg border border-border-default bg-surface-base px-3 py-1.5 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NumericCell({
+  value,
+  onChange,
+  step = 0.01,
+  allowBlank = false,
+}: {
+  value: number | null;
+  onChange: (value: number | null) => void;
+  step?: number;
+  allowBlank?: boolean;
+}) {
+  return (
+    <input
+      type="number"
+      step={step}
+      value={value ?? ""}
+      onChange={(event) => {
+        const raw = event.target.value;
+        if (raw === "" && allowBlank) {
+          onChange(null);
+          return;
+        }
+        onChange(Number(raw || 0));
+      }}
+      className="w-28 rounded-lg border border-border-default bg-surface-base px-3 py-1.5 text-right text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+    />
   );
 }
 

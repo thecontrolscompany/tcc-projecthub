@@ -1,18 +1,25 @@
 # Task 041 Output
 
-## Summary
-- Added a project-scoped POC sheet import flow with parse-preview-confirm UX.
-- Import replaces `poc_line_items` for only the currently open project.
-- Added `Clear All` for project POC items and inline category-name editing after import.
+## What Changed
+- Removed the useless `Back` button from [src/app/reports/weekly-update/[id]/PrintButton.tsx](/c:/Users/TimothyCollins/dev/tcc-projecthub/src/app/reports/weekly-update/[id]/PrintButton.tsx), leaving only `Print / Save as PDF`.
+- Added two new admin tabs in [src/app/admin/page.tsx](/c:/Users/TimothyCollins/dev/tcc-projecthub/src/app/admin/page.tsx):
+  - `Ops View`
+  - `Billing History`
+- Added an admin-backed ops data section in [src/app/api/admin/data/route.ts](/c:/Users/TimothyCollins/dev/tcc-projecthub/src/app/api/admin/data/route.ts) so the admin portal can render the same grouped ops project list via [src/components/ops-project-list.tsx](/c:/Users/TimothyCollins/dev/tcc-projecthub/src/components/ops-project-list.tsx).
+- Added a new service-role route at [src/app/api/admin/billing-backfill/route.ts](/c:/Users/TimothyCollins/dev/tcc-projecthub/src/app/api/admin/billing-backfill/route.ts) with:
+  - `GET` to load all billing periods for a project
+  - `POST` to add a blank billing period
+  - `PATCH` to save dirty period edits
+- Added the Billing History UI in [src/app/admin/page.tsx](/c:/Users/TimothyCollins/dev/tcc-projecthub/src/app/admin/page.tsx):
+  - project selector
+  - editable billing-period table
+  - add-period control
+  - dirty-row tracking
+  - save-changes action
 
-## Files changed
-- `src/lib/poc/import.ts`
-- `src/app/api/admin/parse-poc-sheet/route.ts`
-- `src/app/api/admin/import-poc-sheet/route.ts`
-- `src/components/project-modal.tsx`
-- `codex/task-041-poc-sheet-import.md`
+## Database Operations
+- All new database reads/writes for this task are routed through service-role/admin-client server routes.
+- No SQL migration was required.
 
-## Notes
-- No SQL migration was needed for this first pass.
-- Billing is not auto-updated by import yet; the import focuses on safely seeding the project’s POC breakdown.
-- The flow is intentionally project-scoped so Timothy can test one project at a time and clear/retry if needed.
+## Build Status
+- `npm run build` completed successfully.

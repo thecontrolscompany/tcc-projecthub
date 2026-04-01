@@ -3,6 +3,11 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 
+function normalizeSingle<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
 export async function GET(request: Request) {
   const supabase = await createServerClient();
   const {
@@ -159,6 +164,103 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ projects: data ?? [] });
+  }
+
+  if (section === "ops-projects") {
+    if (requesterRole !== "admin") {
+      return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+    }
+
+    const currentMonth = new Date();
+    const currentMonthStr = `${currentMonth.getUTCFullYear()}-${String(currentMonth.getUTCMonth() + 1).padStart(2, "0")}-01`;
+
+    const [projectsResult, periodsResult] = await Promise.all([
+      adminClient
+        .from("projects")
+        .select(`
+          id,
+          name,
+          is_active,
+          sharepoint_folder,
+          customer:customers(name),
+          pm:profiles(full_name, email),
+          pm_directory:pm_directory(first_name, last_name, email),
+          project_assignments(
+            role_on_project,
+            profile:profiles(full_name, email),
+            pm_directory:pm_directory(first_name, last_name, email)
+          )
+        `)
+        .order("name"),
+      adminClient
+        .from("billing_periods")
+        .select("project_id, pct_complete")
+        .eq("period_month", currentMonthStr),
+    ]);
+
+    if (projectsResult.error || periodsResult.error) {
+      return NextResponse.json({
+        error:
+          projectsResult.error?.message ||
+          periodsResult.error?.message ||
+          "Failed to load ops projects.",
+      }, { status: 500 });
+    }
+
+    const pctByProjectId = new Map((periodsResult.data ?? []).map((period) => [period.project_id, period.pct_complete]));
+    const normalizedProjects = (((projectsResult.data ?? []) as Array<{
+      id: string;
+      name: string;
+      is_active: boolean | null;
+      sharepoint_folder?: string | null;
+      customer?: { name?: string | null } | Array<{ name?: string | null }> | null;
+      pm?: { full_name?: string | null; email?: string | null } | Array<{ full_name?: string | null; email?: string | null }> | null;
+      pm_directory?:
+        | { first_name?: string | null; last_name?: string | null; email?: string | null }
+        | Array<{ first_name?: string | null; last_name?: string | null; email?: string | null }>
+        | null;
+      project_assignments?: Array<{
+        role_on_project?: string | null;
+        profile?: { full_name?: string | null; email?: string | null } | Array<{ full_name?: string | null; email?: string | null }> | null;
+        pm_directory?:
+          | { first_name?: string | null; last_name?: string | null; email?: string | null }
+          | Array<{ first_name?: string | null; last_name?: string | null; email?: string | null }>
+          | null;
+      }> | null;
+    }>) ?? [])
+      .map((project) => {
+        const pm = normalizeSingle(project.pm);
+        const pmDirectory = normalizeSingle(project.pm_directory);
+        const customer = normalizeSingle(project.customer);
+        const primaryAssignment = (project.project_assignments ?? []).find((assignment) => assignment?.role_on_project === "pm");
+        const assignmentProfile = normalizeSingle(primaryAssignment?.profile);
+        const assignmentDirectory = normalizeSingle(primaryAssignment?.pm_directory);
+        const assignmentDirectoryName = [assignmentDirectory?.first_name, assignmentDirectory?.last_name].filter(Boolean).join(" ").trim();
+        const pmDirectoryName = [pmDirectory?.first_name, pmDirectory?.last_name].filter(Boolean).join(" ").trim();
+        const pmGroupName =
+          assignmentProfile?.full_name ||
+          assignmentDirectoryName ||
+          pm?.full_name ||
+          pmDirectoryName ||
+          assignmentProfile?.email ||
+          assignmentDirectory?.email ||
+          pm?.email ||
+          pmDirectory?.email ||
+          "Unassigned";
+
+        return {
+          id: project.id,
+          name: project.name,
+          is_active: project.is_active !== false,
+          customerName: customer?.name ?? null,
+          pmGroupName,
+          pctComplete: (pctByProjectId.get(project.id) ?? 0) * 100,
+          sharepointFolder: project.sharepoint_folder ?? null,
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    return NextResponse.json({ projects: normalizedProjects });
   }
 
   if (section === "me") {

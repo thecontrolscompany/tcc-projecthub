@@ -3,9 +3,6 @@
 export function PrintButton() {
   return (
     <div className="no-print print-actions">
-      <button type="button" onClick={() => window.history.back()}>
-        ← Back
-      </button>
       <button type="button" onClick={() => window.print()}>
         Print / Save as PDF
       </button>
