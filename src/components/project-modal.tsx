@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { ViewReportLink } from "@/components/view-report-link";
+import type { ParsedPocImportRow } from "@/lib/poc/import";
 import type { PocLineItem, Profile, ProjectAssignmentRole, ProjectCustomerContact } from "@/types/database";
 
 export type ProjectCustomerOption = {
@@ -122,6 +123,15 @@ type ParsedWeeklyUpdate = {
   totalHours: number;
   alreadyExists: boolean;
   parseError: string | null;
+};
+
+type ParsedPocSheet = {
+  filename: string;
+  worksheetName: string;
+  rows: ParsedPocImportRow[];
+  totalWeight: number;
+  overallPct: number;
+  existingCount: number;
 };
 
 const DOCUMENT_OPTIONS: Array<{ type: DocumentType; label: string }> = [
@@ -1259,6 +1269,232 @@ function WeeklyReportImportDialog({ projectId, onClose }: WeeklyReportImportDial
   );
 }
 
+type PocSheetImportDialogProps = {
+  projectId: string;
+  onClose: () => void;
+  onImported: () => void;
+};
+
+function PocSheetImportDialog({ projectId, onClose, onImported }: PocSheetImportDialogProps) {
+  const [file, setFile] = useState<File | null>(null);
+  const [parsing, setParsing] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [parsed, setParsed] = useState<ParsedPocSheet | null>(null);
+  const [result, setResult] = useState<{ imported: number } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleParse() {
+    if (!file) return;
+
+    setParsing(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("projectId", projectId);
+
+      const response = await fetch("/api/admin/parse-poc-sheet", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(json?.error ?? "Failed to parse POC sheet.");
+      }
+
+      setParsed({
+        filename: (json?.filename as string) ?? file.name,
+        worksheetName: (json?.worksheetName as string) ?? "Sheet1",
+        rows: ((json?.rows as ParsedPocImportRow[] | undefined) ?? []),
+        totalWeight: typeof json?.totalWeight === "number" ? json.totalWeight : 0,
+        overallPct: typeof json?.overallPct === "number" ? json.overallPct : 0,
+        existingCount: typeof json?.existingCount === "number" ? json.existingCount : 0,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to parse POC sheet.");
+    } finally {
+      setParsing(false);
+    }
+  }
+
+  async function handleImport() {
+    if (!parsed) return;
+
+    setImporting(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/admin/import-poc-sheet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          projectId,
+          filename: parsed.filename,
+          rows: parsed.rows,
+        }),
+      });
+      const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(json?.error ?? "Failed to import POC sheet.");
+      }
+
+      setResult({
+        imported: typeof json?.imported === "number" ? json.imported : parsed.rows.length,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to import POC sheet.");
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8">
+      <div className="w-full max-w-3xl rounded-2xl border border-border-default bg-surface-base shadow-xl">
+        <div className="flex items-start justify-between border-b border-border-default px-6 py-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">POC Import</p>
+            <h3 className="mt-1 text-xl font-bold text-text-primary">Import POC Sheet</h3>
+          </div>
+          <button onClick={onClose} className="text-text-secondary hover:text-text-primary">x</button>
+        </div>
+
+        <div className="space-y-4 px-6 py-6">
+          {error && (
+            <div className="rounded-xl border border-status-danger/30 bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
+              {error}
+            </div>
+          )}
+
+          {!parsed && !result && (
+            <div className="space-y-4">
+              <p className="text-sm text-text-secondary">
+                Upload one project&apos;s legacy POC workbook. The import replaces this project&apos;s existing POC line items only.
+              </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <input
+                  type="file"
+                  accept=".xlsx,.xlsm"
+                  onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                  className="text-sm text-text-secondary"
+                />
+                <span className="text-sm text-text-tertiary">{file?.name ?? "No file chosen"}</span>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => void handleParse()}
+                  disabled={!file || parsing}
+                  className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:opacity-50"
+                >
+                  {parsing ? "Parsing..." : "Parse File"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {parsed && !result && (
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-text-primary">{parsed.filename}</p>
+                    <p className="text-xs text-text-tertiary">Worksheet: {parsed.worksheetName}</p>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 text-center text-sm">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-text-tertiary">Rows</p>
+                      <p className="font-semibold text-text-primary">{parsed.rows.length}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-text-tertiary">Weight</p>
+                      <p className="font-semibold text-text-primary">{parsed.totalWeight}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-text-tertiary">Overall</p>
+                      <p className="font-semibold text-status-success">{(parsed.overallPct * 100).toFixed(1)}%</p>
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs text-text-secondary">
+                  This will replace {parsed.existingCount} existing POC item{parsed.existingCount === 1 ? "" : "s"} for this project. You can still edit or clear the imported items afterward.
+                </p>
+              </div>
+
+              <div className="max-h-[420px] overflow-auto rounded-2xl border border-border-default">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border-default bg-surface-raised">
+                      <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Category</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Weight</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">% Complete</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Contribution</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsed.rows.map((row) => (
+                      <tr key={`${row.category}-${row.sourceRow}`} className="border-b border-border-default last:border-b-0">
+                        <td className="px-4 py-2.5 text-text-primary">{row.category}</td>
+                        <td className="px-4 py-2.5 text-right text-text-secondary">{row.weight}</td>
+                        <td className="px-4 py-2.5 text-right text-text-secondary">{(row.pctComplete * 100).toFixed(1)}%</td>
+                        <td className="px-4 py-2.5 text-right text-text-secondary">{row.contribution.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-xl bg-surface-overlay px-4 py-2 text-sm text-text-secondary hover:bg-surface-overlay"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleImport()}
+                  disabled={parsed.rows.length === 0 || importing}
+                  className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:opacity-50"
+                >
+                  {importing ? "Importing..." : `Replace with ${parsed.rows.length} POC Item${parsed.rows.length === 1 ? "" : "s"}`}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {result && (
+            <div className="space-y-4">
+              <p className="text-base font-semibold text-text-primary">POC import complete.</p>
+              <p className="text-sm text-text-secondary">
+                Imported {result.imported} line item{result.imported === 1 ? "" : "s"} for this project.
+              </p>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onImported();
+                    onClose();
+                  }}
+                  className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CustomerContactsSection({ projectId }: { projectId: string }) {
   const [contacts, setContacts] = useState<(ProjectCustomerContact & { profile: Profile })[]>([]);
   const [availableContacts, setAvailableContacts] = useState<Array<{
@@ -1502,20 +1738,26 @@ function PocSetupSection({ projectId }: { projectId: string }) {
   const [newWeight, setNewWeight] = useState("10");
   const [adding, setAdding] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  async function loadItems() {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/admin/data?section=project-poc-items&projectId=${encodeURIComponent(projectId)}`, {
+        credentials: "include",
+      });
+      const json = await response.json();
+      setItems((((response.ok ? json?.items : []) ?? []) as PocLineItem[]));
+    } catch {
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    fetch(`/api/admin/data?section=project-poc-items&projectId=${encodeURIComponent(projectId)}`, {
-      credentials: "include",
-    })
-      .then((response) => response.json().then((json) => ({ ok: response.ok, json })))
-      .then(({ ok, json }) => {
-        setItems((((ok ? json?.items : []) ?? []) as PocLineItem[]));
-        setLoading(false);
-      })
-      .catch(() => {
-        setItems([]);
-        setLoading(false);
-      });
+    void loadItems();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
@@ -1532,6 +1774,7 @@ function PocSetupSection({ projectId }: { projectId: string }) {
   async function handleAdd() {
     if (!newCategory.trim() || !newWeight) return;
     setAdding(true);
+    setStatusMessage(null);
     const { data, error } = await supabase
       .from("poc_line_items")
       .insert({
@@ -1547,21 +1790,30 @@ function PocSetupSection({ projectId }: { projectId: string }) {
       setItems((prev) => [...prev, data as PocLineItem]);
       setNewCategory("");
       setNewWeight("10");
+      setStatusMessage("POC item added.");
     }
     setAdding(false);
   }
 
   async function handleDelete(id: string) {
+    setStatusMessage(null);
     await supabase.from("poc_line_items").delete().eq("id", id);
     const nextItems = items.filter((item) => item.id !== id).map((item, index) => ({ ...item, sort_order: index }));
     setItems(nextItems);
     await persistSortOrder(nextItems);
+    setStatusMessage("POC item removed.");
   }
 
   async function handleWeightChange(id: string, weight: number) {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, weight } : item)));
     setSaving(id);
     await supabase.from("poc_line_items").update({ weight }).eq("id", id);
+    setSaving(null);
+  }
+
+  async function handleCategorySave(id: string, category: string) {
+    setSaving(id);
+    await supabase.from("poc_line_items").update({ category }).eq("id", id);
     setSaving(null);
   }
 
@@ -1580,15 +1832,53 @@ function PocSetupSection({ projectId }: { projectId: string }) {
     setSaving(null);
   }
 
+  async function handleClearAll() {
+    if (items.length === 0) return;
+    const confirmed = window.confirm("Delete all POC line items for this project?");
+    if (!confirmed) return;
+
+    setSaving("all");
+    setStatusMessage(null);
+    await supabase.from("poc_line_items").delete().eq("project_id", projectId);
+    setItems([]);
+    setSaving(null);
+    setStatusMessage("All POC items cleared for this project.");
+  }
+
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="font-heading text-lg font-semibold text-text-primary">POC Line Items</h4>
-        {totalWeight > 0 && <span className="text-xs text-text-tertiary">Total weight: {totalWeight}</span>}
+        <div>
+          <h4 className="font-heading text-lg font-semibold text-text-primary">POC Line Items</h4>
+          <p className="text-xs text-text-secondary">Project-scoped categories and weights used to calculate % complete.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {totalWeight > 0 && <span className="text-xs text-text-tertiary">Total weight: {totalWeight}</span>}
+          <button
+            type="button"
+            onClick={() => setShowImportDialog(true)}
+            className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-surface-base hover:text-text-primary"
+          >
+            Import POC Sheet...
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleClearAll()}
+            disabled={items.length === 0 || saving === "all"}
+            className="rounded-lg border border-status-danger/30 bg-status-danger/10 px-3 py-1.5 text-xs font-medium text-status-danger transition hover:bg-status-danger/20 disabled:opacity-50"
+          >
+            {saving === "all" ? "Clearing..." : "Clear All"}
+          </button>
+        </div>
       </div>
       <p className="text-xs text-text-secondary">
         Define the categories and relative weights for the % complete calculation. PMs update each category&apos;s completion in their weekly report.
       </p>
+      {statusMessage && (
+        <div className="rounded-xl border border-status-success/20 bg-status-success/10 px-4 py-3 text-sm text-status-success">
+          {statusMessage}
+        </div>
+      )}
 
       {loading ? (
         <p className="text-sm text-text-tertiary">Loading...</p>
@@ -1613,7 +1903,16 @@ function PocSetupSection({ projectId }: { projectId: string }) {
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-medium text-text-primary">{item.category}</span>
+                      <input
+                        type="text"
+                        value={item.category}
+                        onChange={(e) => {
+                          const nextCategory = e.target.value;
+                          setItems((prev) => prev.map((row) => (row.id === item.id ? { ...row, category: nextCategory } : row)));
+                        }}
+                        onBlur={(e) => void handleCategorySave(item.id, e.target.value)}
+                        className="min-w-[220px] rounded-lg border border-border-default bg-surface-overlay px-2.5 py-1 text-sm font-medium text-text-primary focus:border-brand-primary/50 focus:outline-none"
+                      />
                       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${badgeClass}`}>
                         {currentPercent.toFixed(0)}%
                       </span>
@@ -1703,6 +2002,18 @@ function PocSetupSection({ projectId }: { projectId: string }) {
             </button>
           </div>
         </div>
+      )}
+
+      {showImportDialog && (
+        <PocSheetImportDialog
+          projectId={projectId}
+          onClose={() => setShowImportDialog(false)}
+          onImported={() => {
+            setShowImportDialog(false);
+            setStatusMessage("POC sheet imported for this project.");
+            void loadItems();
+          }}
+        />
       )}
     </section>
   );
