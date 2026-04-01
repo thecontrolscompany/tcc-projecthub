@@ -1,15 +1,6 @@
-import { AppShell } from "@/components/app-shell";
-import { AdminUsersPage } from "@/components/admin-users-page";
-import { getShellIdentity } from "@/lib/auth/get-shell-identity";
-
 export const dynamic = "force-dynamic";
+import { redirect } from "next/navigation";
 
-export default async function UserManagementPage() {
-  const identity = await getShellIdentity("admin");
-
-  return (
-    <AppShell role={identity.role} userEmail={identity.email}>
-      <AdminUsersPage />
-    </AppShell>
-  );
+export default function UsersRedirect() {
+  redirect("/admin/contacts");
 }

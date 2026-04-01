@@ -135,7 +135,6 @@ export const NAV_LINKS: NavItem[] = [
   { label: "Billing", href: "/admin", roles: ["ops_manager"], icon: DollarIcon },
   { label: "Ops View", href: "/admin/ops", roles: ["admin"], icon: GridIcon },
   { label: "Contacts", href: "/admin/contacts", roles: ["admin"], icon: UserIcon },
-  { label: "User Management", href: "/admin/users", roles: ["admin"], icon: UserIcon },
   { label: "Quotes", href: "/quotes", roles: ["admin", "ops_manager", "customer"], icon: DocumentIcon },
   { label: "Estimating", href: "/estimating", roles: ["admin", "ops_manager"], icon: CalculatorIcon },
   { label: "Projects", href: "/projects", roles: ["pm", "lead"], icon: FolderIcon },
@@ -150,7 +149,7 @@ export const NAV_LINKS: NavItem[] = [
 const PAGE_TITLE_OVERRIDES: Record<string, string> = {
   "/admin": "Admin",
   "/admin/analytics": "Analytics",
-  "/admin/contacts": "Contacts",
+  "/admin/contacts": "Contacts & Users",
   "/admin/migrate-sharepoint": "SharePoint",
   "/admin/ops": "Ops View",
   "/admin/users": "User Management",

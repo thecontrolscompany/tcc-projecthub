@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { AdminUsersPage } from "@/components/admin-users-page";
 import type { InternalContactRole, UserRole } from "@/types/database";
 
 const INTERNAL_CONTACT_ROLES: InternalContactRole[] = ["pm", "lead", "installer", "ops_manager"];
+type ContactTab = "contacts" | "users";
 
 type PmDirectoryRow = {
   id: string;
@@ -26,6 +28,40 @@ function formatPhone(raw: string): string {
 }
 
 export function AdminContactsPage() {
+  const [contactTab, setContactTab] = useState<ContactTab>("contacts");
+  return (
+    <div className="mx-auto max-w-7xl space-y-4 px-6 py-6">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold text-text-primary">Contacts & Users</h1>
+        <p className="text-sm text-text-secondary">
+          Manage internal contacts, external contacts, and portal user accounts from one place.
+        </p>
+      </div>
+
+      <div className="mb-4 flex gap-2 border-b border-border-default pb-3">
+        {(["contacts", "users"] as ContactTab[]).map((id) => (
+          <button
+            key={id}
+            onClick={() => setContactTab(id)}
+            className={[
+              "rounded-lg px-4 py-2 text-sm font-medium transition",
+              contactTab === id
+                ? "bg-surface-overlay text-text-primary shadow-sm"
+                : "text-text-secondary hover:text-text-primary",
+            ].join(" ")}
+          >
+            {id === "contacts" ? "Contacts" : "User Management"}
+          </button>
+        ))}
+      </div>
+
+      {contactTab === "contacts" && <ContactsPanel />}
+      {contactTab === "users" && <AdminUsersPage />}
+    </div>
+  );
+}
+
+function ContactsPanel() {
   const supabase = createClient();
   const [pms, setPms] = useState<PmDirectoryRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -258,10 +294,10 @@ export function AdminContactsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-4 px-6 py-6">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-text-primary">Contacts</h1>
+          <h2 className="text-2xl font-bold text-text-primary">Contacts</h2>
           <p className="text-sm text-text-secondary">
             Stores both internal TCC staff and external customer-side contacts. Linked portal accounts are shown when `profile_id` is present.
           </p>
