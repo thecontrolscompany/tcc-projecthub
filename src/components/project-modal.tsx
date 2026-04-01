@@ -97,6 +97,9 @@ const inputClassName =
 const textareaClassName =
   "w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none";
 
+const dropdownClassName =
+  "absolute left-0 right-0 top-[calc(100%+0.35rem)] z-50 max-h-60 overflow-auto rounded-xl border border-border-default bg-surface-raised shadow-lg";
+
 type DocumentType = "contract" | "scope" | "estimate";
 type UploadState = "idle" | "uploading" | "success" | "error";
 
@@ -135,6 +138,7 @@ export function ProjectModal({
   assignments,
   pendingTeamMemberId,
   pendingRoleOnProject,
+  primaryPersonId,
   values,
   saving,
   errors,
@@ -147,6 +151,7 @@ export function ProjectModal({
   onChange,
   onPendingTeamMemberChange,
   onPendingRoleChange,
+  onSetPrimary,
   onAddAssignment,
   onRemoveAssignment,
   onSave,
@@ -159,6 +164,7 @@ export function ProjectModal({
   assignments: ProjectAssignmentDraft[];
   pendingTeamMemberId: string;
   pendingRoleOnProject: ProjectAssignmentRole;
+  primaryPersonId: string | null;
   values: ProjectFormValues;
   saving: boolean;
   errors: ProjectFormErrors;
@@ -171,6 +177,7 @@ export function ProjectModal({
   onChange: <K extends keyof ProjectFormValues>(field: K, value: ProjectFormValues[K]) => void;
   onPendingTeamMemberChange: (value: string) => void;
   onPendingRoleChange: (value: ProjectAssignmentRole) => void;
+  onSetPrimary: (personId: string) => void;
   onAddAssignment: () => void;
   onRemoveAssignment: (personId: string, roleOnProject: ProjectAssignmentRole) => void;
   onSave: () => void;
@@ -312,50 +319,35 @@ export function ProjectModal({
                 <input value={values.customerPoNumber} onChange={(e) => onChange("customerPoNumber", e.target.value)} className={inputClassName} />
               </FormField>
               <FormField label="Site Address">
-                <input
-                  list="site-addresses-list"
+                <SiteAddressInput
                   value={values.siteAddress}
-                  onChange={(e) => onChange("siteAddress", e.target.value)}
+                  onChange={(v) => onChange("siteAddress", v)}
                   className={inputClassName}
-                  autoComplete="off"
                 />
-                {(siteAddresses?.length ?? 0) > 0 && (
-                  <datalist id="site-addresses-list">
-                    {siteAddresses!.map((addr) => <option key={addr} value={addr} />)}
-                  </datalist>
-                )}
               </FormField>
               <FormField label="General Contractor">
-                <input
-                  list="contractor-names-list"
+                <ComboboxInput
                   value={values.generalContractor}
-                  onChange={(e) => onChange("generalContractor", e.target.value)}
+                  onChange={(v) => onChange("generalContractor", v)}
+                  suggestions={contractorNames ?? []}
                   className={inputClassName}
-                  autoComplete="off"
                 />
               </FormField>
               <FormField label="Mechanical Contractor">
-                <input
-                  list="contractor-names-list"
+                <ComboboxInput
                   value={values.mechanicalContractor}
-                  onChange={(e) => onChange("mechanicalContractor", e.target.value)}
+                  onChange={(v) => onChange("mechanicalContractor", v)}
+                  suggestions={contractorNames ?? []}
                   className={inputClassName}
-                  autoComplete="off"
                 />
               </FormField>
               <FormField label="Electrical Contractor">
-                <input
-                  list="contractor-names-list"
+                <ComboboxInput
                   value={values.electricalContractor}
-                  onChange={(e) => onChange("electricalContractor", e.target.value)}
+                  onChange={(v) => onChange("electricalContractor", v)}
+                  suggestions={contractorNames ?? []}
                   className={inputClassName}
-                  autoComplete="off"
                 />
-                {(contractorNames?.length ?? 0) > 0 && (
-                  <datalist id="contractor-names-list">
-                    {contractorNames!.map((name) => <option key={name} value={name} />)}
-                  </datalist>
-                )}
               </FormField>
             </div>
 
@@ -407,7 +399,23 @@ export function ProjectModal({
                           {initials}
                         </div>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-text-primary">{label}</p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate text-sm font-medium text-text-primary">{label}</p>
+                            {assignment.roleOnProject === "pm" && assignment.personId === primaryPersonId && (
+                              <span className="inline-flex rounded-full bg-status-warning/10 px-2 py-0.5 text-xs font-medium text-status-warning">
+                                ★ Primary
+                              </span>
+                            )}
+                            {assignment.roleOnProject === "pm" && assignment.personId !== primaryPersonId && (
+                              <button
+                                type="button"
+                                onClick={() => onSetPrimary(assignment.personId)}
+                                className="rounded-lg border border-status-warning/30 bg-status-warning/10 px-2 py-0.5 text-xs font-medium text-status-warning transition hover:bg-status-warning/20"
+                              >
+                                Set Primary
+                              </button>
+                            )}
+                          </div>
                           <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${ROLE_BADGE_STYLES[assignment.roleOnProject]}`}>
                             {ROLE_LABELS[assignment.roleOnProject]}
                           </span>
@@ -507,6 +515,215 @@ export function ProjectModal({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ComboboxInput({
+  value,
+  onChange,
+  suggestions,
+  className,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  suggestions: string[];
+  className: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+
+  const filteredSuggestions = useMemo(() => {
+    const query = value.trim().toLowerCase();
+    const uniqueSuggestions = Array.from(new Set(suggestions.filter(Boolean)));
+    if (!query) return uniqueSuggestions;
+    return uniqueSuggestions.filter((suggestion) => suggestion.toLowerCase().includes(query));
+  }, [suggestions, value]);
+
+  useEffect(() => {
+    setHighlightedIndex(0);
+  }, [value, open]);
+
+  function selectSuggestion(nextValue: string) {
+    onChange(nextValue);
+    setOpen(false);
+  }
+
+  return (
+    <div className="relative">
+      <input
+        value={value}
+        onChange={(event) => {
+          onChange(event.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onKeyDown={(event) => {
+          if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+            setOpen(true);
+            return;
+          }
+
+          if (!filteredSuggestions.length) {
+            if (event.key === "Escape") setOpen(false);
+            return;
+          }
+
+          if (event.key === "ArrowDown") {
+            event.preventDefault();
+            setHighlightedIndex((current) => (current + 1) % filteredSuggestions.length);
+          } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            setHighlightedIndex((current) => (current - 1 + filteredSuggestions.length) % filteredSuggestions.length);
+          } else if (event.key === "Enter" && open) {
+            event.preventDefault();
+            selectSuggestion(filteredSuggestions[highlightedIndex] ?? filteredSuggestions[0]);
+          } else if (event.key === "Escape") {
+            event.preventDefault();
+            setOpen(false);
+          }
+        }}
+        className={className}
+        autoComplete="off"
+      />
+
+      {open && filteredSuggestions.length > 0 && (
+        <div className={dropdownClassName}>
+          {filteredSuggestions.map((suggestion, index) => (
+            <button
+              key={suggestion}
+              type="button"
+              onMouseDown={(event) => {
+                event.preventDefault();
+                selectSuggestion(suggestion);
+              }}
+              onMouseEnter={() => setHighlightedIndex(index)}
+              className={[
+                "block w-full px-3 py-2 text-left text-sm text-text-primary",
+                index === highlightedIndex ? "bg-surface-overlay" : "hover:bg-surface-overlay",
+              ].join(" ")}
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SiteAddressInput({
+  value,
+  onChange,
+  className,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  className: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [results, setResults] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!open || value.trim().length < 4) {
+      setLoading(false);
+      setResults([]);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(async () => {
+      setLoading(true);
+
+      try {
+        const response = await fetch(`/api/address-search?q=${encodeURIComponent(value.trim())}`);
+        const json = await response.json();
+        setResults((response.ok ? (json?.results as string[] | undefined) : []) ?? []);
+      } catch {
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [open, value]);
+
+  useEffect(() => {
+    setHighlightedIndex(0);
+  }, [value, results.length, open]);
+
+  function selectAddress(nextValue: string) {
+    onChange(nextValue);
+    setOpen(false);
+  }
+
+  return (
+    <div className="relative">
+      <input
+        value={value}
+        onChange={(event) => {
+          onChange(event.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onKeyDown={(event) => {
+          if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+            setOpen(true);
+            return;
+          }
+
+          if (!results.length) {
+            if (event.key === "Escape") setOpen(false);
+            return;
+          }
+
+          if (event.key === "ArrowDown") {
+            event.preventDefault();
+            setHighlightedIndex((current) => (current + 1) % results.length);
+          } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            setHighlightedIndex((current) => (current - 1 + results.length) % results.length);
+          } else if (event.key === "Enter" && open) {
+            event.preventDefault();
+            selectAddress(results[highlightedIndex] ?? results[0]);
+          } else if (event.key === "Escape") {
+            event.preventDefault();
+            setOpen(false);
+          }
+        }}
+        className={className}
+        autoComplete="off"
+      />
+
+      {open && (loading || results.length > 0) && (
+        <div className={dropdownClassName}>
+          {loading ? (
+            <div className="px-3 py-2 text-sm text-text-secondary">Searching…</div>
+          ) : (
+            results.map((result, index) => (
+              <button
+                key={`${result}-${index}`}
+                type="button"
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  selectAddress(result);
+                }}
+                onMouseEnter={() => setHighlightedIndex(index)}
+                className={[
+                  "block w-full px-3 py-2 text-left text-sm text-text-primary",
+                  index === highlightedIndex ? "bg-surface-overlay" : "hover:bg-surface-overlay",
+                ].join(" ")}
+              >
+                {result}
+              </button>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

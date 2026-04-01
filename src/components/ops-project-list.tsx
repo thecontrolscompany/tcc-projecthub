@@ -193,6 +193,7 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
   const [assignments, setAssignments] = useState<ProjectAssignmentDraft[]>([]);
   const [pendingTeamMemberId, setPendingTeamMemberId] = useState("");
   const [pendingRoleOnProject, setPendingRoleOnProject] = useState<ProjectAssignmentRole>("pm");
+  const [primaryPersonId, setPrimaryPersonId] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<ProjectFormErrors>({});
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -256,6 +257,7 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
     setAssignments([]);
     setPendingTeamMemberId("");
     setPendingRoleOnProject("pm");
+    setPrimaryPersonId(null);
     setValidationErrors({});
   }
 
@@ -274,18 +276,27 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
 
   function addAssignment() {
     if (!pendingTeamMemberId) return;
+    const nextPersonId = pendingTeamMemberId;
+    const nextRole = pendingRoleOnProject;
     setAssignments((current) => {
-      if (current.some((assignment) => assignment.personId === pendingTeamMemberId && assignment.roleOnProject === pendingRoleOnProject)) {
+      if (current.some((assignment) => assignment.personId === nextPersonId && assignment.roleOnProject === nextRole)) {
         return current;
       }
-      return [...current, { personId: pendingTeamMemberId, roleOnProject: pendingRoleOnProject }];
+      return [...current, { personId: nextPersonId, roleOnProject: nextRole }];
     });
+    if (nextRole === "pm" && !primaryPersonId) {
+      setPrimaryPersonId(nextPersonId);
+    }
     setPendingTeamMemberId("");
     setPendingRoleOnProject("pm");
   }
 
   function removeAssignment(personId: string, roleOnProject: ProjectAssignmentRole) {
-    setAssignments((current) => current.filter((assignment) => !(assignment.personId === personId && assignment.roleOnProject === roleOnProject)));
+    const nextAssignments = assignments.filter((assignment) => !(assignment.personId === personId && assignment.roleOnProject === roleOnProject));
+    setAssignments(nextAssignments);
+    if (personId === primaryPersonId && roleOnProject === "pm") {
+      setPrimaryPersonId(nextAssignments.find((assignment) => assignment.roleOnProject === "pm")?.personId ?? null);
+    }
   }
 
   async function openProject(projectId: string) {
@@ -332,6 +343,8 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
         paidInFull: project.paid_in_full ?? false,
       });
       setAssignments(buildAssignmentDrafts(project, teamMemberOptions));
+      const matchingPrimaryOption = teamMemberOptions.find((option) => option.profileId === project.pm_id);
+      setPrimaryPersonId(matchingPrimaryOption?.id ?? null);
       setShowModal(true);
     } catch {
       setModalError("Failed to load project details.");
@@ -393,6 +406,7 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
             profile_id: option.profileId,
             pm_directory_id: option.pmDirectoryId,
             role_on_project: assignment.roleOnProject,
+            is_primary: assignment.personId === primaryPersonId,
           };
         })
         .filter(Boolean);
@@ -536,6 +550,7 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
           assignments={assignments}
           pendingTeamMemberId={pendingTeamMemberId}
           pendingRoleOnProject={pendingRoleOnProject}
+          primaryPersonId={primaryPersonId}
           values={formValues}
           saving={saving}
           errors={validationErrors}
@@ -544,6 +559,7 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
           onChange={updateFormValue}
           onPendingTeamMemberChange={setPendingTeamMemberId}
           onPendingRoleChange={setPendingRoleOnProject}
+          onSetPrimary={setPrimaryPersonId}
           onAddAssignment={addAssignment}
           onRemoveAssignment={removeAssignment}
           onSave={handleSaveProject}

@@ -13,6 +13,13 @@ import type { BillingRow, BillingPeriod, CustomerFeedback, InternalContactRole, 
 type Tab = "billing" | "projects" | "weekly-updates" | "contacts" | "feedback" | "users";
 const INTERNAL_CONTACT_ROLES: InternalContactRole[] = ["pm", "lead", "installer", "ops_manager"];
 
+function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 10);
+  if (digits.length < 4) return digits;
+  if (digits.length < 7) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("billing");
   const [periodMonth, setPeriodMonth] = useState<Date>(startOfMonth(new Date()));
@@ -711,7 +718,7 @@ function PmDirectoryTab() {
     setFormEmail(pm.email);
     setFormFirstName(pm.first_name ?? "");
     setFormLastName(pm.last_name ?? "");
-    setFormPhone(pm.phone ?? "");
+    setFormPhone(formatPhone(pm.phone ?? ""));
     setFormRole(
       pm.matchedProfileRole && INTERNAL_CONTACT_ROLES.includes(pm.matchedProfileRole as InternalContactRole)
         ? (pm.matchedProfileRole as InternalContactRole)
@@ -942,7 +949,7 @@ function PmDirectoryTab() {
                   <td className="px-4 py-2.5 text-text-primary">{pm.email}</td>
                   <td className="px-4 py-2.5 text-text-secondary">{pm.first_name ?? "-"}</td>
                   <td className="px-4 py-2.5 text-text-secondary">{pm.last_name ?? "-"}</td>
-                  <td className="px-4 py-2.5 text-text-secondary">{pm.phone ?? "-"}</td>
+                  <td className="px-4 py-2.5 text-text-secondary">{pm.phone ? formatPhone(pm.phone) : "-"}</td>
                   <td className="px-4 py-2.5">
                     {pm.profile_id ? (
                       <div className="flex flex-col gap-1">
@@ -1052,7 +1059,7 @@ function PmDirectoryTab() {
                   <input
                     type="tel"
                     value={formPhone}
-                    onChange={(e) => setFormPhone(e.target.value)}
+                    onChange={(e) => setFormPhone(formatPhone(e.target.value))}
                     className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
                   />
                 </div>

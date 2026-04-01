@@ -8,6 +8,7 @@ type ResolvedAssignment = {
   profile_id: string | null;
   pm_directory_id: string | null;
   role_on_project: string;
+  is_primary?: boolean;
 };
 
 export async function POST(request: Request) {
@@ -101,7 +102,10 @@ export async function POST(request: Request) {
     const contractPrice = Number(formValues.contractPrice);
     const billedAndPaid = formValues.billedInFull && formValues.paidInFull;
     const projectName = `${jobNumberPreview} - ${formValues.projectName.trim()}`;
-    const primaryPm = resolvedAssignments.find((a) => a.role_on_project === "pm") ?? null;
+    const primaryPm =
+      resolvedAssignments.find((a) => a.role_on_project === "pm" && a.is_primary) ??
+      resolvedAssignments.find((a) => a.role_on_project === "pm") ??
+      null;
 
     const payload = {
       customer_id: customerId || null,
