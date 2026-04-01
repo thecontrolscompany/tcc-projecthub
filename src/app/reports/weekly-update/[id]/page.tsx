@@ -247,7 +247,6 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
   const crewLog = update.crew_log && update.crew_log.length > 0 ? update.crew_log : emptyCrewLog();
   const totalManHours = crewLog.reduce((sum, row) => sum + (Number(row.men) || 0) * (Number(row.hours) || 0), 0);
   const pocSnapshot = Array.isArray(update.poc_snapshot) ? update.poc_snapshot : [];
-  const totalWeight = pocSnapshot.reduce((sum, item) => sum + (Number(item.weight) || 0), 0);
 
   return (
     <html lang="en">
@@ -589,23 +588,16 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
                       <th>Category</th>
                       <th className="number-cell">Weight</th>
                       <th className="number-cell">% Complete</th>
-                      <th className="number-cell">Contribution</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {pocSnapshot.map((item) => {
-                      const contribution =
-                        totalWeight > 0 ? ((item.weight * item.pct_complete) / totalWeight) * 100 : item.pct_complete * 100;
-
-                      return (
-                        <tr key={item.id}>
-                          <td>{item.category}</td>
-                          <td className="number-cell">{item.weight}</td>
-                          <td className="number-cell">{(item.pct_complete * 100).toFixed(1)}%</td>
-                          <td className="number-cell">{contribution.toFixed(1)}%</td>
-                        </tr>
-                      );
-                    })}
+                    {pocSnapshot.map((item) => (
+                      <tr key={item.id}>
+                        <td>{item.category}</td>
+                        <td className="number-cell">{item.weight}</td>
+                        <td className="number-cell">{(item.pct_complete * 100).toFixed(1)}%</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </>
