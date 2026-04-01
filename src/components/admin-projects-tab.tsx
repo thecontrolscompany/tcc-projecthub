@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { format, startOfMonth } from "date-fns";
+import { format } from "date-fns";
 import type { ProjectAssignmentRole } from "@/types/database";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -230,12 +230,29 @@ export function AdminProjectsTab() {
   const [assignments, setAssignments] = useState<ProjectAssignmentDraft[]>([]);
   const [pendingTeamMemberId, setPendingTeamMemberId] = useState("");
   const [pendingRoleOnProject, setPendingRoleOnProject] = useState<ProjectAssignmentRole>("pm");
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const teamMemberOptions = useMemo(() => buildTeamMemberOptions(profiles, contacts), [contacts, profiles]);
   const externalContactOptions = useMemo(
     () => contacts.filter((contact) => !contact.email.toLowerCase().endsWith("@controlsco.net")),
     [contacts]
   );
+  const siteAddresses = useMemo(() => {
+    const seen = new Set<string>();
+    return projects
+      .map((p) => p.site_address)
+      .filter((addr): addr is string => Boolean(addr?.trim()))
+      .filter((addr) => { if (seen.has(addr)) return false; seen.add(addr); return true; })
+      .sort();
+  }, [projects]);
+  const contractorNames = useMemo(() => {
+    const seen = new Set<string>();
+    return projects
+      .flatMap((p) => [p.general_contractor, p.mechanical_contractor, p.electrical_contractor])
+      .filter((name): name is string => Boolean(name?.trim()))
+      .filter((name) => { if (seen.has(name)) return false; seen.add(name); return true; })
+      .sort();
+  }, [projects]);
 
   useEffect(() => {
     void loadProjects();
@@ -413,29 +430,6 @@ export function AdminProjectsTab() {
     setAssignments((current) => current.filter((assignment) => !(assignment.personId === personId && assignment.roleOnProject === roleOnProject)));
   }
 
-  async function syncAssignments(projectId: string, nextAssignments: ProjectAssignmentDraft[]) {
-    const rows = nextAssignments
-      .map((assignment) => {
-        const option = teamMemberOptions.find((item) => item.id === assignment.personId);
-        if (!option) return null;
-        return {
-          project_id: projectId,
-          profile_id: option.profileId,
-          pm_directory_id: option.pmDirectoryId,
-          role_on_project: assignment.roleOnProject,
-        };
-      })
-      .filter(Boolean);
-
-    const { error: deleteError } = await supabase.from("project_assignments").delete().eq("project_id", projectId);
-    if (deleteError) throw deleteError;
-
-    if (rows.length > 0) {
-      const { error: insertError } = await supabase.from("project_assignments").insert(rows);
-      if (insertError) throw insertError;
-    }
-  }
-
   async function handleSaveProject() {
     const errors: ProjectFormErrors = {};
 
@@ -453,107 +447,67 @@ export function AdminProjectsTab() {
     }
 
     setValidationErrors({});
+    setSaveError(null);
     setSaving(true);
 
     try {
-      let customerId = formValues.customerId;
+      const resolvedAssignments = assignments
+        .map((assignment) => {
+          const option = teamMemberOptions.find((item) => item.id === assignment.personId);
+          if (!option) return null;
+          return {
+            profile_id: option.profileId,
+            pm_directory_id: option.pmDirectoryId,
+            role_on_project: assignment.roleOnProject,
+          };
+        })
+        .filter(Boolean);
 
-      if (formValues.useNewCustomer) {
-        const { data: newCustomer, error: customerError } = await supabase
-          .from("customers")
-          .insert({ name: formValues.newCustomerName.trim(), contact_email: formValues.newCustomerEmail.trim() || null })
-          .select("id")
-          .single();
+      const prevContractPrice = editingProject
+        ? (editingProject.contract_price ?? editingProject.estimated_income ?? null)
+        : null;
 
-        if (customerError) throw customerError;
-        customerId = newCustomer.id;
-      }
+      const res = await fetch("/api/admin/save-project", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          projectId: editingProject?.id ?? null,
+          jobNumberPreview,
+          prevContractPrice,
+          formValues,
+          resolvedAssignments,
+        }),
+      });
 
-      const contractPrice = Number(formValues.contractPrice);
-      const billedAndPaid = formValues.billedInFull && formValues.paidInFull;
-      const effectiveJobNumber = editingProject?.job_number ?? jobNumberPreview;
-      const projectName = `${effectiveJobNumber} - ${formValues.projectName.trim()}`;
-      const primaryPm = assignments.find((assignment) => assignment.roleOnProject === "pm");
-      const primaryPmOption = primaryPm ? teamMemberOptions.find((option) => option.id === primaryPm.personId) ?? null : null;
-
-      const payload = {
-        customer_id: customerId || null,
-        pm_directory_id: primaryPmOption?.pmDirectoryId ?? null,
-        pm_id: primaryPmOption?.profileId ?? null,
-        name: projectName,
-        estimated_income: contractPrice,
-        contract_price: contractPrice,
-        customer_poc: formValues.customerPoc.trim() || null,
-        customer_po_number: formValues.customerPoNumber.trim() || null,
-        site_address: formValues.siteAddress.trim() || null,
-        general_contractor: formValues.generalContractor.trim() || null,
-        mechanical_contractor: formValues.mechanicalContractor.trim() || null,
-        electrical_contractor: formValues.electricalContractor.trim() || null,
-        all_conduit_plenum: formValues.allConduitPlenum,
-        certified_payroll: formValues.certifiedPayroll,
-        buy_american: formValues.buyAmerican,
-        bond_required: formValues.bondRequired,
-        source_estimate_id: formValues.sourceEstimateId.trim() || null,
-        special_requirements: formValues.specialRequirements.trim() || null,
-        special_access: formValues.specialAccess.trim() || null,
-        notes: formValues.notes.trim() || null,
-        billed_in_full: formValues.billedInFull,
-        paid_in_full: formValues.paidInFull,
-        is_active: !billedAndPaid,
-        completed_at: billedAndPaid ? new Date().toISOString() : null,
-      };
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error ?? "Save failed.");
 
       if (editingProject) {
-        const { error } = await supabase.from("projects").update(payload).eq("id", editingProject.id);
-        if (error) throw error;
-
-        await syncAssignments(editingProject.id, assignments);
-
-        if ((editingProject.contract_price ?? editingProject.estimated_income) !== contractPrice) {
-          await supabase
-            .from("billing_periods")
-            .update({ estimated_income_snapshot: contractPrice })
-            .eq("project_id", editingProject.id)
-            .is("actual_billed", null);
-        }
-
         resetEditorState();
       } else {
-        const { data: insertedProject, error } = await supabase
-          .from("projects")
-          .insert({ ...payload, job_number: jobNumberPreview })
-          .select("id, job_number")
-          .single();
-
-        if (error) throw error;
-
-        await syncAssignments(insertedProject.id, assignments);
-
-        await supabase.from("billing_periods").insert({
-          project_id: insertedProject.id,
-          period_month: format(startOfMonth(new Date()), "yyyy-MM-dd"),
-          estimated_income_snapshot: contractPrice,
-          pct_complete: 0,
-          prev_billed: 0,
-        });
+        const newProjectId: string = json.projectId;
+        const newJobNumber: string = json.jobNumber ?? jobNumberPreview;
 
         fetch("/api/admin/provision-project-folder", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            projectId: insertedProject.id,
-            jobNumber: insertedProject.job_number,
+            projectId: newProjectId,
+            jobNumber: newJobNumber,
             projectName: formValues.projectName.trim(),
           }),
-        }).catch((error) => console.error("Project folder provisioning failed", error));
+        }).catch((err) => console.error("Project folder provisioning failed", err));
 
-        const createdProject = await fetchProjectById(insertedProject.id);
+        const createdProject = await fetchProjectById(newProjectId);
         setEditingProject(createdProject);
-        setJobNumberPreview(insertedProject.job_number ?? jobNumberPreview);
-        void pollForSharePointFolder(insertedProject.id);
+        setJobNumberPreview(newJobNumber);
+        void pollForSharePointFolder(newProjectId);
       }
 
       await loadProjects();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Save failed.");
     } finally {
       setSaving(false);
     }
@@ -722,6 +676,9 @@ export function AdminProjectsTab() {
           values={formValues}
           saving={saving}
           errors={validationErrors}
+          saveError={saveError}
+          siteAddresses={siteAddresses}
+          contractorNames={contractorNames}
           onClose={resetEditorState}
           onChange={updateFormValue}
           onPendingTeamMemberChange={setPendingTeamMemberId}

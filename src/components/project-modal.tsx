@@ -138,8 +138,11 @@ export function ProjectModal({
   values,
   saving,
   errors,
+  saveError,
   isNewProjectFlow,
   isWaitingForSharePointFolder,
+  siteAddresses,
+  contractorNames,
   onClose,
   onChange,
   onPendingTeamMemberChange,
@@ -159,8 +162,11 @@ export function ProjectModal({
   values: ProjectFormValues;
   saving: boolean;
   errors: ProjectFormErrors;
+  saveError?: string | null;
   isNewProjectFlow: boolean;
   isWaitingForSharePointFolder: boolean;
+  siteAddresses?: string[];
+  contractorNames?: string[];
   onClose: () => void;
   onChange: <K extends keyof ProjectFormValues>(field: K, value: ProjectFormValues[K]) => void;
   onPendingTeamMemberChange: (value: string) => void;
@@ -217,9 +223,9 @@ export function ProjectModal({
         </div>
 
         <div className="space-y-6 px-6 py-6">
-          {errors.form && (
+          {(errors.form || saveError) && (
             <div className="rounded-xl border border-status-danger/30 bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
-              {errors.form}
+              {errors.form ?? saveError}
             </div>
           )}
 
@@ -281,7 +287,7 @@ export function ProjectModal({
               </FormField>
 
               <FormField label="Contract Price *" error={errors.contractPrice}>
-                <input type="number" min="0" step="0.01" value={values.contractPrice} onChange={(e) => onChange("contractPrice", e.target.value)} className={inputClassName} />
+                <CurrencyInput value={values.contractPrice} onChange={(v) => onChange("contractPrice", v)} className={inputClassName} />
               </FormField>
 
               <FormField label="Customer POC">
@@ -306,33 +312,55 @@ export function ProjectModal({
                 <input value={values.customerPoNumber} onChange={(e) => onChange("customerPoNumber", e.target.value)} className={inputClassName} />
               </FormField>
               <FormField label="Site Address">
-                <input value={values.siteAddress} onChange={(e) => onChange("siteAddress", e.target.value)} className={inputClassName} />
+                <input
+                  list="site-addresses-list"
+                  value={values.siteAddress}
+                  onChange={(e) => onChange("siteAddress", e.target.value)}
+                  className={inputClassName}
+                  autoComplete="off"
+                />
+                {(siteAddresses?.length ?? 0) > 0 && (
+                  <datalist id="site-addresses-list">
+                    {siteAddresses!.map((addr) => <option key={addr} value={addr} />)}
+                  </datalist>
+                )}
               </FormField>
               <FormField label="General Contractor">
-                <input value={values.generalContractor} onChange={(e) => onChange("generalContractor", e.target.value)} className={inputClassName} />
+                <input
+                  list="contractor-names-list"
+                  value={values.generalContractor}
+                  onChange={(e) => onChange("generalContractor", e.target.value)}
+                  className={inputClassName}
+                  autoComplete="off"
+                />
               </FormField>
               <FormField label="Mechanical Contractor">
-                <input value={values.mechanicalContractor} onChange={(e) => onChange("mechanicalContractor", e.target.value)} className={inputClassName} />
+                <input
+                  list="contractor-names-list"
+                  value={values.mechanicalContractor}
+                  onChange={(e) => onChange("mechanicalContractor", e.target.value)}
+                  className={inputClassName}
+                  autoComplete="off"
+                />
               </FormField>
               <FormField label="Electrical Contractor">
-                <input value={values.electricalContractor} onChange={(e) => onChange("electricalContractor", e.target.value)} className={inputClassName} />
+                <input
+                  list="contractor-names-list"
+                  value={values.electricalContractor}
+                  onChange={(e) => onChange("electricalContractor", e.target.value)}
+                  className={inputClassName}
+                  autoComplete="off"
+                />
+                {(contractorNames?.length ?? 0) > 0 && (
+                  <datalist id="contractor-names-list">
+                    {contractorNames!.map((name) => <option key={name} value={name} />)}
+                  </datalist>
+                )}
               </FormField>
             </div>
 
             <FormField label="Notes">
               <textarea rows={3} value={values.notes} onChange={(e) => onChange("notes", e.target.value)} className={textareaClassName} />
-            </FormField>
-            <FormField label="Estimator Reference ID">
-              <div className="space-y-1.5">
-                <input
-                  value={values.sourceEstimateId}
-                  onChange={(e) => onChange("sourceEstimateId", e.target.value)}
-                  className={inputClassName}
-                />
-                <p className="text-xs text-text-tertiary">
-                  Paste the estimate ID from estimates.thecontrolscompany.com - used to link POC categories to the original estimate.
-                </p>
-              </div>
             </FormField>
             <FormField label="Special Requirements">
               <textarea rows={3} value={values.specialRequirements} onChange={(e) => onChange("specialRequirements", e.target.value)} className={textareaClassName} />
@@ -460,7 +488,11 @@ export function ProjectModal({
           )}
 
           {editingProject && (
-            <PocSetupSection projectId={editingProject.id} />
+            <EstimatorAndPocSection
+              projectId={editingProject.id}
+              sourceEstimateId={values.sourceEstimateId}
+              onSourceEstimateIdChange={(v) => onChange("sourceEstimateId", v)}
+            />
           )}
 
           {editingProject && (
@@ -664,6 +696,30 @@ function formatContactLabel(contact: ProjectContactOption) {
   return fullName ? `${fullName} (${contact.email})` : contact.email;
 }
 
+function CurrencyInput({ value, onChange, className }: { value: string; onChange: (v: string) => void; className: string }) {
+  const [focused, setFocused] = useState(false);
+  const displayValue = focused
+    ? value
+    : value
+      ? `$${Number(value).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+      : "";
+
+  return (
+    <input
+      type="text"
+      value={displayValue}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      onChange={(e) => {
+        const raw = e.target.value.replace(/[^0-9.]/g, "");
+        onChange(raw);
+      }}
+      className={className}
+      placeholder="$0"
+    />
+  );
+}
+
 function FormField({ label, children, error }: { label: string; children: React.ReactNode; error?: string }) {
   return (
     <label className="block">
@@ -834,6 +890,50 @@ function CustomerContactsSection({ projectId }: { projectId: string }) {
         </div>
       )}
     </section>
+  );
+}
+
+function EstimatorAndPocSection({
+  projectId,
+  sourceEstimateId,
+  onSourceEstimateIdChange,
+}: {
+  projectId: string;
+  sourceEstimateId: string;
+  onSourceEstimateIdChange: (v: string) => void;
+}) {
+  const [showEstimator, setShowEstimator] = useState(Boolean(sourceEstimateId));
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h4 className="font-heading text-lg font-semibold text-text-primary">POC Setup</h4>
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-text-secondary">
+          <input
+            type="checkbox"
+            checked={showEstimator}
+            onChange={(e) => setShowEstimator(e.target.checked)}
+            className="h-4 w-4 accent-[var(--color-brand-primary)]"
+          />
+          Link Estimate
+        </label>
+      </div>
+      {showEstimator && (
+        <div className="rounded-xl border border-border-default bg-surface-raised px-4 py-3 space-y-1.5">
+          <label className="block text-sm font-medium text-text-secondary">Estimator Reference ID</label>
+          <input
+            value={sourceEstimateId}
+            onChange={(e) => onSourceEstimateIdChange(e.target.value)}
+            placeholder="Paste estimate ID from estimates.thecontrolscompany.com"
+            className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+          />
+          <p className="text-xs text-text-tertiary">
+            Links POC categories to the original estimate. Future feature — save the ID now for later sync.
+          </p>
+        </div>
+      )}
+      <PocSetupSection projectId={projectId} />
+    </div>
   );
 }
 
