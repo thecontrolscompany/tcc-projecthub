@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { roleHome } from "@/lib/auth/role-routes";
+import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -42,27 +43,16 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && pathname === "/login") {
-    // Get role and redirect to correct portal
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
     const url = request.nextUrl.clone();
-    url.pathname = roleHome(profile?.role);
+    const resolvedProfile = await resolveUserRole(user);
+    url.pathname = roleHome(resolvedProfile?.role);
     return NextResponse.redirect(url);
   }
 
   // Role-based path enforcement
   if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    const role = profile?.role;
+    const resolvedProfile = await resolveUserRole(user);
+    const role = resolvedProfile?.role;
     const opsManagerAdminBlocked =
       role === "ops_manager" &&
       (pathname.startsWith("/admin/users") || pathname.startsWith("/admin/migrate-sharepoint"));

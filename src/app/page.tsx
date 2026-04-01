@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 
 export const dynamic = "force-dynamic";
 
@@ -12,13 +13,8 @@ export default async function RootPage() {
 
     if (!user) return redirect("/login");
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    const role = profile?.role ?? "customer";
+    const resolvedProfile = await resolveUserRole(user);
+    const role = resolvedProfile?.role ?? "customer";
     const destinations: Record<string, string> = {
       admin: "/admin",
       pm: "/pm",
