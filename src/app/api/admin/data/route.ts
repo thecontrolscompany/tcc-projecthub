@@ -311,6 +311,49 @@ export async function GET(request: Request) {
     return NextResponse.json({ users: data ?? [] });
   }
 
+  if (section === "analytics") {
+    if (requesterRole !== "admin") {
+      return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+    }
+
+    const startMonth = searchParams.get("startMonth");
+    const endMonth = searchParams.get("endMonth");
+
+    let billingQuery = adminClient
+      .from("billing_periods")
+      .select("period_month, estimated_income_snapshot, pct_complete, prev_billed, actual_billed, project_id");
+
+    if (startMonth) {
+      billingQuery = billingQuery.gte("period_month", startMonth);
+    }
+
+    if (endMonth) {
+      billingQuery = billingQuery.lte("period_month", endMonth);
+    }
+
+    const [billingResult, projectsResult] = await Promise.all([
+      billingQuery,
+      adminClient
+        .from("projects")
+        .select("id, estimated_income, is_active, customer:customers(name)")
+        .eq("is_active", true),
+    ]);
+
+    if (billingResult.error || projectsResult.error) {
+      return NextResponse.json({
+        error:
+          billingResult.error?.message ||
+          projectsResult.error?.message ||
+          "Failed to load analytics data.",
+      }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      billingPeriods: billingResult.data ?? [],
+      projects: projectsResult.data ?? [],
+    });
+  }
+
   if (section === "project-weekly-updates") {
     if (!["admin", "ops_manager"].includes(requesterRole)) {
       return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });

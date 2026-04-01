@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import {
   BarChart,
   Bar,
@@ -49,7 +48,6 @@ const fmt = (n: number) =>
   }).format(n);
 
 export default function AnalyticsPage() {
-  const supabase = createClient();
   const [monthly, setMonthly] = useState<MonthlyData[]>([]);
   const [byCustomer, setByCustomer] = useState<CustomerRevenue[]>([]);
   const [summary, setSummary] = useState({
@@ -74,16 +72,38 @@ export default function AnalyticsPage() {
       format(subMonths(currentMonth, 11 - i), "yyyy-MM-dd")
     );
 
-    const { data: periods } = await supabase
-      .from("billing_periods")
-      .select("period_month, estimated_income_snapshot, pct_complete, prev_billed, actual_billed, project_id")
-      .gte("period_month", months[0])
-      .lte("period_month", months[11]);
+    const response = await fetch(
+      `/api/admin/data?section=analytics&startMonth=${encodeURIComponent(months[0])}&endMonth=${encodeURIComponent(months[11])}`,
+      { credentials: "include" }
+    );
+    const json = await response.json();
+    const periods = (json?.billingPeriods ?? []) as Array<{
+      period_month: string;
+      estimated_income_snapshot: number;
+      pct_complete: number;
+      prev_billed: number;
+      actual_billed: number | null;
+      project_id: string;
+    }>;
+    const projects = (json?.projects ?? []) as Array<{
+      id: string;
+      estimated_income: number;
+      is_active: boolean;
+      customer?: { name: string } | { name: string }[] | null;
+    }>;
 
-    const { data: projects } = await supabase
-      .from("projects")
-      .select("id, estimated_income, is_active, customer:customers(name)")
-      .eq("is_active", true);
+    if (!response.ok) {
+      setMonthly([]);
+      setByCustomer([]);
+      setSummary({
+        activeProjects: 0,
+        totalBacklog: 0,
+        billedMtd: 0,
+        projectedMtd: 0,
+      });
+      setLoading(false);
+      return;
+    }
 
     if (periods) {
       const byMonth = new Map<string, MonthlyData>();
