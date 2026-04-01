@@ -1,32 +1,13 @@
 export const dynamic = "force-dynamic";
 
 import { AppShell } from "@/components/app-shell";
-import { createClient as createServerClient } from "@/lib/supabase/server";
+import { getShellIdentity } from "@/lib/auth/get-shell-identity";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  let profile: { role?: string | null; email?: string | null } | null = null;
-
-  try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      const { data } = await supabase
-        .from("profiles")
-        .select("role, email")
-        .eq("id", user.id)
-        .single();
-
-      profile = data;
-    }
-  } catch {
-    // Supabase not configured â€” render shell with defaults
-  }
+  const identity = await getShellIdentity("admin");
 
   return (
-    <AppShell role={profile?.role ?? "admin"} userEmail={profile?.email ?? "dev@localhost"}>
+    <AppShell role={identity.role} userEmail={identity.email}>
       {children}
     </AppShell>
   );
