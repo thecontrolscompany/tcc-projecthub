@@ -645,6 +645,11 @@ export function AdminProjectsTab() {
                 <tr key={project.id} className="border-b border-border-default hover:bg-surface-raised">
                   <td className="px-3 py-2 font-medium text-text-primary">
                     {project.name}
+                    {project.source_estimate_id && (
+                      <span className="ml-2 inline-flex items-center rounded border border-brand-primary/20 bg-brand-primary/10 px-1.5 py-0.5 text-xs font-medium text-brand-primary">
+                        EST
+                      </span>
+                    )}
                     {project.migration_status === "legacy" && (
                       <span className="ml-2 inline-flex items-center rounded border border-status-warning/20 bg-status-warning/10 px-1.5 py-0.5 text-xs font-medium text-status-warning">
                         Legacy

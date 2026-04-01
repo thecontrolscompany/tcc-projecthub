@@ -198,4 +198,6 @@ export interface BillingRow {
   actual_billed: number | null;
   notes: string | null;
   synced_from_onedrive: boolean;
+  poc_driven?: boolean;
+  has_recent_update?: boolean;
 }

@@ -85,8 +85,15 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
     {
       accessorKey: "project_name",
       header: "Project",
-      cell: ({ getValue }) => (
-        <span className="text-text-secondary">{getValue<string>()}</span>
+      cell: ({ row, getValue }) => (
+        <div className="space-y-1">
+          <span className="text-text-secondary">{getValue<string>()}</span>
+          {row.original.has_recent_update && (
+            <span className="inline-flex w-fit rounded-full bg-status-success/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-status-success">
+              Recent Update
+            </span>
+          )}
+        </div>
       ),
     },
     {
@@ -130,11 +137,16 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
       accessorKey: "pct_complete",
       header: () => <span className="block text-right">% Complete</span>,
       cell: ({ row }) => (
-        <EditablePct
-          value={row.original.pct_complete}
-          onChange={(v) => updateRow(row.original.billing_period_id, "pct_complete", v)}
-          warn={row.original.pct_complete < row.original.prev_billed_pct}
-        />
+        <div className="space-y-1">
+          <EditablePct
+            value={row.original.pct_complete}
+            onChange={(v) => updateRow(row.original.billing_period_id, "pct_complete", v)}
+            warn={row.original.pct_complete < row.original.prev_billed_pct}
+          />
+          <p className="text-right text-[11px] text-text-tertiary" title={row.original.poc_driven ? "Value is being driven by POC line items." : "Value was entered manually."}>
+            {row.original.poc_driven ? "POC calculated" : "Manual"}
+          </p>
+        </div>
       ),
     },
     {
