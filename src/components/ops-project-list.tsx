@@ -181,6 +181,7 @@ function buildAssignmentDrafts(project: ProjectEditorRow, teamOptions: TeamMembe
 export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] }) {
   const supabase = createClient();
   const [showCompleted, setShowCompleted] = useState(false);
+  const [viewMode, setViewMode] = useState<"grouped" | "all">("grouped");
   const [selectedProject, setSelectedProject] = useState<ProjectEditorRow | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -453,17 +454,85 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
         </div>
       )}
 
-      <label className="inline-flex items-center gap-3 rounded-xl border border-border-default bg-surface-raised px-4 py-3 text-sm text-text-primary">
-        <input
-          type="checkbox"
-          checked={showCompleted}
-          onChange={(event) => setShowCompleted(event.target.checked)}
-          className="h-4 w-4 accent-[var(--color-brand-primary)]"
-        />
-        Show completed projects
-      </label>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setViewMode("grouped")}
+            className={[
+              "rounded-lg px-4 py-2 text-sm font-medium transition",
+              viewMode === "grouped"
+                ? "bg-surface-overlay text-text-primary shadow-sm"
+                : "text-text-secondary hover:bg-surface-overlay/70 hover:text-text-primary",
+            ].join(" ")}
+          >
+            By PM
+          </button>
+          <button
+            onClick={() => { setViewMode("all"); setShowCompleted(true); }}
+            className={[
+              "rounded-lg px-4 py-2 text-sm font-medium transition",
+              viewMode === "all"
+                ? "bg-surface-overlay text-text-primary shadow-sm"
+                : "text-text-secondary hover:bg-surface-overlay/70 hover:text-text-primary",
+            ].join(" ")}
+          >
+            All Projects
+          </button>
+        </div>
+        {viewMode === "grouped" && (
+          <label className="inline-flex items-center gap-2 text-sm text-text-secondary">
+            <input
+              type="checkbox"
+              checked={showCompleted}
+              onChange={(event) => setShowCompleted(event.target.checked)}
+              className="h-4 w-4 accent-[var(--color-brand-primary)]"
+            />
+            Show completed
+          </label>
+        )}
+      </div>
 
-      {sortedGroups.length === 0 ? (
+      {viewMode === "all" ? (
+        <div className="overflow-hidden rounded-2xl border border-border-default">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border-default bg-surface-raised/80">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Project</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Customer</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">PM</th>
+                <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
+                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">% Complete</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...projects].sort((a, b) => a.name.localeCompare(b.name)).map((project) => (
+                <tr
+                  key={project.id}
+                  onClick={() => void openProject(project.id)}
+                  className="cursor-pointer border-b border-border-default hover:bg-surface-raised"
+                >
+                  <td className="px-4 py-2.5 font-medium text-text-primary">
+                    <div className="flex items-center gap-2">
+                      <span>{project.name}</span>
+                      {loadingProjectId === project.id && (
+                        <span className="text-xs text-text-tertiary">Loading…</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-2.5 text-text-secondary">{project.customerName ?? "-"}</td>
+                  <td className="px-4 py-2.5 text-text-secondary">{project.pmGroupName !== "Unassigned" ? project.pmGroupName : "-"}</td>
+                  <td className="px-4 py-2.5 text-center">
+                    <span className={["rounded-full px-2 py-0.5 text-xs font-medium", project.is_active ? "bg-status-success/10 text-status-success" : "bg-surface-overlay text-text-secondary"].join(" ")}>
+                      {project.is_active ? "Active" : "Completed"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5 text-right text-text-primary">{project.pctComplete.toFixed(1)}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : sortedGroups.length === 0 ? (
         <div className="rounded-2xl border border-border-default bg-surface-raised px-4 py-6 text-sm text-text-secondary">
           No projects match the current filter.
         </div>
