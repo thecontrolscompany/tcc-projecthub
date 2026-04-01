@@ -5,6 +5,7 @@ import { addDays, format, startOfWeek } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ViewReportLink } from "@/components/view-report-link";
+import type { ChangeOrder } from "@/types/database";
 import type {
   BillingPeriod,
   CrewLogEntry,
@@ -288,6 +289,7 @@ function UpdateForm({
   const [isEditing, setIsEditing] = useState(false);
   const [editHistory, setEditHistory] = useState<WeeklyUpdateEdit[]>([]);
   const [editNote, setEditNote] = useState("");
+  const [changeOrders, setChangeOrders] = useState<ChangeOrder[]>([]);
   const [manualOverride, setManualOverride] = useState<string>(() =>
     project.current_period ? (project.current_period.pct_complete * 100).toFixed(1) : ""
   );
@@ -365,10 +367,15 @@ function UpdateForm({
 
   async function loadData() {
     try {
-      const response = await fetch(`/api/pm/projects?section=project-data&projectId=${encodeURIComponent(project.id)}`, {
-        credentials: "include",
-      });
+      const [response, coResponse] = await Promise.all([
+        fetch(`/api/pm/projects?section=project-data&projectId=${encodeURIComponent(project.id)}`, { credentials: "include" }),
+        fetch(`/api/admin/change-orders?projectId=${encodeURIComponent(project.id)}`, { credentials: "include" }),
+      ]);
       const json = await response.json();
+      if (coResponse.ok) {
+        const coJson = await coResponse.json();
+        setChangeOrders((coJson?.changeOrders as ChangeOrder[]) ?? []);
+      }
       const updatesData = (response.ok ? json?.updates : []) as WeeklyUpdate[];
       const pocData = (response.ok ? json?.pocItems : []) as PocLineItem[];
       const editHistoryData = (response.ok ? json?.editHistory : []) as WeeklyUpdateEdit[];
@@ -925,6 +932,34 @@ function UpdateForm({
               {" - "}
               {format(new Date(edit.edited_at), "MMM d, yyyy h:mm a")}
               {edit.note && <p className="mt-0.5 text-text-tertiary">{edit.note}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {changeOrders.filter((co) => co.status !== "void").length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Change Orders</h3>
+          {changeOrders.filter((co) => co.status !== "void").map((co) => (
+            <div key={co.id} className="flex items-center justify-between rounded-xl border border-border-default bg-surface-raised px-4 py-2.5 text-sm">
+              <div className="space-y-0.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium text-text-primary">{co.co_number}</span>
+                  <span className="text-text-secondary">—</span>
+                  <span className="text-text-primary">{co.title}</span>
+                  <span className={[
+                    "rounded-full px-2 py-0.5 text-xs font-medium capitalize",
+                    co.status === "approved" ? "bg-status-success/10 text-status-success" :
+                    co.status === "rejected" ? "bg-status-danger/10 text-status-danger" :
+                    "bg-status-warning/10 text-status-warning",
+                  ].join(" ")}>{co.status}</span>
+                </div>
+                {co.reference_doc && <p className="text-xs text-text-tertiary">Ref: {co.reference_doc}</p>}
+              </div>
+              <span className={["shrink-0 font-semibold", co.amount >= 0 ? "text-status-success" : "text-status-danger"].join(" ")}>
+                {co.amount >= 0 ? "+" : ""}
+                {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(co.amount)}
+              </span>
             </div>
           ))}
         </div>
