@@ -53,13 +53,25 @@ export async function POST(request: Request) {
     });
 
     if (createUserResult.error || !createUserResult.data.user) {
-      return NextResponse.json({
-        error: createUserResult.error?.message ?? "Failed to create portal account.",
-      }, { status: 500 });
+      // Auth account already exists — find it by email and link it
+      const alreadyExistsMsg = createUserResult.error?.message ?? "";
+      if (alreadyExistsMsg.toLowerCase().includes("already been registered") || alreadyExistsMsg.toLowerCase().includes("already exists")) {
+        const { data: userList } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+        const existingUser = userList?.users?.find((u) => u.email?.toLowerCase() === directoryContact.email.toLowerCase());
+        if (!existingUser) {
+          return NextResponse.json({ error: "Auth account exists but could not be located." }, { status: 500 });
+        }
+        resolvedProfileId = existingUser.id;
+        // Don't set createdAccountEmail — account already existed, no "new account" message needed
+      } else {
+        return NextResponse.json({
+          error: alreadyExistsMsg || "Failed to create portal account.",
+        }, { status: 500 });
+      }
+    } else {
+      resolvedProfileId = createUserResult.data.user.id;
+      createdAccountEmail = directoryContact.email;
     }
-
-    resolvedProfileId = createUserResult.data.user.id;
-    createdAccountEmail = directoryContact.email;
 
     const { error: profileError } = await adminClient
       .from("profiles")
