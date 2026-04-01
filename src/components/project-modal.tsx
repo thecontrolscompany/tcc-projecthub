@@ -710,20 +710,16 @@ function CustomerContactsSection({ projectId }: { projectId: string }) {
 
   useEffect(() => {
     async function load() {
-      const [{ data: contactData }, { data: profileData }] = await Promise.all([
-        supabase
-          .from("project_customer_contacts")
-          .select("*, profile:profiles(*)")
-          .eq("project_id", projectId),
-        supabase
-          .from("profiles")
-          .select("*")
-          .eq("role", "customer")
-          .order("email"),
-      ]);
-      setContacts((contactData ?? []) as (ProjectCustomerContact & { profile: Profile })[]);
-      setAllCustomers((profileData as Profile[]) ?? []);
-      setLoading(false);
+      try {
+        const response = await fetch(`/api/admin/data?section=project-customer-contacts&projectId=${encodeURIComponent(projectId)}`, {
+          credentials: "include",
+        });
+        const json = await response.json();
+        setContacts((((response.ok ? json?.contacts : []) ?? []) as (ProjectCustomerContact & { profile: Profile })[]));
+        setAllCustomers((((response.ok ? json?.profiles : []) ?? []) as Profile[]));
+      } finally {
+        setLoading(false);
+      }
     }
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -851,13 +847,16 @@ function PocSetupSection({ projectId }: { projectId: string }) {
   const [saving, setSaving] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase
-      .from("poc_line_items")
-      .select("*")
-      .eq("project_id", projectId)
-      .order("sort_order")
-      .then(({ data }) => {
-        setItems((data as PocLineItem[]) ?? []);
+    fetch(`/api/admin/data?section=project-poc-items&projectId=${encodeURIComponent(projectId)}`, {
+      credentials: "include",
+    })
+      .then((response) => response.json().then((json) => ({ ok: response.ok, json })))
+      .then(({ ok, json }) => {
+        setItems((((ok ? json?.items : []) ?? []) as PocLineItem[]));
+        setLoading(false);
+      })
+      .catch(() => {
+        setItems([]);
         setLoading(false);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps

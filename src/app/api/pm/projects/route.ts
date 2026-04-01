@@ -3,7 +3,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createServerClient();
   const {
     data: { user },
@@ -22,6 +22,43 @@ export async function GET() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+  const { searchParams } = new URL(request.url);
+  const section = searchParams.get("section");
+
+  if (section === "project-data") {
+    const projectId = searchParams.get("projectId");
+
+    if (!projectId) {
+      return NextResponse.json({ error: "Missing project id." }, { status: 400 });
+    }
+
+    const [updatesResult, pocResult] = await Promise.all([
+      adminClient
+        .from("weekly_updates")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("week_of", { ascending: false }),
+      adminClient
+        .from("poc_line_items")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("sort_order"),
+    ]);
+
+    if (updatesResult.error || pocResult.error) {
+      return NextResponse.json({
+        error:
+          updatesResult.error?.message ||
+          pocResult.error?.message ||
+          "Failed to load project data.",
+      }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      updates: updatesResult.data ?? [],
+      pocItems: pocResult.data ?? [],
+    });
+  }
 
   const currentMonth = new Date();
   const currentMonthStr = `${currentMonth.getUTCFullYear()}-${String(currentMonth.getUTCMonth() + 1).padStart(2, "0")}-01`;

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { format, startOfMonth, subMonths, addMonths, subDays } from "date-fns";
+import { format, startOfMonth, subMonths, addMonths } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { AdminProjectsTab } from "@/components/admin-projects-tab";
 import { BillingTable } from "@/components/billing-table";
@@ -44,9 +44,20 @@ export default function AdminPage() {
       setAuthReady(true);
       setAuthError(null);
 
-      const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
-      if (profile?.role && active) {
-        setUserRole(profile.role as UserRole);
+      try {
+        const response = await fetch("/api/admin/data?section=me", {
+          credentials: "include",
+        });
+        const json = await response.json();
+        const profile = response.ok ? json?.profile : null;
+
+        if (profile?.role && active) {
+          setUserRole(profile.role as UserRole);
+        }
+      } catch {
+        if (active) {
+          setUserRole("admin");
+        }
       }
     }
 
@@ -250,22 +261,8 @@ export default function AdminPage() {
           .filter((row) => row.project_id !== "")
           .sort((a, b) => a.customer_name.localeCompare(b.customer_name));
 
-        const projectIds = mapped.map((row) => row.project_id);
-        const [recentUpdatesResult, pocItemsResult] = await Promise.all([
-          projectIds.length
-            ? supabase
-                .from("weekly_updates")
-                .select("project_id, week_of")
-                .in("project_id", projectIds)
-                .gte("week_of", format(subDays(new Date(), 14), "yyyy-MM-dd"))
-            : Promise.resolve({ data: [] as Array<{ project_id: string; week_of: string }> }),
-          projectIds.length
-            ? supabase.from("poc_line_items").select("project_id").in("project_id", projectIds)
-            : Promise.resolve({ data: [] as Array<{ project_id: string }> }),
-        ]);
-
-        const recentUpdateProjectIds = new Set((recentUpdatesResult.data ?? []).map((update) => update.project_id));
-        const pocDrivenProjectIds = new Set((pocItemsResult.data ?? []).map((item) => item.project_id));
+        const recentUpdateProjectIds = new Set(((json?.recentUpdateProjectIds as string[] | undefined) ?? []));
+        const pocDrivenProjectIds = new Set(((json?.pocDrivenProjectIds as string[] | undefined) ?? []));
 
         setRows(
           mapped.map((row) => ({
@@ -532,7 +529,6 @@ function EmptyBillingState({ month }: { month: string }) {
 }
 
 function ProjectsTab() {
-  const supabase = createClient();
   const [projects, setProjects] = useState<
     Array<{
       id: string;
@@ -549,12 +545,12 @@ function ProjectsTab() {
   useEffect(() => {
     async function loadProjects() {
       try {
-        const { data } = await supabase
-          .from("projects")
-          .select("*, customer:customers(name), pm:profiles(full_name, email)")
-          .order("name");
+        const res = await fetch("/api/admin/data?section=projects", {
+          credentials: "include",
+        });
+        const json = await res.json();
 
-        setProjects((data as typeof projects) ?? []);
+        setProjects((res.ok ? (json?.projects as typeof projects) : []) ?? []);
       } catch {
         setProjects([]);
       } finally {
@@ -562,8 +558,8 @@ function ProjectsTab() {
       }
     }
 
-    loadProjects();
-  }, [supabase]);
+    void loadProjects();
+  }, []);
 
   const fmt = (n: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);

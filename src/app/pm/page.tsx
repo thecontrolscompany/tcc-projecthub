@@ -308,21 +308,15 @@ function UpdateForm({
   useEffect(() => {
     async function loadData() {
       try {
-        const [{ data: updatesData }, { data: pocData }] = await Promise.all([
-          supabase
-            .from("weekly_updates")
-            .select("*")
-            .eq("project_id", project.id)
-            .order("week_of", { ascending: false }),
-          supabase
-            .from("poc_line_items")
-            .select("*")
-            .eq("project_id", project.id)
-            .order("sort_order"),
-        ]);
+        const response = await fetch(`/api/pm/projects?section=project-data&projectId=${encodeURIComponent(project.id)}`, {
+          credentials: "include",
+        });
+        const json = await response.json();
+        const updatesData = (response.ok ? json?.updates : []) as WeeklyUpdate[];
+        const pocData = (response.ok ? json?.pocItems : []) as PocLineItem[];
 
-        setRecentUpdates((updatesData as WeeklyUpdate[]) ?? []);
-        const latestUpdate = ((updatesData as WeeklyUpdate[]) ?? [])[0] ?? null;
+        setRecentUpdates(updatesData ?? []);
+        const latestUpdate = (updatesData ?? [])[0] ?? null;
         const latestCrewLog = latestUpdate?.crew_log ?? [];
         const previousCrewByDay = new Map(latestCrewLog.map((row) => [row.day, row]));
 
@@ -344,7 +338,7 @@ function UpdateForm({
           }))
         );
 
-        const items = (pocData as PocLineItem[]) ?? [];
+        const items = pocData ?? [];
         setPocItems(items);
         // Initialize editable values from current DB values
         const initPcts: Record<string, number> = {};

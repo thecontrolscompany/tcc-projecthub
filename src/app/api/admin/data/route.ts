@@ -67,7 +67,42 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ periods: data ?? [] });
+    const periods = data ?? [];
+    const projectIds = periods
+      .map((period) => {
+        const project = Array.isArray(period.project) ? period.project[0] : period.project;
+        return project?.id ?? null;
+      })
+      .filter((id): id is string => Boolean(id));
+
+    const [recentUpdatesResult, pocItemsResult] = projectIds.length
+      ? await Promise.all([
+          adminClient
+            .from("weekly_updates")
+            .select("project_id")
+            .in("project_id", projectIds)
+            .gte("week_of", new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)),
+          adminClient
+            .from("poc_line_items")
+            .select("project_id")
+            .in("project_id", projectIds),
+        ])
+      : [{ data: [], error: null }, { data: [], error: null }];
+
+    if (recentUpdatesResult.error || pocItemsResult.error) {
+      return NextResponse.json({
+        error:
+          recentUpdatesResult.error?.message ||
+          pocItemsResult.error?.message ||
+          "Failed to load billing metadata.",
+      }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      periods,
+      recentUpdateProjectIds: [...new Set((recentUpdatesResult.data ?? []).map((update) => update.project_id))],
+      pocDrivenProjectIds: [...new Set((pocItemsResult.data ?? []).map((item) => item.project_id))],
+    });
   }
 
   if (section === "projects") {
@@ -124,6 +159,23 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ projects: data ?? [] });
+  }
+
+  if (section === "me") {
+    if (!["admin", "ops_manager"].includes(requesterRole)) {
+      return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });
+    }
+
+    return NextResponse.json({
+      profile: resolvedProfile
+        ? {
+            id: resolvedProfile.id,
+            email: resolvedProfile.email,
+            full_name: resolvedProfile.full_name,
+            role: resolvedProfile.role,
+          }
+        : null,
+    });
   }
 
   if (section === "project") {
@@ -375,6 +427,66 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ updates: data ?? [] });
+  }
+
+  if (section === "project-customer-contacts") {
+    if (!["admin", "ops_manager"].includes(requesterRole)) {
+      return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });
+    }
+
+    const projectId = searchParams.get("projectId");
+    if (!projectId) {
+      return NextResponse.json({ error: "Missing project id." }, { status: 400 });
+    }
+
+    const [contactResult, profileResult] = await Promise.all([
+      adminClient
+        .from("project_customer_contacts")
+        .select("*, profile:profiles(*)")
+        .eq("project_id", projectId),
+      adminClient
+        .from("profiles")
+        .select("*")
+        .eq("role", "customer")
+        .order("email"),
+    ]);
+
+    if (contactResult.error || profileResult.error) {
+      return NextResponse.json({
+        error:
+          contactResult.error?.message ||
+          profileResult.error?.message ||
+          "Failed to load customer contacts.",
+      }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      contacts: contactResult.data ?? [],
+      profiles: profileResult.data ?? [],
+    });
+  }
+
+  if (section === "project-poc-items") {
+    if (!["admin", "ops_manager"].includes(requesterRole)) {
+      return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });
+    }
+
+    const projectId = searchParams.get("projectId");
+    if (!projectId) {
+      return NextResponse.json({ error: "Missing project id." }, { status: 400 });
+    }
+
+    const { data, error } = await adminClient
+      .from("poc_line_items")
+      .select("*")
+      .eq("project_id", projectId)
+      .order("sort_order");
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ items: data ?? [] });
   }
 
   return NextResponse.json({ error: "Unknown section." }, { status: 400 });
