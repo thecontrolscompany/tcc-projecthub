@@ -52,6 +52,7 @@ type ProjectEditorRow = {
   certified_payroll: boolean;
   buy_american: boolean;
   bond_required: boolean;
+  source_estimate_id: string | null;
   special_requirements: string | null;
   special_access: string | null;
   notes: string | null;
@@ -84,6 +85,7 @@ const PROJECT_SELECT_FIELDS = `
   certified_payroll,
   buy_american,
   bond_required,
+  source_estimate_id,
   special_requirements,
   special_access,
   notes,
@@ -299,6 +301,7 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
       mechanicalContractor: project.mechanical_contractor ?? "",
       electricalContractor: project.electrical_contractor ?? "",
       notes: project.notes ?? "",
+      sourceEstimateId: project.source_estimate_id ?? "",
       specialRequirements: project.special_requirements ?? "",
       specialAccess: project.special_access ?? "",
       customerPortalAccess: project.customer_portal_access ?? true,
@@ -394,6 +397,7 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
           certified_payroll: formValues.certifiedPayroll,
           buy_american: formValues.buyAmerican,
           bond_required: formValues.bondRequired,
+          source_estimate_id: formValues.sourceEstimateId.trim() || null,
           special_requirements: formValues.specialRequirements.trim() || null,
           special_access: formValues.specialAccess.trim() || null,
           notes: formValues.notes.trim() || null,

@@ -24,6 +24,7 @@ export interface Project {
   pm_id: string | null;
   name: string;
   estimated_income: number;
+  source_estimate_id: string | null;
   onedrive_path: string | null;
   sharepoint_folder?: string | null;
   sharepoint_item_id?: string | null;
@@ -150,6 +151,18 @@ export interface ProjectAssignment {
   created_at: string | null;
   profile?: Profile | null;
   pm_directory?: PmDirectory | null;
+}
+
+export interface EstimatePayload {
+  estimate_id: string;
+  project_name: string;
+  items: Array<{
+    id: string;
+    type: string;
+    quantity: number;
+    labor_hours: number;
+    description: string;
+  }>;
 }
 
 export type QuoteRequest = {

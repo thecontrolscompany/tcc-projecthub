@@ -49,6 +49,7 @@ export type ProjectFormValues = {
   mechanicalContractor: string;
   electricalContractor: string;
   notes: string;
+  sourceEstimateId: string;
   specialRequirements: string;
   specialAccess: string;
   customerPortalAccess: boolean;
@@ -80,6 +81,7 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   mechanicalContractor: "",
   electricalContractor: "",
   notes: "",
+  sourceEstimateId: "",
   specialRequirements: "",
   specialAccess: "",
   customerPortalAccess: true,
@@ -322,6 +324,18 @@ export function ProjectModal({
 
             <FormField label="Notes">
               <textarea rows={3} value={values.notes} onChange={(e) => onChange("notes", e.target.value)} className={textareaClassName} />
+            </FormField>
+            <FormField label="Estimator Reference ID">
+              <div className="space-y-1.5">
+                <input
+                  value={values.sourceEstimateId}
+                  onChange={(e) => onChange("sourceEstimateId", e.target.value)}
+                  className={inputClassName}
+                />
+                <p className="text-xs text-text-tertiary">
+                  Paste the estimate ID from estimates.thecontrolscompany.com - used to link POC categories to the original estimate.
+                </p>
+              </div>
             </FormField>
             <FormField label="Special Requirements">
               <textarea rows={3} value={values.specialRequirements} onChange={(e) => onChange("specialRequirements", e.target.value)} className={textareaClassName} />
