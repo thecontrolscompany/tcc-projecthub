@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { ViewReportLink } from "@/components/view-report-link";
@@ -162,6 +162,7 @@ export function WeeklyUpdatesTab() {
   const [blockersOnly, setBlockersOnly] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [expandedProject, setExpandedProject] = useState<string | null>(null);
 
   useEffect(() => {
     void loadUpdates();
@@ -213,6 +214,17 @@ export function WeeklyUpdatesTab() {
     return true;
   });
 
+  const groupedByProject = useMemo(() => {
+    const map = new Map<string, { projectName: string; updates: typeof filteredUpdates }>();
+    for (const update of filteredUpdates) {
+      const project = Array.isArray(update.project) ? update.project[0] : update.project;
+      const name = project?.name ?? "Unknown Project";
+      if (!map.has(name)) map.set(name, { projectName: name, updates: [] });
+      map.get(name)?.updates.push(update);
+    }
+    return Array.from(map.values()).sort((a, b) => a.projectName.localeCompare(b.projectName));
+  }, [filteredUpdates]);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -250,26 +262,41 @@ export function WeeklyUpdatesTab() {
           No weekly updates match the current filters.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-border-default">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border-default bg-surface-raised/80">
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Project</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Customer</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">PM</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Week Of</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
-                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">% Complete</th>
-                <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">Has Blockers</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Submitted At</th>
-                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Report</th>
-                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Delete</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUpdates.map((update) => {
+        <div className="space-y-3">
+          {groupedByProject.map(({ projectName, updates }) => (
+            <div key={projectName} className="overflow-hidden rounded-2xl border border-border-default">
+              <button
+                type="button"
+                onClick={() => setExpandedProject(expandedProject === projectName ? null : projectName)}
+                className="flex w-full items-center justify-between border-b border-border-default bg-surface-raised px-4 py-3 text-left hover:bg-surface-overlay/60"
+              >
+                <div>
+                  <span className="font-semibold text-text-primary">{projectName}</span>
+                  <span className="ml-2 text-xs text-text-tertiary">
+                    {updates.length} update{updates.length === 1 ? "" : "s"}
+                  </span>
+                </div>
+                <span className="text-xs text-text-tertiary">{expandedProject === projectName ? "Hide" : "Show"}</span>
+              </button>
+
+              {expandedProject === projectName && (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border-default bg-surface-raised/60">
+                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Week Of</th>
+                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">PM</th>
+                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
+                        <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">% Complete</th>
+                        <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">Blockers</th>
+                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Submitted At</th>
+                        <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Report</th>
+                        <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Delete</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {updates.map((update) => {
                 const project = Array.isArray(update.project) ? update.project[0] : update.project;
-                const customer = Array.isArray(project?.customer) ? project.customer[0] : project?.customer;
                 const pm = Array.isArray(update.pm) ? update.pm[0] : update.pm;
                 const primaryAssignment = (project?.project_assignments ?? []).find((assignment) => assignment?.role_on_project === "pm");
                 const assignmentProfile = Array.isArray(primaryAssignment?.profile) ? primaryAssignment?.profile[0] : primaryAssignment?.profile;
@@ -287,10 +314,8 @@ export function WeeklyUpdatesTab() {
 
                 return (
                   <tr key={update.id} className="border-b border-border-default hover:bg-surface-raised">
-                    <td className="px-4 py-3 font-medium text-text-primary">{project?.name ?? "-"}</td>
-                    <td className="px-4 py-3 text-text-secondary">{customer?.name ?? "-"}</td>
-                    <td className="px-4 py-3 text-text-secondary">{pmName}</td>
                     <td className="px-4 py-3 text-text-secondary">{format(new Date(update.week_of), "MMM d, yyyy")}</td>
+                    <td className="px-4 py-3 text-text-secondary">{pmName}</td>
                     <td className="px-4 py-3">
                       <span
                         className={[
@@ -352,9 +377,13 @@ export function WeeklyUpdatesTab() {
                     </td>
                   </tr>
                 );
-              })}
-            </tbody>
-          </table>
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>

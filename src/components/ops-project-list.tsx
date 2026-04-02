@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { format, startOfMonth } from "date-fns";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import { ViewReportLink } from "@/components/view-report-link";
 import type { ProjectAssignmentRole } from "@/types/database";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -61,6 +61,14 @@ type ProjectEditorRow = {
   sharepoint_folder: string | null;
   customer?: { name: string } | null;
   project_assignments: AssignmentRow[];
+};
+
+type WeeklyUpdateSummary = {
+  id: string;
+  week_of: string;
+  pct_complete: number | null;
+  status: "draft" | "submitted";
+  blockers: string | null;
 };
 
 const PROJECT_SELECT_FIELDS = `
@@ -182,6 +190,9 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
   const supabase = createClient();
   const [showCompleted, setShowCompleted] = useState(false);
   const [viewMode, setViewMode] = useState<"grouped" | "all">("grouped");
+  const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
+  const [projectUpdates, setProjectUpdates] = useState<Record<string, WeeklyUpdateSummary[]>>({});
+  const [loadingUpdatesFor, setLoadingUpdatesFor] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<ProjectEditorRow | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -297,6 +308,33 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
     setAssignments(nextAssignments);
     if (personId === primaryPersonId && roleOnProject === "pm") {
       setPrimaryPersonId(nextAssignments.find((assignment) => assignment.roleOnProject === "pm")?.personId ?? null);
+    }
+  }
+
+  async function toggleProjectUpdates(projectId: string) {
+    if (expandedProjectId === projectId) {
+      setExpandedProjectId(null);
+      return;
+    }
+
+    setExpandedProjectId(projectId);
+    if (projectUpdates[projectId]) return;
+
+    setLoadingUpdatesFor(projectId);
+    try {
+      const res = await fetch(
+        `/api/admin/data?section=project-weekly-updates&projectId=${encodeURIComponent(projectId)}`,
+        { credentials: "include" }
+      );
+      const json = await res.json();
+      setProjectUpdates((prev) => ({
+        ...prev,
+        [projectId]: (json?.updates as WeeklyUpdateSummary[]) ?? [],
+      }));
+    } catch {
+      setProjectUpdates((prev) => ({ ...prev, [projectId]: [] }));
+    } finally {
+      setLoadingUpdatesFor(null);
     }
   }
 
@@ -446,6 +484,80 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
     }
   }
 
+  function renderProjectNameCell(project: OpsProjectListItem) {
+    return (
+      <div className="flex items-center gap-2">
+        <span>{project.name}</span>
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            void openProject(project.id);
+          }}
+          className="shrink-0 rounded border border-border-default bg-surface-overlay px-2 py-0.5 text-xs font-medium text-text-secondary hover:bg-surface-raised hover:text-text-primary"
+        >
+          Edit
+        </button>
+        {loadingProjectId === project.id && (
+          <span className="text-xs text-text-tertiary">Loading...</span>
+        )}
+        {project.sharepointFolder && (
+          <a
+            href={`https://controlsco.sharepoint.com/sites/TCCProjects/Shared%20Documents/${project.sharepointFolder.split("/").filter(Boolean).map(encodeURIComponent).join("/")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(event) => event.stopPropagation()}
+            className="shrink-0 rounded border border-brand-primary/20 bg-brand-primary/10 px-1.5 py-0.5 text-xs font-medium text-brand-primary hover:bg-brand-primary/20"
+          >
+            SP
+          </a>
+        )}
+      </div>
+    );
+  }
+
+  function renderExpandedUpdates(projectId: string) {
+    if (loadingUpdatesFor === projectId) {
+      return <p className="text-xs text-text-tertiary">Loading updates...</p>;
+    }
+
+    const updates = projectUpdates[projectId] ?? [];
+    if (updates.length === 0) {
+      return <p className="text-xs text-text-tertiary">No weekly updates on file.</p>;
+    }
+
+    return (
+      <div className="space-y-1.5">
+        {updates.slice(0, 8).map((update) => (
+          <div
+            key={update.id}
+            className="flex items-center justify-between rounded-lg border border-border-default bg-surface-base px-3 py-1.5 text-xs"
+          >
+            <span className="text-text-secondary">Week of {update.week_of}</span>
+            <div className="flex items-center gap-3">
+              {update.pct_complete !== null && (
+                <span className="font-semibold text-status-success">
+                  {(update.pct_complete * 100).toFixed(1)}%
+                </span>
+              )}
+              <span
+                className={[
+                  "rounded-full px-2 py-0.5 font-medium capitalize",
+                  update.status === "draft"
+                    ? "bg-status-warning/10 text-status-warning"
+                    : "bg-status-success/10 text-status-success",
+                ].join(" ")}
+              >
+                {update.status}
+              </span>
+              {update.status === "submitted" && <ViewReportLink updateId={update.id} />}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {modalError && (
@@ -468,7 +580,7 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
             By PM
           </button>
           <button
-            onClick={() => { setViewMode("all"); setShowCompleted(true); }}
+            onClick={() => setViewMode("all")}
             className={[
               "rounded-lg px-4 py-2 text-sm font-medium transition",
               viewMode === "all"
@@ -476,20 +588,18 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
                 : "text-text-secondary hover:bg-surface-overlay/70 hover:text-text-primary",
             ].join(" ")}
           >
-            All Projects
+            By Project
           </button>
         </div>
-        {viewMode === "grouped" && (
-          <label className="inline-flex items-center gap-2 text-sm text-text-secondary">
-            <input
-              type="checkbox"
-              checked={showCompleted}
-              onChange={(event) => setShowCompleted(event.target.checked)}
-              className="h-4 w-4 accent-[var(--color-brand-primary)]"
-            />
-            Show completed
-          </label>
-        )}
+        <label className="inline-flex items-center gap-2 text-sm text-text-secondary">
+          <input
+            type="checkbox"
+            checked={showCompleted}
+            onChange={(event) => setShowCompleted(event.target.checked)}
+            className="h-4 w-4 accent-[var(--color-brand-primary)]"
+          />
+          Show completed
+        </label>
       </div>
 
       {viewMode === "all" ? (
@@ -505,30 +615,33 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
               </tr>
             </thead>
             <tbody>
-              {[...projects].sort((a, b) => a.name.localeCompare(b.name)).map((project) => (
-                <tr
-                  key={project.id}
-                  onClick={() => void openProject(project.id)}
-                  className="cursor-pointer border-b border-border-default hover:bg-surface-raised"
-                >
-                  <td className="px-4 py-2.5 font-medium text-text-primary">
-                    <div className="flex items-center gap-2">
-                      <span>{project.name}</span>
-                      {loadingProjectId === project.id && (
-                        <span className="text-xs text-text-tertiary">Loading…</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-2.5 text-text-secondary">{project.customerName ?? "-"}</td>
-                  <td className="px-4 py-2.5 text-text-secondary">{project.pmGroupName !== "Unassigned" ? project.pmGroupName : "-"}</td>
-                  <td className="px-4 py-2.5 text-center">
-                    <span className={["rounded-full px-2 py-0.5 text-xs font-medium", project.is_active ? "bg-status-success/10 text-status-success" : "bg-surface-overlay text-text-secondary"].join(" ")}>
-                      {project.is_active ? "Active" : "Completed"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2.5 text-right text-text-primary">{project.pctComplete.toFixed(1)}%</td>
-                </tr>
-              ))}
+              {(showCompleted ? projects : projects.filter((project) => project.is_active))
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((project) => (
+                  <Fragment key={project.id}>
+                    <tr
+                      onClick={() => void toggleProjectUpdates(project.id)}
+                      className="cursor-pointer border-b border-border-default hover:bg-surface-raised"
+                    >
+                      <td className="px-4 py-2.5 font-medium text-text-primary">{renderProjectNameCell(project)}</td>
+                      <td className="px-4 py-2.5 text-text-secondary">{project.customerName ?? "-"}</td>
+                      <td className="px-4 py-2.5 text-text-secondary">{project.pmGroupName !== "Unassigned" ? project.pmGroupName : "-"}</td>
+                      <td className="px-4 py-2.5 text-center">
+                        <span className={["rounded-full px-2 py-0.5 text-xs font-medium", project.is_active ? "bg-status-success/10 text-status-success" : "bg-surface-overlay text-text-secondary"].join(" ")}>
+                          {project.is_active ? "Active" : "Completed"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-right text-text-primary">{project.pctComplete.toFixed(1)}%</td>
+                    </tr>
+                    {expandedProjectId === project.id && (
+                      <tr className="border-b border-border-default bg-surface-raised/40">
+                        <td colSpan={5} className="px-6 py-3">
+                          {renderExpandedUpdates(project.id)}
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                ))}
             </tbody>
           </table>
         </div>
@@ -567,43 +680,33 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
                   </thead>
                   <tbody>
                     {groupProjects.map((project) => (
-                      <tr
-                        key={project.id}
-                        onClick={() => void openProject(project.id)}
-                        className="cursor-pointer border-b border-border-default hover:bg-surface-raised"
-                      >
-                        <td className="px-4 py-2.5 font-medium text-text-primary">
-                          <div className="flex items-center gap-2">
-                            <span>{project.name}</span>
-                            {loadingProjectId === project.id && (
-                              <span className="text-xs font-medium text-text-tertiary">Loading…</span>
-                            )}
-                            {project.sharepointFolder && (
-                              <a
-                                href={`https://controlsco.sharepoint.com/sites/TCCProjects/Shared%20Documents/${project.sharepointFolder.split("/").filter(Boolean).map(encodeURIComponent).join("/")}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="shrink-0 rounded border border-brand-primary/20 bg-brand-primary/10 px-1.5 py-0.5 text-xs font-medium text-brand-primary hover:bg-brand-primary/20"
-                              >
-                                SP
-                              </a>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-2.5 text-text-secondary">{project.customerName ?? "-"}</td>
-                        <td className="px-4 py-2.5 text-center">
-                          <span
-                            className={[
-                              "rounded-full px-2 py-0.5 text-xs font-medium",
-                              project.is_active ? "bg-status-success/10 text-status-success" : "bg-surface-overlay text-text-secondary",
-                            ].join(" ")}
-                          >
-                            {project.is_active ? "Active" : "Completed"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-right text-text-primary">{project.pctComplete.toFixed(1)}%</td>
-                      </tr>
+                      <Fragment key={project.id}>
+                        <tr
+                          onClick={() => void toggleProjectUpdates(project.id)}
+                          className="cursor-pointer border-b border-border-default hover:bg-surface-raised"
+                        >
+                          <td className="px-4 py-2.5 font-medium text-text-primary">{renderProjectNameCell(project)}</td>
+                          <td className="px-4 py-2.5 text-text-secondary">{project.customerName ?? "-"}</td>
+                          <td className="px-4 py-2.5 text-center">
+                            <span
+                              className={[
+                                "rounded-full px-2 py-0.5 text-xs font-medium",
+                                project.is_active ? "bg-status-success/10 text-status-success" : "bg-surface-overlay text-text-secondary",
+                              ].join(" ")}
+                            >
+                              {project.is_active ? "Active" : "Completed"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2.5 text-right text-text-primary">{project.pctComplete.toFixed(1)}%</td>
+                        </tr>
+                        {expandedProjectId === project.id && (
+                          <tr className="border-b border-border-default bg-surface-raised/40">
+                            <td colSpan={4} className="px-6 py-3">
+                              {renderExpandedUpdates(project.id)}
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
                     ))}
                   </tbody>
                 </table>

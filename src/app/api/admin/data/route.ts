@@ -171,10 +171,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Admin access required." }, { status: 403 });
     }
 
-    const currentMonth = new Date();
-    const currentMonthStr = `${currentMonth.getUTCFullYear()}-${String(currentMonth.getUTCMonth() + 1).padStart(2, "0")}-01`;
-
-    const [projectsResult, periodsResult] = await Promise.all([
+    const [projectsResult, updatesResult] = await Promise.all([
       adminClient
         .from("projects")
         .select(`
@@ -193,21 +190,27 @@ export async function GET(request: Request) {
         `)
         .order("name"),
       adminClient
-        .from("billing_periods")
-        .select("project_id, pct_complete")
-        .eq("period_month", currentMonthStr),
+        .from("weekly_updates")
+        .select("project_id, pct_complete, week_of")
+        .eq("status", "submitted")
+        .order("week_of", { ascending: false }),
     ]);
 
-    if (projectsResult.error || periodsResult.error) {
+    if (projectsResult.error || updatesResult.error) {
       return NextResponse.json({
         error:
           projectsResult.error?.message ||
-          periodsResult.error?.message ||
+          updatesResult.error?.message ||
           "Failed to load ops projects.",
       }, { status: 500 });
     }
 
-    const pctByProjectId = new Map((periodsResult.data ?? []).map((period) => [period.project_id, period.pct_complete]));
+    const pctByProjectId = new Map<string, number>();
+    for (const update of (updatesResult.data ?? [])) {
+      if (!pctByProjectId.has(update.project_id) && update.pct_complete !== null) {
+        pctByProjectId.set(update.project_id, update.pct_complete);
+      }
+    }
     const normalizedProjects = (((projectsResult.data ?? []) as Array<{
       id: string;
       name: string;
@@ -521,9 +524,10 @@ export async function GET(request: Request) {
 
     const { data, error } = await adminClient
       .from("weekly_updates")
-      .select("id, week_of, pct_complete, notes, blockers")
+      .select("id, week_of, pct_complete, status, blockers")
       .eq("project_id", projectId)
-      .order("week_of", { ascending: false });
+      .order("week_of", { ascending: false })
+      .limit(20);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

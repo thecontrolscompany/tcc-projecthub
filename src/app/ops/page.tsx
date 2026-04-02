@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { OpsProjectList } from "@/components/ops-project-list";
@@ -69,8 +68,6 @@ export default async function OpsPage() {
 
   const linkedPmDirectoryIds = (linkedPmDirectoryRows ?? []).map((row) => row.id);
 
-  const currentMonth = format(new Date(), "yyyy-MM-01");
-
   const assignedProjectsQuery = adminClient
     .from("project_assignments")
     .select(`
@@ -91,7 +88,7 @@ export default async function OpsPage() {
     `)
     .eq("role_on_project", "ops_manager");
 
-  const [{ data: assignedProjects }, { data: allProjects }, { data: periods }] = await Promise.all([
+  const [{ data: assignedProjects }, { data: allProjects }, { data: recentUpdates }] = await Promise.all([
     linkedPmDirectoryIds.length
       ? assignedProjectsQuery.or(`profile_id.eq.${user.id},pm_directory_id.in.(${linkedPmDirectoryIds.join(",")})`)
       : assignedProjectsQuery.eq("profile_id", user.id),
@@ -114,7 +111,11 @@ export default async function OpsPage() {
           `)
           .order("name")
       : Promise.resolve({ data: [] as unknown[] }),
-    adminClient.from("billing_periods").select("project_id, pct_complete").eq("period_month", currentMonth),
+    adminClient
+      .from("weekly_updates")
+      .select("project_id, pct_complete, week_of")
+      .eq("status", "submitted")
+      .order("week_of", { ascending: false }),
   ]);
 
   const projectMap = new Map<string, OpsProject>();
@@ -130,7 +131,12 @@ export default async function OpsPage() {
     if (project?.id) projectMap.set(project.id, project);
   }
 
-  const pctByProjectId = new Map((periods ?? []).map((period) => [period.project_id, period.pct_complete]));
+  const pctByProjectId = new Map<string, number>();
+  for (const update of (recentUpdates ?? [])) {
+    if (!pctByProjectId.has(update.project_id) && update.pct_complete !== null) {
+      pctByProjectId.set(update.project_id, update.pct_complete);
+    }
+  }
   const normalizedProjects: OpsProjectListItem[] = Array.from(projectMap.values()).map((project) => {
     const pm = Array.isArray(project.pm) ? project.pm[0] : project.pm;
     const pmDirectory = Array.isArray(project.pm_directory) ? project.pm_directory[0] : project.pm_directory;
@@ -168,7 +174,7 @@ export default async function OpsPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Operations Portal</p>
         <h1 className="mt-1 text-2xl font-bold text-text-primary">Projects by Project Manager</h1>
         <p className="mt-2 text-sm text-text-secondary">
-          Click any row to open the full project editor. Active projects are shown by default, with completed projects available from the toggle.
+          Click any row to expand recent weekly updates. Use Edit to open the full project editor. Active projects are shown by default, with completed projects available from the toggle.
         </p>
       </div>
 
