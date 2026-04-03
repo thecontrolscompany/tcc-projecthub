@@ -470,12 +470,13 @@ export async function GET(request: Request) {
   }
 
   if (section === "analytics") {
-    if (requesterRole !== "admin") {
-      return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+    if (!["admin", "ops_manager"].includes(requesterRole)) {
+      return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });
     }
 
     const startMonth = searchParams.get("startMonth");
     const endMonth = searchParams.get("endMonth");
+    const currentMonth = new Date().toISOString().slice(0, 10).replace(/-\d{2}$/, "-01");
 
     let billingQuery = adminClient
       .from("billing_periods")
@@ -506,9 +507,102 @@ export async function GET(request: Request) {
       }, { status: 500 });
     }
 
+    const [projectsForStatusResult, latestPeriodsResult, assignmentsResult, customerBacklogResult] = await Promise.all([
+      adminClient
+        .from("projects")
+        .select("id, is_active")
+        .order("name"),
+      adminClient
+        .from("billing_periods")
+        .select("project_id, pct_complete")
+        .eq("period_month", currentMonth),
+      adminClient
+        .from("project_assignments")
+        .select("profile_id, role_on_project, project:projects(is_active), profile:profiles(full_name)")
+        .eq("role_on_project", "pm"),
+      adminClient
+        .from("projects")
+        .select("estimated_income, customer:customers(name)")
+        .eq("is_active", true)
+        .gt("estimated_income", 0),
+    ]);
+
+    const extraError =
+      projectsForStatusResult.error ||
+      latestPeriodsResult.error ||
+      assignmentsResult.error ||
+      customerBacklogResult.error;
+
+    if (extraError) {
+      return NextResponse.json({
+        error:
+          projectsForStatusResult.error?.message ||
+          latestPeriodsResult.error?.message ||
+          assignmentsResult.error?.message ||
+          customerBacklogResult.error?.message ||
+          "Failed to load analytics breakdowns.",
+      }, { status: 500 });
+    }
+
+    const pctMap = new Map((latestPeriodsResult.data ?? []).map((period) => [period.project_id, period.pct_complete ?? 0]));
+    let active = 0;
+    let nearComplete = 0;
+    let complete = 0;
+    let noUpdates = 0;
+
+    for (const project of projectsForStatusResult.data ?? []) {
+      if (!project.is_active) {
+        complete += 1;
+        continue;
+      }
+
+      const pct = pctMap.get(project.id);
+      if (pct === undefined) {
+        noUpdates += 1;
+      } else if (pct >= 0.95) {
+        complete += 1;
+      } else if (pct >= 0.75) {
+        nearComplete += 1;
+      } else {
+        active += 1;
+      }
+    }
+
+    const projectStatusBreakdown = [
+      { name: "Active", value: active },
+      { name: "Near Complete", value: nearComplete },
+      { name: "Complete", value: complete },
+      { name: "No Updates", value: noUpdates },
+    ].filter((item) => item.value > 0);
+
+    const workloadMap = new Map<string, { name: string; count: number }>();
+    for (const assignment of assignmentsResult.data ?? []) {
+      const project = normalizeSingle(assignment.project);
+      if (!project?.is_active) continue;
+      const profile = normalizeSingle(assignment.profile);
+      const name = profile?.full_name ?? "Unknown";
+      const existing = workloadMap.get(name) ?? { name, count: 0 };
+      workloadMap.set(name, { ...existing, count: existing.count + 1 });
+    }
+    const pmWorkload = Array.from(workloadMap.values()).sort((a, b) => b.count - a.count);
+
+    const customerMap = new Map<string, number>();
+    for (const project of customerBacklogResult.data ?? []) {
+      const customer = normalizeSingle(project.customer);
+      const name = customer?.name ?? "Unknown";
+      customerMap.set(name, (customerMap.get(name) ?? 0) + (project.estimated_income ?? 0));
+    }
+    const topCustomers = Array.from(customerMap.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 8);
+
     return NextResponse.json({
       billingPeriods: billingResult.data ?? [],
       projects: projectsResult.data ?? [],
+      projectStatusBreakdown,
+      pmWorkload,
+      topCustomers,
     });
   }
 
