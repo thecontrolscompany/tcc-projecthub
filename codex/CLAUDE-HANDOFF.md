@@ -1,5 +1,5 @@
 # Claude Session Handoff — TCC ProjectHub
-**Last updated:** 2026-03-31
+**Last updated:** 2026-04-01
 
 Paste this file into a new Claude session to restore full context.
 
@@ -48,32 +48,60 @@ Replaces an Excel-based monthly billing tracker with a multi-role portal.
 
 ---
 
-## What's Built and Working
+## What's Built and Working (tasks 001–030, build clean)
 
 - Microsoft SSO + email/password auth, role-based routing
-- Admin billing table: TanStack Table, inline editing, roll-forward, POC sync, email gen, Excel export
+- UI overhaul: collapsible sidebar (localStorage), aligned header, SVG nav icons, avatar, pill tabs (task-023)
+- Admin billing table: TanStack Table, inline editing all fields, roll-forward, POC sync, email gen, Excel export (task-020)
 - Admin analytics: Recharts + Power BI embed
-- Admin SharePoint migration tool (migrated ~120 active projects from OneDrive to SharePoint)
+- Admin user management: full name/email/role display, Edit modal for name and role (task-017)
+- Admin SharePoint migration tool + cleanup tab
+- Admin Projects tab: New/Edit Project modals, auto YYYY-NNN job number, Billed/Paid logic, SharePoint provisioning (task-014)
+- Admin Projects tab: filter/search/sort, Customer POC dropdown, All Conduit label, form validation (task-014+)
+- Admin Contacts tab (renamed from PM Directory): Add/Edit/Delete CRUD, linked vs external badge (task-019)
+- PM Directory: Import from Microsoft (Graph API GET /users with paging, upserts name, links profile_id) (task-015)
+- PM import consent error returns direct Azure admin-consent URL with inline "Grant Admin Consent" link (task-016)
+- PM auto-link on Microsoft sign-in (auth callback) (task-014)
 - PM portal, Customer portal, Quote requests stub, Estimating link page
 - Brand token system (Tailwind semantic classes), sidebar nav, dark/light theme
-- Database: all migrations 001–005 run; 24 projects seeded
-- Admin Projects tab: New/Edit Project modals, auto YYYY-NNN job number, Billed/Paid logic, SharePoint provisioning
-- Admin Projects tab: Active/Completed/All filter, text search, sortable columns
-- PM auto-link on Microsoft sign-in (auth callback)
-- PM Directory: Import from Microsoft button, Graph API GET /users with paging, upserts first/last name, links profile_id
-- Build is clean (tasks 001–015 complete)
+- `project_assignments` junction table — multiple people per project, each with `role_on_project` (task-028)
+- Portal pages read by role_on_project: pm, installer, ops (task-029)
+- Ops rows clickable → shared ProjectModal with full edit capability (task-030)
+- Shared project editor extracted to `src/components/project-modal.tsx`
+- Ops manager table column alignment fixed
+- Login page mojibake characters fixed
+- SharePoint document uploads: contract, scope, estimate (task-026)
+- Admin "View As" role preview (sessionStorage, amber banner) (task-027)
+
+### Migrations run in Supabase (all 11)
+- `001_initial_schema.sql` ✅
+- `002_add_sharepoint_columns.sql` ✅
+- `003_migration_status.sql` ✅
+- `004_project_fields.sql` ✅
+- `005_pm_directory_last_name.sql` ✅
+- `006_new_roles.sql` ✅
+- `007_pm_directory_intended_role.sql` ✅
+- `008_project_assignments.sql` ✅
+- `009_ops_manager_write.sql` ✅
+- `010_quote_requests.sql` ✅
+- `011_customer_project_settings.sql` ✅
 
 ---
 
-## Current Task
+## Current / Next Task
 
-**Task 016 — Quote Requests Workflow** (task spec not yet written)
+**Task 031 — Quote Requests Workflow** (spec not yet written)
 
 What it adds:
 - Expand `/quotes` stub: status pipeline (new → reviewing → quoted → won/lost)
 - Quote detail page `/quotes/[id]`
-- Customer-facing intake form
+- Customer-facing intake form (public or authenticated)
 - Admin status updates + notes
+- Link won quote to a project
+
+**Task 032 — Estimate → Project lifecycle**
+- Convert a won quote into a project (pre-fill New Project modal from quote data)
+- Link `quotes.project_id` after conversion
 
 ---
 
@@ -81,48 +109,42 @@ What it adds:
 
 ### Database
 - `projects.name` format: `"YYYY-NNN - Project Name"` (job number prefixed during SharePoint migration)
-- `projects.pm_id` references `profiles(id)` — for authenticated PMs
 - `pm_directory` stores all PM emails (including external: Trane, JCI, Siemens PMs)
-- `projects.pm_directory_id` references `pm_directory(id)` for assignment (added task-014)
-- `billing_periods.estimated_income_snapshot` is locked at roll-forward time
+- `projects.pm_directory_id` references `pm_directory(id)` for assignment
+- `project_assignments` junction table: multiple people per project with `role_on_project`
+- `billing_periods.estimated_income_snapshot` locked at roll-forward time
 - `billing_periods.to_bill` is a generated column: `MAX(estimated_income_snapshot * pct_complete - prev_billed, 0)`
 
 ### Auth
 - Admin + PMs: Microsoft SSO via Supabase Azure provider
 - Customers: Supabase email/password, created by admin at `/admin/users`
-- Provider token (from session) is used for Graph API calls (SharePoint, Outlook)
+- Provider token (from session) used for Graph API calls (SharePoint, Outlook)
 
 ### SharePoint
-- Project folders live at: `Active Projects/{job_number} - {project name}/`
+- Project folders: `Active Projects/{job_number} - {project name}/`
 - Subfolders: `01 Contract`, `02 Estimate`, `03 Submittals`, `04 Drawings`, `05 Change Orders`, `06 Closeout`, `07 Billing`, `99 Archive - Legacy Files`
 - Graph API helpers in `src/lib/graph/client.ts`
 
-### hvac-estimator (separate repo)
-- Repo: `C:\Users\TimothyCollins\dev\hvac-estimator`
-- Deployed to: https://estimates.thecontrolscompany.com via GitHub Pages
-- Auth re-enabled: VITE_AZURE_CLIENT_ID in GitHub Actions secrets
-- Redirect URI type in Azure: SPA (not Web) — PKCE flow
-
 ### Billing table data
-- `seed-projects-fix.sql` already run — most projects have income data
-- Projects with $0 estimated_income are historical completed projects not in the billing sheet (expected)
-- `billing_rows` view exists in migration 001, fallback direct query also added in task-013
+- `seed-projects-fix.sql` already run — projects have income data
+- Projects with $0 are historical completed projects not in the billing sheet (expected)
+- `billing_rows` view exists in migration 001; fallback direct query also in place (task-013)
 
 ---
 
 ## Files to Read First (new session)
 
 1. `CLAUDE.md` — project instructions and file map
-2. `codex/CONTINUITY.md` — Codex-focused state tracker
+2. `codex/CONTINUITY.md` — Codex-focused state tracker (most up to date)
 3. `src/types/database.ts` — TypeScript types
 4. `src/app/admin/page.tsx` — admin portal (largest file)
+5. `src/components/project-modal.tsx` — shared project editor (added task-030)
 
 ---
 
-## Upcoming After Task 016
+## Pending / Watch Items
 
-- **Task 017**: Estimate → Project lifecycle (convert won quote to project)
-- **Task 018**: Analytics expansion (more charts, date range filters)
-- **SharePoint cleanup**: Run cleanup tool at `/admin/migrate-sharepoint` to remove duplicate folders
-- **Supabase Site URL**: Confirm it's set to `https://internal.thecontrolscompany.com` in Supabase Auth settings
+- **SharePoint cleanup**: Run cleanup tool at `/admin/migrate-sharepoint` to remove duplicate folders from failed migration runs
+- **Supabase Site URL**: Confirm set to `https://internal.thecontrolscompany.com` in Supabase Auth settings
 - **Azure admin consent**: Grant `User.ReadBasic.All` for PM import if not yet done
+- **Task 031 spec**: Needs to be written before giving to Codex

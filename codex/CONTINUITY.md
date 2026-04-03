@@ -5,7 +5,7 @@
 
 ## Current State
 
-### Completed (tasks 001–015, build clean)
+### Completed (tasks 001–030, build clean)
 - Token/theme system, sidebar shell, AppShell, ThemeProvider
 - UI overhaul: collapsible sidebar (localStorage), aligned header, SVG nav icons, avatar, pill tabs, cleaned nav structure (task-023)
 - Microsoft SSO (admin/PM) + email/password (customer) auth
@@ -30,6 +30,12 @@
 - PM Directory: Import from Microsoft button, Graph API GET /users with paging, upserts first/last name, links profile_id (task-015)
 - PM Directory: Add/Edit/Delete CRUD, linked vs external badge (task-019)
 - PM import consent error now returns direct Azure admin-consent URL with inline "Grant Admin Consent" link (task-016)
+- project_assignments junction table — multiple people per project, each with role_on_project (task-028)
+- Portal pages read by role_on_project: pm, installer, ops (task-029)
+- Ops rows clickable → shared ProjectModal with full edit capability (task-030)
+- Shared project editor extracted to `src/components/project-modal.tsx`
+- Ops manager table column alignment fixed (table-fixed + colgroup widths)
+- Login page mojibake characters fixed
 
 ### Infrastructure (live)
 | Item | Value |
@@ -50,34 +56,32 @@
 - `004_project_fields.sql` ✅ run manually
 - `005_pm_directory_last_name.sql` ✅ run manually
 - `006_new_roles.sql` ✅ run manually
-- `007_pm_directory_intended_role.sql` ⏳ — run manually before using pre-sign-in role assignment
+- `007_pm_directory_intended_role.sql` ✅ run manually
+- `008_project_assignments.sql` ✅ run manually
+- `009_ops_manager_write.sql` ✅ run manually
+- `010_quote_requests.sql` ✅ run manually
+- `011_customer_project_settings.sql` ✅ run manually
 
 ---
 
-## Next Task — READY TO RUN
+## Next Tasks — READY TO RUN
 
-### Task 017 — Quote Requests Workflow
-File: `codex/task-016-quote-requests.md` (not yet written)
-
+### Task 031 — Quote Requests Workflow (not yet written)
 **What it does:**
 - Expand `/quotes` stub into a full workflow: status management (new → reviewing → quoted → won/lost)
 - Quote detail page `/quotes/[id]`
 - Customer-facing intake form (public or authenticated)
 - Admin can update status, attach notes, link to a project once won
 
-**Before running task 016:**
-- Timothy must run `supabase/migrations/005_pm_directory_last_name.sql` in Supabase SQL editor
-- Grant `User.ReadBasic.All` admin consent in Azure if not done (required for PM import)
-
 ---
 
 ## Upcoming Tasks (not yet written)
 
-### Task 017 — Estimate → Project lifecycle
+### Task 032 — Estimate → Project lifecycle
 - Convert a won quote into a project (pre-fill New Project modal from quote data)
 - Link `quotes.project_id` after conversion
 
-### Task 018 — Analytics expansion
+### Task 033 — Analytics expansion
 - More Recharts charts: billing trend, PM workload, project status breakdown
 - Date range filters
 
@@ -151,7 +155,8 @@ public/
 | 4f — Audit fixes (billing save, role-routes, layout auth, Zod) | ✅ Complete (task-025) |
 | 4g — SharePoint document uploads (contract, scope, estimate) | ✅ Complete (task-026) |
 | 4h — Admin "View As" role preview (sessionStorage, amber banner) | ✅ Complete (task-027) |
-| 5 — Quote Requests workflow | ❌ Not yet started |
-| 6 — Estimate → Project lifecycle | ❌ Not started |
-| 7 — Analytics expansion | ❌ Not started |
+| 4i — project_assignments: multi-person team per project | ✅ Complete (tasks 028–030) |
+| 5 — Quote Requests workflow | ❌ Not yet started (task-031) |
+| 6 — Estimate → Project lifecycle | ❌ Not started (task-032) |
+| 7 — Analytics expansion | ❌ Not started (task-033) |
 | 8 — QBO integration | ❌ Not started |
