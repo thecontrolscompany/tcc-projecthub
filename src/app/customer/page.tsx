@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import {
   Bar,
   BarChart,
@@ -57,6 +57,7 @@ export default function CustomerPage() {
   const [selectedProject, setSelectedProject] = useState<CustomerProject | null>(null);
   const [userEmail, setUserEmail] = useState("");
   const [userId, setUserId] = useState("");
+  const [loadedAt, setLoadedAt] = useState<Date | null>(null);
 
   useEffect(() => {
     void loadProjects();
@@ -123,6 +124,7 @@ export default function CustomerPage() {
       });
 
       setProjects(combined);
+      setLoadedAt(new Date());
     } catch {
       setProjects([]);
     } finally {
@@ -223,7 +225,7 @@ export default function CustomerPage() {
                 Your project access hasn&apos;t been set up yet. Contact The Controls Company to get started.
               </p>
               <a
-                href="mailto:info@thecontrolsco.com"
+                href="mailto:info@thecontrolscompany.com"
                 className="mt-6 inline-flex items-center rounded-full px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
                 style={{ backgroundColor: HEADER_BG }}
               >
@@ -233,7 +235,7 @@ export default function CustomerPage() {
           ) : selectedProject ? (
             <ProjectDetail project={selectedProject} userId={userId} onBack={() => setSelectedProject(null)} />
           ) : (
-            <ProjectList projects={projects} onSelect={setSelectedProject} />
+            <ProjectList projects={projects} loadedAt={loadedAt} onSelect={setSelectedProject} />
           )}
         </ErrorBoundary>
       </main>
@@ -250,15 +252,25 @@ export default function CustomerPage() {
 
 function ProjectList({
   projects,
+  loadedAt,
   onSelect,
 }: {
   projects: CustomerProject[];
+  loadedAt: Date | null;
   onSelect: (project: CustomerProject) => void;
 }) {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
   const summary = useMemo(() => {
     const totalContracts = projects.reduce((sum, project) => sum + (project.estimated_income ?? 0), 0);
     const totalBilled = projects.reduce((sum, project) => sum + getProjectBilledToDate(project), 0);
     const totalBacklog = Math.max(totalContracts - totalBilled, 0);
+    const billedThisPeriod = projects.reduce((sum, project) => sum + (project.billing_periods[0]?.actual_billed ?? 0), 0);
+    const averageProgress =
+      projects.length > 0
+        ? projects.reduce((sum, project) => sum + (project.billing_periods[0]?.pct_complete ?? 0), 0) / projects.length
+        : 0;
 
     const financialChartData = projects.map((project) => {
       const billed = getProjectBilledToDate(project);
@@ -277,12 +289,29 @@ function ProjectList({
 
     return {
       totalContracts,
-      totalBilled,
-      totalBacklog,
+      billedThisPeriod,
+      averageProgress,
       financialChartData,
       mixChartData,
     };
   }, [projects]);
+
+  const filteredProjects = useMemo(() => {
+    return projects.filter((project) => {
+      const matchesSearch =
+        !search ||
+        project.name.toLowerCase().includes(search.toLowerCase()) ||
+        (project.site_address ?? "").toLowerCase().includes(search.toLowerCase());
+      const badge = getProjectStatus(project).label;
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && badge !== "Complete") ||
+        (statusFilter === "complete" && badge === "Complete") ||
+        (statusFilter === "blocked" && badge === "Has Blockers");
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [projects, search, statusFilter]);
 
   return (
     <div className="space-y-6">
@@ -301,9 +330,35 @@ function ProjectList({
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <MetricCard label="Total Contracts" value={currency(summary.totalContracts)} />
-        <MetricCard label="Total Billed" value={currency(summary.totalBilled)} />
-        <MetricCard label="Backlog" value={currency(summary.totalBacklog)} />
+        <MetricCard label="Avg Progress Across Projects" value={`${(summary.averageProgress * 100).toFixed(1)}%`} />
+        <MetricCard label="Billed This Period" value={currency(summary.billedThisPeriod)} />
+        <MetricCard label="Total Contract Value" value={currency(summary.totalContracts)} />
+      </div>
+
+      {loadedAt && (
+        <p className="text-xs text-slate-500">
+          Last updated: {format(loadedAt, "MMM d, yyyy h:mm a")}
+        </p>
+      )}
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <input
+          type="search"
+          placeholder="Search projects..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm text-text-primary placeholder-text-tertiary focus:border-brand-primary/50 focus:outline-none"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm text-text-primary focus:outline-none"
+        >
+          <option value="all">All Projects</option>
+          <option value="active">Active</option>
+          <option value="complete">Complete</option>
+          <option value="blocked">Has Blockers</option>
+        </select>
       </div>
 
       <div className="customer-print-chart grid gap-5 lg:grid-cols-[1.3fr_0.9fr]">
@@ -376,13 +431,14 @@ function ProjectList({
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        {projects.map((project) => {
+        {filteredProjects.map((project) => {
           const latestPeriod = project.billing_periods[0];
           const latestUpdate = project.weekly_updates[0];
           const pct = latestPeriod ? latestPeriod.pct_complete * 100 : 0;
+          const status = getProjectStatus(project);
           const lastUpdateLabel = latestUpdate
-            ? format(new Date(latestUpdate.week_of), "MMMM d, yyyy")
-            : "No update yet";
+            ? `Last update: ${format(new Date(latestUpdate.week_of), "MMM d, yyyy")} (${formatDistanceToNow(new Date(latestUpdate.week_of), { addSuffix: true })})`
+            : "Last update: No update yet";
 
           return (
             <button
@@ -392,13 +448,24 @@ function ProjectList({
               style={{ borderColor: BORDER, borderLeftColor: HEADER_BG }}
             >
               <div className="flex items-start justify-between gap-4">
-                <div className="space-y-2">
-                  <p className="text-xl font-bold" style={{ color: CHARCOAL }}>
-                    {project.name}
-                  </p>
-                  <p className="text-sm text-slate-500">{project.customer_name || "Customer project"}</p>
-                  <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Last update</p>
+                <div className="min-w-0 space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-xl font-bold" style={{ color: CHARCOAL }}>
+                      {project.name}
+                    </p>
+                    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${status.className}`}>
+                      {status.label}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-3xl font-bold leading-none text-status-success">{pct.toFixed(1)}%</p>
+                    <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Current progress</p>
+                  </div>
                   <p className="text-sm font-medium text-slate-700">{lastUpdateLabel}</p>
+                  <div className="space-y-1 text-sm text-slate-500">
+                    {project.site_address && <p>{project.site_address}</p>}
+                    <p>{project.customer_name || "Customer project"}</p>
+                  </div>
                 </div>
                 <ProgressDonut value={pct} />
               </div>
@@ -408,20 +475,19 @@ function ProjectList({
               )}
 
               <div className="mt-5 flex items-center justify-between">
-                <div
-                  className="rounded-full px-3 py-1 text-xs font-semibold"
-                  style={{ backgroundColor: "#e6f6f4", color: HEADER_BG }}
-                >
-                  {latestPeriod ? `${pct.toFixed(1)}% complete` : "Progress pending"}
-                </div>
                 <span className="text-sm font-semibold" style={{ color: HEADER_BG }}>
-                  {"View Details ->"}
+                  View updates
                 </span>
               </div>
             </button>
           );
         })}
       </div>
+      {filteredProjects.length === 0 && (
+        <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-sm text-slate-500">
+          No projects match the current search or filter.
+        </div>
+      )}
     </div>
   );
 }
@@ -1010,7 +1076,7 @@ function ProgressDonut({ value }: { value: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-lg font-bold" style={{ color: CHARCOAL }}>
+        <span className="text-sm font-bold text-status-success">
           {clamped.toFixed(0)}%
         </span>
         <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">Complete</span>
@@ -1179,6 +1245,33 @@ function getProjectBilledToDate(project: CustomerProject) {
   return latest.actual_billed !== null
     ? latest.prev_billed + latest.actual_billed
     : latest.prev_billed;
+}
+
+function getProjectStatus(project: CustomerProject) {
+  const latestPeriod = project.billing_periods[0];
+  const latestUpdate = project.weekly_updates[0];
+  const pctComplete = latestPeriod?.pct_complete ?? 0;
+  const hasBlockers = Boolean(latestUpdate?.blockers?.trim());
+
+  if (pctComplete >= 0.95) {
+    return { label: "Complete", className: "bg-status-success/10 text-status-success" };
+  }
+
+  if (hasBlockers) {
+    return { label: "Has Blockers", className: "bg-status-danger/10 text-status-danger" };
+  }
+
+  if (latestUpdate) {
+    const daysSinceUpdate = (Date.now() - new Date(latestUpdate.week_of).getTime()) / (1000 * 60 * 60 * 24);
+    if (daysSinceUpdate <= 14) {
+      return { label: "On Track", className: "bg-brand-primary/10 text-brand-primary" };
+    }
+    if (daysSinceUpdate > 30) {
+      return { label: "No Updates", className: "bg-status-warning/10 text-status-warning" };
+    }
+  }
+
+  return { label: "Active", className: "bg-surface-overlay text-text-secondary" };
 }
 
 function getProjectChartLabel(project: CustomerProject) {

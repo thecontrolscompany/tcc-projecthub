@@ -98,7 +98,7 @@ export default async function PublicStatusPage({ params }: PageProps) {
           <div className="grid gap-4 md:grid-cols-3">
             <StatusCard label="Current % Complete" value={pctComplete} accent />
             <StatusCard label="Last Update Date" value={lastUpdate} />
-            <StatusCard label="Need Help?" value="info@thecontrolsco.com" />
+            <StatusCard label="Need Help?" value="info@thecontrolscompany.com" />
           </div>
 
           <div className="rounded-3xl border border-[#d9ece8] bg-[#f8fcfb] p-5">
@@ -109,7 +109,7 @@ export default async function PublicStatusPage({ params }: PageProps) {
 
           <div>
             <Link
-              href="mailto:info@thecontrolsco.com"
+              href="mailto:info@thecontrolscompany.com"
               className="inline-flex items-center rounded-full bg-[#017a6f] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#015f57]"
             >
               Contact Us
@@ -140,7 +140,7 @@ function NotFoundState() {
           We couldn&apos;t find a public project status page for that job number.
         </p>
         <Link
-          href="mailto:info@thecontrolsco.com"
+          href="mailto:info@thecontrolscompany.com"
           className="mt-6 inline-flex items-center rounded-full bg-[#017a6f] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#015f57]"
         >
           Contact Us

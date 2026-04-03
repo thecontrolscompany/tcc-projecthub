@@ -622,7 +622,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
             </div>
 
             <footer className="footer">
-              <div>The Controls Company, LLC | thecontrolsco.com</div>
+              <div>The Controls Company, LLC | thecontrolscompany.com</div>
               <div>Service Disabled Veteran Owned Small Business</div>
               <div>Submitted: {formatDate(update.submitted_at)}</div>
             </footer>
