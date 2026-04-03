@@ -5,6 +5,7 @@ import { addDays, format, startOfWeek } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ViewReportLink } from "@/components/view-report-link";
+import { WipTab } from "@/components/wip-tab";
 import type { ChangeOrder } from "@/types/database";
 import type {
   BillingPeriod,
@@ -1050,6 +1051,16 @@ function UpdateForm({
           ))
         )}
       </div>
+
+      <details className="group">
+        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-text-secondary">
+          WIP / Open Items
+          <span className="ml-2 text-text-tertiary group-open:hidden">▼</span>
+        </summary>
+        <div className="mt-3">
+          <WipTab projectId={project.id} readOnly />
+        </div>
+      </details>
 
       {recentUpdates.length > 0 && (
         <div className="space-y-3">

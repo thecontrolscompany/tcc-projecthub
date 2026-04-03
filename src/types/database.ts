@@ -6,6 +6,8 @@ export type ProjectAssignmentRole = "pm" | "lead" | "installer" | "ops_manager";
 export type QuoteRequestStatus = "new" | "reviewing" | "quoted" | "won" | "lost";
 export type WeeklyUpdateStatus = "draft" | "submitted";
 export type ChangeOrderStatus = "pending" | "approved" | "rejected" | "void";
+export type WipStatus = "not_started" | "in_progress" | "blocked" | "in_review" | "complete";
+export type WipPriority = "low" | "medium" | "high";
 
 export interface Profile {
   id: string;
@@ -229,6 +231,23 @@ export interface ChangeOrder {
   approved_by: string | null;
   reference_doc: string | null;
   notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WipItem {
+  id: string;
+  project_id: string;
+  system_area: string;
+  task: string;
+  status: WipStatus;
+  assigned_to: string | null;
+  responsible_co: string | null;
+  blocker: string | null;
+  priority: WipPriority;
+  due_date: string | null;
+  notes: string | null;
+  sort_order: number;
   created_at: string;
   updated_at: string;
 }

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { ViewReportLink } from "@/components/view-report-link";
+import { WipTab } from "@/components/wip-tab";
 import type { ParsedPocImportRow } from "@/lib/poc/import";
 import type { ChangeOrder, ChangeOrderStatus, PocLineItem, Profile, ProjectAssignmentRole, ProjectCustomerContact } from "@/types/database";
 
@@ -209,6 +210,7 @@ export function ProjectModal({
 }) {
   const customerOptions = useMemo(() => customers, [customers]);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState<"overview" | "wip">("overview");
   const customerPocOptions = useMemo(() => {
     const options = [...externalContacts];
     const currentValue = values.customerPoc.trim();
@@ -255,6 +257,34 @@ export function ProjectModal({
           </button>
         </div>
 
+        {editingProject && (
+          <div className="border-b border-border-default px-6 py-3">
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  { id: "overview", label: "Overview" },
+                  { id: "wip", label: "WIP" },
+                ] as const
+              ).map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={[
+                    "rounded-lg px-4 py-2 text-sm font-medium transition",
+                    activeTab === tab.id
+                      ? "bg-surface-overlay text-text-primary shadow-sm"
+                      : "text-text-secondary hover:bg-surface-overlay/70 hover:text-text-primary",
+                  ].join(" ")}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {(!editingProject || activeTab === "overview") && (
         <div className="space-y-6 px-6 py-6">
           {(errors.form || saveError) && (
             <div className="rounded-xl border border-status-danger/30 bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
@@ -537,7 +567,15 @@ export function ProjectModal({
             <WeeklyUpdatesSection projectId={editingProject.id} />
           )}
         </div>
+        )}
 
+        {editingProject && activeTab === "wip" && (
+          <div className="px-6 py-6">
+            <WipTab projectId={editingProject.id} />
+          </div>
+        )}
+
+        {(!editingProject || activeTab === "overview") && (
         <div className="flex items-center justify-end gap-3 border-t border-border-default px-6 py-4">
           <div className="flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -559,6 +597,7 @@ export function ProjectModal({
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {showImportDialog && editingProject && (
