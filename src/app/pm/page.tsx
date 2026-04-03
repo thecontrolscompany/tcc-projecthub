@@ -61,6 +61,10 @@ function emptyCrewLog(): CrewLogEntry[] {
   return DAYS.map((day) => ({ day, men: 0, hours: 0, activities: "" }));
 }
 
+function hasCrewLogEntry(row: CrewLogEntry) {
+  return row.men > 0 || row.hours > 0 || Boolean(row.activities?.trim());
+}
+
 export default function PmPage() {
   const supabase = createClient();
   const [view, setView] = useState<ViewState>("list");
@@ -602,7 +606,31 @@ function UpdateForm({
 
           <SummaryField label="Additional Notes" value={notes} />
 
-          <div className="overflow-x-auto rounded-xl border border-border-default">
+          <div className="space-y-2 md:hidden">
+            {crewLog.filter(hasCrewLogEntry).map((row) => (
+              <div key={row.day} className="rounded-xl border border-border-default bg-surface-base px-4 py-3">
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-text-secondary">{row.day}</p>
+                <div className="flex flex-wrap gap-4 text-sm">
+                  {row.men > 0 && (
+                    <span>
+                      <span className="text-text-tertiary">Men: </span>
+                      <span className="font-medium text-text-primary">{row.men}</span>
+                    </span>
+                  )}
+                  {row.hours > 0 && (
+                    <span>
+                      <span className="text-text-tertiary">Hours: </span>
+                      <span className="font-medium text-text-primary">{row.hours}</span>
+                    </span>
+                  )}
+                </div>
+                {row.activities?.trim() && <p className="mt-1.5 text-sm text-text-primary">{row.activities}</p>}
+              </div>
+            ))}
+            {crewLog.every((row) => !hasCrewLogEntry(row)) && <p className="text-sm text-text-tertiary">No crew log entries.</p>}
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-xl border border-border-default md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border-default bg-surface-overlay text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">
@@ -697,7 +725,47 @@ function UpdateForm({
 
           <div>
             <h3 className="mb-3 text-sm font-semibold text-text-primary">Daily Crew Log</h3>
-            <div className="overflow-x-auto rounded-xl border border-border-default">
+            <div className="space-y-3 md:hidden">
+              {crewLog.map((row, i) => (
+                <div key={row.day} className="space-y-2 rounded-xl border border-border-default bg-surface-base px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{row.day}</p>
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <label className="mb-1 block text-xs text-text-tertiary"># of Men</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={row.men === 0 ? "" : row.men}
+                        onChange={(e) => updateCrewRow(i, "men", Number(e.target.value))}
+                        className="w-full rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="mb-1 block text-xs text-text-tertiary">Hours</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={row.hours === 0 ? "" : row.hours}
+                        onChange={(e) => updateCrewRow(i, "hours", Number(e.target.value))}
+                        className="w-full rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-text-tertiary">Activities</label>
+                    <input
+                      type="text"
+                      value={row.activities}
+                      onChange={(e) => updateCrewRow(i, "activities", e.target.value)}
+                      placeholder="Work performed..."
+                      className="w-full rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary placeholder-text-tertiary focus:border-status-success/50 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden overflow-x-auto rounded-xl border border-border-default md:block">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border-default bg-surface-overlay text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">
@@ -988,9 +1056,9 @@ function UpdateForm({
           <h3 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Update History</h3>
           {recentUpdates.map((update) => (
             <div key={update.id} className="rounded-xl border border-border-default bg-surface-raised p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-text-tertiary">Week of {update.week_of}</span>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium text-text-primary">Week of {format(new Date(update.week_of), "MMM d, yyyy")}</span>
                   <span
                     className={[
                       "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
@@ -1010,7 +1078,7 @@ function UpdateForm({
                   <button
                     type="button"
                     onClick={() => handleSelectExistingUpdate(update)}
-                    className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-surface-base hover:text-text-primary"
+                    className="min-h-10 rounded-lg border border-border-default bg-surface-overlay px-4 py-2 text-sm font-medium text-text-secondary transition hover:bg-surface-base hover:text-text-primary"
                   >
                     {update.status === "draft" ? "Open Draft" : "Edit"}
                   </button>
@@ -1018,30 +1086,16 @@ function UpdateForm({
               </div>
               {update.notes && <p className="mt-1.5 text-sm text-text-secondary">{update.notes}</p>}
               {update.blockers && <p className="mt-1 text-sm text-status-danger">Blocker: {update.blockers}</p>}
-              {update.crew_log && update.crew_log.length > 0 && update.crew_log.some((row) => row.men > 0 || row.hours > 0 || row.activities) && (
-                <div className="mt-2 overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="text-text-tertiary">
-                        <th className="pr-3 text-left font-medium">Day</th>
-                        <th className="pr-3 text-center font-medium">Men</th>
-                        <th className="pr-3 text-center font-medium">Hrs</th>
-                        <th className="text-left font-medium">Activities</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {update.crew_log
-                        .filter((row) => row.men > 0 || row.hours > 0 || row.activities)
-                        .map((row) => (
-                          <tr key={row.day} className="text-text-secondary">
-                            <td className="pr-3">{row.day}</td>
-                            <td className="pr-3 text-center">{row.men}</td>
-                            <td className="pr-3 text-center">{row.hours}</td>
-                            <td>{row.activities}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
+              {update.crew_log && update.crew_log.some(hasCrewLogEntry) && (
+                <div className="mt-2 space-y-1">
+                  {update.crew_log.filter(hasCrewLogEntry).map((row) => (
+                    <div key={row.day} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-xs text-text-secondary">
+                      <span className="w-20 font-medium text-text-primary">{row.day}</span>
+                      {row.men > 0 && <span>{row.men} men</span>}
+                      {row.hours > 0 && <span>{row.hours} hrs</span>}
+                      {row.activities?.trim() && <span className="text-text-secondary">{row.activities}</span>}
+                    </div>
+                  ))}
                 </div>
               )}
               {update.material_delivered && <p className="mt-1 text-xs text-text-secondary"><span className="font-medium">Material:</span> {update.material_delivered}</p>}
@@ -1056,10 +1110,12 @@ function UpdateForm({
 }
 
 function SummaryField({ label, value }: { label: string; value: string | null }) {
+  if (!value?.trim()) return null;
+
   return (
     <div className="rounded-xl border border-border-default bg-surface-base p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{label}</p>
-      <p className="mt-2 whitespace-pre-wrap text-sm text-text-primary">{value?.trim() ? value : "None"}</p>
+      <p className="mt-2 whitespace-pre-wrap text-sm text-text-primary">{value}</p>
     </div>
   );
 }

@@ -35,6 +35,7 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const title = useMemo(() => resolvePageTitle(pathname), [pathname]);
   const initials = useMemo(() => getUserInitials(userEmail), [userEmail]);
 
@@ -47,19 +48,43 @@ export function AppShell({
     window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(collapsed));
   }, [collapsed]);
 
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   return (
     <>
-      <SidebarNav role={role} userEmail={userEmail} collapsed={collapsed} onToggle={() => setCollapsed((value) => !value)} />
+      <div className="hidden md:block">
+        <SidebarNav role={role} userEmail={userEmail} collapsed={collapsed} onToggle={() => setCollapsed((value) => !value)} />
+      </div>
+      {mobileOpen && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/40 md:hidden" onClick={() => setMobileOpen(false)} />
+          <div className="fixed inset-y-0 left-0 z-50 md:hidden">
+            <SidebarNav role={role} userEmail={userEmail} collapsed={false} onToggle={() => setMobileOpen(false)} />
+          </div>
+        </>
+      )}
       <header
         className={[
           "fixed top-0 right-0 z-20 flex h-14 items-center justify-between border-b border-border-default bg-surface-raised px-4 transition-[left] duration-200",
-          collapsed ? "left-16" : "left-56",
+          "left-0 md:left-auto",
+          collapsed ? "md:left-16" : "md:left-56",
         ].join(" ")}
       >
         <div className="flex items-center gap-3">
           <button
+            onClick={() => setMobileOpen((value) => !value)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border-default bg-surface-overlay text-text-secondary transition hover:text-text-primary md:hidden"
+            aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+              <path d="M3 12h18M3 6h18M3 18h18" />
+            </svg>
+          </button>
+          <button
             onClick={() => setCollapsed((value) => !value)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border-default bg-surface-overlay text-text-secondary transition hover:text-text-primary"
+            className="hidden h-9 w-9 items-center justify-center rounded-lg border border-border-default bg-surface-overlay text-text-secondary transition hover:text-text-primary md:inline-flex"
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
@@ -80,7 +105,8 @@ export function AppShell({
       <div
         className={[
           "min-h-screen bg-surface-base pt-14 transition-[margin-left] duration-200",
-          collapsed ? "ml-16" : "ml-56",
+          "ml-0",
+          collapsed ? "md:ml-16" : "md:ml-56",
         ].join(" ")}
       >
         <main className="p-6">{children}</main>

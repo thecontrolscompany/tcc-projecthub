@@ -215,6 +215,7 @@ export function SidebarNav({
     <aside
       className={[
         "fixed left-0 top-0 z-30 flex h-screen flex-col border-r border-border-default bg-surface-raised transition-[width] duration-200",
+        "max-w-[calc(100vw-2rem)]",
         collapsed ? "w-16" : "w-56",
       ].join(" ")}
     >
