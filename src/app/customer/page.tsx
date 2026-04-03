@@ -501,7 +501,6 @@ function ProjectDetail({
   userId: string;
   onBack: () => void;
 }) {
-  const supabase = createClient();
   const [view, setView] = useState<"updates" | "billing">("updates");
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState("");
@@ -863,19 +862,28 @@ function ProjectDetail({
                 onClick={async () => {
                   setFeedbackSaving(true);
                   setFeedbackStatus(null);
-                  const { error } = await supabase.from("customer_feedback").insert({
-                    project_id: project.id,
-                    profile_id: userId,
-                    message: feedbackMessage.trim(),
-                  });
+                  try {
+                    const response = await fetch("/api/customer/feedback", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      credentials: "include",
+                      body: JSON.stringify({
+                        project_id: project.id,
+                        message: feedbackMessage.trim(),
+                      }),
+                    });
+                    const json = await response.json();
 
-                  if (!error) {
+                    if (!response.ok) {
+                      throw new Error(json?.error ?? "Unable to submit feedback.");
+                    }
+
                     setFeedbackMessage("");
                     setShowFeedback(false);
                     setFeedbackStatus("Feedback sent. Thank you.");
                     window.setTimeout(() => setFeedbackStatus(null), 3000);
-                  } else {
-                    setFeedbackStatus(error.message);
+                  } catch (submitError) {
+                    setFeedbackStatus(submitError instanceof Error ? submitError.message : "Unable to submit feedback.");
                   }
 
                   setFeedbackSaving(false);

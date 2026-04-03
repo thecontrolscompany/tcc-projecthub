@@ -121,6 +121,14 @@ function UserIcon({ className = "h-5 w-5" }: IconProps) {
   );
 }
 
+function MessageIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <path d="M7 18.5H4a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H11l-4 3v-3Z" />
+    </svg>
+  );
+}
+
 function ChevronLeftIcon({ className = "h-4 w-4" }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
@@ -136,6 +144,7 @@ export const NAV_LINKS: NavItem[] = [
   { label: "Ops View", href: "/admin/ops", roles: ["admin"], icon: GridIcon },
   { label: "Contacts", href: "/admin/contacts", roles: ["admin"], icon: UserIcon },
   { label: "Quotes", href: "/quotes", roles: ["admin", "ops_manager", "customer"], icon: DocumentIcon },
+  { label: "Feedback", href: "/feedback", roles: ["admin", "pm", "lead", "ops_manager"], icon: MessageIcon },
   { label: "Estimating", href: "/estimating", roles: ["admin", "ops_manager"], icon: CalculatorIcon },
   { label: "Projects", href: "/projects", roles: ["pm", "lead"], icon: FolderIcon },
   { label: "PM Portal", href: "/pm", roles: ["pm", "lead", "ops_manager"], icon: ClipboardIcon },
@@ -156,6 +165,7 @@ const PAGE_TITLE_OVERRIDES: Record<string, string> = {
   "/billing": "Billing",
   "/customer": "My Portal",
   "/estimating": "Estimating",
+  "/feedback": "Feedback",
   "/installer": "Installer",
   "/ops": "Operations",
   "/pm": "PM Portal",

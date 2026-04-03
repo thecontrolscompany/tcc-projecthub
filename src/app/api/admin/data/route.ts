@@ -431,8 +431,8 @@ export async function GET(request: Request) {
   }
 
   if (section === "feedback") {
-    if (requesterRole !== "admin") {
-      return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+    if (!["admin", "ops_manager"].includes(requesterRole)) {
+      return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });
     }
     const showUnreviewedOnly = searchParams.get("unreviewedOnly") === "true";
     let query = adminClient

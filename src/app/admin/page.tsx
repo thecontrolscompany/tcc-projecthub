@@ -5,11 +5,12 @@ import Link from "next/link";
 import { format, startOfMonth, subMonths, addMonths } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { AdminProjectsTab } from "@/components/admin-projects-tab";
+import { FeedbackTab } from "@/components/admin-weekly-feedback";
 import { BillingTable } from "@/components/billing-table";
 import { calcToBill, generatePmEmailDrafts, rollForwardRows } from "@/lib/billing/calculations";
 import type { BillingRow, BillingPeriod } from "@/types/database";
 
-type Tab = "billing" | "projects" | "backfill";
+type Tab = "billing" | "projects" | "backfill" | "feedback";
 type ProjectOption = { id: string; name: string };
 type BillingPeriodRow = {
   id: string;
@@ -423,6 +424,7 @@ export default function AdminPage() {
               { id: "billing", label: "Billing Table" },
               { id: "projects", label: "Projects" },
               { id: "backfill", label: "Billing History" },
+              { id: "feedback", label: "Feedback" },
             ] as { id: Tab; label: string }[]
           ).map(({ id, label }) => (
             <button
@@ -522,6 +524,7 @@ export default function AdminPage() {
 
         {tab === "projects" && <AdminProjectsTab />}
         {tab === "backfill" && <BillingBackfillTab projects={projectOptions} />}
+        {tab === "feedback" && <FeedbackTab />}
           </>
         )}
       </main>

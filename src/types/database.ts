@@ -202,6 +202,18 @@ export interface CustomerFeedback {
   reviewed: boolean;
 }
 
+export interface PortalFeedback {
+  id: string;
+  submitted_by: string;
+  type: "bug" | "feature" | "ux" | "other";
+  title: string;
+  description: string;
+  priority: "low" | "medium" | "high";
+  page_area: string | null;
+  status: "new" | "reviewing" | "planned" | "done" | "wont_fix";
+  created_at: string;
+}
+
 export interface ChangeOrder {
   id: string;
   project_id: string;

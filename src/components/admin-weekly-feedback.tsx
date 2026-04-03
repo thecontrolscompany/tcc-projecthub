@@ -4,10 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { ViewReportLink } from "@/components/view-report-link";
-import type { CustomerFeedback } from "@/types/database";
+import type { CustomerFeedback, PortalFeedback } from "@/types/database";
 
 export function FeedbackTab() {
   const supabase = createClient();
+  const [section, setSection] = useState<"customer" | "team">("customer");
   const [feedback, setFeedback] = useState<
     Array<
       CustomerFeedback & {
@@ -16,13 +17,26 @@ export function FeedbackTab() {
       }
     >
   >([]);
+  const [teamFeedback, setTeamFeedback] = useState<
+    Array<
+      PortalFeedback & {
+        profile?: { full_name: string | null; email: string } | { full_name: string | null; email: string }[] | null;
+      }
+    >
+  >([]);
   const [loading, setLoading] = useState(true);
   const [showUnreviewedOnly, setShowUnreviewedOnly] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [teamTypeFilter, setTeamTypeFilter] = useState("all");
+  const [teamStatusFilter, setTeamStatusFilter] = useState("all");
 
   useEffect(() => {
     void loadFeedback();
   }, [showUnreviewedOnly]);
+
+  useEffect(() => {
+    void loadTeamFeedback();
+  }, []);
 
   async function loadFeedback() {
     setLoading(true);
@@ -38,6 +52,18 @@ export function FeedbackTab() {
     setLoading(false);
   }
 
+  async function loadTeamFeedback() {
+    const res = await fetch("/api/feedback", {
+      credentials: "include",
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      setTeamFeedback([]);
+    } else {
+      setTeamFeedback((json?.feedback as typeof teamFeedback) ?? []);
+    }
+  }
+
   async function markReviewed(id: string) {
     setSavingId(id);
     const { error } = await supabase.from("customer_feedback").update({ reviewed: true }).eq("id", id);
@@ -47,80 +73,223 @@ export function FeedbackTab() {
     }
   }
 
+  async function updateTeamStatus(id: string, status: string) {
+    setSavingId(id);
+    const res = await fetch("/api/feedback", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id, status }),
+    });
+    setSavingId(null);
+    if (res.ok) {
+      await loadTeamFeedback();
+    }
+  }
+
+  const filteredTeamFeedback = teamFeedback.filter((item) => {
+    if (teamTypeFilter !== "all" && item.type !== teamTypeFilter) return false;
+    if (teamStatusFilter !== "all" && item.status !== teamStatusFilter) return false;
+    return true;
+  });
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
-          <h2 className="text-2xl font-bold text-text-primary">Customer Feedback</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Feedback Inbox</h2>
           <p className="text-sm text-text-secondary">
-            Review customer questions and comments submitted from the project portal.
+            Review customer questions and internal team suggestions in one place.
           </p>
         </div>
-        <label className="inline-flex items-center gap-3 rounded-xl border border-border-default bg-surface-raised px-4 py-2 text-sm text-text-primary">
-          <input
-            type="checkbox"
-            checked={showUnreviewedOnly}
-            onChange={(event) => setShowUnreviewedOnly(event.target.checked)}
-            className="h-4 w-4 accent-[var(--color-brand-primary)]"
-          />
-          Unreviewed only
-        </label>
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              { id: "customer", label: "Customer Feedback" },
+              { id: "team", label: "Team Feedback" },
+            ] as const
+          ).map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setSection(id)}
+              className={[
+                "rounded-full px-4 py-2 text-sm font-medium transition",
+                section === id
+                  ? "bg-brand-primary text-text-inverse"
+                  : "border border-border-default bg-surface-raised text-text-secondary hover:bg-surface-overlay hover:text-text-primary",
+              ].join(" ")}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {loading ? (
-        <div className="py-10 text-center text-text-tertiary">Loading...</div>
-      ) : feedback.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border-default px-6 py-10 text-center text-sm text-text-secondary">
-          No customer feedback found for the current filter.
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-2xl border border-border-default">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border-default bg-surface-raised/80">
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Project</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Customer Email</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Message</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Submitted</th>
-                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {feedback.map((item) => {
-                const project = Array.isArray(item.project) ? item.project[0] : item.project;
-                const profile = Array.isArray(item.profile) ? item.profile[0] : item.profile;
+      {section === "customer" ? (
+        <>
+          <label className="inline-flex items-center gap-3 rounded-xl border border-border-default bg-surface-raised px-4 py-2 text-sm text-text-primary">
+            <input
+              type="checkbox"
+              checked={showUnreviewedOnly}
+              onChange={(event) => setShowUnreviewedOnly(event.target.checked)}
+              className="h-4 w-4 accent-[var(--color-brand-primary)]"
+            />
+            Unreviewed only
+          </label>
 
-                return (
-                  <tr key={item.id} className="border-b border-border-default align-top hover:bg-surface-raised">
-                    <td className="px-4 py-3 text-text-primary">{project?.name ?? item.project_id}</td>
-                    <td className="px-4 py-3 text-text-secondary">{profile?.email ?? item.profile_id}</td>
-                    <td className="px-4 py-3 text-text-secondary">{item.message}</td>
-                    <td className="px-4 py-3 text-text-secondary">{format(new Date(item.submitted_at), "MMM d, yyyy h:mm a")}</td>
-                    <td className="px-4 py-3 text-right">
-                      {item.reviewed ? (
-                        <span className="inline-flex rounded-full bg-status-success/10 px-2.5 py-0.5 text-xs font-medium text-status-success">
-                          Reviewed
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => void markReviewed(item.id)}
-                          disabled={savingId === item.id}
-                          className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-surface-raised hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {savingId === item.id ? "Saving..." : "Mark Reviewed"}
-                        </button>
-                      )}
-                    </td>
+          {loading ? (
+            <div className="py-10 text-center text-text-tertiary">Loading...</div>
+          ) : feedback.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border-default px-6 py-10 text-center text-sm text-text-secondary">
+              No customer feedback found for the current filter.
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-2xl border border-border-default">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border-default bg-surface-raised/80">
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Project</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Customer Email</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Message</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Submitted</th>
+                    <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actions</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody>
+                  {feedback.map((item) => {
+                    const project = Array.isArray(item.project) ? item.project[0] : item.project;
+                    const profile = Array.isArray(item.profile) ? item.profile[0] : item.profile;
+
+                    return (
+                      <tr key={item.id} className="border-b border-border-default align-top hover:bg-surface-raised">
+                        <td className="px-4 py-3 text-text-primary">{project?.name ?? item.project_id}</td>
+                        <td className="px-4 py-3 text-text-secondary">{profile?.email ?? item.profile_id}</td>
+                        <td className="px-4 py-3 text-text-secondary">{item.message}</td>
+                        <td className="px-4 py-3 text-text-secondary">{format(new Date(item.submitted_at), "MMM d, yyyy h:mm a")}</td>
+                        <td className="px-4 py-3 text-right">
+                          {item.reviewed ? (
+                            <span className="inline-flex rounded-full bg-status-success/10 px-2.5 py-0.5 text-xs font-medium text-status-success">
+                              Reviewed
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => void markReviewed(item.id)}
+                              disabled={savingId === item.id}
+                              className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-surface-raised hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {savingId === item.id ? "Saving..." : "Mark Reviewed"}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-3">
+            <select
+              value={teamTypeFilter}
+              onChange={(event) => setTeamTypeFilter(event.target.value)}
+              className="rounded-xl border border-border-default bg-surface-raised px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+            >
+              <option value="all">All Types</option>
+              <option value="bug">Bug Reports</option>
+              <option value="feature">Feature Ideas</option>
+              <option value="ux">UX Issues</option>
+              <option value="other">Other</option>
+            </select>
+            <select
+              value={teamStatusFilter}
+              onChange={(event) => setTeamStatusFilter(event.target.value)}
+              className="rounded-xl border border-border-default bg-surface-raised px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+            >
+              <option value="all">All Statuses</option>
+              <option value="new">New</option>
+              <option value="reviewing">Reviewing</option>
+              <option value="planned">Planned</option>
+              <option value="done">Done</option>
+              <option value="wont_fix">Won&apos;t Fix</option>
+            </select>
+          </div>
+
+          {filteredTeamFeedback.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border-default px-6 py-10 text-center text-sm text-text-secondary">
+              No team feedback found for the current filter.
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-2xl border border-border-default">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border-default bg-surface-raised/80">
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Type</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Title</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Description</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Priority</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Page/Area</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Submitted By</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Date</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTeamFeedback.map((item) => {
+                    const profile = Array.isArray(item.profile) ? item.profile[0] : item.profile;
+                    const submittedBy = profile?.full_name || profile?.email || item.submitted_by;
+
+                    return (
+                      <tr key={item.id} className="border-b border-border-default align-top hover:bg-surface-raised">
+                        <td className="px-4 py-3 text-text-secondary">{TEAM_TYPE_LABELS[item.type]}</td>
+                        <td className="px-4 py-3 font-medium text-text-primary">{item.title}</td>
+                        <td className="px-4 py-3 text-text-secondary">{item.description}</td>
+                        <td className="px-4 py-3 text-text-secondary">{TEAM_PRIORITY_LABELS[item.priority]}</td>
+                        <td className="px-4 py-3 text-text-secondary">{item.page_area || "-"}</td>
+                        <td className="px-4 py-3 text-text-secondary">{submittedBy}</td>
+                        <td className="px-4 py-3 text-text-secondary">{format(new Date(item.created_at), "MMM d, yyyy h:mm a")}</td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={item.status}
+                            onChange={(event) => void updateTeamStatus(item.id, event.target.value)}
+                            disabled={savingId === item.id}
+                            className="rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none disabled:opacity-60"
+                          >
+                            <option value="new">New</option>
+                            <option value="reviewing">Reviewing</option>
+                            <option value="planned">Planned</option>
+                            <option value="done">Done</option>
+                            <option value="wont_fix">Won&apos;t Fix</option>
+                          </select>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
 }
+
+const TEAM_TYPE_LABELS: Record<PortalFeedback["type"], string> = {
+  bug: "Bug Report",
+  feature: "Feature Idea",
+  ux: "UX Issue",
+  other: "Other",
+};
+
+const TEAM_PRIORITY_LABELS: Record<PortalFeedback["priority"], string> = {
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+};
 
 type WeeklyUpdatesAdminRow = {
   id: string;
