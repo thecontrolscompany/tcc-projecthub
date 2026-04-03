@@ -38,11 +38,13 @@ CREATE POLICY "Admin full access to customer_feedback"
   USING (current_user_role() IN ('admin', 'ops_manager'));
 
 -- ── Migration 029: WIP tracker ───────────────────────────────
-CREATE TYPE IF NOT EXISTS wip_status AS ENUM (
-  'not_started', 'in_progress', 'blocked', 'in_review', 'complete'
-);
+DO $$ BEGIN
+  CREATE TYPE wip_status AS ENUM ('not_started', 'in_progress', 'blocked', 'in_review', 'complete');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-CREATE TYPE IF NOT EXISTS wip_priority AS ENUM ('low', 'medium', 'high');
+DO $$ BEGIN
+  CREATE TYPE wip_priority AS ENUM ('low', 'medium', 'high');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 CREATE TABLE IF NOT EXISTS wip_items (
   id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
