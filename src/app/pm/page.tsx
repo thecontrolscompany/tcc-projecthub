@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ViewReportLink } from "@/components/view-report-link";
 import { WipTab } from "@/components/wip-tab";
+import { BomTab } from "@/components/bom-tab";
 import type { ChangeOrder } from "@/types/database";
 import type {
   BillingPeriod,
@@ -1059,6 +1060,16 @@ function UpdateForm({
         </summary>
         <div className="mt-3">
           <WipTab projectId={project.id} readOnly />
+        </div>
+      </details>
+
+      <details className="group">
+        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-text-secondary">
+          Materials / BOM
+          <span className="ml-2 text-text-tertiary group-open:hidden">▼</span>
+        </summary>
+        <div className="mt-3">
+          <BomTab projectId={project.id} readOnly />
         </div>
       </details>
 

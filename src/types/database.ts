@@ -8,6 +8,7 @@ export type WeeklyUpdateStatus = "draft" | "submitted";
 export type ChangeOrderStatus = "pending" | "approved" | "rejected" | "void";
 export type WipStatus = "not_started" | "in_progress" | "blocked" | "in_review" | "complete";
 export type WipPriority = "low" | "medium" | "high";
+export type BomStatus = "not_received" | "partial" | "received" | "surplus";
 
 export interface Profile {
   id: string;
@@ -250,6 +251,34 @@ export interface WipItem {
   sort_order: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface BomItem {
+  id: string;
+  project_id: string;
+  section: string;
+  designation: string | null;
+  code_number: string | null;
+  description: string;
+  qty_required: number;
+  notes: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  qty_received?: number;
+  remain_surplus?: number;
+  status?: BomStatus;
+}
+
+export interface MaterialReceipt {
+  id: string;
+  bom_item_id: string;
+  qty_received: number;
+  date_received: string;
+  received_by: string | null;
+  packing_slip: string | null;
+  notes: string | null;
+  created_at: string;
 }
 
 // Billing table row (joined view used in admin table)

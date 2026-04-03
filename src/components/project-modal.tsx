@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { ViewReportLink } from "@/components/view-report-link";
 import { WipTab } from "@/components/wip-tab";
+import { BomTab } from "@/components/bom-tab";
 import type { ParsedPocImportRow } from "@/lib/poc/import";
 import type { ChangeOrder, ChangeOrderStatus, PocLineItem, Profile, ProjectAssignmentRole, ProjectCustomerContact } from "@/types/database";
 
@@ -210,7 +211,7 @@ export function ProjectModal({
 }) {
   const customerOptions = useMemo(() => customers, [customers]);
   const [showImportDialog, setShowImportDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "wip">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "wip" | "materials">("overview");
   const customerPocOptions = useMemo(() => {
     const options = [...externalContacts];
     const currentValue = values.customerPoc.trim();
@@ -264,6 +265,7 @@ export function ProjectModal({
                 [
                   { id: "overview", label: "Overview" },
                   { id: "wip", label: "WIP" },
+                  { id: "materials", label: "Materials" },
                 ] as const
               ).map((tab) => (
                 <button
@@ -572,6 +574,12 @@ export function ProjectModal({
         {editingProject && activeTab === "wip" && (
           <div className="px-6 py-6">
             <WipTab projectId={editingProject.id} />
+          </div>
+        )}
+
+        {editingProject && activeTab === "materials" && (
+          <div className="px-6 py-6">
+            <BomTab projectId={editingProject.id} />
           </div>
         )}
 
