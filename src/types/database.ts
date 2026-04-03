@@ -191,6 +191,7 @@ export type QuoteRequest = {
   status: QuoteRequestStatus;
   notes: string | null;
   project_id: string | null;
+  project?: { name: string; job_number: string | null } | null;
 };
 
 export interface CustomerFeedback {

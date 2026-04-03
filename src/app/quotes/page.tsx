@@ -18,7 +18,10 @@ export default async function QuotesPage() {
   }
 
   if (role === "admin") {
-    const { data } = await supabase.from("quote_requests").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase
+      .from("quote_requests")
+      .select("*, project:projects(name, job_number)")
+      .order("created_at", { ascending: false });
     return <QuotesPageClient mode="admin" initialQuotes={(data as QuoteRequest[]) ?? []} />;
   }
 

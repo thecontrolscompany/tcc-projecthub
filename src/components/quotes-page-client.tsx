@@ -148,6 +148,7 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
   const [draftNotes, setDraftNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showConvertModal, setShowConvertModal] = useState(false);
 
   const selectedQuote = useMemo(() => quotes.find((quote) => quote.id === selectedQuoteId) ?? null, [quotes, selectedQuoteId]);
 
@@ -155,6 +156,7 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
     setSelectedQuoteId(quote.id);
     setDraftStatus(quote.status);
     setDraftNotes(quote.notes ?? "");
+    setShowConvertModal(false);
     setError(null);
   }
 
@@ -180,12 +182,22 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
       }
 
       setQuotes((current) => current.map((quote) => (quote.id === json.id ? json as QuoteRequest : quote)));
-      setSelectedQuoteId(null);
+      setSelectedQuote((current) => current ? (json as QuoteRequest) : current);
+      setSelectedQuoteId(json.id);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Unable to update quote request.");
     } finally {
       setSaving(false);
     }
+  }
+
+  function setSelectedQuote(updater: (current: QuoteRequest | null) => QuoteRequest | null) {
+    setQuotes((currentQuotes) => {
+      const current = currentQuotes.find((quote) => quote.id === selectedQuoteId) ?? null;
+      const next = updater(current);
+      if (!next) return currentQuotes;
+      return currentQuotes.map((quote) => (quote.id === next.id ? next : quote));
+    });
   }
 
   return (
@@ -220,9 +232,16 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
                 <td className="px-4 py-2.5 text-text-secondary">{quote.contact_email}</td>
                 <td className="px-4 py-2.5 text-right text-text-secondary">{formatCurrency(quote.estimated_value)}</td>
                 <td className="px-4 py-2.5 text-center">
-                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGES[quote.status]}`}>
-                    {quote.status}
-                  </span>
+                  <div className="flex items-center justify-center gap-2">
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGES[quote.status]}`}>
+                      {quote.status}
+                    </span>
+                    {quote.project_id && (
+                      <span className="rounded-full bg-status-success/10 px-2 py-0.5 text-xs font-medium text-status-success">
+                        Linked
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-2.5 text-right">
                   <button onClick={() => openQuote(quote)} className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-surface-raised hover:text-text-primary">
@@ -243,68 +262,199 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
       </div>
 
       {selectedQuote ? (
-        <div className="fixed inset-0 z-40 flex justify-end bg-black/40">
-          <div className="flex h-full w-full max-w-2xl flex-col border-l border-border-default bg-surface-base shadow-2xl">
-            <div className="flex items-start justify-between border-b border-border-default px-6 py-5">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Quote Request</p>
-                <h2 className="mt-1 text-xl font-bold text-text-primary">{selectedQuote.company_name}</h2>
-                <p className="mt-1 text-sm text-text-secondary">{selectedQuote.contact_name} • {selectedQuote.contact_email}</p>
-              </div>
-              <button onClick={() => setSelectedQuoteId(null)} className="text-text-secondary hover:text-text-primary">x</button>
-            </div>
-
-            <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
-              {error ? (
-                <div className="rounded-xl border border-status-danger/30 bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
-                  {error}
+        <>
+          <div className="fixed inset-0 z-40 flex justify-end bg-black/40">
+            <div className="flex h-full w-full max-w-2xl flex-col border-l border-border-default bg-surface-base shadow-2xl">
+              <div className="flex items-start justify-between border-b border-border-default px-6 py-5">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Quote Request</p>
+                  <h2 className="mt-1 text-xl font-bold text-text-primary">{selectedQuote.company_name}</h2>
+                  <p className="mt-1 text-sm text-text-secondary">{selectedQuote.contact_name} • {selectedQuote.contact_email}</p>
                 </div>
-              ) : null}
+                <button onClick={() => setSelectedQuoteId(null)} className="text-text-secondary hover:text-text-primary">x</button>
+              </div>
 
-              <section className="space-y-3">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">Submitted Details</h3>
-                <ReadonlyField label="Company" value={selectedQuote.company_name} />
-                <ReadonlyField label="Contact" value={selectedQuote.contact_name} />
-                <ReadonlyField label="Email" value={selectedQuote.contact_email} />
-                <ReadonlyField label="Phone" value={selectedQuote.contact_phone ?? "-"} />
-                <ReadonlyField label="Site Address" value={selectedQuote.site_address ?? "-"} />
-                <ReadonlyField label="Estimated Value" value={formatCurrency(selectedQuote.estimated_value)} />
-                <ReadonlyField label="Project Description" value={selectedQuote.project_description} multiline />
-              </section>
-
-              <section className="space-y-4">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">Workflow</h3>
-                <Field label="Status">
-                  <select value={draftStatus} onChange={(e) => setDraftStatus(e.target.value as QuoteRequestStatus)} className={inputClassName}>
-                    <option value="new">new</option>
-                    <option value="reviewing">reviewing</option>
-                    <option value="quoted">quoted</option>
-                    <option value="won">won</option>
-                    <option value="lost">lost</option>
-                  </select>
-                </Field>
-                <Field label="Notes">
-                  <textarea rows={6} value={draftNotes} onChange={(e) => setDraftNotes(e.target.value)} className={textareaClassName} />
-                </Field>
-                {draftStatus === "won" ? (
-                  <button type="button" disabled title="Coming soon" className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm font-medium text-text-tertiary opacity-70">
-                    Convert to Project
-                  </button>
+              <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
+                {error ? (
+                  <div className="rounded-xl border border-status-danger/30 bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
+                    {error}
+                  </div>
                 ) : null}
-              </section>
-            </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-border-default px-6 py-4">
-              <button onClick={() => setSelectedQuoteId(null)} className="rounded-xl bg-surface-overlay px-4 py-2 text-sm text-text-secondary hover:bg-surface-overlay">
-                Cancel
-              </button>
-              <button onClick={() => void handleSave()} disabled={saving} className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-brand-hover disabled:opacity-60">
-                {saving ? "Saving..." : "Save Changes"}
-              </button>
+                <section className="space-y-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">Submitted Details</h3>
+                  <ReadonlyField label="Company" value={selectedQuote.company_name} />
+                  <ReadonlyField label="Contact" value={selectedQuote.contact_name} />
+                  <ReadonlyField label="Email" value={selectedQuote.contact_email} />
+                  <ReadonlyField label="Phone" value={selectedQuote.contact_phone ?? "-"} />
+                  <ReadonlyField label="Site Address" value={selectedQuote.site_address ?? "-"} />
+                  <ReadonlyField label="Estimated Value" value={formatCurrency(selectedQuote.estimated_value)} />
+                  <ReadonlyField label="Project Description" value={selectedQuote.project_description} multiline />
+                </section>
+
+                {selectedQuote.project_id && (
+                  <div className="rounded-xl border border-status-success/20 bg-status-success/5 px-4 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-status-success">Linked Project</p>
+                    <p className="mt-1 text-sm text-text-primary">
+                      {selectedQuote.project?.name ?? selectedQuote.project_id}
+                    </p>
+                  </div>
+                )}
+
+                <section className="space-y-4">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">Workflow</h3>
+                  <Field label="Status">
+                    <select value={draftStatus} onChange={(e) => setDraftStatus(e.target.value as QuoteRequestStatus)} className={inputClassName}>
+                      <option value="new">new</option>
+                      <option value="reviewing">reviewing</option>
+                      <option value="quoted">quoted</option>
+                      <option value="won">won</option>
+                      <option value="lost">lost</option>
+                    </select>
+                  </Field>
+                  <Field label="Notes">
+                    <textarea rows={6} value={draftNotes} onChange={(e) => setDraftNotes(e.target.value)} className={textareaClassName} />
+                  </Field>
+                  {selectedQuote.status === "won" && !selectedQuote.project_id && (
+                    <button
+                      type="button"
+                      onClick={() => setShowConvertModal(true)}
+                      className="w-full rounded-xl bg-status-success px-4 py-3 text-sm font-semibold text-text-inverse transition hover:opacity-90"
+                    >
+                      Convert to Project →
+                    </button>
+                  )}
+                  {selectedQuote.project_id && (
+                    <p className="text-sm font-medium text-status-success">
+                      ✓ Converted to project
+                    </p>
+                  )}
+                </section>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 border-t border-border-default px-6 py-4">
+                <button onClick={() => setSelectedQuoteId(null)} className="rounded-xl bg-surface-overlay px-4 py-2 text-sm text-text-secondary hover:bg-surface-overlay">
+                  Cancel
+                </button>
+                <button onClick={() => void handleSave()} disabled={saving} className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-brand-hover disabled:opacity-60">
+                  {saving ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+
+          {showConvertModal && (
+            <ConvertToProjectModal
+              quote={selectedQuote}
+              onClose={() => setShowConvertModal(false)}
+              onConverted={(projectId, projectName, jobNumber) => {
+                setShowConvertModal(false);
+                setQuotes((current) =>
+                  current.map((quote) =>
+                    quote.id === selectedQuote.id
+                      ? { ...quote, project_id: projectId, project: { name: projectName, job_number: jobNumber } }
+                      : quote
+                  )
+                );
+              }}
+            />
+          )}
+        </>
       ) : null}
+    </div>
+  );
+}
+
+function ConvertToProjectModal({
+  quote,
+  onClose,
+  onConverted,
+}: {
+  quote: QuoteRequest;
+  onClose: () => void;
+  onConverted: (projectId: string, projectName: string, jobNumber: string) => void;
+}) {
+  const [name, setName] = useState(quote.project_description);
+  const [siteAddress, setSiteAddress] = useState(quote.site_address ?? "");
+  const [estimatedIncome, setEstimatedIncome] = useState(String(quote.estimated_value ?? 0));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const previewJobNumber = `Auto-generated on save`;
+
+  async function handleConvert(event: React.FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/admin/convert-quote-to-project", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          quote_id: quote.id,
+          name,
+          site_address: siteAddress,
+          estimated_income: Number(estimatedIncome || 0),
+        }),
+      });
+      const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(json?.error ?? "Unable to convert quote.");
+      }
+
+      onConverted(json.project_id, `${json.job_number} - ${name.trim()}`, json.job_number);
+    } catch (convertError) {
+      setError(convertError instanceof Error ? convertError.message : "Unable to convert quote.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8">
+      <div className="w-full max-w-2xl rounded-2xl border border-border-default bg-surface-base shadow-2xl">
+        <div className="flex items-start justify-between border-b border-border-default px-6 py-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Quote Conversion</p>
+            <h3 className="mt-1 text-xl font-bold text-text-primary">Convert to Project</h3>
+          </div>
+          <button onClick={onClose} className="text-text-secondary hover:text-text-primary">x</button>
+        </div>
+
+        <form onSubmit={handleConvert} className="space-y-5 px-6 py-6">
+          {error && (
+            <div className="rounded-xl border border-status-danger/30 bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
+              {error}
+            </div>
+          )}
+
+          <Field label="Project Name">
+            <input value={name} onChange={(e) => setName(e.target.value)} required className={inputClassName} />
+          </Field>
+
+          <Field label="Site Address">
+            <input value={siteAddress} onChange={(e) => setSiteAddress(e.target.value)} className={inputClassName} />
+          </Field>
+
+          <Field label="Estimated Income">
+            <input type="number" min="0" step="0.01" value={estimatedIncome} onChange={(e) => setEstimatedIncome(e.target.value)} className={inputClassName} />
+          </Field>
+
+          <ReadonlyField label="Customer" value={`${quote.company_name} (customer will be created if new)`} />
+          <ReadonlyField label="Job Number" value={previewJobNumber} />
+
+          <div className="flex justify-end gap-3 border-t border-border-default pt-4">
+            <button type="button" onClick={onClose} className="rounded-xl bg-surface-overlay px-4 py-2 text-sm text-text-secondary hover:bg-surface-overlay">
+              Cancel
+            </button>
+            <button type="submit" disabled={saving} className="rounded-xl bg-status-success px-4 py-2 text-sm font-semibold text-text-inverse hover:opacity-90 disabled:opacity-60">
+              {saving ? "Converting..." : "Create Project"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
