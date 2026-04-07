@@ -49,6 +49,7 @@ interface CustomerProject {
   weekly_updates: WeeklyUpdate[];
   team_members: ProjectTeamMember[];
   change_orders: CustomerChangeOrder[];
+  photo_count: number;
 }
 
 type ProjectTeamMember = {
@@ -120,6 +121,7 @@ export default function CustomerPage() {
       const updates = (json?.weeklyUpdates ?? []) as WeeklyUpdate[];
       const assignments = (json?.assignments ?? []) as Array<ProjectTeamMember & { project_id: string }>;
       const changeOrders = (json?.changeOrders ?? []) as CustomerChangeOrder[];
+      const photosByProject = (json?.photosByProject ?? {}) as Record<string, number>;
 
       if (!projectData?.length) {
         setProjects([]);
@@ -144,6 +146,7 @@ export default function CustomerPage() {
           weekly_updates: ((updates ?? []).filter((update) => update.project_id === project.id) as WeeklyUpdate[]),
           team_members: assignments.filter((assignment) => assignment.project_id === project.id),
           change_orders: changeOrders.filter((co) => co.project_id === project.id),
+          photo_count: photosByProject[project.id] ?? 0,
         };
       });
 
@@ -637,6 +640,14 @@ function ProjectDetail({
                   </span>
                 </div>
               )}
+              {project.photo_count > 0 && (
+                <div className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+                  <PhotoIcon />
+                  <span>
+                    {project.photo_count} site photo{project.photo_count !== 1 ? "s" : ""} on file
+                  </span>
+                </div>
+              )}
             </div>
             {latestPeriod && (
               <div className="max-w-xl">
@@ -1098,6 +1109,14 @@ function CalendarIcon() {
   return (
     <svg className="h-4 w-4 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+    </svg>
+  );
+}
+
+function PhotoIcon() {
+  return (
+    <svg className="h-4 w-4 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
     </svg>
   );
 }

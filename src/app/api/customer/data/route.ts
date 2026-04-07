@@ -48,10 +48,11 @@ export async function GET(request: Request) {
         weeklyUpdates: [],
         assignments: [],
         changeOrders: [],
+        photosByProject: {},
       });
     }
 
-    const [projectsResult, billingResult, updatesResult, assignmentsResult, changeOrdersResult] = await Promise.all([
+    const [projectsResult, billingResult, updatesResult, assignmentsResult, changeOrdersResult, photosResult] = await Promise.all([
       adminClient
         .from("projects")
         .select("id, name, estimated_income, job_number, site_address, general_contractor, start_date, scheduled_completion, scope_description, customer:customers(name)")
@@ -101,6 +102,10 @@ export async function GET(request: Request) {
         .select("id, project_id, co_number, title, amount, status, submitted_date, approved_date, reference_doc")
         .in("project_id", projectIds)
         .in("status", ["approved"]),
+      adminClient
+        .from("project_photos")
+        .select("project_id")
+        .in("project_id", projectIds),
     ]);
 
     const readError =
@@ -108,7 +113,8 @@ export async function GET(request: Request) {
       billingResult.error ||
       updatesResult.error ||
       assignmentsResult.error ||
-      changeOrdersResult.error;
+      changeOrdersResult.error ||
+      photosResult.error;
 
     if (readError) {
       return NextResponse.json({ error: readError.message }, { status: 500 });
@@ -120,6 +126,10 @@ export async function GET(request: Request) {
       weeklyUpdates: updatesResult.data ?? [],
       assignments: assignmentsResult.data ?? [],
       changeOrders: changeOrdersResult.data ?? [],
+      photosByProject: (photosResult.data ?? []).reduce((acc: Record<string, number>, row: { project_id: string }) => {
+        acc[row.project_id] = (acc[row.project_id] ?? 0) + 1;
+        return acc;
+      }, {}),
     });
   }
 

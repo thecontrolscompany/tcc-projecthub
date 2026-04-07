@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { addDays, format, startOfWeek } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -17,7 +17,7 @@ import type {
 } from "@/types/database";
 
 type ViewState = "list" | "update";
-type ProjectTab = "overview" | "contacts" | "update" | "poc" | "change-orders" | "rfis" | "bom";
+type ProjectTab = "overview" | "contacts" | "update" | "poc" | "change-orders" | "rfis" | "photos" | "bom";
 
 interface ProjectContact {
   id?: string;
@@ -718,6 +718,9 @@ function UpdateForm({
           }}
         >
           RFIs
+        </PmTabButton>
+        <PmTabButton active={activeTab === "photos"} onClick={() => setActiveTab("photos")}>
+          Photos
         </PmTabButton>
         <PmTabButton active={activeTab === "bom"} onClick={() => setActiveTab("bom")}>
           BOM
@@ -1525,6 +1528,10 @@ function UpdateForm({
         />
       )}
 
+      {activeTab === "photos" && (
+        <PhotosTab projectId={project.id} />
+      )}
+
       {activeTab === "bom" && (
         <div className="rounded-2xl border border-border-default bg-surface-raised p-5">
           <BomTab projectId={project.id} readOnly />
@@ -2164,6 +2171,181 @@ function RfiTab({
               </div>
             );
           })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PhotosTab({ projectId }: { projectId: string }) {
+  const [photos, setPhotos] = useState<Array<{
+    id: string;
+    caption: string | null;
+    filename: string;
+    content_type: string;
+    sharepoint_web_url: string | null;
+    taken_date: string | null;
+    created_at: string;
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [pendingCaption, setPendingCaption] = useState("");
+  const [pendingDate, setPendingDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    void loadPhotos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
+  async function loadPhotos() {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/pm/photos?projectId=${encodeURIComponent(projectId)}`, {
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (res.ok) setPhotos(json.photos ?? []);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function uploadFile(file: File) {
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("projectId", projectId);
+      if (pendingCaption.trim()) fd.append("caption", pendingCaption.trim());
+      if (pendingDate) fd.append("takenDate", pendingDate);
+
+      const res = await fetch("/api/pm/photos", {
+        method: "POST",
+        credentials: "include",
+        body: fd,
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error ?? "Upload failed.");
+      setPhotos((prev) => [json.photo, ...prev]);
+      setPendingCaption("");
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    for (const file of files) {
+      await uploadFile(file);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-semibold text-text-primary">Site Photos</h3>
+          <p className="mt-0.5 text-sm text-text-tertiary">Photos are stored in the project&apos;s SharePoint folder.</p>
+        </div>
+      </div>
+
+      <div className="space-y-3 rounded-2xl border border-border-default bg-surface-raised p-4">
+        <p className="text-sm font-semibold text-text-primary">Upload Photos</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-text-secondary">Caption (applies to all selected)</label>
+            <input
+              type="text"
+              value={pendingCaption}
+              onChange={(e) => setPendingCaption(e.target.value)}
+              className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:border-brand-primary/50 focus:outline-none"
+              placeholder="Optional caption"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-text-secondary">Date Taken</label>
+            <input
+              type="date"
+              value={pendingDate}
+              onChange={(e) => setPendingDate(e.target.value)}
+              className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:outline-none"
+            />
+          </div>
+        </div>
+        <div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => void handleFileChange(e)}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="rounded-lg border border-border-default bg-surface-overlay px-4 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-base disabled:opacity-60"
+          >
+            {uploading ? "Uploading..." : "Choose Photos"}
+          </button>
+          <span className="ml-3 text-xs text-text-tertiary">Images only, max 20 MB each</span>
+        </div>
+        {uploadError && <p className="text-sm text-status-danger">{uploadError}</p>}
+      </div>
+
+      {loading ? (
+        <p className="text-sm text-text-tertiary">Loading photos...</p>
+      ) : photos.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border-default px-6 py-10 text-center">
+          <p className="text-sm font-medium text-text-secondary">No photos uploaded yet.</p>
+          <p className="mt-1 text-xs text-text-tertiary">Use the upload area above to add site photos.</p>
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {photos.map((photo) => (
+            <div key={photo.id} className="overflow-hidden rounded-2xl border border-border-default bg-surface-raised">
+              <img
+                src={`/api/pm/photos/${photo.id}/content`}
+                alt={photo.caption ?? photo.filename}
+                className="h-44 w-full object-cover"
+                loading="lazy"
+              />
+              <div className="space-y-0.5 px-3 py-2">
+                {photo.caption && <p className="text-sm font-medium text-text-primary">{photo.caption}</p>}
+                <p className="text-xs text-text-tertiary">
+                  {photo.taken_date
+                    ? new Date(photo.taken_date).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                        timeZone: "UTC",
+                      })
+                    : new Date(photo.created_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                </p>
+                {photo.sharepoint_web_url && (
+                  <a
+                    href={photo.sharepoint_web_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-brand-primary hover:underline"
+                  >
+                    View in SharePoint -&gt;
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

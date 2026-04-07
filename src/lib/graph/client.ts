@@ -420,3 +420,63 @@ export async function uploadToOneDrive(
 
   return res.ok;
 }
+
+/**
+ * Upload a photo/file to a SharePoint drive folder.
+ * Returns the created item's id and webUrl.
+ */
+export async function uploadFileToSharePointDrive(
+  providerToken: string,
+  driveId: string,
+  folderPath: string,
+  filename: string,
+  fileBuffer: ArrayBuffer,
+  contentType: string
+): Promise<{ id: string; webUrl: string }> {
+  const encodedFolder = folderPath
+    .split("/")
+    .filter(Boolean)
+    .map((p) => encodeURIComponent(p))
+    .join("/");
+  const encodedName = encodeURIComponent(filename);
+
+  const url = `/drives/${driveId}/root:/${encodedFolder}/${encodedName}:/content`;
+
+  const res = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${providerToken}`,
+      "Content-Type": contentType,
+    },
+    body: fileBuffer,
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`SharePoint upload failed (${res.status}): ${body}`);
+  }
+
+  const data = await res.json();
+  return {
+    id: data.id as string,
+    webUrl: data.webUrl as string,
+  };
+}
+
+/**
+ * Fetch a file's raw bytes from SharePoint for proxy serving.
+ * Returns Response so the caller can stream it directly.
+ */
+export async function fetchSharePointItemContent(
+  providerToken: string,
+  driveId: string,
+  itemId: string
+): Promise<Response> {
+  return fetch(
+    `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${encodeURIComponent(itemId)}/content`,
+    {
+      headers: { Authorization: `Bearer ${providerToken}` },
+      redirect: "follow",
+    }
+  );
+}
