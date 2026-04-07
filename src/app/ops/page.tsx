@@ -141,23 +141,30 @@ export default async function OpsPage() {
   }
   const normalizedProjects: OpsProjectListItem[] = Array.from(projectMap.values()).map((project) => {
     const customer = Array.isArray(project.customer) ? project.customer[0] : project.customer;
+    // projects.pm / pm_directory are joined from projects.pm_id / pm_directory_id — the canonical primary PM
+    const pm = Array.isArray(project.pm) ? project.pm[0] : project.pm;
+    const pmDirectory = Array.isArray(project.pm_directory) ? project.pm_directory[0] : project.pm_directory;
+    const pmDirectoryName = [pmDirectory?.first_name, pmDirectory?.last_name].filter(Boolean).join(" ").trim();
+
     const allAssignments = project.project_assignments ?? [];
-
-    // Primary: assignment explicitly marked is_primary=true
-    const primaryAssignment =
-      allAssignments.find((a) => a.role_on_project === "pm" && a.is_primary) ??
-      // Fallback: any PM assignment (first added)
-      allAssignments.find((a) => a.role_on_project === "pm");
-
-    const primaryProfile = Array.isArray(primaryAssignment?.profile) ? primaryAssignment?.profile[0] : primaryAssignment?.profile;
-    const primaryDirectory = Array.isArray(primaryAssignment?.pm_directory) ? primaryAssignment?.pm_directory[0] : primaryAssignment?.pm_directory;
-    const primaryDirectoryName = [primaryDirectory?.first_name, primaryDirectory?.last_name].filter(Boolean).join(" ").trim();
+    // Fallback: find PM via is_primary flag (written on save after migration 036)
+    const flaggedAssignment = allAssignments.find((a) => a.role_on_project === "pm" && a.is_primary);
+    const flaggedProfile = Array.isArray(flaggedAssignment?.profile) ? flaggedAssignment?.profile[0] : flaggedAssignment?.profile;
+    const flaggedDirectory = Array.isArray(flaggedAssignment?.pm_directory) ? flaggedAssignment?.pm_directory[0] : flaggedAssignment?.pm_directory;
+    const flaggedDirectoryName = [flaggedDirectory?.first_name, flaggedDirectory?.last_name].filter(Boolean).join(" ").trim();
+    // Last resort: first PM in assignments
+    const firstPmAssignment = allAssignments.find((a) => a.role_on_project === "pm");
+    const firstPmProfile = Array.isArray(firstPmAssignment?.profile) ? firstPmAssignment?.profile[0] : firstPmAssignment?.profile;
+    const firstPmDirectory = Array.isArray(firstPmAssignment?.pm_directory) ? firstPmAssignment?.pm_directory[0] : firstPmAssignment?.pm_directory;
+    const firstPmDirectoryName = [firstPmDirectory?.first_name, firstPmDirectory?.last_name].filter(Boolean).join(" ").trim();
 
     const pmGroupName =
-      primaryProfile?.full_name ||
-      primaryDirectoryName ||
-      primaryProfile?.email ||
-      primaryDirectory?.email ||
+      // 1. projects.pm_id / pm_directory_id — written by save-project, most reliable
+      pm?.full_name || pmDirectoryName || pm?.email || pmDirectory?.email ||
+      // 2. is_primary flag on project_assignments (migration 036+)
+      flaggedProfile?.full_name || flaggedDirectoryName || flaggedProfile?.email || flaggedDirectory?.email ||
+      // 3. first PM in assignments (legacy fallback)
+      firstPmProfile?.full_name || firstPmDirectoryName || firstPmProfile?.email || firstPmDirectory?.email ||
       "Unassigned";
 
     return {
