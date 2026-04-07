@@ -182,11 +182,14 @@ export async function GET(request: Request) {
           name,
           is_active,
           sharepoint_folder,
+          pm_id,
+          pm_directory_id,
           customer:customers(name),
-          pm:profiles(full_name, email),
-          pm_directory:pm_directory(first_name, last_name, email),
           project_assignments(
             role_on_project,
+            is_primary,
+            profile_id,
+            pm_directory_id,
             profile:profiles(full_name, email),
             pm_directory:pm_directory(first_name, last_name, email)
           )
@@ -219,14 +222,14 @@ export async function GET(request: Request) {
       name: string;
       is_active: boolean | null;
       sharepoint_folder?: string | null;
+      pm_id?: string | null;
+      pm_directory_id?: string | null;
       customer?: { name?: string | null } | Array<{ name?: string | null }> | null;
-      pm?: { full_name?: string | null; email?: string | null } | Array<{ full_name?: string | null; email?: string | null }> | null;
-      pm_directory?:
-        | { first_name?: string | null; last_name?: string | null; email?: string | null }
-        | Array<{ first_name?: string | null; last_name?: string | null; email?: string | null }>
-        | null;
       project_assignments?: Array<{
         role_on_project?: string | null;
+        is_primary?: boolean | null;
+        profile_id?: string | null;
+        pm_directory_id?: string | null;
         profile?: { full_name?: string | null; email?: string | null } | Array<{ full_name?: string | null; email?: string | null }> | null;
         pm_directory?:
           | { first_name?: string | null; last_name?: string | null; email?: string | null }
@@ -235,23 +238,31 @@ export async function GET(request: Request) {
       }> | null;
     }>) ?? [])
       .map((project) => {
-        const pm = normalizeSingle(project.pm);
-        const pmDirectory = normalizeSingle(project.pm_directory);
         const customer = normalizeSingle(project.customer);
-        const primaryAssignment = (project.project_assignments ?? []).find((assignment) => assignment?.role_on_project === "pm");
-        const assignmentProfile = normalizeSingle(primaryAssignment?.profile);
-        const assignmentDirectory = normalizeSingle(primaryAssignment?.pm_directory);
-        const assignmentDirectoryName = [assignmentDirectory?.first_name, assignmentDirectory?.last_name].filter(Boolean).join(" ").trim();
-        const pmDirectoryName = [pmDirectory?.first_name, pmDirectory?.last_name].filter(Boolean).join(" ").trim();
+        const allAssignments = project.project_assignments ?? [];
+
+        function normAssignment(a: typeof allAssignments[number]) {
+          const profile = normalizeSingle(a.profile);
+          const dir = normalizeSingle(a.pm_directory);
+          const dirName = [dir?.first_name, dir?.last_name].filter(Boolean).join(" ").trim();
+          return profile?.full_name || dirName || profile?.email || dir?.email || null;
+        }
+
+        // 1. Canonical: assignment whose IDs match projects.pm_id / pm_directory_id
+        const canonicalAssignment = allAssignments.find((a) =>
+          a.role_on_project === "pm" &&
+          ((project.pm_id && a.profile_id === project.pm_id) ||
+           (project.pm_directory_id && a.pm_directory_id === project.pm_directory_id))
+        );
+        // 2. is_primary flag
+        const flaggedAssignment = allAssignments.find((a) => a.role_on_project === "pm" && a.is_primary);
+        // 3. First PM (legacy fallback)
+        const firstPmAssignment = allAssignments.find((a) => a.role_on_project === "pm");
+
         const pmGroupName =
-          assignmentProfile?.full_name ||
-          assignmentDirectoryName ||
-          pm?.full_name ||
-          pmDirectoryName ||
-          assignmentProfile?.email ||
-          assignmentDirectory?.email ||
-          pm?.email ||
-          pmDirectory?.email ||
+          normAssignment(canonicalAssignment ?? {}) ||
+          normAssignment(flaggedAssignment ?? {}) ||
+          normAssignment(firstPmAssignment ?? {}) ||
           "Unassigned";
 
         return {
