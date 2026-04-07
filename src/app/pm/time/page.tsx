@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { redirect } from 'next/navigation';
 import TimeEntryForm from '@/components/TimeEntryForm';
 import WeeklyTimeReport from '@/components/WeeklyTimeReport';
@@ -28,18 +29,62 @@ export default async function TimeTrackingPage() {
     .single();
 
   let projects: TimeTrackingProject[] = [];
-  if (profile?.role === 'pm') {
-    const { data } = await supabase
-      .from('projects')
-      .select('id, name, customer_id, customers(name)')
-      .eq('pm_id', user.id)
-      .eq('is_active', true);
-    projects = (data ?? []).map((project) => ({
-      id: project.id,
-      name: project.name,
-      customer_id: project.customer_id,
-      customers: Array.isArray(project.customers) ? project.customers[0] ?? null : project.customers,
-    }));
+  if (profile?.role === 'pm' || profile?.role === 'lead' || profile?.role === 'ops_manager' || profile?.role === 'admin') {
+    const adminClient = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Step 1: find pm_directory entries linked to this profile
+    const { data: pmDirRows } = await adminClient
+      .from('pm_directory')
+      .select('id')
+      .eq('profile_id', user.id);
+
+    const pmDirIds = (pmDirRows ?? []).map((r: { id: string }) => r.id);
+
+    // Step 2: find assigned project IDs via project_assignments
+    let assignmentQuery = adminClient
+      .from('project_assignments')
+      .select('project_id')
+      .eq('profile_id', user.id);
+
+    // Also include assignments via pm_directory linkage
+    // Use a union approach: fetch both and merge
+    const { data: directAssignments } = await assignmentQuery;
+    const directIds = (directAssignments ?? []).map((a: { project_id: string }) => a.project_id);
+
+    let dirIds: string[] = [];
+    if (pmDirIds.length > 0) {
+      const { data: dirAssignments } = await adminClient
+        .from('project_assignments')
+        .select('project_id')
+        .in('pm_directory_id', pmDirIds);
+      dirIds = (dirAssignments ?? []).map((a: { project_id: string }) => a.project_id);
+    }
+
+    const allProjectIds = [...new Set([...directIds, ...dirIds])];
+
+    if (allProjectIds.length > 0) {
+      const { data } = await adminClient
+        .from('projects')
+        .select('id, name, customer_id, customers(name)')
+        .in('id', allProjectIds)
+        .eq('is_active', true)
+        .order('name');
+
+      projects = (data ?? []).map((project: {
+        id: string;
+        name: string;
+        customer_id: string;
+        customers: { name: string } | { name: string }[] | null;
+      }) => ({
+        id: project.id,
+        name: project.name,
+        customer_id: project.customer_id,
+        customers: Array.isArray(project.customers) ? project.customers[0] ?? null : project.customers,
+      }));
+    }
   }
 
   return (
