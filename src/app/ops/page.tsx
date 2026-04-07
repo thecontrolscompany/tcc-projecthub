@@ -141,20 +141,22 @@ export default async function OpsPage() {
     const pm = Array.isArray(project.pm) ? project.pm[0] : project.pm;
     const pmDirectory = Array.isArray(project.pm_directory) ? project.pm_directory[0] : project.pm_directory;
     const customer = Array.isArray(project.customer) ? project.customer[0] : project.customer;
-    const primaryAssignment = (project.project_assignments ?? []).find((assignment) => assignment?.role_on_project === "pm");
-    const assignmentProfile = Array.isArray(primaryAssignment?.profile) ? primaryAssignment?.profile[0] : primaryAssignment?.profile;
-    const assignmentDirectory = Array.isArray(primaryAssignment?.pm_directory) ? primaryAssignment?.pm_directory[0] : primaryAssignment?.pm_directory;
-    const assignmentDirectoryName = [assignmentDirectory?.first_name, assignmentDirectory?.last_name].filter(Boolean).join(" ").trim();
+    // Fall back to first PM in assignments only when projects.pm_id / pm_directory_id is not set
+    const fallbackAssignment = (project.project_assignments ?? []).find((assignment) => assignment?.role_on_project === "pm");
+    const fallbackProfile = Array.isArray(fallbackAssignment?.profile) ? fallbackAssignment?.profile[0] : fallbackAssignment?.profile;
+    const fallbackDirectory = Array.isArray(fallbackAssignment?.pm_directory) ? fallbackAssignment?.pm_directory[0] : fallbackAssignment?.pm_directory;
+    const fallbackDirectoryName = [fallbackDirectory?.first_name, fallbackDirectory?.last_name].filter(Boolean).join(" ").trim();
     const pmDirectoryName = [pmDirectory?.first_name, pmDirectory?.last_name].filter(Boolean).join(" ").trim();
+    // projects.pm_id and pm_directory_id hold the primary PM (written by save-project)
     const pmGroupName =
-      assignmentProfile?.full_name ||
-      assignmentDirectoryName ||
       pm?.full_name ||
       pmDirectoryName ||
-      assignmentProfile?.email ||
-      assignmentDirectory?.email ||
       pm?.email ||
       pmDirectory?.email ||
+      fallbackProfile?.full_name ||
+      fallbackDirectoryName ||
+      fallbackProfile?.email ||
+      fallbackDirectory?.email ||
       "Unassigned";
 
     return {
