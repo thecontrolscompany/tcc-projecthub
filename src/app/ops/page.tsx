@@ -183,9 +183,7 @@ export default async function OpsPage() {
   }).sort((a, b) => a.name.localeCompare(b.name));
 
   // TEMPORARY DEBUG — remove after confirming fix
-  const debugProjects = Array.from(projectMap.values()).filter(p =>
-    p.name?.toLowerCase().includes("mobile") || p.name?.toLowerCase().includes("arena")
-  );
+  const debugProjects = Array.from(projectMap.values());
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -197,9 +195,12 @@ export default async function OpsPage() {
         </p>
       </div>
 
+      <div className="rounded-xl border border-yellow-400 bg-yellow-50 p-4 text-xs font-mono text-slate-800">
+          <p className="mb-2 font-bold text-yellow-700">DEBUG — role: {profile?.role ?? "unknown"} | projects in map: {debugProjects.length}</p>
+        </div>
       {debugProjects.length > 0 && (
         <div className="rounded-xl border border-yellow-400 bg-yellow-50 p-4 text-xs font-mono text-slate-800">
-          <p className="mb-2 font-bold text-yellow-700">DEBUG — Mobile Arena raw data (remove after fix):</p>
+          <p className="mb-2 font-bold text-yellow-700">DEBUG — All projects raw data:</p>
           {debugProjects.map(p => (
             <div key={p.id} className="mb-3">
               <p><strong>pm_id:</strong> {p.pm_id ?? "NULL"}</p>
