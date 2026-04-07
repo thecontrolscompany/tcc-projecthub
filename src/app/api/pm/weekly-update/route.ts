@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
+import { sendWeeklyUpdateNotification } from "@/lib/email/notifications";
 import type { CrewLogEntry, PocSnapshotEntry, WeeklyUpdate, WeeklyUpdateStatus } from "@/types/database";
 
 type UpdatePayload = {
@@ -200,6 +201,52 @@ async function loadExistingWeekRow(projectId: string, weekOf: string) {
   };
 }
 
+async function notifyCustomersOfUpdate({
+  admin,
+  projectId,
+  weekOf,
+  notes,
+}: {
+  admin: ReturnType<typeof adminClient>;
+  projectId: string;
+  weekOf: string;
+  notes: string | null;
+}) {
+  try {
+    const { data: project } = await admin
+      .from("projects")
+      .select("name")
+      .eq("id", projectId)
+      .single();
+
+    if (!project) return;
+
+    const { data: contacts } = await admin
+      .from("project_customer_contacts")
+      .select("profile:profiles(email)")
+      .eq("project_id", projectId)
+      .eq("portal_access", true);
+
+    const emails = (contacts ?? [])
+      .map((c) => {
+        const profile = Array.isArray(c.profile) ? c.profile[0] : c.profile;
+        return profile?.email ?? null;
+      })
+      .filter((e): e is string => Boolean(e));
+
+    if (emails.length === 0) return;
+
+    await sendWeeklyUpdateNotification({
+      projectName: project.name,
+      weekOf,
+      notes,
+      recipientEmails: emails,
+    });
+  } catch (err) {
+    console.error("[notify] Failed to send weekly update notification:", err);
+  }
+}
+
 export async function POST(request: Request) {
   const supabase = await createServerClient();
   const {
@@ -272,6 +319,15 @@ export async function POST(request: Request) {
       pctComplete: normalized.value.pctComplete,
       status: normalized.value.status,
     });
+
+    if (normalized.value.status === "submitted") {
+      void notifyCustomersOfUpdate({
+        admin: authz.admin,
+        projectId: normalized.value.projectId,
+        weekOf: normalized.value.weekOf,
+        notes: normalized.value.notes,
+      });
+    }
 
     return NextResponse.json({ update: data });
   } catch (error) {
@@ -375,6 +431,15 @@ export async function PATCH(request: Request) {
       pctComplete: normalized.value.pctComplete,
       status: normalized.value.status,
     });
+
+    if (existing.status === "draft" && normalized.value.status === "submitted") {
+      void notifyCustomersOfUpdate({
+        admin: authz.admin,
+        projectId: normalized.value.projectId,
+        weekOf: normalized.value.weekOf,
+        notes: normalized.value.notes,
+      });
+    }
 
     return NextResponse.json({ update: data, editLogged });
   } catch (error) {
