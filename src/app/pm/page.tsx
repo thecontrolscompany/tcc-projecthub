@@ -42,6 +42,7 @@ interface ProjectWithBilling {
   job_number: string | null;
   start_date: string | null;
   scheduled_completion: string | null;
+  scope_description: string | null;
   migration_status: "legacy" | "migrated" | "clean" | null;
   is_active: boolean;
   created_at: string;
@@ -807,6 +808,17 @@ function UpdateForm({
               >
                 Submit This Week's Report -&gt;
               </button>
+            </div>
+          )}
+
+          {project.scope_description && (
+            <div className="rounded-2xl border border-border-default bg-surface-raised px-4 py-3">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                Project Scope
+              </p>
+              <p className="text-sm leading-relaxed text-text-secondary">
+                {project.scope_description}
+              </p>
             </div>
           )}
 

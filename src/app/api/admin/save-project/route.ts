@@ -60,6 +60,7 @@ export async function POST(request: Request) {
       mechanicalContractor: string;
       electricalContractor: string;
       notes: string;
+      scopeDescription: string;
       sourceEstimateId: string;
       specialRequirements: string;
       specialAccess: string;
@@ -132,6 +133,7 @@ export async function POST(request: Request) {
       special_requirements: formValues.specialRequirements.trim() || null,
       special_access: formValues.specialAccess.trim() || null,
       notes: formValues.notes.trim() || null,
+      scope_description: formValues.scopeDescription.trim() || null,
       billed_in_full: formValues.billedInFull,
       paid_in_full: formValues.paidInFull,
       is_active: !billedAndPaid,

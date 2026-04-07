@@ -32,6 +32,7 @@ type ProjectRow = {
   site_address: string | null;
   start_date: string | null;
   scheduled_completion: string | null;
+  scope_description: string | null;
   general_contractor: string | null;
   mechanical_contractor: string | null;
   electrical_contractor: string | null;
@@ -84,6 +85,7 @@ const PROJECT_SELECT_FIELDS = `
   site_address,
   start_date,
   scheduled_completion,
+  scope_description,
   general_contractor,
   mechanical_contractor,
   electrical_contractor,
@@ -417,6 +419,7 @@ export function AdminProjectsTab() {
       mechanicalContractor: project.mechanical_contractor ?? "",
       electricalContractor: project.electrical_contractor ?? "",
       notes: project.notes ?? "",
+      scopeDescription: project.scope_description ?? "",
       sourceEstimateId: project.source_estimate_id ?? "",
       specialRequirements: project.special_requirements ?? "",
       specialAccess: project.special_access ?? "",

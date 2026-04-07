@@ -43,6 +43,7 @@ interface CustomerProject {
   general_contractor: string | null;
   start_date: string | null;
   scheduled_completion: string | null;
+  scope_description: string | null;
   customer_name: string | null;
   billing_periods: BillingPeriod[];
   weekly_updates: WeeklyUpdate[];
@@ -112,6 +113,7 @@ export default function CustomerPage() {
         general_contractor: string | null;
         start_date: string | null;
         scheduled_completion: string | null;
+        scope_description: string | null;
         customer?: { name: string } | { name: string }[] | null;
       }>;
       const periods = (json?.billingPeriods ?? []) as BillingPeriod[];
@@ -136,6 +138,7 @@ export default function CustomerPage() {
           general_contractor: project.general_contractor ?? null,
           start_date: project.start_date ?? null,
           scheduled_completion: project.scheduled_completion ?? null,
+          scope_description: project.scope_description ?? null,
           customer_name: customer?.name ?? null,
           billing_periods: ((periods ?? []).filter((period) => period.project_id === project.id) as BillingPeriod[]),
           weekly_updates: ((updates ?? []).filter((update) => update.project_id === project.id) as WeeklyUpdate[]),
@@ -613,6 +616,11 @@ function ProjectDetail({
               )}
               {project.general_contractor && (
                 <p className="text-sm text-slate-600">GC: {project.general_contractor}</p>
+              )}
+              {project.scope_description && (
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-600">
+                  {project.scope_description}
+                </p>
               )}
               {project.scheduled_completion && (
                 <div className="mt-2 flex items-center gap-2 text-sm text-slate-600">

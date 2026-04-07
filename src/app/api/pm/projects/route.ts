@@ -133,6 +133,7 @@ export async function GET(request: Request) {
         job_number,
         start_date,
         scheduled_completion,
+        scope_description,
         migration_status,
         is_active,
         created_at,
@@ -164,6 +165,7 @@ export async function GET(request: Request) {
           job_number: string | null;
           start_date: string | null;
           scheduled_completion: string | null;
+          scope_description: string | null;
           migration_status: "legacy" | "migrated" | "clean" | null;
           is_active: boolean;
           created_at: string;
@@ -181,6 +183,7 @@ export async function GET(request: Request) {
           job_number: string | null;
           start_date: string | null;
           scheduled_completion: string | null;
+          scope_description: string | null;
           migration_status: "legacy" | "migrated" | "clean" | null;
           is_active: boolean;
           created_at: string;
@@ -209,6 +212,7 @@ export async function GET(request: Request) {
       job_number: string | null;
       start_date: string | null;
       scheduled_completion: string | null;
+      scope_description: string | null;
       migration_status: "legacy" | "migrated" | "clean" | null;
       is_active: boolean;
       created_at: string;

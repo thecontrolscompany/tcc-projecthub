@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     const [projectsResult, billingResult, updatesResult, assignmentsResult, changeOrdersResult] = await Promise.all([
       adminClient
         .from("projects")
-        .select("id, name, estimated_income, job_number, site_address, general_contractor, start_date, scheduled_completion, customer:customers(name)")
+        .select("id, name, estimated_income, job_number, site_address, general_contractor, start_date, scheduled_completion, scope_description, customer:customers(name)")
         .in("id", projectIds)
         .eq("is_active", true)
         .order("name"),

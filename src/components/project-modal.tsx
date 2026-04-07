@@ -55,6 +55,7 @@ export type ProjectFormValues = {
   mechanicalContractor: string;
   electricalContractor: string;
   notes: string;
+  scopeDescription: string;
   sourceEstimateId: string;
   specialRequirements: string;
   specialAccess: string;
@@ -87,6 +88,7 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   mechanicalContractor: "",
   electricalContractor: "",
   notes: "",
+  scopeDescription: "",
   sourceEstimateId: "",
   specialRequirements: "",
   specialAccess: "",
@@ -440,6 +442,19 @@ export function ProjectModal({
             <FormField label="Notes">
               <textarea rows={3} value={values.notes} onChange={(e) => onChange("notes", e.target.value)} className={textareaClassName} />
             </FormField>
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                Scope Description
+                <span className="ml-1 normal-case font-normal text-text-tertiary">(visible to customer)</span>
+              </label>
+              <textarea
+                rows={3}
+                className={textareaClassName}
+                placeholder="Brief description of work scope visible on customer portal"
+                value={values.scopeDescription}
+                onChange={(e) => onChange("scopeDescription", e.target.value)}
+              />
+            </div>
             <FormField label="Special Requirements">
               <textarea rows={3} value={values.specialRequirements} onChange={(e) => onChange("specialRequirements", e.target.value)} className={textareaClassName} />
             </FormField>
