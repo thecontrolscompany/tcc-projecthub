@@ -37,6 +37,7 @@ type UpdateRow = {
         site_address: string | null;
         general_contractor: string | null;
         customer_poc: string | null;
+        scheduled_completion: string | null;
         customer?: { name: string | null } | Array<{ name: string | null }> | null;
       }
     | Array<{
@@ -46,6 +47,7 @@ type UpdateRow = {
         site_address: string | null;
         general_contractor: string | null;
         customer_poc: string | null;
+        scheduled_completion: string | null;
         customer?: { name: string | null } | Array<{ name: string | null }> | null;
       }>
     | null;
@@ -225,6 +227,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
         site_address,
         general_contractor,
         customer_poc,
+        scheduled_completion,
         customer:customers(name)
       )
     `)
@@ -510,6 +513,13 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
               <div>{project.customer_poc || "Not provided"}</div>
               <div className="meta-label">General Contractor:</div>
               <div>{project.general_contractor || "Not provided"}</div>
+              <div className="meta-label">Scheduled Completion:</div>
+              <div>
+                {project.scheduled_completion
+                  ? formatDate(project.scheduled_completion)
+                  : <span style={{ color: "#b91c1c", fontWeight: 700 }}>⚠ Schedule not received</span>
+                }
+              </div>
               <div className="meta-label">Report Date:</div>
               <div>{formatDate(update.week_of)}</div>
             </div>
