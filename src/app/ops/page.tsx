@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { OpsProjectList } from "@/components/ops-project-list";
-import { OpsDebugPanel } from "@/components/ops-debug-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -183,27 +182,6 @@ export default async function OpsPage() {
     };
   }).sort((a, b) => a.name.localeCompare(b.name));
 
-  // TEMPORARY DEBUG — remove after confirming fix
-  const debugProjects = Array.from(projectMap.values()).map((p) => ({
-    id: p.id,
-    name: p.name,
-    pm_id: p.pm_id ?? null,
-    pm_directory_id: p.pm_directory_id ?? null,
-    resolvedPmGroup: normalizedProjects.find((n) => n.id === p.id)?.pmGroupName ?? "?",
-    assignments: (p.project_assignments ?? []).map((a) => {
-      const prof = Array.isArray(a.profile) ? a.profile[0] : a.profile;
-      const dir = Array.isArray(a.pm_directory) ? a.pm_directory[0] : a.pm_directory;
-      const dirName = [dir?.first_name, dir?.last_name].filter(Boolean).join(" ").trim();
-      return {
-        role_on_project: a.role_on_project ?? null,
-        is_primary: a.is_primary ?? null,
-        profile_id: a.profile_id ?? null,
-        pm_directory_id: a.pm_directory_id ?? null,
-        profileName: prof?.full_name || dirName || prof?.email || dir?.email || null,
-      };
-    }),
-  }));
-
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
@@ -214,7 +192,6 @@ export default async function OpsPage() {
         </p>
       </div>
 
-      <OpsDebugPanel projects={debugProjects} />
       <OpsProjectList projects={normalizedProjects} />
     </div>
   );
