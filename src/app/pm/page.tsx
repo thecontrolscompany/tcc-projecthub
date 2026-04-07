@@ -17,7 +17,7 @@ import type {
 } from "@/types/database";
 
 type ViewState = "list" | "update";
-type ProjectTab = "overview" | "update" | "poc" | "bom";
+type ProjectTab = "overview" | "update" | "poc" | "change-orders" | "rfis" | "bom";
 
 interface ProjectWithBilling {
   id: string;
@@ -640,6 +640,17 @@ function UpdateForm({
         <PmTabButton active={activeTab === "poc"} onClick={() => setActiveTab("poc")}>
           POC &amp; Progress
         </PmTabButton>
+        <PmTabButton active={activeTab === "change-orders"} onClick={() => setActiveTab("change-orders")}>
+          Change Orders
+          {activeChangeOrders.length > 0 && (
+            <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-surface-overlay px-1.5 py-0.5 text-[10px] font-semibold text-text-secondary">
+              {activeChangeOrders.length}
+            </span>
+          )}
+        </PmTabButton>
+        <PmTabButton active={activeTab === "rfis"} onClick={() => setActiveTab("rfis")}>
+          RFIs
+        </PmTabButton>
         <PmTabButton active={activeTab === "bom"} onClick={() => setActiveTab("bom")}>
           BOM
         </PmTabButton>
@@ -729,34 +740,27 @@ function UpdateForm({
             </div>
           )}
 
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Change Orders</h3>
-            {coError ? (
-              <p className="text-sm text-status-danger">{coError}</p>
-            ) : activeChangeOrders.length === 0 ? (
-              <p className="text-sm text-text-tertiary">No change orders on file.</p>
-            ) : (
-              activeChangeOrders.map((co) => (
-                <div key={co.id} className="flex items-center justify-between rounded-xl border border-border-default bg-surface-raised px-4 py-2.5 text-sm">
-                  <div className="space-y-0.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium text-text-primary">{co.co_number}</span>
-                      <span className="text-text-secondary">-</span>
-                      <span className="text-text-primary">{co.title}</span>
-                      <span className={["rounded-full px-2 py-0.5 text-xs font-medium capitalize", co.status === "approved" ? "bg-status-success/10 text-status-success" : co.status === "rejected" ? "bg-status-danger/10 text-status-danger" : "bg-status-warning/10 text-status-warning"].join(" ")}>
-                        {co.status}
-                      </span>
-                    </div>
-                    {co.reference_doc && <p className="text-xs text-text-tertiary">Ref: {co.reference_doc}</p>}
-                  </div>
-                  <span className={["shrink-0 font-semibold", co.amount >= 0 ? "text-status-success" : "text-status-danger"].join(" ")}>
-                    {co.amount >= 0 ? "+" : ""}
-                    {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(co.amount)}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
+          {(activeChangeOrders.length > 0 || coError) && (
+            <div className="flex items-center justify-between rounded-xl border border-border-default bg-surface-raised px-4 py-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Change Orders</p>
+                {coError ? (
+                  <p className="mt-0.5 text-sm text-status-danger">Failed to load</p>
+                ) : (
+                  <p className="mt-0.5 text-sm font-medium text-text-primary">
+                    {activeChangeOrders.length} active change order{activeChangeOrders.length !== 1 ? "s" : ""}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab("change-orders")}
+                className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-semibold text-text-secondary transition hover:bg-surface-base hover:text-text-primary"
+              >
+                View all -&gt;
+              </button>
+            </div>
+          )}
 
           {recentOverviewUpdates.length > 0 && (
             <div className="space-y-3">
@@ -1288,6 +1292,113 @@ function UpdateForm({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === "change-orders" && (
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-base font-semibold text-text-primary">Change Orders</h3>
+            <p className="mt-1 text-sm text-text-tertiary">
+              Change orders on this project. Contact admin to add or update change orders.
+            </p>
+          </div>
+
+          {coError ? (
+            <p className="text-sm text-status-danger">{coError}</p>
+          ) : changeOrders.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border-default px-6 py-10 text-center">
+              <p className="text-sm font-medium text-text-secondary">No change orders on file.</p>
+              <p className="mt-1 text-xs text-text-tertiary">Change orders will appear here once added by admin.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {changeOrders.map((co) => (
+                <div
+                  key={co.id}
+                  className={[
+                    "flex items-center justify-between rounded-xl border px-4 py-3 text-sm",
+                    co.status === "void"
+                      ? "border-border-default bg-surface-base opacity-50"
+                      : "border-border-default bg-surface-raised",
+                  ].join(" ")}
+                >
+                  <div className="space-y-0.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium text-text-primary">{co.co_number}</span>
+                      <span className="text-text-secondary">-</span>
+                      <span className="text-text-primary">{co.title}</span>
+                      <span
+                        className={[
+                          "rounded-full px-2 py-0.5 text-xs font-medium capitalize",
+                          co.status === "approved"
+                            ? "bg-status-success/10 text-status-success"
+                            : co.status === "rejected"
+                              ? "bg-status-danger/10 text-status-danger"
+                              : co.status === "void"
+                                ? "bg-surface-overlay text-text-tertiary"
+                                : "bg-status-warning/10 text-status-warning",
+                        ].join(" ")}
+                      >
+                        {co.status}
+                      </span>
+                    </div>
+                    {co.reference_doc && (
+                      <p className="text-xs text-text-tertiary">Ref: {co.reference_doc}</p>
+                    )}
+                  </div>
+                  <span
+                    className={[
+                      "shrink-0 font-semibold",
+                      co.status === "void"
+                        ? "text-text-tertiary"
+                        : co.amount >= 0
+                          ? "text-status-success"
+                          : "text-status-danger",
+                    ].join(" ")}
+                  >
+                    {co.amount >= 0 ? "+" : ""}
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                      maximumFractionDigits: 0,
+                    }).format(co.amount)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {changeOrders.filter((co) => co.status === "approved").length > 0 && (
+            <div className="rounded-xl border border-status-success/20 bg-status-success/5 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Total Approved CO Value</p>
+              <p className="mt-1 text-base font-bold text-status-success">
+                {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(
+                  changeOrders
+                    .filter((co) => co.status === "approved")
+                    .reduce((sum, co) => sum + co.amount, 0)
+                )}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "rfis" && (
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-base font-semibold text-text-primary">RFI Log</h3>
+            <p className="mt-1 text-sm text-text-tertiary">
+              Request for Information tracking for this project.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-dashed border-border-default px-6 py-12 text-center">
+            <p className="text-sm font-semibold text-text-secondary">Coming Soon</p>
+            <p className="mx-auto mt-2 max-w-sm text-xs text-text-tertiary">
+              RFI logging, GC/design team question tracking, and submittal linking
+              will be available here in a future update.
+            </p>
+          </div>
         </div>
       )}
 
