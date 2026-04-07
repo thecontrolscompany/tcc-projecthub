@@ -186,6 +186,7 @@ export async function POST(request: Request) {
         profile_id: a.profile_id,
         pm_directory_id: a.pm_directory_id,
         role_on_project: a.role_on_project,
+        is_primary: a.is_primary ?? false,
       }));
       const { error } = await adminClient.from("project_assignments").insert(rows);
       if (error) throw error;

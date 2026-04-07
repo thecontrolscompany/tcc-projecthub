@@ -17,6 +17,7 @@ type OpsProject = {
     | null;
   project_assignments?: Array<{
     role_on_project?: string | null;
+    is_primary?: boolean | null;
     profile?: { full_name?: string | null; email?: string | null } | Array<{ full_name?: string | null; email?: string | null }> | null;
     pm_directory?:
       | { first_name?: string | null; last_name?: string | null; email?: string | null }
@@ -81,6 +82,7 @@ export default async function OpsPage() {
         pm_directory:pm_directory(first_name, last_name, email),
         project_assignments(
           role_on_project,
+          is_primary,
           profile:profiles(full_name, email),
           pm_directory:pm_directory(first_name, last_name, email)
         )
@@ -138,25 +140,24 @@ export default async function OpsPage() {
     }
   }
   const normalizedProjects: OpsProjectListItem[] = Array.from(projectMap.values()).map((project) => {
-    const pm = Array.isArray(project.pm) ? project.pm[0] : project.pm;
-    const pmDirectory = Array.isArray(project.pm_directory) ? project.pm_directory[0] : project.pm_directory;
     const customer = Array.isArray(project.customer) ? project.customer[0] : project.customer;
-    // Fall back to first PM in assignments only when projects.pm_id / pm_directory_id is not set
-    const fallbackAssignment = (project.project_assignments ?? []).find((assignment) => assignment?.role_on_project === "pm");
-    const fallbackProfile = Array.isArray(fallbackAssignment?.profile) ? fallbackAssignment?.profile[0] : fallbackAssignment?.profile;
-    const fallbackDirectory = Array.isArray(fallbackAssignment?.pm_directory) ? fallbackAssignment?.pm_directory[0] : fallbackAssignment?.pm_directory;
-    const fallbackDirectoryName = [fallbackDirectory?.first_name, fallbackDirectory?.last_name].filter(Boolean).join(" ").trim();
-    const pmDirectoryName = [pmDirectory?.first_name, pmDirectory?.last_name].filter(Boolean).join(" ").trim();
-    // projects.pm_id and pm_directory_id hold the primary PM (written by save-project)
+    const allAssignments = project.project_assignments ?? [];
+
+    // Primary: assignment explicitly marked is_primary=true
+    const primaryAssignment =
+      allAssignments.find((a) => a.role_on_project === "pm" && a.is_primary) ??
+      // Fallback: any PM assignment (first added)
+      allAssignments.find((a) => a.role_on_project === "pm");
+
+    const primaryProfile = Array.isArray(primaryAssignment?.profile) ? primaryAssignment?.profile[0] : primaryAssignment?.profile;
+    const primaryDirectory = Array.isArray(primaryAssignment?.pm_directory) ? primaryAssignment?.pm_directory[0] : primaryAssignment?.pm_directory;
+    const primaryDirectoryName = [primaryDirectory?.first_name, primaryDirectory?.last_name].filter(Boolean).join(" ").trim();
+
     const pmGroupName =
-      pm?.full_name ||
-      pmDirectoryName ||
-      pm?.email ||
-      pmDirectory?.email ||
-      fallbackProfile?.full_name ||
-      fallbackDirectoryName ||
-      fallbackProfile?.email ||
-      fallbackDirectory?.email ||
+      primaryProfile?.full_name ||
+      primaryDirectoryName ||
+      primaryProfile?.email ||
+      primaryDirectory?.email ||
       "Unassigned";
 
     return {
