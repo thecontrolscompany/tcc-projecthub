@@ -9,15 +9,14 @@ type OpsProject = {
   name: string;
   is_active: boolean | null;
   sharepoint_folder?: string | null;
+  pm_id?: string | null;
+  pm_directory_id?: string | null;
   customer?: { name?: string | null } | Array<{ name?: string | null }> | null;
-  pm?: { full_name?: string | null; email?: string | null } | Array<{ full_name?: string | null; email?: string | null }> | null;
-  pm_directory?:
-    | { first_name?: string | null; last_name?: string | null; email?: string | null }
-    | Array<{ first_name?: string | null; last_name?: string | null; email?: string | null }>
-    | null;
   project_assignments?: Array<{
     role_on_project?: string | null;
     is_primary?: boolean | null;
+    profile_id?: string | null;
+    pm_directory_id?: string | null;
     profile?: { full_name?: string | null; email?: string | null } | Array<{ full_name?: string | null; email?: string | null }> | null;
     pm_directory?:
       | { first_name?: string | null; last_name?: string | null; email?: string | null }
@@ -77,12 +76,14 @@ export default async function OpsPage() {
         name,
         is_active,
         sharepoint_folder,
+        pm_id,
+        pm_directory_id,
         customer:customers(name),
-        pm:profiles(full_name, email),
-        pm_directory:pm_directory(first_name, last_name, email),
         project_assignments(
           role_on_project,
           is_primary,
+          profile_id,
+          pm_directory_id,
           profile:profiles(full_name, email),
           pm_directory:pm_directory(first_name, last_name, email)
         )
@@ -102,11 +103,14 @@ export default async function OpsPage() {
             name,
             is_active,
             sharepoint_folder,
+            pm_id,
+            pm_directory_id,
             customer:customers(name),
-            pm:profiles(full_name, email),
-            pm_directory:pm_directory(first_name, last_name, email),
             project_assignments(
               role_on_project,
+              is_primary,
+              profile_id,
+              pm_directory_id,
               profile:profiles(full_name, email),
               pm_directory:pm_directory(first_name, last_name, email)
             )
@@ -141,30 +145,30 @@ export default async function OpsPage() {
   }
   const normalizedProjects: OpsProjectListItem[] = Array.from(projectMap.values()).map((project) => {
     const customer = Array.isArray(project.customer) ? project.customer[0] : project.customer;
-    // projects.pm / pm_directory are joined from projects.pm_id / pm_directory_id — the canonical primary PM
-    const pm = Array.isArray(project.pm) ? project.pm[0] : project.pm;
-    const pmDirectory = Array.isArray(project.pm_directory) ? project.pm_directory[0] : project.pm_directory;
-    const pmDirectoryName = [pmDirectory?.first_name, pmDirectory?.last_name].filter(Boolean).join(" ").trim();
-
     const allAssignments = project.project_assignments ?? [];
-    // Fallback: find PM via is_primary flag (written on save after migration 036)
+
+    function normAssignment(a: typeof allAssignments[number]) {
+      const profile = Array.isArray(a.profile) ? a.profile[0] : a.profile;
+      const dir = Array.isArray(a.pm_directory) ? a.pm_directory[0] : a.pm_directory;
+      const dirName = [dir?.first_name, dir?.last_name].filter(Boolean).join(" ").trim();
+      return profile?.full_name || dirName || profile?.email || dir?.email || null;
+    }
+
+    // 1. Match assignment whose profile_id/pm_directory_id equals projects.pm_id/pm_directory_id
+    const canonicalAssignment = allAssignments.find((a) =>
+      a.role_on_project === "pm" &&
+      ((project.pm_id && a.profile_id === project.pm_id) ||
+       (project.pm_directory_id && a.pm_directory_id === project.pm_directory_id))
+    );
+    // 2. is_primary flag (migration 036+)
     const flaggedAssignment = allAssignments.find((a) => a.role_on_project === "pm" && a.is_primary);
-    const flaggedProfile = Array.isArray(flaggedAssignment?.profile) ? flaggedAssignment?.profile[0] : flaggedAssignment?.profile;
-    const flaggedDirectory = Array.isArray(flaggedAssignment?.pm_directory) ? flaggedAssignment?.pm_directory[0] : flaggedAssignment?.pm_directory;
-    const flaggedDirectoryName = [flaggedDirectory?.first_name, flaggedDirectory?.last_name].filter(Boolean).join(" ").trim();
-    // Last resort: first PM in assignments
+    // 3. First PM in assignments (legacy fallback)
     const firstPmAssignment = allAssignments.find((a) => a.role_on_project === "pm");
-    const firstPmProfile = Array.isArray(firstPmAssignment?.profile) ? firstPmAssignment?.profile[0] : firstPmAssignment?.profile;
-    const firstPmDirectory = Array.isArray(firstPmAssignment?.pm_directory) ? firstPmAssignment?.pm_directory[0] : firstPmAssignment?.pm_directory;
-    const firstPmDirectoryName = [firstPmDirectory?.first_name, firstPmDirectory?.last_name].filter(Boolean).join(" ").trim();
 
     const pmGroupName =
-      // 1. projects.pm_id / pm_directory_id — written by save-project, most reliable
-      pm?.full_name || pmDirectoryName || pm?.email || pmDirectory?.email ||
-      // 2. is_primary flag on project_assignments (migration 036+)
-      flaggedProfile?.full_name || flaggedDirectoryName || flaggedProfile?.email || flaggedDirectory?.email ||
-      // 3. first PM in assignments (legacy fallback)
-      firstPmProfile?.full_name || firstPmDirectoryName || firstPmProfile?.email || firstPmDirectory?.email ||
+      normAssignment(canonicalAssignment ?? {}) ||
+      normAssignment(flaggedAssignment ?? {}) ||
+      normAssignment(firstPmAssignment ?? {}) ||
       "Unassigned";
 
     return {
