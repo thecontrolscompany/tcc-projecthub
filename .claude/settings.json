@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(supabase/migrations/013_weekly_updates_read.sql:*)",
+      "Bash(supabase/migrations/014_weekly_updates_write.sql:*)",
+      "Bash(ls \"c:\\\\Users\\\\TimothyCollins\\\\dev\\\\tcc-projecthub\\\\Logos etc\"\" 2>/dev/null || ls \"C:UsersTimothyCollinsdevtcc-projecthubLogos etc\"\")",
+      "Read(//c/Users/TimothyCollins/OneDrive - The Controls Company, LLC/Projects/**)",
+      "Bash(python3 -c \":*)",
+      "Bash(node -e ':*)",
+      "Bash(supabase projects:*)",
+      "Bash(mkdir -p backups)",
+      "Bash(supabase link:*)",
+      "Bash(supabase db:*)",
+      "WebFetch(domain:developer.intuit.com)",
+      "WebFetch(domain:www.getknit.dev)",
+      "WebFetch(domain:www.apideck.com)",
+      "WebFetch(domain:coefficient.io)",
+      "WebFetch(domain:rollout.com)",
+      "WebFetch(domain:developers.getknit.dev)",
+      "WebFetch(domain:satvasolutions.com)",
+      "WebFetch(domain:zuplo.com)",
+      "WebFetch(domain:blogs.intuit.com)",
+      "WebFetch(domain:honestaccountinggroup.com)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:glinteco.com)",
+      "WebFetch(domain:community.airtable.com)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\TimothyCollins\\OneDrive - The Controls Company, LLC"
+    ]
+  }
+}

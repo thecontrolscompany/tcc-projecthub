@@ -8,28 +8,35 @@ The integration bridges them so neither system requires double-entry.
 
 ---
 
-## What QBO unlocks for TCC
+## What QBO and QBT unlock for TCC
 
-| Portal feature | What QBO provides |
-|---|---|
-| `projects.estimated_income` | Pull from accepted Estimate `TotalAmt` — no manual entry |
-| `billing_periods.actual_billed` | Pull from posted Invoice `TotalAmt` |
-| `billing_periods.paid` | Invoice `Balance == 0` |
-| Material cost per project | Bill line `AccountBasedExpenseLineDetail.CustomerRef` |
-| Labor cost per project | TimeActivity `CustomerRef + Hours` |
-| Customer list | Customer objects (parent level) |
-| Job list | Sub-customer objects (`Job = true`) |
-| Change order contract value | Sum of accepted Estimates per job |
+| Portal feature | What QBO provides | What QBT provides |
+|---|---|---|
+| `projects.estimated_income` | Pull from accepted Estimate `TotalAmt` — no manual entry | |
+| `billing_periods.actual_billed` | Pull from posted Invoice `TotalAmt` | |
+| `billing_periods.paid` | Invoice `Balance == 0` | |
+| Material cost per project | Bill line `AccountBasedExpenseLineDetail.CustomerRef` | |
+| Labor cost per project | TimeActivity `CustomerRef + Hours` | Timesheet hours by project + employee |
+| Customer list | Customer objects (parent level) | |
+| Job list | Sub-customer objects (`Job = true`) | Project assignments in time entries |
+| Change order contract value | Sum of accepted Estimates per job | |
+| Employee time tracking | | Detailed timesheets with GPS/location |
 
 ---
 
 ## Authentication: OAuth 2.0
 
-### Flow
+### QBO Flow
 1. Redirect user to `https://appcenter.intuit.com/connect/oauth2` with scope `com.intuit.quickbooks.accounting`
 2. User authorizes → Intuit redirects back with `?code=AUTH_CODE&realmId=REALM_ID`
 3. POST to `https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer` with auth code → get `access_token` + `refresh_token`
 4. Store `access_token`, `refresh_token`, `realm_id`, `token_expires_at`, `refresh_token_expires_at` in Supabase `qbo_tokens` table (encrypted)
+
+### QBT Flow
+1. Redirect user to `https://appcenter.intuit.com/connect/oauth2` with scope `com.intuit.quickbooks.payroll.time` (or appropriate QBT scope)
+2. User authorizes → Intuit redirects back with `?code=AUTH_CODE&companyId=COMPANY_ID`
+3. POST to `https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer` with auth code → get `access_token` + `refresh_token`
+4. Store `access_token`, `refresh_token`, `company_id`, `token_expires_at`, `refresh_token_expires_at` in Supabase `qbt_tokens` table (encrypted)
 
 ### Token lifetimes
 - **Access token**: 1 hour
@@ -37,13 +44,15 @@ The integration bridges them so neither system requires double-entry.
 - **Rotation**: Every refresh call returns a NEW refresh token — store it immediately or lose access
 - **Reconnect warning**: Build a UI warning when `refresh_token_expires_at` is within 30 days
 
-### Scope needed
-`com.intuit.quickbooks.accounting` — this is the only scope needed for all data described here.
+### Scopes needed
+- QBO: `com.intuit.quickbooks.accounting`
+- QBT: `com.intuit.quickbooks.payroll.time` or similar (confirm exact scope for time tracking)
 
 ---
 
 ## API base URLs
 
+### QBO
 ```
 Production: https://quickbooks.api.intuit.com/v3/company/{realmId}/{endpoint}
 Sandbox:    https://sandbox-quickbooks.api.intuit.com/v3/company/{realmId}/{endpoint}
@@ -61,6 +70,18 @@ Query language (IQL — SQL-like):
 GET /v3/company/{realmId}/query?query=SELECT * FROM Invoice WHERE CustomerRef = '123' MAXRESULTS 100
 ```
 Max 1,000 results per page. Paginate with `STARTPOSITION`.
+
+### QBT
+```
+Production: https://rest.tsheets.com/api/v1/{endpoint}
+Sandbox:    https://rest.tsheets.com/api/v1/{endpoint}  (confirm if separate sandbox URL exists)
+```
+
+Headers:
+```
+Authorization: Bearer {access_token}
+Content-Type: application/json
+```
 
 ---
 
@@ -137,7 +158,7 @@ Filter accepted contracts: `SELECT * FROM Estimate WHERE CustomerRef = '{jobId}'
 
 ---
 
-### TimeActivity (Labor Hours)
+### TimeActivity (QBO Labor Hours)
 
 | Field | Notes |
 |---|---|
@@ -151,6 +172,23 @@ Filter accepted contracts: `SELECT * FROM Estimate WHERE CustomerRef = '{jobId}'
 Query: `SELECT * FROM TimeActivity WHERE CustomerRef = '{jobId}'`
 
 **Gotcha**: If TCC uses QBO Payroll, payroll timesheets use the new GraphQL Time API (not REST). That API requires `payroll.compensation.read` scope and is **not available in sandbox** — production only.
+
+### Timesheets (QBT Labor Hours)
+
+| Field | Notes |
+|---|---|
+| `id` | Timesheet entry ID |
+| `user_id` | Employee ID |
+| `jobcode_id` | Project/job code ID |
+| `start` | Start time |
+| `end` | End time |
+| `duration` | Total hours |
+| `date` | Work date |
+| `notes` | Time entry notes |
+
+Query: `GET /api/v1/timesheets?jobcode_id={projectId}`
+
+**QBT provides more detailed time tracking** including GPS, breaks, and mobile app entries.
 
 ---
 
@@ -202,6 +240,7 @@ Delivery: ~5 min latency, batched, best-effort with retries. Plan for duplicates
 
 ## Change Data Capture (use instead of polling)
 
+### QBO CDC
 Much more efficient than querying each entity on a schedule:
 ```
 GET /v3/company/{realmId}/cdc?entities=Customer,Invoice,Bill,TimeActivity,Payment&changedSince=2026-04-01T00:00:00-07:00
@@ -210,10 +249,19 @@ GET /v3/company/{realmId}/cdc?entities=Customer,Invoice,Bill,TimeActivity,Paymen
 - Max 30-day lookback
 - First sync: full query per entity. Subsequent syncs: CDC with last-sync timestamp stored in DB.
 
+### QBT Sync
+QBT supports webhooks for real-time updates or scheduled polling:
+```
+GET /api/v1/timesheets?modified_since={timestamp}
+```
+- Use webhooks for immediate sync when time entries are created/updated
+- Store last sync timestamp for incremental updates
+
 ---
 
 ## Rate limits
 
+### QBO
 | Limit | Value |
 |---|---|
 | Requests/minute per company | 500 |
@@ -221,18 +269,31 @@ GET /v3/company/{realmId}/cdc?entities=Customer,Invoice,Bill,TimeActivity,Paymen
 | Query max results/page | 1,000 |
 | Free GET calls/month | 500,000 then metered |
 
+### QBT
+| Limit | Value |
+|---|---|
+| Requests/minute | 60 |
+| Requests/hour | 1,000 |
+| Requests/day | 10,000 |
+
 HTTP 429 = rate limited. Implement exponential backoff with `Retry-After` header.
 
 ---
 
 ## Sandbox setup
 
-1. Go to developer.intuit.com → create app (select `com.intuit.quickbooks.accounting` scope)
-2. Note separate Client ID / Client Secret for sandbox vs production
-3. Developer Profile → Sandbox → Add Sandbox Company (pre-populated with sample data)
-4. Sandbox base URL: `https://sandbox-quickbooks.api.intuit.com/...`
-5. Sandbox company valid for 2 years; up to 10 sandbox companies
-6. **GraphQL Time/Payroll API not available in sandbox** — use REST `TimeActivity` instead
+1. **QBO Setup:**
+   - Go to developer.intuit.com → create app (select `com.intuit.quickbooks.accounting` scope)
+   - Note separate Client ID / Client Secret for sandbox vs production
+   - Developer Profile → Sandbox → Add Sandbox Company (pre-populated with sample data)
+   - Sandbox base URL: `https://sandbox-quickbooks.api.intuit.com/...`
+   - Sandbox company valid for 2 years; up to 10 sandbox companies
+   - **GraphQL Time/Payroll API not available in sandbox** — use REST `TimeActivity` instead
+
+2. **QBT Setup:**
+   - Register separate app for QuickBooks Time at developer.intuit.com
+   - Use different OAuth scopes for time tracking
+   - Sandbox available for QBT API testing
 
 ---
 
@@ -241,6 +302,7 @@ HTTP 429 = rate limited. Implement exponential backoff with `Retry-After` header
 ```
 npm install intuit-oauth          # Official Intuit OAuth client
 npm install node-quickbooks       # Community SDK with entity CRUD wrappers
+npm install tSheets              # QuickBooks Time SDK (if available) or raw fetch
 ```
 
 Or use raw `fetch` with bearer token — simpler for a limited integration.
@@ -249,24 +311,35 @@ Or use raw `fetch` with bearer token — simpler for a limited integration.
 
 ## Integration phases for TCC
 
-### Phase 1 — Read only (safe, build first)
-- OAuth flow + token storage in `qbo_tokens` table
-- Pull customers → sync to `customers` table
-- Pull jobs (sub-customers) → match to `projects` by job_number in DisplayName
-- Pull accepted Estimates → populate `projects.estimated_income`
-- Pull Invoices → populate `billing_periods.actual_billed` + `billing_periods.paid`
-- Show QBO payment status on billing table
+### Phase 1 — Read only from QuickBooks Online and QuickBooks Time (safe, build first)
+- OAuth flow + token storage for QBO (`qbo_tokens` table) and QBT (`qbt_tokens` table)
+- **QBO reads:**
+  - Pull customers → sync to `customers` table
+  - Pull jobs (sub-customers) → match to `projects` by job_number in DisplayName
+  - Pull accepted Estimates → populate `projects.estimated_income`
+  - Pull Invoices → populate `billing_periods.actual_billed` + `billing_periods.paid`
+  - Show QBO payment status on billing table
+- **QBT reads:**
+  - Pull timesheets/times → populate labor hours per project
+  - Sync employee time entries with project assignments
+  - Calculate actual labor costs from QBT data
 
-### Phase 2 — Write (more complex)
+### Phase 2 — Write to QuickBooks Online (invoicing)
 - Push TCC billing calculation to QBO as Invoice draft
 - Include approved COs as additional invoice lines
 - Mark billing period as invoiced after QBO invoice is created
 
 ### Phase 3 — Full job costing
 - Pull Bills → populate material actual costs per project
-- Pull TimeActivity → populate labor hours per project
+- Pull TimeActivity (QBO) → additional labor data if not covered by QBT
 - Show budget vs actual with real cost data (not estimates)
 - Payroll rate sync for true labor cost calculation
+
+### Phase 4 — Full 2-way data transfer
+- Write time entries to QBT from TCC project tracking
+- Sync employee assignments and project codes bidirectionally
+- Automated invoice creation and time entry approval workflows
+- Real-time sync of project status updates between systems
 
 ---
 
@@ -278,6 +351,18 @@ CREATE TABLE qbo_tokens (
   realm_id                  text NOT NULL UNIQUE,
   access_token              text NOT NULL,       -- encrypt at rest
   refresh_token             text NOT NULL,       -- encrypt at rest
+  token_expires_at          timestamptz NOT NULL,
+  refresh_token_expires_at  timestamptz NOT NULL,
+  connected_by              uuid REFERENCES profiles(id),
+  connected_at              timestamptz NOT NULL DEFAULT now(),
+  updated_at                timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE qbt_tokens (
+  id                        uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id                text NOT NULL UNIQUE,  -- QBT company ID
+  access_token              text NOT NULL,         -- encrypt at rest
+  refresh_token             text NOT NULL,         -- encrypt at rest
   token_expires_at          timestamptz NOT NULL,
   refresh_token_expires_at  timestamptz NOT NULL,
   connected_by              uuid REFERENCES profiles(id),
@@ -301,13 +386,22 @@ POST /api/qbo/sync-estimates    -- Phase 1: sync estimated_income
 POST /api/qbo/sync-invoices     -- Phase 1: sync actual_billed + paid status
 POST /api/qbo/create-invoice    -- Phase 2: push billing calculation to QBO
 POST /api/qbo/sync-bills        -- Phase 3: sync material costs
-POST /api/qbo/sync-time         -- Phase 3: sync labor hours
+POST /api/qbo/sync-time         -- Phase 3: sync additional labor hours (TimeActivity)
+
+GET  /api/qbt/auth              -- initiate OAuth for QuickBooks Time
+GET  /api/qbt/callback          -- OAuth callback, store QBT tokens
+GET  /api/qbt/status            -- check QBT connection status
+DELETE /api/qbt/disconnect      -- revoke QBT tokens
+POST /api/qbt/sync-timesheets   -- Phase 1: sync labor hours from QBT
+POST /api/qbt/sync-employees    -- Phase 1: sync employee data
+POST /api/qbt/create-time-entry -- Phase 4: push time entries to QBT
 ```
 
 ---
 
 ## Key gotchas summary
 
+### QBO
 1. `realmId` is per-company — required in every URL
 2. `SyncToken` required for all updates — always read first, include in update
 3. Bills have no top-level `CustomerRef` — job cost is per-line only, cannot filter via IQL
@@ -320,9 +414,17 @@ POST /api/qbo/sync-time         -- Phase 3: sync labor hours
 10. Always use `?minorversion=70` on all requests
 11. CDC is better than polling for sync — use it after initial full sync
 
+### QBT
+1. `companyId` instead of `realmId` for API calls
+2. Job codes in QBT must be mapped to TCC project IDs
+3. QBT API uses different authentication flow than QBO
+4. Webhooks available for real-time sync of time entries
+5. Rate limits are per API key, not per company
+6. Sandbox environment available but may have limited data
+
 ---
 
 ## Priority: High strategic value
 ## Depends on: budget-vs-actual (task 058), timesheets (task 056)
 ## Suggested task number: 059
-## Sandbox app registration: developer.intuit.com (separate from production)
+## Sandbox app registration: developer.intuit.com (separate apps for QBO and QBT)

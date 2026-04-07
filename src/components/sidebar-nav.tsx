@@ -129,10 +129,19 @@ function MessageIcon({ className = "h-5 w-5" }: IconProps) {
   );
 }
 
+function ClockIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
 function ChevronLeftIcon({ className = "h-4 w-4" }: IconProps) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
-      <path d="m15 18-6-6 6-6" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <path d="m15 6-6 6 6 6" />
     </svg>
   );
 }
@@ -148,6 +157,7 @@ export const NAV_LINKS: NavItem[] = [
   { label: "Estimating", href: "/estimating", roles: ["admin", "ops_manager"], icon: CalculatorIcon },
   { label: "Projects", href: "/projects", roles: ["pm", "lead"], icon: FolderIcon },
   { label: "PM Portal", href: "/pm", roles: ["pm", "lead", "ops_manager"], icon: ClipboardIcon },
+  { label: "Time Tracking", href: "/pm/time", roles: ["pm", "lead", "ops_manager"], icon: ClockIcon },
   { label: "Installer", href: "/installer", roles: ["installer"], icon: WrenchIcon },
   { label: "Analytics", href: "/admin/analytics", roles: ["admin", "ops_manager"], icon: ChartIcon },
   { label: "SharePoint", href: "/admin/migrate-sharepoint", roles: ["admin"], icon: FolderIcon },
@@ -169,6 +179,7 @@ const PAGE_TITLE_OVERRIDES: Record<string, string> = {
   "/installer": "Installer",
   "/ops": "Operations",
   "/pm": "PM Portal",
+  "/pm/time": "Time Tracking",
   "/projects": "Projects",
   "/quotes": "Quotes",
 };
