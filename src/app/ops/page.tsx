@@ -96,7 +96,7 @@ export default async function OpsPage() {
     linkedPmDirectoryIds.length
       ? assignedProjectsQuery.or(`profile_id.eq.${user.id},pm_directory_id.in.(${linkedPmDirectoryIds.join(",")})`)
       : assignedProjectsQuery.eq("profile_id", user.id),
-    profile?.role === "ops_manager"
+    (profile?.role === "ops_manager" || profile?.role === "admin")
       ? adminClient
           .from("projects")
           .select(`
