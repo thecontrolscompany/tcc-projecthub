@@ -471,7 +471,7 @@ function ProjectList({
           return (
             <button
               key={project.id}
-              onClick={() => onSelect(project)}
+              onClick={() => { onSelect(project); window.scrollTo({ top: 0, behavior: "instant" }); }}
               className="customer-print-card relative overflow-hidden rounded-3xl border-l-4 bg-white p-6 text-left shadow-[0_18px_45px_rgba(1,122,111,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_55px_rgba(1,122,111,0.14)]"
               style={{ borderColor: BORDER, borderLeftColor: HEADER_BG }}
             >
