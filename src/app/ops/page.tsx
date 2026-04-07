@@ -182,6 +182,11 @@ export default async function OpsPage() {
     };
   }).sort((a, b) => a.name.localeCompare(b.name));
 
+  // TEMPORARY DEBUG — remove after confirming fix
+  const debugProjects = Array.from(projectMap.values()).filter(p =>
+    p.name?.toLowerCase().includes("mobile") || p.name?.toLowerCase().includes("arena")
+  );
+
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
@@ -191,6 +196,28 @@ export default async function OpsPage() {
           Click any row to expand recent weekly updates. Use Edit to open the full project editor. Active projects are shown by default, with completed projects available from the toggle.
         </p>
       </div>
+
+      {debugProjects.length > 0 && (
+        <div className="rounded-xl border border-yellow-400 bg-yellow-50 p-4 text-xs font-mono text-slate-800">
+          <p className="mb-2 font-bold text-yellow-700">DEBUG — Mobile Arena raw data (remove after fix):</p>
+          {debugProjects.map(p => (
+            <div key={p.id} className="mb-3">
+              <p><strong>pm_id:</strong> {p.pm_id ?? "NULL"}</p>
+              <p><strong>pm_directory_id:</strong> {p.pm_directory_id ?? "NULL"}</p>
+              <p className="mt-1"><strong>Assignments:</strong></p>
+              {(p.project_assignments ?? []).map((a, i) => {
+                const prof = Array.isArray(a.profile) ? a.profile[0] : a.profile;
+                const dir = Array.isArray(a.pm_directory) ? a.pm_directory[0] : a.pm_directory;
+                return (
+                  <p key={i} className="ml-2">
+                    role={a.role_on_project} | is_primary={String(a.is_primary)} | profile_id={a.profile_id ?? "null"} | pm_dir_id={a.pm_directory_id ?? "null"} | name={prof?.full_name ?? dir?.first_name ?? "?"}
+                  </p>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      )}
 
       <OpsProjectList projects={normalizedProjects} />
     </div>
