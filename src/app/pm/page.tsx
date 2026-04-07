@@ -17,7 +17,18 @@ import type {
 } from "@/types/database";
 
 type ViewState = "list" | "update";
-type ProjectTab = "overview" | "update" | "poc" | "change-orders" | "rfis" | "bom";
+type ProjectTab = "overview" | "contacts" | "update" | "poc" | "change-orders" | "rfis" | "bom";
+
+interface ProjectContact {
+  id?: string;
+  role: string;
+  company: string;
+  contact_name: string;
+  phone: string;
+  email: string;
+  notes: string;
+  sort_order?: number;
+}
 
 interface ProjectWithBilling {
   id: string;
@@ -296,6 +307,7 @@ function UpdateForm({
   const [editHistory, setEditHistory] = useState<WeeklyUpdateEdit[]>([]);
   const [editNote, setEditNote] = useState("");
   const [changeOrders, setChangeOrders] = useState<ChangeOrder[]>([]);
+  const [contacts, setContacts] = useState<ProjectContact[]>([]);
   const [coError, setCoError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ProjectTab>("overview");
   const [manualOverride, setManualOverride] = useState<string>(() =>
@@ -395,6 +407,14 @@ function UpdateForm({
       const updatesData = (response.ok ? json?.updates : []) as WeeklyUpdate[];
       const pocData = (response.ok ? json?.pocItems : []) as PocLineItem[];
       const editHistoryData = (response.ok ? json?.editHistory : []) as WeeklyUpdateEdit[];
+      setContacts((json?.contacts ?? []).map((c: ProjectContact) => ({
+        ...c,
+        company: c.company ?? "",
+        contact_name: c.contact_name ?? "",
+        phone: c.phone ?? "",
+        email: c.email ?? "",
+        notes: c.notes ?? "",
+      })));
 
       setRecentUpdates(updatesData ?? []);
 
@@ -427,6 +447,7 @@ function UpdateForm({
     } catch {
       setRecentUpdates([]);
       setChangeOrders([]);
+      setContacts([]);
       setCoError("Failed to load change orders.");
       resetForNewWeek(null);
     }
@@ -633,6 +654,9 @@ function UpdateForm({
         <PmTabButton active={activeTab === "overview"} onClick={() => setActiveTab("overview")}>
           Overview
         </PmTabButton>
+        <PmTabButton active={activeTab === "contacts"} onClick={() => setActiveTab("contacts")}>
+          Contacts
+        </PmTabButton>
         <PmTabButton active={activeTab === "update"} onClick={() => setActiveTab("update")}>
           Weekly Update
           {draftUpdateId && <span className="ml-1.5 inline-flex h-2 w-2 rounded-full bg-status-warning" />}
@@ -795,7 +819,15 @@ function UpdateForm({
         </div>
       )}
 
-            {activeTab === "update" && (
+      {activeTab === "contacts" && (
+        <ContactsTab
+          projectId={project.id}
+          contacts={contacts}
+          onSaved={(updated) => setContacts(updated)}
+        />
+      )}
+
+      {activeTab === "update" && (
         <>
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-default bg-surface-raised p-4">
             <div>
@@ -1418,6 +1450,277 @@ function SummaryField({ label, value }: { label: string; value: string | null })
     <div className="rounded-xl border border-border-default bg-surface-base p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{label}</p>
       <p className="mt-2 whitespace-pre-wrap text-sm text-text-primary">{value}</p>
+    </div>
+  );
+}
+
+const CONTACT_ROLES = [
+  { key: "gc", label: "General Contractor" },
+  { key: "mechanical", label: "Mechanical Contractor" },
+  { key: "electrical", label: "Electrical Contractor" },
+  { key: "owner", label: "Owner / Owner's Rep" },
+  { key: "architect", label: "Architect" },
+  { key: "engineer", label: "Engineer" },
+  { key: "other", label: "Other" },
+];
+
+function ContactsTab({
+  projectId,
+  contacts,
+  onSaved,
+}: {
+  projectId: string;
+  contacts: ProjectContact[];
+  onSaved: (updated: ProjectContact[]) => void;
+}) {
+  const [editMode, setEditMode] = useState(false);
+  const [draft, setDraft] = useState<ProjectContact[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  function enterEdit() {
+    const rows: ProjectContact[] = CONTACT_ROLES.map((r, i) => {
+      const existing = contacts.find((c) => c.role === r.key);
+      return existing
+        ? {
+            ...existing,
+            company: existing.company ?? "",
+            contact_name: existing.contact_name ?? "",
+            phone: existing.phone ?? "",
+            email: existing.email ?? "",
+            notes: existing.notes ?? "",
+          }
+        : { role: r.key, company: "", contact_name: "", phone: "", email: "", notes: "", sort_order: i };
+    });
+    setDraft(rows);
+    setSaveError(null);
+    setEditMode(true);
+  }
+
+  function cancelEdit() {
+    setEditMode(false);
+    setSaveError(null);
+  }
+
+  function updateDraft(index: number, field: keyof ProjectContact, value: string) {
+    setDraft((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
+  }
+
+  async function saveContacts() {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const response = await fetch("/api/pm/contacts", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ project_id: projectId, contacts: draft }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json?.error ?? "Failed to save.");
+      const saved = draft.filter(
+        (c) => c.company || c.contact_name || c.phone || c.email || c.notes
+      );
+      onSaved(saved);
+      setEditMode(false);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save contacts.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!editMode) {
+    const populated = contacts.filter(
+      (c) => c.company || c.contact_name || c.phone || c.email
+    );
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-semibold text-text-primary">Project Contacts</h3>
+            <p className="mt-0.5 text-sm text-text-tertiary">
+              Key contacts for this project.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={enterEdit}
+            className="rounded-lg border border-border-default bg-surface-overlay px-4 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-base hover:text-text-primary"
+          >
+            Edit Contacts
+          </button>
+        </div>
+
+        {populated.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border-default px-6 py-10 text-center">
+            <p className="text-sm font-medium text-text-secondary">No contacts on file.</p>
+            <p className="mt-1 text-xs text-text-tertiary">
+              Click Edit Contacts to add GC, mechanical, electrical, and other key contacts.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {populated.map((contact, i) => {
+              const roleLabel =
+                CONTACT_ROLES.find((r) => r.key === contact.role)?.label ?? contact.role;
+              return (
+                <div
+                  key={contact.id ?? i}
+                  className="rounded-2xl border border-border-default bg-surface-raised p-4 space-y-2"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                    {roleLabel}
+                  </p>
+                  {contact.company && (
+                    <p className="font-semibold text-text-primary">{contact.company}</p>
+                  )}
+                  {contact.contact_name && (
+                    <p className="text-sm text-text-secondary">{contact.contact_name}</p>
+                  )}
+                  <div className="space-y-1">
+                    {contact.phone && (
+                      <a
+                        href={`tel:${contact.phone}`}
+                        className="block text-sm text-brand-primary hover:underline"
+                      >
+                        {contact.phone}
+                      </a>
+                    )}
+                    {contact.email && (
+                      <a
+                        href={`mailto:${contact.email}`}
+                        className="block text-sm text-brand-primary hover:underline"
+                      >
+                        {contact.email}
+                      </a>
+                    )}
+                  </div>
+                  {contact.notes && (
+                    <p className="text-xs text-text-tertiary">{contact.notes}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-semibold text-text-primary">Edit Contacts</h3>
+          <p className="mt-0.5 text-sm text-text-tertiary">
+            All fields are optional. Leave blank to omit a contact.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={cancelEdit}
+            disabled={saving}
+            className="rounded-lg border border-border-default bg-surface-overlay px-4 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-base"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => void saveContacts()}
+            disabled={saving}
+            className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </div>
+
+      {saveError && (
+        <p className="rounded-xl border border-status-danger/20 bg-status-danger/5 px-4 py-3 text-sm text-status-danger">
+          {saveError}
+        </p>
+      )}
+
+      <div className="space-y-6">
+        {draft.map((row, index) => {
+          const roleLabel =
+            CONTACT_ROLES.find((r) => r.key === row.role)?.label ?? row.role;
+          return (
+            <div
+              key={row.role}
+              className="rounded-2xl border border-border-default bg-surface-raised p-4 space-y-3"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                {roleLabel}
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">
+                    Company
+                  </label>
+                  <input
+                    type="text"
+                    value={row.company}
+                    onChange={(e) => updateDraft(index, "company", e.target.value)}
+                    className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:border-brand-primary/50 focus:outline-none"
+                    placeholder="Company name"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">
+                    Contact Name
+                  </label>
+                  <input
+                    type="text"
+                    value={row.contact_name}
+                    onChange={(e) => updateDraft(index, "contact_name", e.target.value)}
+                    className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:border-brand-primary/50 focus:outline-none"
+                    placeholder="First Last"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={row.phone}
+                    onChange={(e) => updateDraft(index, "phone", e.target.value)}
+                    className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:border-brand-primary/50 focus:outline-none"
+                    placeholder="(555) 555-5555"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={row.email}
+                    onChange={(e) => updateDraft(index, "email", e.target.value)}
+                    className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:border-brand-primary/50 focus:outline-none"
+                    placeholder="email@company.com"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-text-secondary">
+                  Notes
+                </label>
+                <input
+                  type="text"
+                  value={row.notes}
+                  onChange={(e) => updateDraft(index, "notes", e.target.value)}
+                  className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:border-brand-primary/50 focus:outline-none"
+                  placeholder="Optional notes"
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

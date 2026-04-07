@@ -4,6 +4,17 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import type { WeeklyUpdateEdit } from "@/types/database";
 
+interface ProjectContact {
+  id: string;
+  role: string;
+  company: string | null;
+  contact_name: string | null;
+  phone: string | null;
+  email: string | null;
+  notes: string | null;
+  sort_order: number;
+}
+
 export async function GET(request: Request) {
   const supabase = await createServerClient();
   const {
@@ -42,7 +53,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Missing project id." }, { status: 400 });
     }
 
-    const [updatesResult, pocResult] = await Promise.all([
+    const [updatesResult, pocResult, contactsResult] = await Promise.all([
       adminClient
         .from("weekly_updates")
         .select("id, project_id, pm_id, week_of, pct_complete, notes, blockers, poc_snapshot, crew_log, material_delivered, equipment_set, safety_incidents, inspections_tests, delays_impacts, other_remarks, imported_from, status, submitted_at")
@@ -53,13 +64,20 @@ export async function GET(request: Request) {
         .select("*")
         .eq("project_id", projectId)
         .order("sort_order"),
+      adminClient
+        .from("project_contacts")
+        .select("id, role, company, contact_name, phone, email, notes, sort_order")
+        .eq("project_id", projectId)
+        .order("sort_order")
+        .order("created_at"),
     ]);
 
-    if (updatesResult.error || pocResult.error) {
+    if (updatesResult.error || pocResult.error || contactsResult.error) {
       return NextResponse.json({
         error:
           updatesResult.error?.message ||
           pocResult.error?.message ||
+          contactsResult.error?.message ||
           "Failed to load project data.",
       }, { status: 500 });
     }
@@ -81,6 +99,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       updates,
       pocItems: pocResult.data ?? [],
+      contacts: (contactsResult.data ?? []) as ProjectContact[],
       editHistory,
     });
   }
