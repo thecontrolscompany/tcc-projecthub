@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { ViewReportLink } from "@/components/view-report-link";
@@ -218,6 +218,15 @@ export function ProjectModal({
   const customerOptions = useMemo(() => customers, [customers]);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "wip" | "materials">("overview");
+  const [formTab, setFormTab] = useState<"details" | "team" | "compliance" | "history">("details");
+
+  // Track unsaved changes
+  const initialValuesRef = useRef<string>("");
+  useEffect(() => {
+    initialValuesRef.current = JSON.stringify(values);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingProject?.id]);
+  const isDirty = useMemo(() => JSON.stringify(values) !== initialValuesRef.current, [values]);
   const customerPocOptions = useMemo(() => {
     const options = [...externalContacts];
     const currentValue = values.customerPoc.trim();
@@ -237,8 +246,8 @@ export function ProjectModal({
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4 py-8">
-      <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-border-default bg-surface-base shadow-xl">
-        <div className="flex items-start justify-between border-b border-border-default px-6 py-4">
+      <div className="flex max-h-[90vh] w-full max-w-4xl flex-col rounded-2xl border border-border-default bg-surface-base shadow-xl">
+        <div className="flex shrink-0 items-start justify-between border-b border-border-default px-6 py-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">
               {editingProject ? "Edit Project" : "New Project"}
@@ -265,7 +274,7 @@ export function ProjectModal({
         </div>
 
         {editingProject && (
-          <div className="border-b border-border-default px-6 py-3">
+          <div className="shrink-0 border-b border-border-default px-6 py-3">
             <div className="flex flex-wrap gap-2">
               {(
                 [
@@ -292,6 +301,37 @@ export function ProjectModal({
           </div>
         )}
 
+        {/* Form sub-tabs — Overview only, editing only */}
+        {editingProject && activeTab === "overview" && (
+          <div className="shrink-0 border-b border-border-default bg-surface-raised/50 px-6 py-2">
+            <div className="flex flex-wrap gap-1">
+              {(
+                [
+                  { id: "details", label: "Details" },
+                  { id: "team", label: "Team" },
+                  { id: "compliance", label: "Compliance" },
+                  { id: "history", label: "Docs & History" },
+                ] as const
+              ).map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setFormTab(tab.id)}
+                  className={[
+                    "rounded-md px-3 py-1.5 text-xs font-semibold transition",
+                    formTab === tab.id
+                      ? "bg-brand-primary text-text-inverse"
+                      : "text-text-secondary hover:bg-surface-overlay hover:text-text-primary",
+                  ].join(" ")}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 overflow-y-auto">
         {(!editingProject || activeTab === "overview") && (
         <div className="space-y-6 px-6 py-6">
           {(errors.form || saveError) && (
@@ -300,6 +340,7 @@ export function ProjectModal({
             </div>
           )}
 
+          {(!editingProject || formTab === "details") && (
           <section className="space-y-4">
             <h4 className="font-heading text-lg font-semibold text-text-primary">Project Info</h4>
             <div className="grid gap-4 md:grid-cols-2">
@@ -462,15 +503,17 @@ export function ProjectModal({
               <input value={values.specialAccess} onChange={(e) => onChange("specialAccess", e.target.value)} className={inputClassName} />
             </FormField>
           </section>
+          )}
 
-          {editingProject && (
+          {(!editingProject || formTab === "team") && editingProject && (
             <CustomerContactsSection projectId={editingProject.id} />
           )}
 
-          {editingProject && (
+          {formTab === "compliance" && editingProject && (
             <ChangeOrdersSection projectId={editingProject.id} />
           )}
 
+          {(!editingProject || formTab === "team") && (
           <section className="space-y-4">
             <div>
               <h4 className="font-heading text-lg font-semibold text-text-primary">Team</h4>
@@ -571,7 +614,9 @@ export function ProjectModal({
               </div>
             </div>
           </section>
+          )}
 
+          {(!editingProject || formTab === "compliance") && (
           <section className="space-y-4">
             <h4 className="font-heading text-lg font-semibold text-text-primary">Compliance</h4>
             <div className="grid gap-3 md:grid-cols-2">
@@ -581,8 +626,9 @@ export function ProjectModal({
               <CheckboxField label="Bond Required" checked={values.bondRequired} onChange={(checked) => onChange("bondRequired", checked)} />
             </div>
           </section>
+          )}
 
-          {editingProject && (
+          {formTab === "compliance" && editingProject && (
             <section className="space-y-4">
               <h4 className="font-heading text-lg font-semibold text-text-primary">Completion Status</h4>
               <div className="grid gap-3 md:grid-cols-2">
@@ -592,7 +638,7 @@ export function ProjectModal({
             </section>
           )}
 
-          {editingProject && (
+          {formTab === "history" && editingProject && (
             <ProjectDocumentUploads
               project={editingProject}
               isNewProjectFlow={isNewProjectFlow}
@@ -600,7 +646,7 @@ export function ProjectModal({
             />
           )}
 
-          {editingProject && (
+          {formTab === "history" && editingProject && (
             <EstimatorAndPocSection
               projectId={editingProject.id}
               sourceEstimateId={values.sourceEstimateId}
@@ -608,7 +654,7 @@ export function ProjectModal({
             />
           )}
 
-          {editingProject && (
+          {formTab === "history" && editingProject && (
             <WeeklyUpdatesSection projectId={editingProject.id} />
           )}
         </div>
@@ -625,11 +671,12 @@ export function ProjectModal({
             <BomTab projectId={editingProject.id} />
           </div>
         )}
+        </div>{/* end scrollable content */}
 
         {(!editingProject || activeTab === "overview") && (
-        <div className="flex items-center justify-end gap-3 border-t border-border-default px-6 py-4">
+        <div className={["shrink-0 flex items-center justify-end gap-3 border-t px-6 py-4 transition-colors", isDirty ? "border-brand-primary/40 bg-brand-primary/5" : "border-border-default"].join(" ")}>
           <div className="flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+            <div className="flex items-center gap-3">
               {editingProject && (
                 <button
                   type="button"
@@ -639,10 +686,20 @@ export function ProjectModal({
                   Import Weekly Reports from Excel…
                 </button>
               )}
+              {isDirty && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary/10 px-2.5 py-1 text-xs font-semibold text-brand-primary">
+                  <span className="h-1.5 w-1.5 rounded-full bg-brand-primary" />
+                  Unsaved changes
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <button onClick={onClose} className="rounded-xl bg-surface-overlay px-4 py-2 text-sm text-text-secondary hover:bg-surface-overlay">Cancel</button>
-              <button onClick={onSave} disabled={saving} className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-brand-hover disabled:opacity-50">
+              <button
+                onClick={onSave}
+                disabled={saving}
+                className={["rounded-xl px-4 py-2 text-sm font-semibold text-text-inverse transition disabled:opacity-50", isDirty ? "bg-brand-primary ring-2 ring-brand-primary/40 hover:bg-brand-hover" : "bg-brand-primary hover:bg-brand-hover"].join(" ")}
+              >
                 {saving ? "Saving..." : editingProject ? "Save Changes" : "Create Project"}
               </button>
             </div>
