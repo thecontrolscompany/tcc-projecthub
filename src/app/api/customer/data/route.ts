@@ -47,10 +47,11 @@ export async function GET(request: Request) {
         billingPeriods: [],
         weeklyUpdates: [],
         assignments: [],
+        changeOrders: [],
       });
     }
 
-    const [projectsResult, billingResult, updatesResult, assignmentsResult] = await Promise.all([
+    const [projectsResult, billingResult, updatesResult, assignmentsResult, changeOrdersResult] = await Promise.all([
       adminClient
         .from("projects")
         .select("id, name, estimated_income, job_number, site_address, general_contractor, customer:customers(name)")
@@ -95,13 +96,19 @@ export async function GET(request: Request) {
         `)
         .in("project_id", projectIds)
         .in("role_on_project", ["pm", "lead"]),
+      adminClient
+        .from("change_orders")
+        .select("id, project_id, co_number, title, amount, status, submitted_date, approved_date, reference_doc")
+        .in("project_id", projectIds)
+        .in("status", ["approved"]),
     ]);
 
     const readError =
       projectsResult.error ||
       billingResult.error ||
       updatesResult.error ||
-      assignmentsResult.error;
+      assignmentsResult.error ||
+      changeOrdersResult.error;
 
     if (readError) {
       return NextResponse.json({ error: readError.message }, { status: 500 });
@@ -112,6 +119,7 @@ export async function GET(request: Request) {
       billingPeriods: billingResult.data ?? [],
       weeklyUpdates: updatesResult.data ?? [],
       assignments: assignmentsResult.data ?? [],
+      changeOrders: changeOrdersResult.data ?? [],
     });
   }
 

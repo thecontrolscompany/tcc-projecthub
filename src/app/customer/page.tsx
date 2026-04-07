@@ -22,6 +22,18 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { ViewReportLink } from "@/components/view-report-link";
 import type { BillingPeriod, CrewLogEntry, WeeklyUpdate } from "@/types/database";
 
+interface CustomerChangeOrder {
+  id: string;
+  project_id: string;
+  co_number: string;
+  title: string;
+  amount: number;
+  status: string;
+  submitted_date: string | null;
+  approved_date: string | null;
+  reference_doc: string | null;
+}
+
 interface CustomerProject {
   id: string;
   name: string;
@@ -33,6 +45,7 @@ interface CustomerProject {
   billing_periods: BillingPeriod[];
   weekly_updates: WeeklyUpdate[];
   team_members: ProjectTeamMember[];
+  change_orders: CustomerChangeOrder[];
 }
 
 type ProjectTeamMember = {
@@ -100,6 +113,7 @@ export default function CustomerPage() {
       const periods = (json?.billingPeriods ?? []) as BillingPeriod[];
       const updates = (json?.weeklyUpdates ?? []) as WeeklyUpdate[];
       const assignments = (json?.assignments ?? []) as Array<ProjectTeamMember & { project_id: string }>;
+      const changeOrders = (json?.changeOrders ?? []) as CustomerChangeOrder[];
 
       if (!projectData?.length) {
         setProjects([]);
@@ -120,6 +134,7 @@ export default function CustomerPage() {
           billing_periods: ((periods ?? []).filter((period) => period.project_id === project.id) as BillingPeriod[]),
           weekly_updates: ((updates ?? []).filter((update) => update.project_id === project.id) as WeeklyUpdate[]),
           team_members: assignments.filter((assignment) => assignment.project_id === project.id),
+          change_orders: changeOrders.filter((co) => co.project_id === project.id),
         };
       });
 
@@ -263,7 +278,7 @@ function ProjectList({
   const [statusFilter, setStatusFilter] = useState("all");
 
   const summary = useMemo(() => {
-    const totalContracts = projects.reduce((sum, project) => sum + (project.estimated_income ?? 0), 0);
+    const totalContracts = projects.reduce((sum, project) => sum + getProjectContractValue(project), 0);
     const totalBilled = projects.reduce((sum, project) => sum + getProjectBilledToDate(project), 0);
     const totalBacklog = Math.max(totalContracts - totalBilled, 0);
     const billedThisPeriod = projects.reduce((sum, project) => sum + (project.billing_periods[0]?.actual_billed ?? 0), 0);
@@ -274,11 +289,12 @@ function ProjectList({
 
     const financialChartData = projects.map((project) => {
       const billed = getProjectBilledToDate(project);
+      const contractValue = getProjectContractValue(project);
       return {
         name: getProjectChartLabel(project),
-        contractValue: project.estimated_income ?? 0,
+        contractValue,
         billed,
-        backlog: Math.max((project.estimated_income ?? 0) - billed, 0),
+        backlog: Math.max(contractValue - billed, 0),
       };
     });
 
@@ -530,9 +546,9 @@ function ProjectDetail({
         .map((period) => ({
           label: format(new Date(period.period_month), "MMM ''yy"),
           billed: period.actual_billed ?? 0,
-          contractValue: period.estimated_income_snapshot,
+          contractValue: getProjectContractValue(project),
         })),
-    [project.billing_periods]
+    [project]
   );
 
   return (
@@ -613,13 +629,29 @@ function ProjectDetail({
             )}
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <MetricCard label="Contract Value" value={currency(project.estimated_income)} />
-            <MetricCard
-              label="Last Update"
-              value={project.weekly_updates[0] ? format(new Date(project.weekly_updates[0].week_of), "MMM d, yyyy") : "Pending"}
-            />
-          </div>
+          {/* Compute these inline since they're only used here */}
+          {(() => {
+            const approvedCoTotal = getProjectApprovedCoTotal(project);
+            const contractValue = getProjectContractValue(project);
+            const totalBilled = project.billing_periods.reduce((sum, p) => sum + (p.actual_billed ?? 0), 0);
+            const remaining = Math.max(contractValue - totalBilled, 0);
+            const currentPct = latestPeriod ? latestPeriod.pct_complete * 100 : null;
+            return (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
+                <MetricCard
+                  label="Contract Value"
+                  value={currency(contractValue)}
+                  subLabel={approvedCoTotal > 0 ? `incl. ${currency(approvedCoTotal)} in approved COs` : undefined}
+                />
+                <MetricCard label="Total Billed" value={currency(totalBilled)} />
+                <MetricCard label="Remaining Balance" value={currency(remaining)} />
+                <MetricCard
+                  label="% Complete"
+                  value={currentPct !== null ? `${currentPct.toFixed(1)}%` : "Pending"}
+                />
+              </div>
+            );
+          })()}
         </div>
       </section>
 
@@ -739,6 +771,68 @@ function ProjectDetail({
           )}
         </ChartCard>
       </div>
+
+      {project.change_orders.filter((co) => co.status === "approved").length > 0 && (
+        <section
+          className="customer-print-card rounded-3xl border bg-white p-6 shadow-sm"
+          style={{ borderColor: BORDER }}
+        >
+          <div className="mb-4">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: HEADER_BG }}>
+              Change Orders
+            </p>
+            <h3 className="text-xl font-bold" style={{ color: CHARCOAL }}>
+              Approved Change Orders
+            </h3>
+          </div>
+          <div className="space-y-3">
+            {project.change_orders
+              .filter((co) => co.status === "approved")
+              .map((co) => (
+                <div
+                  key={co.id}
+                  className="flex items-center justify-between rounded-2xl border bg-slate-50 px-4 py-3 text-sm"
+                  style={{ borderColor: BORDER }}
+                >
+                  <div className="space-y-0.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-slate-800">{co.co_number}</span>
+                      <span className="text-slate-400">-</span>
+                      <span className="text-slate-700">{co.title}</span>
+                    </div>
+                    {co.approved_date && (
+                      <p className="text-xs text-slate-400">
+                        Approved {format(new Date(co.approved_date), "MMM d, yyyy")}
+                      </p>
+                    )}
+                    {co.reference_doc && (
+                      <p className="text-xs text-slate-400">Ref: {co.reference_doc}</p>
+                    )}
+                  </div>
+                  <span className="shrink-0 font-semibold" style={{ color: HEADER_BG }}>
+                    {co.amount >= 0 ? "+" : ""}
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                      maximumFractionDigits: 0,
+                    }).format(co.amount)}
+                  </span>
+                </div>
+              ))}
+          </div>
+          <div
+            className="mt-4 rounded-2xl px-4 py-3"
+            style={{ backgroundColor: "#e6f6f4" }}
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Total Approved Change Orders
+            </p>
+            <p className="mt-1 text-base font-bold" style={{ color: HEADER_BG }}>
+              {currency(getProjectApprovedCoTotal(project))}
+            </p>
+          </div>
+        </section>
+      )}
 
       <div className="customer-print-hide flex gap-2 border-b pb-1" style={{ borderColor: BORDER }}>
         {(["updates", "billing"] as const).map((tab) => (
@@ -1093,13 +1187,16 @@ function ProgressDonut({ value }: { value: number }) {
   );
 }
 
-function MetricCard({ label, value }: { label: string; value: string }) {
+function MetricCard({ label, value, subLabel }: { label: string; value: string; subLabel?: string }) {
   return (
     <div className="rounded-2xl border bg-white px-4 py-3 shadow-sm" style={{ borderColor: BORDER }}>
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</p>
       <p className="mt-1 text-lg font-bold" style={{ color: CHARCOAL }}>
         {value}
       </p>
+      {subLabel && (
+        <p className="mt-0.5 text-[11px] text-slate-400">{subLabel}</p>
+      )}
     </div>
   );
 }
@@ -1253,6 +1350,16 @@ function getProjectBilledToDate(project: CustomerProject) {
   return latest.actual_billed !== null
     ? latest.prev_billed + latest.actual_billed
     : latest.prev_billed;
+}
+
+function getProjectApprovedCoTotal(project: CustomerProject): number {
+  return project.change_orders
+    .filter((co) => co.status === "approved")
+    .reduce((sum, co) => sum + co.amount, 0);
+}
+
+function getProjectContractValue(project: CustomerProject): number {
+  return (project.estimated_income ?? 0) + getProjectApprovedCoTotal(project);
 }
 
 function getProjectStatus(project: CustomerProject) {
