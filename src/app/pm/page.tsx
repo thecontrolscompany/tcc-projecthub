@@ -30,6 +30,20 @@ interface ProjectContact {
   sort_order?: number;
 }
 
+interface ProjectRfi {
+  id: string;
+  project_id: string;
+  rfi_number: number;
+  subject: string;
+  question: string | null;
+  directed_to: string | null;
+  date_submitted: string;
+  date_responded: string | null;
+  response: string | null;
+  status: "open" | "pending_response" | "closed";
+  created_at: string;
+}
+
 interface ProjectWithBilling {
   id: string;
   customer_id: string | null;
@@ -311,6 +325,8 @@ function UpdateForm({
   const [editNote, setEditNote] = useState("");
   const [changeOrders, setChangeOrders] = useState<ChangeOrder[]>([]);
   const [contacts, setContacts] = useState<ProjectContact[]>([]);
+  const [rfis, setRfis] = useState<ProjectRfi[]>([]);
+  const [rfisLoading, setRfisLoading] = useState(false);
   const [coError, setCoError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ProjectTab>("overview");
   const [manualOverride, setManualOverride] = useState<string>(() =>
@@ -451,6 +467,7 @@ function UpdateForm({
       setRecentUpdates([]);
       setChangeOrders([]);
       setContacts([]);
+      setRfis([]);
       setCoError("Failed to load change orders.");
       resetForNewWeek(null);
     }
@@ -460,6 +477,22 @@ function UpdateForm({
     void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project.id]);
+
+  async function loadRfis(projectId: string) {
+    if (rfisLoading) return;
+    setRfisLoading(true);
+    try {
+      const res = await fetch(`/api/pm/rfis?projectId=${encodeURIComponent(projectId)}`, {
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (res.ok) setRfis(json.rfis ?? []);
+    } catch {
+      // silently ignore
+    } finally {
+      setRfisLoading(false);
+    }
+  }
 
   function updateCrewRow(index: number, field: keyof CrewLogEntry, value: string | number) {
     setCrewLog((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
@@ -675,7 +708,15 @@ function UpdateForm({
             </span>
           )}
         </PmTabButton>
-        <PmTabButton active={activeTab === "rfis"} onClick={() => setActiveTab("rfis")}>
+        <PmTabButton
+          active={activeTab === "rfis"}
+          onClick={() => {
+            setActiveTab("rfis");
+            if (rfis.length === 0 && !rfisLoading) {
+              void loadRfis(project.id);
+            }
+          }}
+        >
           RFIs
         </PmTabButton>
         <PmTabButton active={activeTab === "bom"} onClick={() => setActiveTab("bom")}>
@@ -1475,21 +1516,13 @@ function UpdateForm({
       )}
 
       {activeTab === "rfis" && (
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-base font-semibold text-text-primary">RFI Log</h3>
-            <p className="mt-1 text-sm text-text-tertiary">
-              Request for Information tracking for this project.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-dashed border-border-default px-6 py-12 text-center">
-            <p className="text-sm font-semibold text-text-secondary">Coming Soon</p>
-            <p className="mx-auto mt-2 max-w-sm text-xs text-text-tertiary">
-              RFI logging, GC/design team question tracking, and submittal linking
-              will be available here in a future update.
-            </p>
-          </div>
-        </div>
+        <RfiTab
+          projectId={project.id}
+          rfis={rfis}
+          loading={rfisLoading}
+          onCreated={(rfi) => setRfis((prev) => [rfi, ...prev])}
+          onUpdated={(rfi) => setRfis((prev) => prev.map((r) => (r.id === rfi.id ? rfi : r)))}
+        />
       )}
 
       {activeTab === "bom" && (
@@ -1520,6 +1553,14 @@ const CONTACT_ROLES = [
   { key: "architect", label: "Architect" },
   { key: "engineer", label: "Engineer" },
   { key: "other", label: "Other" },
+];
+
+const RFI_DIRECTED_TO_OPTIONS = [
+  "General Contractor",
+  "Architect",
+  "Engineer",
+  "Owner / Owner's Rep",
+  "Other",
 ];
 
 function ContactsTab({
@@ -1779,6 +1820,352 @@ function ContactsTab({
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function RfiTab({
+  projectId,
+  rfis,
+  loading,
+  onCreated,
+  onUpdated,
+}: {
+  projectId: string;
+  rfis: ProjectRfi[];
+  loading: boolean;
+  onCreated: (rfi: ProjectRfi) => void;
+  onUpdated: (rfi: ProjectRfi) => void;
+}) {
+  const [showForm, setShowForm] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [subject, setSubject] = useState("");
+  const [question, setQuestion] = useState("");
+  const [directedTo, setDirectedTo] = useState("");
+  const [dateSubmitted, setDateSubmitted] = useState(() => new Date().toISOString().slice(0, 10));
+  const [closingId, setClosingId] = useState<string | null>(null);
+  const [closeResponse, setCloseResponse] = useState("");
+  const [closeDate, setCloseDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [closeStatus, setCloseStatus] = useState<"pending_response" | "closed">("closed");
+
+  function resetForm() {
+    setSubject("");
+    setQuestion("");
+    setDirectedTo("");
+    setDateSubmitted(new Date().toISOString().slice(0, 10));
+    setFormError(null);
+  }
+
+  async function submitRfi() {
+    if (!subject.trim()) {
+      setFormError("Subject is required.");
+      return;
+    }
+    setSaving(true);
+    setFormError(null);
+    try {
+      const res = await fetch("/api/pm/rfis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ projectId, subject, question, directedTo, dateSubmitted }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error ?? "Failed to save.");
+      onCreated(json.rfi as ProjectRfi);
+      resetForm();
+      setShowForm(false);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Failed to save.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function updateRfi(id: string, updates: Partial<{ status: string; response: string; dateResponded: string }>) {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/pm/rfis", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, ...updates }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        onUpdated(json.rfi as ProjectRfi);
+        setClosingId(null);
+        setCloseResponse("");
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const statusConfig = {
+    open: { label: "Open", className: "bg-status-danger/10 text-status-danger" },
+    pending_response: { label: "Pending Response", className: "bg-status-warning/10 text-status-warning" },
+    closed: { label: "Closed", className: "bg-status-success/10 text-status-success" },
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-semibold text-text-primary">RFI Log</h3>
+          <p className="mt-0.5 text-sm text-text-tertiary">Request for Information tracking.</p>
+        </div>
+        {!showForm && (
+          <button
+            type="button"
+            onClick={() => {
+              resetForm();
+              setShowForm(true);
+            }}
+            className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+          >
+            + New RFI
+          </button>
+        )}
+      </div>
+
+      {showForm && (
+        <div className="space-y-3 rounded-2xl border border-border-default bg-surface-raised p-4">
+          <p className="text-sm font-semibold text-text-primary">New RFI</p>
+          {formError && <p className="text-sm text-status-danger">{formError}</p>}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-text-secondary">Subject *</label>
+            <input
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:border-brand-primary/50 focus:outline-none"
+              placeholder="Brief subject line"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-text-secondary">Question</label>
+            <textarea
+              rows={3}
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:border-brand-primary/50 focus:outline-none"
+              placeholder="Full RFI question text"
+            />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-text-secondary">Directed To</label>
+              <select
+                value={directedTo}
+                onChange={(e) => setDirectedTo(e.target.value)}
+                className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:outline-none"
+              >
+                <option value="">- Select -</option>
+                {RFI_DIRECTED_TO_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-text-secondary">Date Submitted</label>
+              <input
+                type="date"
+                value={dateSubmitted}
+                onChange={(e) => setDateSubmitted(e.target.value)}
+                className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:outline-none"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => void submitRfi()}
+              disabled={saving}
+              className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            >
+              {saving ? "Saving..." : "Log RFI"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                resetForm();
+                setShowForm(false);
+              }}
+              className="rounded-lg border border-border-default px-4 py-2 text-sm font-semibold text-text-secondary"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <p className="text-sm text-text-tertiary">Loading RFIs...</p>
+      ) : rfis.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border-default px-6 py-10 text-center">
+          <p className="text-sm font-medium text-text-secondary">No RFIs logged yet.</p>
+          <p className="mt-1 text-xs text-text-tertiary">Use the New RFI button to log a field question.</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {rfis.map((rfi) => {
+            const cfg = statusConfig[rfi.status];
+            const isExpanded = expandedId === rfi.id;
+            const isClosing = closingId === rfi.id;
+            return (
+              <div key={rfi.id} className="overflow-hidden rounded-xl border border-border-default bg-surface-raised">
+                <button
+                  type="button"
+                  onClick={() => setExpandedId(isExpanded ? null : rfi.id)}
+                  className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left"
+                >
+                  <div className="min-w-0 space-y-0.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-semibold text-text-tertiary">
+                        RFI-{String(rfi.rfi_number).padStart(3, "0")}
+                      </span>
+                      <span className="text-sm font-medium text-text-primary">{rfi.subject}</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-text-tertiary">
+                      {rfi.directed_to && <span>-&gt; {rfi.directed_to}</span>}
+                      <span>
+                        {new Date(rfi.date_submitted).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          timeZone: "UTC",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.className}`}>
+                    {cfg.label}
+                  </span>
+                </button>
+
+                {isExpanded && (
+                  <div className="space-y-3 border-t border-border-default px-4 py-3">
+                    {rfi.question && (
+                      <div>
+                        <p className="mb-0.5 text-xs font-semibold text-text-tertiary">Question</p>
+                        <p className="whitespace-pre-wrap text-sm text-text-secondary">{rfi.question}</p>
+                      </div>
+                    )}
+                    {rfi.response && (
+                      <div>
+                        <p className="mb-0.5 text-xs font-semibold text-text-tertiary">Response</p>
+                        <p className="whitespace-pre-wrap text-sm text-text-secondary">{rfi.response}</p>
+                        {rfi.date_responded && (
+                          <p className="mt-0.5 text-xs text-text-tertiary">
+                            Received{" "}
+                            {new Date(rfi.date_responded).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                              timeZone: "UTC",
+                            })}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {rfi.status !== "closed" && !isClosing && (
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setClosingId(rfi.id);
+                            setCloseResponse(rfi.response ?? "");
+                            setCloseDate(new Date().toISOString().slice(0, 10));
+                            setCloseStatus("closed");
+                          }}
+                          className="rounded-lg border border-border-default px-3 py-1.5 text-xs font-semibold text-text-secondary hover:bg-surface-base"
+                        >
+                          Log Response / Close
+                        </button>
+                        {rfi.status === "open" && (
+                          <button
+                            type="button"
+                            onClick={() => void updateRfi(rfi.id, { status: "pending_response" })}
+                            disabled={saving}
+                            className="rounded-lg border border-border-default px-3 py-1.5 text-xs font-semibold text-text-secondary hover:bg-surface-base disabled:opacity-50"
+                          >
+                            Mark Pending Response
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {isClosing && (
+                      <div className="space-y-3 rounded-xl border border-border-default bg-surface-base p-3">
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-text-secondary">Response Text</label>
+                          <textarea
+                            rows={2}
+                            value={closeResponse}
+                            onChange={(e) => setCloseResponse(e.target.value)}
+                            className="w-full rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary/50 focus:outline-none"
+                          />
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div>
+                            <label className="mb-1 block text-xs font-medium text-text-secondary">Date Responded</label>
+                            <input
+                              type="date"
+                              value={closeDate}
+                              onChange={(e) => setCloseDate(e.target.value)}
+                              className="w-full rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-xs font-medium text-text-secondary">Mark As</label>
+                            <select
+                              value={closeStatus}
+                              onChange={(e) => setCloseStatus(e.target.value as "pending_response" | "closed")}
+                              className="w-full rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:outline-none"
+                            >
+                              <option value="closed">Closed</option>
+                              <option value="pending_response">Pending Response</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void updateRfi(rfi.id, {
+                                status: closeStatus,
+                                response: closeResponse,
+                                dateResponded: closeDate,
+                              })
+                            }
+                            disabled={saving}
+                            className="rounded-lg bg-brand-primary px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+                          >
+                            {saving ? "Saving..." : "Save"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setClosingId(null)}
+                            className="rounded-lg border border-border-default px-3 py-1.5 text-xs font-semibold text-text-secondary"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
