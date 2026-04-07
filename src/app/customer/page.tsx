@@ -41,6 +41,8 @@ interface CustomerProject {
   job_number: string | null;
   site_address: string | null;
   general_contractor: string | null;
+  start_date: string | null;
+  scheduled_completion: string | null;
   customer_name: string | null;
   billing_periods: BillingPeriod[];
   weekly_updates: WeeklyUpdate[];
@@ -108,6 +110,8 @@ export default function CustomerPage() {
         job_number: string | null;
         site_address: string | null;
         general_contractor: string | null;
+        start_date: string | null;
+        scheduled_completion: string | null;
         customer?: { name: string } | { name: string }[] | null;
       }>;
       const periods = (json?.billingPeriods ?? []) as BillingPeriod[];
@@ -130,6 +134,8 @@ export default function CustomerPage() {
           job_number: project.job_number ?? null,
           site_address: project.site_address ?? null,
           general_contractor: project.general_contractor ?? null,
+          start_date: project.start_date ?? null,
+          scheduled_completion: project.scheduled_completion ?? null,
           customer_name: customer?.name ?? null,
           billing_periods: ((periods ?? []).filter((period) => period.project_id === project.id) as BillingPeriod[]),
           weekly_updates: ((updates ?? []).filter((update) => update.project_id === project.id) as WeeklyUpdate[]),
@@ -608,6 +614,21 @@ function ProjectDetail({
               {project.general_contractor && (
                 <p className="text-sm text-slate-600">GC: {project.general_contractor}</p>
               )}
+              {project.scheduled_completion && (
+                <div className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+                  <CalendarIcon />
+                  <span>
+                    Scheduled completion:{" "}
+                    <span className={
+                      new Date(project.scheduled_completion) < new Date()
+                        ? "font-semibold text-red-600"
+                        : "font-medium"
+                    }>
+                      {format(new Date(project.scheduled_completion), "MMMM d, yyyy")}
+                    </span>
+                  </span>
+                </div>
+              )}
             </div>
             {latestPeriod && (
               <div className="max-w-xl">
@@ -1061,6 +1082,14 @@ function LocationPinIcon() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="mt-0.5 shrink-0">
       <path d="M12 21s6-5.3 6-11a6 6 0 1 0-12 0c0 5.7 6 11 6 11Z" stroke="currentColor" strokeWidth="1.8" />
       <circle cx="12" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <svg className="h-4 w-4 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
     </svg>
   );
 }

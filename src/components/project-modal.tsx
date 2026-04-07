@@ -49,6 +49,8 @@ export type ProjectFormValues = {
   customerPoc: string;
   customerPoNumber: string;
   siteAddress: string;
+  startDate: string;
+  scheduledCompletion: string;
   generalContractor: string;
   mechanicalContractor: string;
   electricalContractor: string;
@@ -79,6 +81,8 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   customerPoc: "",
   customerPoNumber: "",
   siteAddress: "",
+  startDate: "",
+  scheduledCompletion: "",
   generalContractor: "",
   mechanicalContractor: "",
   electricalContractor: "",
@@ -383,6 +387,30 @@ export function ProjectModal({
                   className={inputClassName}
                 />
               </FormField>
+              <div className="grid gap-3 sm:grid-cols-2 md:col-span-2">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    className={inputClassName}
+                    value={values.startDate}
+                    onChange={(e) => onChange("startDate", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                    Scheduled Completion
+                  </label>
+                  <input
+                    type="date"
+                    className={inputClassName}
+                    value={values.scheduledCompletion}
+                    onChange={(e) => onChange("scheduledCompletion", e.target.value)}
+                  />
+                </div>
+              </div>
               <FormField label="General Contractor">
                 <ComboboxInput
                   value={values.generalContractor}

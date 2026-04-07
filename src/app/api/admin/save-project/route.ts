@@ -54,6 +54,8 @@ export async function POST(request: Request) {
       customerPoc: string;
       customerPoNumber: string;
       siteAddress: string;
+      startDate: string;
+      scheduledCompletion: string;
       generalContractor: string;
       mechanicalContractor: string;
       electricalContractor: string;
@@ -117,6 +119,8 @@ export async function POST(request: Request) {
       customer_poc: formValues.customerPoc.trim() || null,
       customer_po_number: formValues.customerPoNumber.trim() || null,
       site_address: formValues.siteAddress.trim() || null,
+      start_date: formValues.startDate || null,
+      scheduled_completion: formValues.scheduledCompletion || null,
       general_contractor: formValues.generalContractor.trim() || null,
       mechanical_contractor: formValues.mechanicalContractor.trim() || null,
       electrical_contractor: formValues.electricalContractor.trim() || null,

@@ -131,6 +131,8 @@ export async function GET(request: Request) {
         sharepoint_folder,
         sharepoint_item_id,
         job_number,
+        start_date,
+        scheduled_completion,
         migration_status,
         is_active,
         created_at,
@@ -160,6 +162,8 @@ export async function GET(request: Request) {
           sharepoint_folder: string | null;
           sharepoint_item_id: string | null;
           job_number: string | null;
+          start_date: string | null;
+          scheduled_completion: string | null;
           migration_status: "legacy" | "migrated" | "clean" | null;
           is_active: boolean;
           created_at: string;
@@ -175,6 +179,8 @@ export async function GET(request: Request) {
           sharepoint_folder: string | null;
           sharepoint_item_id: string | null;
           job_number: string | null;
+          start_date: string | null;
+          scheduled_completion: string | null;
           migration_status: "legacy" | "migrated" | "clean" | null;
           is_active: boolean;
           created_at: string;
@@ -201,6 +207,8 @@ export async function GET(request: Request) {
       sharepoint_folder: string | null;
       sharepoint_item_id: string | null;
       job_number: string | null;
+      start_date: string | null;
+      scheduled_completion: string | null;
       migration_status: "legacy" | "migrated" | "clean" | null;
       is_active: boolean;
       created_at: string;

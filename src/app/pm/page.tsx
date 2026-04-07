@@ -40,6 +40,8 @@ interface ProjectWithBilling {
   sharepoint_folder: string | null;
   sharepoint_item_id: string | null;
   job_number: string | null;
+  start_date: string | null;
+  scheduled_completion: string | null;
   migration_status: "legacy" | "migrated" | "clean" | null;
   is_active: boolean;
   created_at: string;
@@ -682,6 +684,17 @@ function UpdateForm({
 
       {activeTab === "overview" && (
         <div className="space-y-5">
+          {!project.scheduled_completion && (
+            <div className="flex items-center gap-3 rounded-xl border border-status-danger/30 bg-status-danger/5 px-4 py-3">
+              <svg className="h-4 w-4 shrink-0 text-status-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+              </svg>
+              <p className="text-sm font-medium text-status-danger">
+                Schedule not received - no completion date on file for this project.
+              </p>
+            </div>
+          )}
+
           <div className="rounded-2xl border border-border-default bg-surface-raised p-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
@@ -726,6 +739,39 @@ function UpdateForm({
                 </span>
               )}
             </div>
+            {(project.start_date || project.scheduled_completion) && (
+              <div className="mt-5 rounded-2xl border border-border-default bg-surface-raised px-4 py-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                  Project Dates
+                </p>
+                <div className="flex flex-wrap gap-6 text-sm">
+                  {project.start_date && (
+                    <div>
+                      <p className="text-xs text-text-tertiary">Start Date</p>
+                      <p className="font-medium text-text-primary">
+                        {format(new Date(project.start_date), "MMM d, yyyy")}
+                      </p>
+                    </div>
+                  )}
+                  {project.scheduled_completion && (
+                    <div>
+                      <p className="text-xs text-text-tertiary">Scheduled Completion</p>
+                      <p className={[
+                        "font-medium",
+                        new Date(project.scheduled_completion) < new Date()
+                          ? "text-status-danger"
+                          : "text-text-primary",
+                      ].join(" ")}>
+                        {format(new Date(project.scheduled_completion), "MMM d, yyyy")}
+                        {new Date(project.scheduled_completion) < new Date() && (
+                          <span className="ml-1.5 text-xs font-semibold text-status-danger">(Overdue)</span>
+                        )}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {latestSubmittedUpdate ? (

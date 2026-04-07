@@ -30,6 +30,8 @@ type ProjectRow = {
   customer_poc: string | null;
   customer_po_number: string | null;
   site_address: string | null;
+  start_date: string | null;
+  scheduled_completion: string | null;
   general_contractor: string | null;
   mechanical_contractor: string | null;
   electrical_contractor: string | null;
@@ -80,6 +82,8 @@ const PROJECT_SELECT_FIELDS = `
   customer_poc,
   customer_po_number,
   site_address,
+  start_date,
+  scheduled_completion,
   general_contractor,
   mechanical_contractor,
   electrical_contractor,
@@ -407,6 +411,8 @@ export function AdminProjectsTab() {
       customerPoc: project.customer_poc ?? "",
       customerPoNumber: project.customer_po_number ?? "",
       siteAddress: project.site_address ?? "",
+      startDate: project.start_date ?? "",
+      scheduledCompletion: project.scheduled_completion ?? "",
       generalContractor: project.general_contractor ?? "",
       mechanicalContractor: project.mechanical_contractor ?? "",
       electricalContractor: project.electrical_contractor ?? "",
