@@ -528,14 +528,15 @@ function ProjectDetail({
 
   const progressChartData = useMemo(
     () =>
-      [...project.weekly_updates]
-        .sort((a, b) => new Date(a.week_of).getTime() - new Date(b.week_of).getTime())
-        .map((update) => ({
-          label: format(new Date(update.week_of), "MMM d"),
-          date: format(new Date(update.week_of), "MMMM d, yyyy"),
-          percent: Number(((update.pct_complete ?? 0) * 100).toFixed(1)),
+      [...project.billing_periods]
+        .filter((period) => period.pct_complete != null)
+        .sort((a, b) => new Date(a.period_month).getTime() - new Date(b.period_month).getTime())
+        .map((period) => ({
+          label: format(new Date(period.period_month), "MMM ''yy"),
+          date: format(new Date(period.period_month), "MMMM yyyy"),
+          percent: Number(((period.pct_complete ?? 0) * 100).toFixed(1)),
         })),
-    [project.weekly_updates]
+    [project.billing_periods]
   );
 
   const billingChartData = useMemo(
@@ -740,7 +741,7 @@ function ProjectDetail({
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <EmptyChartMessage message="Weekly updates will appear here as progress is reported." />
+            <EmptyChartMessage message="Progress data will appear here as monthly billing periods are recorded." />
           )}
         </ChartCard>
 
