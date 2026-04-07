@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { ViewReportLink } from "@/components/view-report-link";
-import { WipTab } from "@/components/wip-tab";
 import { BomTab } from "@/components/bom-tab";
 import type { ParsedPocImportRow } from "@/lib/poc/import";
 import type { ChangeOrder, ChangeOrderStatus, PocLineItem, Profile, ProjectAssignmentRole, ProjectCustomerContact } from "@/types/database";
@@ -217,7 +216,7 @@ export function ProjectModal({
 }) {
   const customerOptions = useMemo(() => customers, [customers]);
   const [showImportDialog, setShowImportDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "wip" | "materials">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "weekly-updates" | "materials">("overview");
   const [formTab, setFormTab] = useState<"details" | "team" | "compliance" | "history">("details");
 
   // Track unsaved changes
@@ -279,7 +278,7 @@ export function ProjectModal({
               {(
                 [
                   { id: "overview", label: "Overview" },
-                  { id: "wip", label: "WIP" },
+                  { id: "weekly-updates", label: "Weekly Updates" },
                   { id: "materials", label: "Materials" },
                 ] as const
               ).map((tab) => (
@@ -654,15 +653,12 @@ export function ProjectModal({
             />
           )}
 
-          {formTab === "history" && editingProject && (
-            <WeeklyUpdatesSection projectId={editingProject.id} />
-          )}
         </div>
         )}
 
-        {editingProject && activeTab === "wip" && (
+        {editingProject && activeTab === "weekly-updates" && (
           <div className="px-6 py-6">
-            <WipTab projectId={editingProject.id} />
+            <WeeklyUpdatesSection projectId={editingProject.id} />
           </div>
         )}
 
