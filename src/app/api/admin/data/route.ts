@@ -193,10 +193,9 @@ export async function GET(request: Request) {
         `)
         .order("name"),
       adminClient
-        .from("weekly_updates")
-        .select("project_id, pct_complete, week_of")
-        .eq("status", "submitted")
-        .order("week_of", { ascending: false }),
+        .from("billing_periods")
+        .select("project_id, pct_complete, period_month")
+        .order("period_month", { ascending: false }),
     ]);
 
     if (projectsResult.error || updatesResult.error) {

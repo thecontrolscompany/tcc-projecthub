@@ -222,14 +222,20 @@ export async function GET(request: Request) {
         .from("billing_periods")
         .select("*")
         .in("project_id", ids)
-        .eq("period_month", currentMonthStr)
+        .order("period_month", { ascending: false })
     : { data: [], error: null };
 
   if (periodsError) {
     return NextResponse.json({ error: periodsError.message }, { status: 500 });
   }
 
-  const periodMap = new Map((periods ?? []).map((period) => [period.project_id, period]));
+  // Take the most recent period per project (periods are ordered desc)
+  const periodMap = new Map<string, typeof periods[number]>();
+  for (const period of (periods ?? [])) {
+    if (!periodMap.has(period.project_id)) {
+      periodMap.set(period.project_id, period);
+    }
+  }
 
   return NextResponse.json({
     projects: normalizedProjects.map((project) => ({

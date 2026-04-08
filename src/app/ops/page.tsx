@@ -107,10 +107,9 @@ export default async function OpsPage() {
           .order("name")
       : Promise.resolve({ data: [] as unknown[] }),
     adminClient
-      .from("weekly_updates")
-      .select("project_id, pct_complete, week_of")
-      .eq("status", "submitted")
-      .order("week_of", { ascending: false }),
+      .from("billing_periods")
+      .select("project_id, pct_complete, period_month")
+      .order("period_month", { ascending: false }),
   ]);
 
   const projectMap = new Map<string, OpsProject>();
@@ -126,10 +125,11 @@ export default async function OpsPage() {
     if (project?.id) projectMap.set(project.id, project);
   }
 
+  // Most recent billing period per project (already ordered desc)
   const pctByProjectId = new Map<string, number>();
-  for (const update of (recentUpdates ?? [])) {
-    if (!pctByProjectId.has(update.project_id) && update.pct_complete !== null) {
-      pctByProjectId.set(update.project_id, update.pct_complete);
+  for (const period of (recentUpdates ?? [])) {
+    if (!pctByProjectId.has(period.project_id) && period.pct_complete !== null) {
+      pctByProjectId.set(period.project_id, period.pct_complete);
     }
   }
   const normalizedProjects: OpsProjectListItem[] = Array.from(projectMap.values()).map((project) => {
