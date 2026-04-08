@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import type { ProjectAssignmentRole } from "@/types/database";
 import { normalizeSingle } from "@/lib/utils/normalize";
 import { createClient } from "@/lib/supabase/client";
+import { fmtCurrency } from "@/lib/utils/format";
 import {
   EMPTY_PROJECT_FORM,
   ProjectModal,
@@ -452,8 +453,7 @@ export function AdminProjectsTab() {
     }
   }
 
-  const fmt = (n: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+  const fmt = fmtCurrency;
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));

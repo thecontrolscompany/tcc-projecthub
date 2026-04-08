@@ -16,6 +16,8 @@ import type {
   WeeklyUpdate,
   WeeklyUpdateEdit,
 } from "@/types/database";
+import { fmtCurrency } from "@/lib/utils/format";
+import { ROLE_LABELS, ROLE_BADGE_STYLES_WITH_BORDER } from "@/lib/project/roles";
 
 type ViewState = "list" | "update";
 type ProjectTab = "overview" | "contacts" | "update" | "poc" | "change-orders" | "rfis" | "photos" | "bom";
@@ -198,23 +200,6 @@ function ProjectList({
   projects: ProjectWithBilling[];
   onSelectProject: (project: ProjectWithBilling) => void;
 }) {
-  const fmt = (n: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
-
-  const roleBadgeStyles: Record<ProjectAssignmentRole, string> = {
-    pm: "bg-status-info/10 text-status-info border-status-info/20",
-    lead: "bg-status-warning/10 text-status-warning border-status-warning/20",
-    installer: "bg-brand-primary/10 text-brand-primary border-brand-primary/20",
-    ops_manager: "bg-surface-overlay text-text-primary border-border-default",
-  };
-
-  const roleLabels: Record<ProjectAssignmentRole, string> = {
-    pm: "PM",
-    lead: "Lead",
-    installer: "Installer",
-    ops_manager: "Ops Manager",
-  };
-
   if (projects.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border-default p-12 text-center">
@@ -276,8 +261,8 @@ function ProjectList({
                       SharePoint
                     </a>
                   )}
-                  <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${roleBadgeStyles[project.assignmentRole]}`}>
-                    {roleLabels[project.assignmentRole]}
+                  <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${ROLE_BADGE_STYLES_WITH_BORDER[project.assignmentRole]}`}>
+                    {ROLE_LABELS[project.assignmentRole]}
                   </span>
                 </div>
                 <p className="mt-0.5 text-sm text-text-secondary">{project.customer?.name}</p>
@@ -288,10 +273,10 @@ function ProjectList({
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Stat label="Est. Income" value={fmt(project.estimated_income)} />
+              <Stat label="Est. Income" value={fmtCurrency(project.estimated_income)} />
               <Stat label="% Complete" value={pct !== null ? `${pct.toFixed(1)}%` : "-"} />
-              <Stat label="Prev. Billed" value={period ? fmt(period.prev_billed) : "-"} />
-              <Stat label="To Bill" value={toBill !== null ? fmt(toBill) : "-"} highlight />
+              <Stat label="Prev. Billed" value={period ? fmtCurrency(period.prev_billed) : "-"} />
+              <Stat label="To Bill" value={toBill !== null ? fmtCurrency(toBill) : "-"} highlight />
             </div>
           </button>
         );
@@ -759,26 +744,9 @@ function UpdateForm({
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:min-w-[32rem]">
                 <Stat label="% Complete" value={`${statusPct.toFixed(1)}%`} highlight />
-                <Stat
-                  label="Contract"
-                  value={new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(project.estimated_income)}
-                />
-                <Stat
-                  label="Prev. Billed"
-                  value={
-                    currentPeriod
-                      ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(currentPeriod.prev_billed)
-                      : "-"
-                  }
-                />
-                <Stat
-                  label="To Bill"
-                  value={
-                    currentPeriodToBill !== null
-                      ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(currentPeriodToBill)
-                      : "-"
-                  }
-                />
+                <Stat label="Contract" value={fmtCurrency(project.estimated_income)} />
+                <Stat label="Prev. Billed" value={currentPeriod ? fmtCurrency(currentPeriod.prev_billed) : "-"} />
+                <Stat label="To Bill" value={currentPeriodToBill !== null ? fmtCurrency(currentPeriodToBill) : "-"} />
               </div>
             </div>
             <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -1513,11 +1481,7 @@ function UpdateForm({
                     ].join(" ")}
                   >
                     {co.amount >= 0 ? "+" : ""}
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "USD",
-                      maximumFractionDigits: 0,
-                    }).format(co.amount)}
+                    {fmtCurrency(co.amount)}
                   </span>
                 </div>
               ))}
@@ -1528,11 +1492,7 @@ function UpdateForm({
             <div className="rounded-xl border border-status-success/20 bg-status-success/5 px-4 py-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Total Approved CO Value</p>
               <p className="mt-1 text-base font-bold text-status-success">
-                {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(
-                  changeOrders
-                    .filter((co) => co.status === "approved")
-                    .reduce((sum, co) => sum + co.amount, 0)
-                )}
+                {fmtCurrency(changeOrders.filter((co) => co.status === "approved").reduce((sum, co) => sum + co.amount, 0))}
               </p>
             </div>
           )}

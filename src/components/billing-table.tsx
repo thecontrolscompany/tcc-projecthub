@@ -13,14 +13,12 @@ import { useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { calcToBill } from "@/lib/billing/calculations";
 import type { BillingRow } from "@/types/database";
+import { fmtCurrency as fmt } from "@/lib/utils/format";
 
 interface BillingTableProps {
   rows: BillingRow[];
   onRowsChange: (rows: BillingRow[]) => void;
 }
-
-const fmt = (n: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 

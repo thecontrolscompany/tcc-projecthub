@@ -5,12 +5,12 @@ import Link from "next/link";
 import { format, startOfMonth, subMonths, addMonths } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { AdminProjectsTab } from "@/components/admin-projects-tab";
-import { FeedbackTab } from "@/components/admin-weekly-feedback";
+import { FeedbackTab, WeeklyUpdatesTab } from "@/components/admin-weekly-feedback";
 import { BillingTable } from "@/components/billing-table";
 import { calcToBill, generatePmEmailDrafts, rollForwardRows } from "@/lib/billing/calculations";
 import type { BillingRow, BillingPeriod } from "@/types/database";
 
-type Tab = "billing" | "projects" | "backfill" | "feedback";
+type Tab = "billing" | "projects" | "backfill" | "weekly-updates" | "feedback";
 type ProjectOption = { id: string; name: string };
 type BillingPeriodRow = {
   id: string;
@@ -424,6 +424,7 @@ export default function AdminPage() {
               { id: "billing", label: "Billing Table" },
               { id: "projects", label: "Projects" },
               { id: "backfill", label: "Billing History" },
+              { id: "weekly-updates", label: "Weekly Updates" },
               { id: "feedback", label: "Feedback" },
             ] as { id: Tab; label: string }[]
           ).map(({ id, label }) => (
@@ -524,6 +525,7 @@ export default function AdminPage() {
 
         {tab === "projects" && <AdminProjectsTab />}
         {tab === "backfill" && <BillingBackfillTab projects={projectOptions} />}
+        {tab === "weekly-updates" && <WeeklyUpdatesTab />}
         {tab === "feedback" && <FeedbackTab />}
           </>
         )}
@@ -828,100 +830,6 @@ function EmptyBillingState({ month }: { month: string }) {
         Use <strong>Roll Forward Month</strong> from the previous period to create this period,
         or add projects first.
       </p>
-    </div>
-  );
-}
-
-function ProjectsTab() {
-  const [projects, setProjects] = useState<
-    Array<{
-      id: string;
-      name: string;
-      estimated_income: number;
-      migration_status?: "legacy" | "migrated" | "clean" | null;
-      is_active: boolean;
-      customer?: { name: string };
-      pm?: { full_name: string; email: string };
-    }>
-  >([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadProjects() {
-      try {
-        const res = await fetch("/api/admin/data?section=projects", {
-          credentials: "include",
-        });
-        const json = await res.json();
-
-        setProjects((res.ok ? (json?.projects as typeof projects) : []) ?? []);
-      } catch {
-        setProjects([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    void loadProjects();
-  }, []);
-
-  const fmt = (n: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-text-primary">Projects</h2>
-        <Link
-          href="/admin/projects/new"
-          className="rounded-xl bg-brand-primary px-4 py-1.5 text-sm font-semibold text-text-inverse hover:bg-brand-hover"
-        >
-          + Add Project
-        </Link>
-      </div>
-
-      {loading ? (
-        <div className="py-10 text-center text-text-tertiary">Loading...</div>
-      ) : (
-        <div className="overflow-x-auto rounded-2xl border border-border-default">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border-default bg-surface-raised/80">
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Project</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Customer</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">PM</th>
-                <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Est. Income</th>
-                <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {projects.map((p) => (
-                <tr key={p.id} className="border-b border-border-default hover:bg-surface-raised">
-                  <td className="px-4 py-2.5 font-medium text-text-primary">
-                    {p.name}
-                    {p.migration_status === "legacy" && (
-                      <span className="ml-2 inline-flex items-center rounded border border-status-warning/20 bg-status-warning/10 px-2 py-0.5 text-xs font-medium text-status-warning">
-                        ⚠ Legacy
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-2.5 text-text-secondary">{p.customer?.name ?? "-"}</td>
-                  <td className="px-4 py-2.5 text-text-secondary">{p.pm?.full_name ?? p.pm?.email ?? "-"}</td>
-                  <td className="px-4 py-2.5 text-right text-text-secondary">{fmt(p.estimated_income)}</td>
-                  <td className="px-4 py-2.5 text-center">
-                    <span className={[
-                      "rounded-full px-2 py-0.5 text-xs font-medium",
-                      p.is_active ? "bg-status-success/10 text-status-success" : "bg-surface-overlay text-text-secondary",
-                    ].join(" ")}>
-                      {p.is_active ? "Active" : "Archived"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
     </div>
   );
 }

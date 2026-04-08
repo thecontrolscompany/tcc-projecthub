@@ -22,6 +22,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ViewReportLink } from "@/components/view-report-link";
 import type { BillingPeriod, CrewLogEntry, WeeklyUpdate } from "@/types/database";
+import { fmtCurrency, fmtCurrencyCompact } from "@/lib/utils/format";
 
 interface CustomerChangeOrder {
   id: string;
@@ -1407,22 +1408,8 @@ function SignOutButton() {
   );
 }
 
-function currency(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function compactCurrency(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(value);
-}
+const currency = fmtCurrency;
+const compactCurrency = fmtCurrencyCompact;
 
 function getProjectBilledToDate(project: CustomerProject) {
   // Use the most recent period's prev_billed (cumulative billed before this period)
