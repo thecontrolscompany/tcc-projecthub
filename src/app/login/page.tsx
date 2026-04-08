@@ -19,6 +19,12 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
+    if (email.toLowerCase().endsWith("@controlsco.net")) {
+      await handleMicrosoftLogin();
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setError(error.message);
@@ -102,7 +108,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm text-text-primary placeholder-text-tertiary focus:border-brand-primary/50 focus:outline-none focus:ring-1 focus:ring-brand-primary/50"
-                    placeholder="you@example.com"
+                    placeholder="you@controlsco.net or customer@example.com"
                   />
                 </div>
                 <div>
