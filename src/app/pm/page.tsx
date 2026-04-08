@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { addDays, format, startOfWeek } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -97,11 +98,24 @@ function hasCrewLogEntry(row: CrewLogEntry) {
 
 export default function PmPage() {
   const supabase = createClient();
-  const [view, setView] = useState<ViewState>("list");
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [projects, setProjects] = useState<ProjectWithBilling[]>([]);
-  const [selectedProject, setSelectedProject] = useState<ProjectWithBilling | null>(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+
+  const selectedProjectId = searchParams.get("project");
+  const selectedProject = projects.find((p) => p.id === selectedProjectId) ?? null;
+
+  function selectProject(project: ProjectWithBilling) {
+    window.scrollTo({ top: 0, behavior: "instant" });
+    router.push(`/pm?project=${project.id}`);
+  }
+
+  function goBack() {
+    if (userId) void loadProjects(userId);
+    router.push("/pm");
+  }
 
   useEffect(() => {
     async function init() {
@@ -160,24 +174,17 @@ export default function PmPage() {
     <div className="min-h-screen bg-surface-base text-text-primary">
       <main className="mx-auto max-w-4xl px-6 py-6">
         <ErrorBoundary theme="dark">
-          {view === "list" ? (
-            <ProjectList
-              projects={projects}
-              onSelectProject={(project) => {
-                setSelectedProject(project);
-                setView("update");
-              }}
-            />
-          ) : selectedProject ? (
+          {selectedProject ? (
             <UpdateForm
               project={selectedProject}
-              onBack={() => {
-                setView("list");
-                setSelectedProject(null);
-                if (userId) void loadProjects(userId);
-              }}
+              onBack={goBack}
             />
-          ) : null}
+          ) : (
+            <ProjectList
+              projects={projects}
+              onSelectProject={selectProject}
+            />
+          )}
         </ErrorBoundary>
       </main>
     </div>

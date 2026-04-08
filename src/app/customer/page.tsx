@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { format, formatDistanceToNow } from "date-fns";
 import {
   Bar,
@@ -72,12 +73,16 @@ const CHARCOAL = "#2d3748";
 
 export default function CustomerPage() {
   const supabase = createClient();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [projects, setProjects] = useState<CustomerProject[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProject, setSelectedProject] = useState<CustomerProject | null>(null);
   const [userEmail, setUserEmail] = useState("");
   const [userId, setUserId] = useState("");
   const [loadedAt, setLoadedAt] = useState<Date | null>(null);
+
+  const selectedProjectId = searchParams.get("project");
+  const selectedProject = projects.find((p) => p.id === selectedProjectId) ?? null;
 
   useEffect(() => {
     void loadProjects();
@@ -263,9 +268,9 @@ export default function CustomerPage() {
               </a>
             </div>
           ) : selectedProject ? (
-            <ProjectDetail project={selectedProject} userId={userId} onBack={() => setSelectedProject(null)} />
+            <ProjectDetail project={selectedProject} userId={userId} onBack={() => router.push("/customer")} />
           ) : (
-            <ProjectList projects={projects} loadedAt={loadedAt} onSelect={setSelectedProject} />
+            <ProjectList projects={projects} loadedAt={loadedAt} onSelect={(p) => { window.scrollTo({ top: 0, behavior: "instant" }); router.push(`/customer?project=${p.id}`); }} />
           )}
         </ErrorBoundary>
       </main>
@@ -474,7 +479,7 @@ function ProjectList({
           return (
             <button
               key={project.id}
-              onClick={() => { onSelect(project); window.scrollTo({ top: 0, behavior: "instant" }); }}
+              onClick={() => onSelect(project)}
               className="customer-print-card relative overflow-hidden rounded-3xl border-l-4 bg-white p-6 text-left shadow-[0_18px_45px_rgba(1,122,111,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_55px_rgba(1,122,111,0.14)]"
               style={{ borderColor: BORDER, borderLeftColor: HEADER_BG }}
             >
