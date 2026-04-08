@@ -185,11 +185,15 @@ export default async function ChangeOrderReportPage({ params }: PageProps) {
 
           body {
             margin: 0;
-            background: #f4f7f6;
-            color: #111827;
+            background: #f4f7f6 !important;
+            color: #111827 !important;
             font-family: Arial, Helvetica, sans-serif;
             font-size: 14px;
             line-height: 1.5;
+          }
+
+          body, body * {
+            color: #111827;
           }
 
           .page {

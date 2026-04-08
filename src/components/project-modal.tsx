@@ -180,7 +180,7 @@ export function ProjectModal({
 }) {
   const customerOptions = useMemo(() => customers, [customers]);
   const [showImportDialog, setShowImportDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "weekly-updates" | "materials">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "weekly-updates" | "change-orders" | "materials">("overview");
   const [formTab, setFormTab] = useState<"details" | "team" | "compliance" | "history">("details");
 
   // Track unsaved changes
@@ -243,6 +243,7 @@ export function ProjectModal({
                 [
                   { id: "overview", label: "Overview" },
                   { id: "weekly-updates", label: "Weekly Updates" },
+                  { id: "change-orders", label: "Change Orders" },
                   { id: "materials", label: "Materials" },
                 ] as const
               ).map((tab) => (
@@ -472,10 +473,6 @@ export function ProjectModal({
             <CustomerContactsSection projectId={editingProject.id} />
           )}
 
-          {formTab === "compliance" && editingProject && (
-            <ChangeOrdersSection projectId={editingProject.id} />
-          )}
-
           {(!editingProject || formTab === "team") && (
           <section className="space-y-4">
             <div>
@@ -623,6 +620,12 @@ export function ProjectModal({
         {editingProject && activeTab === "weekly-updates" && (
           <div className="px-6 py-6">
             <WeeklyUpdatesSection projectId={editingProject.id} />
+          </div>
+        )}
+
+        {editingProject && activeTab === "change-orders" && (
+          <div className="px-6 py-6">
+            <ChangeOrdersSection projectId={editingProject.id} />
           </div>
         )}
 
