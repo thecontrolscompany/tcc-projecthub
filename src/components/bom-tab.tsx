@@ -495,6 +495,13 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
             <button type="button" onClick={() => resetAddForm("General")} className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-medium text-text-primary transition hover:bg-surface-base">
               + Add Section
             </button>
+            <a
+              href="/api/admin/bom/template"
+              download="BOM_Template.xlsx"
+              className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-medium text-text-primary transition hover:bg-surface-base"
+            >
+              Download Template
+            </a>
             <label className="cursor-pointer rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-medium text-text-primary transition hover:bg-surface-base">
               Import from Excel
               <input
