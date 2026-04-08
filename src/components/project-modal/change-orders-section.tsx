@@ -167,6 +167,14 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
                   {co.amount >= 0 ? "+" : ""}
                   {fmtCurrency(co.amount)}
                 </span>
+                <a
+                  href={`/reports/change-order/${co.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-brand-primary hover:underline"
+                >
+                  View/Print
+                </a>
                 <button
                   type="button"
                   onClick={() => void handleVoidCo(co.id)}

@@ -1486,19 +1486,31 @@ function UpdateForm({
                       <p className="text-xs text-text-tertiary">Ref: {co.reference_doc}</p>
                     )}
                   </div>
-                  <span
-                    className={[
-                      "shrink-0 font-semibold",
-                      co.status === "void"
-                        ? "text-text-tertiary"
-                        : co.amount >= 0
-                          ? "text-status-success"
-                          : "text-status-danger",
-                    ].join(" ")}
-                  >
-                    {co.amount >= 0 ? "+" : ""}
-                    {fmtCurrency(co.amount)}
-                  </span>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span
+                      className={[
+                        "font-semibold",
+                        co.status === "void"
+                          ? "text-text-tertiary"
+                          : co.amount >= 0
+                            ? "text-status-success"
+                            : "text-status-danger",
+                      ].join(" ")}
+                    >
+                      {co.amount >= 0 ? "+" : ""}
+                      {fmtCurrency(co.amount)}
+                    </span>
+                    {co.status !== "void" && (
+                      <a
+                        href={`/reports/change-order/${co.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-status-success hover:underline"
+                      >
+                        View/Print
+                      </a>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
