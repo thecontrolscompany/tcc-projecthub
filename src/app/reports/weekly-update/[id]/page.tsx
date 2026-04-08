@@ -305,7 +305,45 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
 
           @page {
             size: letter;
-            margin: 0.75in;
+            margin: 1in 0.75in 0.9in 0.75in;
+
+            @top-left {
+              content: "The Controls Company, LLC";
+              font-family: Arial, Helvetica, sans-serif;
+              font-size: 8pt;
+              color: #4b5563;
+              vertical-align: bottom;
+              padding-bottom: 6pt;
+              border-bottom: 1pt solid #017a6f;
+            }
+
+            @top-right {
+              content: "${project.name.replace(/"/g, '\\"')} — Week of ${format(new Date(update.week_of), "MMM d, yyyy")}";
+              font-family: Arial, Helvetica, sans-serif;
+              font-size: 8pt;
+              color: #4b5563;
+              vertical-align: bottom;
+              padding-bottom: 6pt;
+              border-bottom: 1pt solid #017a6f;
+            }
+
+            @bottom-left {
+              content: "thecontrolscompany.com  |  Service Disabled Veteran Owned Small Business";
+              font-family: Arial, Helvetica, sans-serif;
+              font-size: 7.5pt;
+              color: #9ca3af;
+              vertical-align: top;
+              padding-top: 6pt;
+            }
+
+            @bottom-right {
+              content: "Page " counter(page) " of " counter(pages);
+              font-family: Arial, Helvetica, sans-serif;
+              font-size: 8pt;
+              color: #4b5563;
+              vertical-align: top;
+              padding-top: 6pt;
+            }
           }
 
           body {
@@ -513,6 +551,10 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
             .report {
               border: 0;
               padding: 0;
+            }
+
+            .footer {
+              display: none;
             }
           }
         `}</style>
