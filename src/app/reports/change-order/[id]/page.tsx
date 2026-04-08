@@ -56,11 +56,12 @@ function tryParseLineItems(notes: string | null): LineItem[] | null {
 }
 
 async function canAccess(
-  admin: ReturnType<typeof createAdminClient>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  admin: any,
   role: UserRole,
   userId: string,
   projectId: string
-) {
+): Promise<boolean> {
   if (role === "admin" || role === "ops_manager") return true;
 
   if (role === "pm" || role === "lead") {
