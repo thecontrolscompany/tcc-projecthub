@@ -92,11 +92,14 @@ export async function GET(request: Request) {
         .select(`
           project_id,
           role_on_project,
+          is_primary,
+          profile_id,
+          pm_directory_id,
           profile:profiles(full_name, email),
           pm_directory:pm_directory(first_name, last_name, email, phone)
         `)
         .in("project_id", projectIds)
-        .in("role_on_project", ["pm", "lead"]),
+        .in("role_on_project", ["pm", "lead", "ops_manager"]),
       adminClient
         .from("change_orders")
         .select("id, project_id, co_number, title, amount, status, submitted_date, approved_date, reference_doc")

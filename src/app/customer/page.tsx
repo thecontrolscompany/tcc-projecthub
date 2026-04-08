@@ -53,7 +53,10 @@ interface CustomerProject {
 }
 
 type ProjectTeamMember = {
-  role_on_project: "pm" | "lead";
+  role_on_project: "pm" | "lead" | "ops_manager";
+  is_primary?: boolean | null;
+  profile_id?: string | null;
+  pm_directory_id?: string | null;
   profile?: { full_name: string | null; email: string } | { full_name: string | null; email: string }[] | null;
   pm_directory?:
     | { first_name: string | null; last_name: string | null; email: string; phone: string | null }
@@ -712,7 +715,14 @@ function ProjectDetail({
             <h3 className="text-xl font-bold" style={{ color: CHARCOAL }}>Who to contact</h3>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            {project.team_members.map((member, index) => {
+            {[...project.team_members]
+              .sort((a, b) => {
+                const roleOrder = { pm: 0, lead: 2, ops_manager: 3 } as Record<string, number>;
+                const aOrder = a.role_on_project === "pm" ? (a.is_primary ? 0 : 1) : (roleOrder[a.role_on_project] ?? 9);
+                const bOrder = b.role_on_project === "pm" ? (b.is_primary ? 0 : 1) : (roleOrder[b.role_on_project] ?? 9);
+                return aOrder - bOrder;
+              })
+              .map((member, index) => {
               const profile = Array.isArray(member.profile) ? member.profile[0] : member.profile;
               const directory = Array.isArray(member.pm_directory) ? member.pm_directory[0] : member.pm_directory;
               const name =
@@ -722,6 +732,10 @@ function ProjectDetail({
                 "Team member";
               const email = profile?.email ?? directory?.email ?? null;
               const phone = directory?.phone ?? null;
+              const roleLabel =
+                member.role_on_project === "pm" ? "Project Manager" :
+                member.role_on_project === "lead" ? "Field Lead" :
+                "Operations Manager";
 
               return (
                 <div
@@ -733,7 +747,7 @@ function ProjectDetail({
                     className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase"
                     style={{ backgroundColor: "#e6f6f4", color: HEADER_BG }}
                   >
-                    {member.role_on_project === "pm" ? "PM" : "Lead"}
+                    {roleLabel}
                   </span>
                   <p className="mt-3 text-lg font-bold" style={{ color: CHARCOAL }}>
                     {name}
