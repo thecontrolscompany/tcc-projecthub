@@ -384,7 +384,7 @@ export default async function ChangeOrderReportPage({ params }: PageProps) {
                 <p>Service Disabled Veteran Owned Small Business</p>
                 <p style={{ marginTop: 4 }}>thecontrolscompany.com</p>
               </div>
-              <img src="/badge.png" alt="SDVOSB" className="badge" />
+              <img src="/sdvosb.jpg" alt="SDVOSB" className="badge" />
             </div>
 
             <h2 className="doc-title">Change Order Request</h2>
