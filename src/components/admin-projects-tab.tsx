@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import type { ProjectAssignmentRole } from "@/types/database";
+import { normalizeSingle } from "@/lib/utils/normalize";
 import { createClient } from "@/lib/supabase/client";
 import {
   EMPTY_PROJECT_FORM,
@@ -14,6 +15,12 @@ import {
   type ProjectFormValues,
   type TeamMemberOption,
 } from "@/components/project-modal";
+import {
+  buildTeamMemberOptions,
+  buildAssignmentDrafts,
+  type ProfileOption,
+} from "@/lib/project/assignments";
+import { PROJECT_SELECT_FIELDS } from "@/lib/project/select-fields";
 
 type ProjectRow = {
   id: string;
@@ -52,13 +59,6 @@ type ProjectRow = {
   project_assignments: AssignmentRow[];
 };
 
-type ProfileOption = {
-  id: string;
-  full_name: string | null;
-  email: string;
-  role: ProjectAssignmentRole;
-};
-
 type AssignmentRow = {
   id: string;
   profile_id: string | null;
@@ -68,59 +68,11 @@ type AssignmentRow = {
   pm_directory?: { id: string; first_name: string | null; last_name: string | null; email: string; profile_id: string | null } | null;
 };
 
-const PROJECT_SELECT_FIELDS = `
-  id,
-  name,
-  job_number,
-  estimated_income,
-  contract_price,
-  migration_status,
-  is_active,
-  billed_in_full,
-  paid_in_full,
-  completed_at,
-  customer_id,
-  customer_poc,
-  customer_po_number,
-  site_address,
-  start_date,
-  scheduled_completion,
-  scope_description,
-  general_contractor,
-  mechanical_contractor,
-  electrical_contractor,
-  all_conduit_plenum,
-  certified_payroll,
-  buy_american,
-  bond_required,
-  source_estimate_id,
-  special_requirements,
-  special_access,
-  notes,
-  pm_directory_id,
-  pm_id,
-  sharepoint_folder,
-  created_at,
-  customer:customers(name),
-  pm_directory:pm_directory(id, first_name, last_name, email, profile_id),
-  project_assignments(
-    id,
-    profile_id,
-    pm_directory_id,
-    role_on_project,
-    profile:profiles(id, full_name, email, role),
-    pm_directory:pm_directory(id, first_name, last_name, email, profile_id)
-  )
-`;
-
 type SortKey = "job_number" | "name" | "customer" | "contract_price";
 type SortDir = "asc" | "desc";
 type StatusFilter = "active" | "completed" | "all";
 
-function normalizeSingle<T>(value: T | T[] | null | undefined): T | null {
-  if (Array.isArray(value)) return value[0] ?? null;
-  return value ?? null;
-}
+
 
 function normalizeProject(item: Record<string, unknown>): ProjectRow {
   return {
@@ -135,73 +87,6 @@ function normalizeProject(item: Record<string, unknown>): ProjectRow {
         }))
       : [],
   };
-}
-
-function buildTeamMemberOptions(profiles: ProfileOption[], contacts: ProjectContactOption[]) {
-  const byEmail = new Map<string, TeamMemberOption>();
-
-  for (const profile of profiles) {
-    const email = profile.email.trim().toLowerCase();
-    if (!email) continue;
-
-    byEmail.set(email, {
-      id: `profile:${profile.id}`,
-      email: profile.email,
-      displayLabel: `${profile.full_name?.trim() || profile.email} (${profile.email})`,
-      source: "profile",
-      profileId: profile.id,
-      pmDirectoryId: contacts.find((contact) => contact.email.toLowerCase() === email)?.id ?? null,
-    });
-  }
-
-  for (const contact of contacts) {
-    const email = contact.email.trim().toLowerCase();
-    if (!email || !email.endsWith("@controlsco.net") || contact.profile_id) continue;
-    if (byEmail.has(email)) continue;
-
-    const fullName = [contact.first_name, contact.last_name].filter(Boolean).join(" ").trim();
-    byEmail.set(email, {
-      id: `directory:${contact.id}`,
-      email: contact.email,
-      displayLabel: `${fullName || contact.email} (${contact.email}) - not yet signed in`,
-      source: "directory",
-      profileId: null,
-      pmDirectoryId: contact.id,
-    });
-  }
-
-  return Array.from(byEmail.values()).sort((a, b) => a.displayLabel.localeCompare(b.displayLabel));
-}
-
-function buildAssignmentDrafts(project: ProjectRow, teamOptions: TeamMemberOption[]): ProjectAssignmentDraft[] {
-  const drafts = project.project_assignments.map((assignment): ProjectAssignmentDraft | null => {
-    const personId = assignment.profile_id
-      ? `profile:${assignment.profile_id}`
-      : assignment.pm_directory_id
-        ? `directory:${assignment.pm_directory_id}`
-        : "";
-
-    return {
-      personId,
-      roleOnProject: assignment.role_on_project as ProjectAssignmentRole,
-    };
-  }).filter((assignment): assignment is ProjectAssignmentDraft => Boolean(assignment?.personId));
-
-  if (drafts.length > 0) {
-    return drafts;
-  }
-
-  const fallbackPm = project.pm_id
-    ? `profile:${project.pm_id}`
-    : project.pm_directory_id
-      ? `directory:${project.pm_directory_id}`
-      : "";
-
-  if (fallbackPm && teamOptions.some((option) => option.id === fallbackPm)) {
-    return [{ personId: fallbackPm, roleOnProject: "pm" }];
-  }
-
-  return [];
 }
 
 function getPrimaryPmLabel(project: ProjectRow) {

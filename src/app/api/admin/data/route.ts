@@ -2,11 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
-
-function normalizeSingle<T>(value: T | T[] | null | undefined): T | null {
-  if (Array.isArray(value)) return value[0] ?? null;
-  return value ?? null;
-}
+import { normalizeSingle } from "@/lib/utils/normalize";
+import { resolvePmName } from "@/lib/project/assignments";
 
 export async function GET(request: Request) {
   const supabase = await createServerClient();
@@ -241,11 +238,9 @@ export async function GET(request: Request) {
         const customer = normalizeSingle(project.customer);
         const allAssignments = project.project_assignments ?? [];
 
-        function normAssignment(a: typeof allAssignments[number]) {
-          const profile = normalizeSingle(a.profile);
-          const dir = normalizeSingle(a.pm_directory);
-          const dirName = [dir?.first_name, dir?.last_name].filter(Boolean).join(" ").trim();
-          return profile?.full_name || dirName || profile?.email || dir?.email || null;
+        function toNormalized(a: typeof allAssignments[number] | undefined) {
+          if (!a) return null;
+          return { profile: normalizeSingle(a.profile), pm_directory: normalizeSingle(a.pm_directory) };
         }
 
         // 1. Canonical: assignment whose IDs match projects.pm_id / pm_directory_id
@@ -260,9 +255,9 @@ export async function GET(request: Request) {
         const firstPmAssignment = allAssignments.find((a) => a.role_on_project === "pm");
 
         const pmGroupName =
-          normAssignment(canonicalAssignment ?? {}) ||
-          normAssignment(flaggedAssignment ?? {}) ||
-          normAssignment(firstPmAssignment ?? {}) ||
+          resolvePmName(toNormalized(canonicalAssignment)) ||
+          resolvePmName(toNormalized(flaggedAssignment)) ||
+          resolvePmName(toNormalized(firstPmAssignment)) ||
           "Unassigned";
 
         return {

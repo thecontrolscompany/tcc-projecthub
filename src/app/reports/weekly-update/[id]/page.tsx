@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { notFound, redirect } from "next/navigation";
 import { PrintButton } from "@/app/reports/weekly-update/[id]/PrintButton";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeSingle } from "@/lib/utils/normalize";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import type { CrewLogEntry, PocSnapshotEntry, UserRole } from "@/types/database";
@@ -61,11 +62,6 @@ type AssignmentPmRow = {
     | Array<{ first_name: string | null; last_name: string | null; email: string }>
     | null;
 };
-
-function normalizeSingle<T>(value: T | T[] | null | undefined): T | null {
-  if (Array.isArray(value)) return value[0] ?? null;
-  return value ?? null;
-}
 
 function emptyCrewLog(): CrewLogEntry[] {
   return ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => ({

@@ -1,0 +1,123 @@
+Good morning.
+
+Following my team call this week, below is our updated two-week look-ahead for the DDC upgrade project at Bldg. 1416.
+
+Two-Week Look-Ahead:
+• April 6-10: Trunk 16 – 1st Floor, Area G
+• April 13-17: AHU 20/21 - Start Controller Replacement
+
+We plan on starting the controller replacement week of April 13. This will cause the HVAC system in that area to be down temporarily. We will attempt to run the equipment in “Hand” mode, but acknowledge that full control is not practical during the entire process.
+
+We will be working above the ceiling on the 2nd floor during this process. I anticipate it will take 2 weeks to get through AHU-20/21.
+
+Please let me know if you have any questions or concerns about timing, access, etc.
+
+Thank you,
+Tim Collins, MBA
+President | The Controls Company, LLC
+Service-Disabled Veteran-Owned Small Business
+📞 Phone: 850-490-1844
+✉️ Email: Tim@ControlsCo.net
+🌐 Web: TheControlsCompany.com
+🔗 LinkedIn: linkedin.com/in/tcollins2
+
+From: DUNN, JARED T CIV USAF AFMC AFTC/PZIO <jared.dunn.6@us.af.mil> 
+Sent: Thursday, March 12, 2026 8:17 AM
+To: Timothy Collins <Tim@controlsco.net>; David Harrison <David@controlsco.net>; Shane Bradford II <DSBII@controlsco.net>
+Cc: HARTZOG, LINDSAY A CIV USAF AFMC AFLCMC/AFTC / PZIOC <lindsay.hartzog@us.af.mil>; KEEFER, CURTIS J CIV USAF AFMC 796 CES/CEOES <curtis.keefer.3@us.af.mil>
+Subject: RE: Action Needed \\ Upgrade DDC Devices Eglin AFB Bldg. 1416
+
+I appreciate you providing the two-week look-ahead so I can share with the end user. 
+
+From: Timothy Collins <Tim@controlsco.net> 
+Sent: Thursday, March 12, 2026 8:10 AM
+To: DUNN, JARED T CIV USAF AFMC AFTC/PZIO <jared.dunn.6@us.af.mil>; David Harrison <David@controlsco.net>; Shane Bradford II <DSBII@controlsco.net>
+Cc: HARTZOG, LINDSAY A CIV USAF AFMC AFLCMC/AFTC / PZIOC <lindsay.hartzog@us.af.mil>; KEEFER, CURTIS J CIV USAF AFMC 796 CES/CEOES <curtis.keefer.3@us.af.mil>
+Subject: [Non-DoD Source] RE: Action Needed \\ Upgrade DDC Devices Eglin AFB Bldg. 1416
+
+Jared,
+
+Following my team call this week, below is our updated two-week look-ahead for the DDC upgrade project at Bldg. 1416.
+
+Two-Week Look-Ahead:
+• Mar 12–20: Trunk 17 – 1st Floor, Area F
+• Mar 20–27: Trunk 16 – 1st Floor, Area G
+
+No equipment shutdowns are scheduled during this period. Occupant impact is expected to be minimal, limited to brief physical access as needed.
+
+Regarding SAPF access, we are still more than two weeks out from requiring entry into the secure area. Our approach remains to complete all work possible in non-secure areas before transitioning into the SAPF.
+
+Regarding controller replacement, we are currently awaiting shipment of the DDC controllers. I have been in contact with our supplier and the order is on its way. Once Trunks 16 and 17 are complete and controllers are received, we will begin replacing controllers in the non-secure areas first. I will provide a more defined timeline, including an estimated SAPF start date, once we have confirmation of the controllers' delivery.
+
+Please let me know if you have any questions or need additional coordination.
+
+Thank you,
+
+Tim Collins, MBA
+President | The Controls Company, LLC
+Service-Disabled Veteran-Owned Small Business
+📞 Phone: 850-490-1844
+✉️ Email: Tim@ControlsCo.net
+🌐 Web: TheControlsCompany.com
+🔗 LinkedIn: linkedin.com/in/tcollins2
+
+Tim Collins, MBA
+President | The Controls Company, LLC
+Service-Disabled Veteran-Owned Small Business
+📞 Phone: 850-490-1844
+✉️ Email: Tim@ControlsCo.net
+🌐 Web: TheControlsCompany.com
+🔗 LinkedIn: linkedin.com/in/tcollins2
+
+From: DUNN, JARED T CIV USAF AFMC AFTC/PZIO <jared.dunn.6@us.af.mil> 
+Sent: Thursday, March 5, 2026 12:30 PM
+To: Timothy Collins <Tim@controlsco.net>; David Harrison <David@controlsco.net>
+Cc: HARTZOG, LINDSAY A CIV USAF AFMC AFLCMC/AFTC / PZIOC <lindsay.hartzog@us.af.mil>; KEEFER, CURTIS J CIV USAF AFMC 796 CES/CEOES <curtis.keefer.3@us.af.mil>
+Subject: RE: Action Needed \\ Upgrade DDC Devices Eglin AFB Bldg. 1416
+
+Received, thank you for the update sir!
+
+From: Timothy Collins <Tim@controlsco.net> 
+Sent: Thursday, March 5, 2026 11:16 AM
+To: DUNN, JARED T CIV USAF AFMC AFTC/PZIO <jared.dunn.6@us.af.mil>; David Harrison <David@controlsco.net>
+Cc: HARTZOG, LINDSAY A CIV USAF AFMC AFLCMC/AFTC / PZIOC <lindsay.hartzog@us.af.mil>; KEEFER, CURTIS J CIV USAF AFMC 796 CES/CEOES <curtis.keefer.3@us.af.mil>
+Subject: [Non-DoD Source] RE: Action Needed \\ Upgrade DDC Devices Eglin AFB Bldg. 1416
+
+Jared,
+
+Email received. I have a phone call with my team scheduled for this afternoon. I will compile the latest schedule after that call and send it in. We are still more than 2 weeks away from work inside the SAPF. Our approach is to complete as much work outside of the SAPF as possible before moving in to that area.
+
+Thanks,
+Tim Collins, MBA
+President | The Controls Company, LLC
+Service-Disabled Veteran-Owned Small Business
+📞 Phone: 850-490-1844
+✉️ Email: Tim@ControlsCo.net
+🌐 Web: TheControlsCompany.com
+🔗 LinkedIn: linkedin.com/in/tcollins2
+
+From: DUNN, JARED T CIV USAF AFMC AFTC/PZIO <jared.dunn.6@us.af.mil> 
+Sent: Thursday, March 5, 2026 10:32 AM
+To: David Harrison <David@controlsco.net>; Timothy Collins <Tim@controlsco.net>
+Cc: HARTZOG, LINDSAY A CIV USAF AFMC AFLCMC/AFTC / PZIOC <lindsay.hartzog@us.af.mil>; KEEFER, CURTIS J CIV USAF AFMC 796 CES/CEOES <curtis.keefer.3@us.af.mil>
+Subject: Action Needed \\ Upgrade DDC Devices Eglin AFB Bldg. 1416
+
+Good morning,
+
+To support the Security Managers at Bldg. 1416 in preparing for their CSP package for PSO approval, we need an estimated start date for your work inside the SAPF.
+
+To ensure we can coordinate with all parties, please begin providing a two-week look-ahead schedule to the government team.
+
+Additionally, please let us know when you plan on submitting items for security inspection. Keep in mind that you will need to allow the security team a minimum of two weeks to complete their checks.
+
+Your cooperation is appreciated to ensure a smooth and secure process.
+
+Please let me know if you have any questions!
+
+Thanks,
+
+Jared Dunn
+Contract Specialist
+AFTC/PZIOA-A
+jared.dunn.6@us.af.mil
+

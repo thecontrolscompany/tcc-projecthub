@@ -1,0 +1,21 @@
+control_panel,source_visio_page,trunk_name,trunk_type,child_device,location,notes
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,CP-14 ELE RM-1,EMERGENCY ELECTRICAL 01.21.08,Inferred breakout from embedded subtree on CP-10.2 page.
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,FCU 1.4,MAIN ELEC 01.21.10,Inferred breakout from embedded subtree on CP-10.2 page.
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,VAV 8-11,CREW/MEDIA LOUNGE 01.20.06,Inferred breakout from embedded subtree on CP-10.2 page.
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,FCU 1.5,HOUSEKEEPING 01.21.11,Inferred breakout from embedded subtree on CP-10.2 page.
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,FCU 1.8,TR 01.21.09,Inferred breakout from embedded subtree on CP-10.2 page. | Additional location ref: ELEVATOR CTRL 01.22.05
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,FCU 1.10,ELEVATOR CTRL 01.22.06,Inferred breakout from embedded subtree on CP-10.2 page.
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,FCU 1.39,,Inferred breakout from embedded subtree on CP-10.2 page.
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,FCU 1.7,EMERGENCY ELECTRICAL 01.21.08,Inferred breakout from embedded subtree on CP-10.2 page.
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,VAV 8-10,SERVICE CORRIDOR,Inferred breakout from embedded subtree on CP-10.2 page.
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,VAV 8-7,GREEN RM/FAMILY LOUNGE 01.19.02,Inferred breakout from embedded subtree on CP-10.2 page. | Additional location ref: MARSHALLING AREA 01.22.02
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,VAV 8-2,SERVICE CORRIDOR 01.20.05,Inferred breakout from embedded subtree on CP-10.2 page.
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,FCU 1.9,,Inferred breakout from embedded subtree on CP-10.2 page.
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,VAV 8-1,NEAR LAUNDRY 01.13.08,Inferred breakout from embedded subtree on CP-10.2 page.
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,FCU 1.12,SECURITY OFFFICE 01.23.05,Inferred breakout from embedded subtree on CP-10.2 page. | Additional location ref: SHOW POWER 01.23.01
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,FCU 1.14,STORAGE 01.21.01,Inferred breakout from embedded subtree on CP-10.2 page.
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,FCU 1.13,,Inferred breakout from embedded subtree on CP-10.2 page.
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,VAV 8-5,OFFICIALS MEETING ROOM 01.20.02,Inferred breakout from embedded subtree on CP-10.2 page.
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,VAV 8-3,,Inferred breakout from embedded subtree on CP-10.2 page.
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,VAV 8-4,PRODUCTION OPEN OFFICE 01.21.03,Inferred breakout from embedded subtree on CP-10.2 page. | fROM: Area 1-b Vav 8-13 | Additional location ref: PRODUCTION OPEN OFFICE 01.21.03
+CP-14,CP-10 AHU-11 (2 of 2),MS/TP Trunk-1,MS/TP,FCU 1.11,SECURITY OFFFICE 01.23.05,Inferred breakout from embedded subtree on CP-10.2 page. | Additional location ref: STAR DRESSING OFFICIALS 01.20.03

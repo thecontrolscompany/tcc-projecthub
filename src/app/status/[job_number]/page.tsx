@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { format } from "date-fns";
 import { createClient } from "@supabase/supabase-js";
+import { normalizeSingle } from "@/lib/utils/normalize";
 
 export const dynamic = "force-dynamic";
 
@@ -14,11 +15,6 @@ type ProjectRow = {
   job_number: string | null;
   customer?: { name: string | null } | Array<{ name: string | null }> | null;
 };
-
-function normalizeSingle<T>(value: T | T[] | null | undefined): T | null {
-  if (Array.isArray(value)) return value[0] ?? null;
-  return value ?? null;
-}
 
 export default async function PublicStatusPage({ params }: PageProps) {
   const { job_number } = await params;

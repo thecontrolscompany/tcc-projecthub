@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { OpsProjectList } from "@/components/ops-project-list";
+import { normalizeSingle } from "@/lib/utils/normalize";
+import { resolvePmName } from "@/lib/project/assignments";
+import { linkAndGetPmDirectoryIds } from "@/lib/auth/link-pm-directory";
 
 export const dynamic = "force-dynamic";
 
@@ -52,21 +55,7 @@ export default async function OpsPage() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  if (user.email) {
-    const normalizedEmail = user.email.trim().toLowerCase();
-    await adminClient
-      .from("pm_directory")
-      .update({ profile_id: user.id })
-      .eq("email", normalizedEmail)
-      .is("profile_id", null);
-  }
-
-  const { data: linkedPmDirectoryRows } = await adminClient
-    .from("pm_directory")
-    .select("id")
-    .eq("profile_id", user.id);
-
-  const linkedPmDirectoryIds = (linkedPmDirectoryRows ?? []).map((row) => row.id);
+  const linkedPmDirectoryIds = await linkAndGetPmDirectoryIds(adminClient, user);
 
   const assignedProjectsQuery = adminClient
     .from("project_assignments")
@@ -147,11 +136,9 @@ export default async function OpsPage() {
     const customer = Array.isArray(project.customer) ? project.customer[0] : project.customer;
     const allAssignments = project.project_assignments ?? [];
 
-    function normAssignment(a: typeof allAssignments[number]) {
-      const profile = Array.isArray(a.profile) ? a.profile[0] : a.profile;
-      const dir = Array.isArray(a.pm_directory) ? a.pm_directory[0] : a.pm_directory;
-      const dirName = [dir?.first_name, dir?.last_name].filter(Boolean).join(" ").trim();
-      return profile?.full_name || dirName || profile?.email || dir?.email || null;
+    function toNormalized(a: typeof allAssignments[number] | undefined) {
+      if (!a) return null;
+      return { profile: normalizeSingle(a.profile), pm_directory: normalizeSingle(a.pm_directory) };
     }
 
     // 1. Match assignment whose profile_id/pm_directory_id equals projects.pm_id/pm_directory_id
@@ -166,9 +153,9 @@ export default async function OpsPage() {
     const firstPmAssignment = allAssignments.find((a) => a.role_on_project === "pm");
 
     const pmGroupName =
-      normAssignment(canonicalAssignment ?? {}) ||
-      normAssignment(flaggedAssignment ?? {}) ||
-      normAssignment(firstPmAssignment ?? {}) ||
+      resolvePmName(toNormalized(canonicalAssignment)) ||
+      resolvePmName(toNormalized(flaggedAssignment)) ||
+      resolvePmName(toNormalized(firstPmAssignment)) ||
       "Unassigned";
 
     return {

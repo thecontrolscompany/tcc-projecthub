@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
+import { linkAndGetPmDirectoryIds } from "@/lib/auth/link-pm-directory";
 import type { WeeklyUpdateEdit } from "@/types/database";
 
 interface ProjectContact {
@@ -37,14 +38,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const section = searchParams.get("section");
 
-  if (user.email) {
-    const normalizedEmail = user.email.trim().toLowerCase();
-    await adminClient
-      .from("pm_directory")
-      .update({ profile_id: user.id })
-      .eq("email", normalizedEmail)
-      .is("profile_id", null);
-  }
+  await linkAndGetPmDirectoryIds(adminClient, user);
 
   if (section === "project-data") {
     const projectId = searchParams.get("projectId");
@@ -53,7 +47,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Missing project id." }, { status: 400 });
     }
 
-    const [updatesResult, pocResult, contactsResult] = await Promise.all([
+    const currentMonthForPeriod = new Date();
+    const currentMonthStrForPeriod = `${currentMonthForPeriod.getUTCFullYear()}-${String(currentMonthForPeriod.getUTCMonth() + 1).padStart(2, "0")}-01`;
+
+    const [updatesResult, pocResult, contactsResult, periodResult] = await Promise.all([
       adminClient
         .from("weekly_updates")
         .select("id, project_id, pm_id, week_of, pct_complete, notes, blockers, poc_snapshot, crew_log, material_delivered, equipment_set, safety_incidents, inspections_tests, delays_impacts, other_remarks, imported_from, status, submitted_at")
@@ -70,6 +67,12 @@ export async function GET(request: Request) {
         .eq("project_id", projectId)
         .order("sort_order")
         .order("created_at"),
+      adminClient
+        .from("billing_periods")
+        .select("*")
+        .eq("project_id", projectId)
+        .eq("period_month", currentMonthStrForPeriod)
+        .maybeSingle(),
     ]);
 
     if (updatesResult.error || pocResult.error || contactsResult.error) {
@@ -101,22 +104,14 @@ export async function GET(request: Request) {
       pocItems: pocResult.data ?? [],
       contacts: (contactsResult.data ?? []) as ProjectContact[],
       editHistory,
+      currentPeriod: periodResult.data ?? null,
     });
   }
 
   const currentMonth = new Date();
   const currentMonthStr = `${currentMonth.getUTCFullYear()}-${String(currentMonth.getUTCMonth() + 1).padStart(2, "0")}-01`;
 
-  const { data: pmDirectoryRows, error: pmDirectoryError } = await adminClient
-    .from("pm_directory")
-    .select("id")
-    .eq("profile_id", user.id);
-
-  if (pmDirectoryError) {
-    return NextResponse.json({ error: pmDirectoryError.message }, { status: 500 });
-  }
-
-  const linkedPmDirectoryIds = (pmDirectoryRows ?? []).map((row) => row.id);
+  const linkedPmDirectoryIds = await linkAndGetPmDirectoryIds(adminClient, user);
   const assignmentQuery = adminClient
     .from("project_assignments")
     .select(`

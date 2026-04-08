@@ -335,6 +335,7 @@ function UpdateForm({
   const [savingPoc, setSavingPoc] = useState(false);
   const [pocSaveMessage, setPocSaveMessage] = useState<string | null>(null);
   const [pocSaveError, setPocSaveError] = useState<string | null>(null);
+  const [currentPeriod, setCurrentPeriod] = useState<BillingPeriod | null | undefined>(project.current_period);
 
   const totalWeight = pocItems.reduce((sum, item) => sum + item.weight, 0);
   const pocPctDecimal =
@@ -346,8 +347,8 @@ function UpdateForm({
       ? Number(manualOverride)
       : pocPctDecimal !== null
         ? pocPctDecimal * 100
-        : project.current_period
-          ? project.current_period.pct_complete * 100
+        : currentPeriod
+          ? currentPeriod.pct_complete * 100
           : 0;
 
   function seedFromLatest(latestUpdate: WeeklyUpdate | null) {
@@ -398,7 +399,7 @@ function UpdateForm({
     setInspectionsTests("");
     setDelaysImpacts("");
     setOtherRemarks("");
-    setManualOverride(project.current_period ? (project.current_period.pct_complete * 100).toFixed(1) : "");
+    setManualOverride(currentPeriod ? (currentPeriod.pct_complete * 100).toFixed(1) : "");
     setDraftUpdateId(null);
     setSubmittedUpdateId(null);
     setIsEditing(false);
@@ -426,6 +427,9 @@ function UpdateForm({
       const updatesData = (response.ok ? json?.updates : []) as WeeklyUpdate[];
       const pocData = (response.ok ? json?.pocItems : []) as PocLineItem[];
       const editHistoryData = (response.ok ? json?.editHistory : []) as WeeklyUpdateEdit[];
+      if (response.ok && json?.currentPeriod !== undefined) {
+        setCurrentPeriod(json.currentPeriod);
+      }
       setContacts((json?.contacts ?? []).map((c: ProjectContact) => ({
         ...c,
         company: c.company ?? "",
@@ -541,7 +545,7 @@ function UpdateForm({
             id: item.id,
             pct_complete: Math.min(Math.max((pocPcts[item.id] ?? item.pct_complete * 100) / 100, 0), 1),
           })),
-          billingPeriodId: nextStatus === "submitted" ? project.current_period?.id ?? null : null,
+          billingPeriodId: nextStatus === "submitted" ? currentPeriod?.id ?? null : null,
           editNote: isSubmittedEdit ? editNote || null : null,
         }),
       });
@@ -655,12 +659,12 @@ function UpdateForm({
   const statusPct =
     latestStatusUpdate?.pct_complete !== null && latestStatusUpdate?.pct_complete !== undefined
       ? latestStatusUpdate.pct_complete * 100
-      : project.current_period
-        ? project.current_period.pct_complete * 100
+      : currentPeriod
+        ? currentPeriod.pct_complete * 100
         : 0;
-  const projectStatus = getPmProjectStatus(project.current_period, latestStatusUpdate);
-  const currentPeriodToBill = project.current_period
-    ? Math.max(project.current_period.estimated_income_snapshot * project.current_period.pct_complete - project.current_period.prev_billed, 0)
+  const projectStatus = getPmProjectStatus(currentPeriod ?? undefined, latestStatusUpdate);
+  const currentPeriodToBill = currentPeriod
+    ? Math.max(currentPeriod.estimated_income_snapshot * currentPeriod.pct_complete - currentPeriod.prev_billed, 0)
     : null;
   const isViewingCurrentReport = currentWeekUpdate
     ? draftUpdateId === currentWeekUpdate.id || submittedUpdateId === currentWeekUpdate.id
@@ -755,8 +759,8 @@ function UpdateForm({
                 <Stat
                   label="Prev. Billed"
                   value={
-                    project.current_period
-                      ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(project.current_period.prev_billed)
+                    currentPeriod
+                      ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(currentPeriod.prev_billed)
                       : "-"
                   }
                 />
@@ -1094,7 +1098,7 @@ function UpdateForm({
                           step={0.1}
                           value={manualOverride}
                           onChange={(e) => setManualOverride(e.target.value)}
-                          placeholder={project.current_period ? (project.current_period.pct_complete * 100).toFixed(1) : "0.0"}
+                          placeholder={currentPeriod ? (currentPeriod.pct_complete * 100).toFixed(1) : "0.0"}
                           className="w-32 rounded-lg border border-border-default bg-surface-base px-3 py-2 text-center text-sm font-semibold text-text-primary focus:border-status-success/50 focus:outline-none"
                         />
                         <span className="text-sm text-text-secondary">Manual override is used when no POC categories are configured.</span>
@@ -1427,7 +1431,7 @@ function UpdateForm({
                   step={0.1}
                   value={manualOverride}
                   onChange={(e) => setManualOverride(e.target.value)}
-                  placeholder={project.current_period ? (project.current_period.pct_complete * 100).toFixed(1) : "0.0"}
+                  placeholder={currentPeriod ? (currentPeriod.pct_complete * 100).toFixed(1) : "0.0"}
                   className="w-32 rounded-lg border border-border-default bg-surface-base px-3 py-2 text-center text-sm font-semibold text-text-primary focus:border-status-success/50 focus:outline-none"
                 />
                 <span className="text-sm text-text-secondary">

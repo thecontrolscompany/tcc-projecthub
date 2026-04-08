@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { normalizeSingle } from "@/lib/utils/normalize";
+import { linkAndGetPmDirectoryIds } from "@/lib/auth/link-pm-directory";
 
 export const dynamic = "force-dynamic";
 
@@ -34,11 +36,6 @@ type InstallerProjectCard = {
   pctComplete: number | null;
 };
 
-function normalizeSingle<T>(value: T | T[] | null | undefined): T | null {
-  if (Array.isArray(value)) return value[0] ?? null;
-  return value ?? null;
-}
-
 function toSharePointUrl(folder: string | null) {
   if (!folder) return null;
   const encodedPath = folder.split("/").filter(Boolean).map((segment) => encodeURIComponent(segment)).join("/");
@@ -60,21 +57,7 @@ export default async function InstallerPage() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  if (user.email) {
-    const normalizedEmail = user.email.trim().toLowerCase();
-    await adminClient
-      .from("pm_directory")
-      .update({ profile_id: user.id })
-      .eq("email", normalizedEmail)
-      .is("profile_id", null);
-  }
-
-  const { data: pmDirectoryRows } = await adminClient
-    .from("pm_directory")
-    .select("id")
-    .eq("profile_id", user.id);
-
-  const linkedPmDirectoryIds = (pmDirectoryRows ?? []).map((row) => row.id);
+  const linkedPmDirectoryIds = await linkAndGetPmDirectoryIds(adminClient, user);
   const assignmentsQuery = adminClient
     .from("project_assignments")
     .select(`
