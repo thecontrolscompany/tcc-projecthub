@@ -45,6 +45,7 @@ export async function POST(request: Request) {
     notes: null;
     sort_order: number;
   }> = [];
+  const qtyReceivedByIndex: number[] = []; // parallel array — qty received per rowsToInsert entry
 
   let currentSection = "General";
   let skipped = 0;
@@ -54,7 +55,9 @@ export async function POST(request: Request) {
     const qtyText = String(row.getCell(2).text ?? "").trim();
     const codeNumber = String(row.getCell(3).text ?? "").trim();
     const description = String(row.getCell(4).text ?? "").trim();
+    const qtyReceivedText = String(row.getCell(5).text ?? "").trim();
     const qtyRequired = Number(qtyText || 0);
+    const qtyReceived = Number(qtyReceivedText || 0);
 
     const isSectionHeader = designation && !qtyText && !codeNumber && !description;
     if (isSectionHeader) {
@@ -88,6 +91,7 @@ export async function POST(request: Request) {
       notes: null,
       sort_order: rowsToInsert.length,
     });
+    qtyReceivedByIndex.push(Number.isFinite(qtyReceived) && qtyReceived > 0 ? qtyReceived : 0);
   });
 
   const adminClient = createAdminClient(
@@ -95,10 +99,33 @@ export async function POST(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const { error } = await adminClient.from("bom_items").insert(rowsToInsert);
+  const { data: insertedItems, error } = await adminClient
+    .from("bom_items")
+    .insert(rowsToInsert)
+    .select("id");
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ imported: rowsToInsert.length, skipped, errors: [] });
+  // Create bulk receipt entries for any rows that had qty received > 0
+  const receiptsToInsert = (insertedItems ?? [])
+    .map((item: { id: string }, i: number) => ({ id: item.id, qty: qtyReceivedByIndex[i] ?? 0 }))
+    .filter((r) => r.qty > 0)
+    .map((r) => ({
+      bom_item_id: r.id,
+      qty_received: r.qty,
+      date_received: new Date().toISOString().slice(0, 10),
+      received_by: null,
+      packing_slip: "Imported",
+      notes: "Bulk import",
+    }));
+
+  if (receiptsToInsert.length > 0) {
+    const { error: receiptError } = await adminClient.from("material_receipts").insert(receiptsToInsert);
+    if (receiptError) {
+      return NextResponse.json({ error: receiptError.message }, { status: 500 });
+    }
+  }
+
+  return NextResponse.json({ imported: rowsToInsert.length, receipts: receiptsToInsert.length, skipped, errors: [] });
 }
