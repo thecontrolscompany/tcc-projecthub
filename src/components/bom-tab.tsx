@@ -496,11 +496,11 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
               + Add Section
             </button>
             <a
-              href="/api/admin/bom/template"
-              download="BOM_Template.xlsx"
+              href={`/api/admin/bom/template?projectId=${encodeURIComponent(projectId)}`}
+              download
               className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-medium text-text-primary transition hover:bg-surface-base"
             >
-              Download Template
+              {items.length > 0 ? "Export BOM" : "Download Template"}
             </a>
             <label className="cursor-pointer rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-medium text-text-primary transition hover:bg-surface-base">
               Import from Excel

@@ -303,6 +303,7 @@ function UpdateForm({
   const [inspectionsTests, setInspectionsTests] = useState("");
   const [delaysImpacts, setDelaysImpacts] = useState("");
   const [otherRemarks, setOtherRemarks] = useState("");
+  const [includeBomReport, setIncludeBomReport] = useState(false);
   const [saving, setSaving] = useState<"draft" | "submit" | false>(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -378,6 +379,7 @@ function UpdateForm({
     setInspectionsTests(update.inspections_tests ?? "");
     setDelaysImpacts(update.delays_impacts ?? "");
     setOtherRemarks(update.other_remarks ?? "");
+    setIncludeBomReport(update.include_bom_report ?? false);
     setManualOverride(update.pct_complete !== null ? (update.pct_complete * 100).toFixed(1) : "");
   }
 
@@ -391,6 +393,7 @@ function UpdateForm({
     setInspectionsTests("");
     setDelaysImpacts("");
     setOtherRemarks("");
+    setIncludeBomReport(false);
     setManualOverride(currentPeriod ? (currentPeriod.pct_complete * 100).toFixed(1) : "");
     setDraftUpdateId(null);
     setSubmittedUpdateId(null);
@@ -539,6 +542,7 @@ function UpdateForm({
           })),
           billingPeriodId: nextStatus === "submitted" ? currentPeriod?.id ?? null : null,
           editNote: isSubmittedEdit ? editNote || null : null,
+          includeBomReport,
         }),
       });
 
@@ -1232,6 +1236,18 @@ function UpdateForm({
                   className={inputCls}
                 />
               </div>
+
+              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border-default bg-surface-overlay px-4 py-3">
+                <input
+                  type="checkbox"
+                  checked={includeBomReport}
+                  onChange={(e) => setIncludeBomReport(e.target.checked)}
+                  className="h-4 w-4 accent-[var(--color-brand-primary)]"
+                />
+                <span className="text-sm text-text-primary">
+                  Include BOM report in this week&apos;s report
+                </span>
+              </label>
 
               {submittedUpdateId && isEditing && (
                 <div>

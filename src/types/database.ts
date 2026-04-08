@@ -119,6 +119,7 @@ export interface WeeklyUpdate {
   delays_impacts: string | null;
   other_remarks: string | null;
   imported_from?: string | null;
+  include_bom_report?: boolean;
   submitted_at: string;
   // joined
   project?: Project;

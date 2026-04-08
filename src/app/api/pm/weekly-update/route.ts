@@ -24,6 +24,7 @@ type UpdatePayload = {
   pocUpdates?: Array<{ id: string; pct_complete: number }>;
   billingPeriodId?: string | null;
   editNote?: string | null;
+  includeBomReport?: boolean;
 };
 
 type NormalizedPayload = {
@@ -44,6 +45,7 @@ type NormalizedPayload = {
   pocUpdates: Array<{ id: string; pct_complete: number }>;
   billingPeriodId: string | null;
   editNote: string | null;
+  includeBomReport: boolean;
 };
 
 function adminClient() {
@@ -112,6 +114,7 @@ function normalizePayload(body: UpdatePayload): { value: NormalizedPayload } | {
       pocUpdates: Array.isArray(body.pocUpdates) ? body.pocUpdates : [],
       billingPeriodId: typeof body.billingPeriodId === "string" ? body.billingPeriodId : null,
       editNote: typeof body.editNote === "string" ? body.editNote : null,
+      includeBomReport: body.includeBomReport === true,
     },
   };
 }
@@ -175,6 +178,7 @@ function toRow(payload: NormalizedPayload, profileId: string) {
     inspections_tests: payload.inspectionsTests,
     delays_impacts: payload.delaysImpacts,
     other_remarks: payload.otherRemarks,
+    include_bom_report: payload.includeBomReport,
     submitted_at: payload.status === "submitted" ? new Date().toISOString() : null,
   };
 }

@@ -29,6 +29,7 @@ type UpdateRow = {
   inspections_tests: string | null;
   delays_impacts: string | null;
   other_remarks: string | null;
+  include_bom_report: boolean | null;
   submitted_at: string | null;
   project?:
     | {
@@ -214,6 +215,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
       inspections_tests,
       delays_impacts,
       other_remarks,
+      include_bom_report,
       submitted_at,
       pm:profiles(full_name, email),
       project:projects(
@@ -247,6 +249,46 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
   const totalManHours = crewLog.reduce((sum, row) => sum + (Number(row.men) || 0) * (Number(row.hours) || 0), 0);
   const pocSnapshot = Array.isArray(update.poc_snapshot) ? update.poc_snapshot : [];
   const totalWeight = pocSnapshot.reduce((sum, item) => sum + (Number(item.weight) || 0), 0);
+
+  // BOM report — fetch items + receipts if flag is set
+  type BomReportItem = {
+    id: string;
+    section: string;
+    designation: string | null;
+    code_number: string | null;
+    description: string;
+    qty_required: number;
+    qty_received: number;
+    status: "not_received" | "partial" | "received" | "surplus";
+  };
+  let bomItems: BomReportItem[] = [];
+  if (update.include_bom_report) {
+    const { data: rawItems } = await admin
+      .from("bom_items")
+      .select("id, section, designation, code_number, description, qty_required, sort_order")
+      .eq("project_id", project.id)
+      .order("section")
+      .order("sort_order");
+    const rawItemIds = (rawItems ?? []).map((i: { id: string }) => i.id);
+    const { data: rawReceipts } = rawItemIds.length > 0
+      ? await admin.from("material_receipts").select("bom_item_id, qty_received").in("bom_item_id", rawItemIds)
+      : { data: [] };
+    if (rawItems) {
+      const receivedMap = new Map<string, number>();
+      for (const r of (rawReceipts ?? []) as { bom_item_id: string; qty_received: number }[]) {
+        receivedMap.set(r.bom_item_id, (receivedMap.get(r.bom_item_id) ?? 0) + r.qty_received);
+      }
+      bomItems = (rawItems as { id: string; section: string; designation: string | null; code_number: string | null; description: string; qty_required: number }[]).map((item) => {
+        const received = receivedMap.get(item.id) ?? 0;
+        let status: BomReportItem["status"];
+        if (received === 0) status = "not_received";
+        else if (received < item.qty_required) status = "partial";
+        else if (received === item.qty_required) status = "received";
+        else status = "surplus";
+        return { ...item, qty_received: received, status };
+      });
+    }
+  }
 
   return (
     <html lang="en">
@@ -626,6 +668,59 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
               {"\n"}
               {coalesceText(update.notes, "") || " "}
             </div>
+
+            {bomItems.length > 0 && (
+              <>
+                <div className="section-divider">
+                  <h2>BILL OF MATERIALS</h2>
+                </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Designation</th>
+                      <th>Code Number</th>
+                      <th>Description</th>
+                      <th className="number-cell">Qty Req&apos;d</th>
+                      <th className="number-cell">Qty Rec&apos;d</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      let lastSection = "";
+                      return bomItems.map((item) => {
+                        const sectionHeader = item.section !== lastSection ? item.section : null;
+                        if (item.section !== lastSection) lastSection = item.section;
+                        const statusLabel =
+                          item.status === "received" ? "Received"
+                          : item.status === "partial" ? "Partial"
+                          : item.status === "surplus" ? "Surplus"
+                          : "Missing";
+                        return (
+                          <>
+                            {sectionHeader && (
+                              <tr key={`section-${sectionHeader}`} style={{ background: "#e8f0fa" }}>
+                                <td colSpan={6} style={{ fontWeight: 700, fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#1e3a5f" }}>
+                                  {sectionHeader}
+                                </td>
+                              </tr>
+                            )}
+                            <tr key={item.id}>
+                              <td>{item.designation || "-"}</td>
+                              <td>{item.code_number || "-"}</td>
+                              <td>{item.description}</td>
+                              <td className="number-cell">{item.qty_required}</td>
+                              <td className="number-cell">{item.qty_received}</td>
+                              <td>{statusLabel}</td>
+                            </tr>
+                          </>
+                        );
+                      });
+                    })()}
+                  </tbody>
+                </table>
+              </>
+            )}
 
             <footer className="footer">
               <div>The Controls Company, LLC | thecontrolscompany.com</div>
