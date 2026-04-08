@@ -434,6 +434,36 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
     }
   }
 
+  async function handleClearAll() {
+    if (!window.confirm("Delete ALL BOM items and receipt history for this project? This cannot be undone.")) return;
+
+    setSaving(true);
+    setError(null);
+    setStatusMessage(null);
+
+    try {
+      const response = await fetch("/api/admin/bom?action=clear-all", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ projectId }),
+      });
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(json?.error ?? "Failed to clear BOM.");
+
+      setItems([]);
+      setReceipts([]);
+      setExpandedItemId(null);
+      setEditingItemId(null);
+      setAddingSection(null);
+      setStatusMessage("BOM cleared.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to clear BOM.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function handleImport(file: File) {
     setSaving(true);
     setError(null);
@@ -515,6 +545,16 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
                 }}
               />
             </label>
+            {items.length > 0 && (
+              <button
+                type="button"
+                onClick={() => void handleClearAll()}
+                disabled={saving}
+                className="rounded-xl border border-status-danger/30 bg-status-danger/10 px-4 py-2.5 text-sm font-medium text-status-danger transition hover:bg-status-danger/20 disabled:opacity-50"
+              >
+                Clear All
+              </button>
+            )}
           </>
         )}
       </div>

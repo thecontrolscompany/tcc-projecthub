@@ -184,6 +184,14 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true });
   }
 
+  if (action === "clear-all") {
+    const projectId = typeof body?.projectId === "string" ? body.projectId : null;
+    if (!projectId) return NextResponse.json({ error: "projectId is required." }, { status: 400 });
+    const { error } = await client.from("bom_items").delete().eq("project_id", projectId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true });
+  }
+
   const { error } = await client.from("bom_items").delete().eq("id", body?.id);
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
