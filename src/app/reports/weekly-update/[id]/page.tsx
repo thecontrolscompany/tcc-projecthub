@@ -686,37 +686,35 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {(() => {
-                      let lastSection = "";
-                      return bomItems.map((item) => {
-                        const sectionHeader = item.section !== lastSection ? item.section : null;
-                        if (item.section !== lastSection) lastSection = item.section;
-                        const statusLabel =
-                          item.status === "received" ? "Received"
-                          : item.status === "partial" ? "Partial"
-                          : item.status === "surplus" ? "Surplus"
-                          : "Missing";
-                        return (
-                          <>
-                            {sectionHeader && (
-                              <tr key={`section-${sectionHeader}`} style={{ background: "#e8f0fa" }}>
-                                <td colSpan={6} style={{ fontWeight: 700, fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#1e3a5f" }}>
-                                  {sectionHeader}
-                                </td>
-                              </tr>
-                            )}
-                            <tr key={item.id}>
-                              <td>{item.designation || "-"}</td>
-                              <td>{item.code_number || "-"}</td>
-                              <td>{item.description}</td>
-                              <td className="number-cell">{item.qty_required}</td>
-                              <td className="number-cell">{item.qty_received}</td>
-                              <td>{statusLabel}</td>
-                            </tr>
-                          </>
+                    {bomItems.flatMap((item, i) => {
+                      const statusLabel =
+                        item.status === "received" ? "Received"
+                        : item.status === "partial" ? "Partial"
+                        : item.status === "surplus" ? "Surplus"
+                        : "Missing";
+                      const prevSection = i > 0 ? bomItems[i - 1].section : "";
+                      const rows = [];
+                      if (item.section !== prevSection) {
+                        rows.push(
+                          <tr key={`section-${item.section}-${i}`} style={{ background: "#e8f0fa" }}>
+                            <td colSpan={6} style={{ fontWeight: 700, fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#1e3a5f" }}>
+                              {item.section}
+                            </td>
+                          </tr>
                         );
-                      });
-                    })()}
+                      }
+                      rows.push(
+                        <tr key={item.id}>
+                          <td>{item.designation || "-"}</td>
+                          <td>{item.code_number || "-"}</td>
+                          <td>{item.description}</td>
+                          <td className="number-cell">{item.qty_required}</td>
+                          <td className="number-cell">{item.qty_received}</td>
+                          <td>{statusLabel}</td>
+                        </tr>
+                      );
+                      return rows;
+                    })}
                   </tbody>
                 </table>
               </>
