@@ -391,7 +391,7 @@ export async function GET(request: Request) {
       .from("pm_directory")
       .select(`
         id, email, first_name, last_name, phone, intended_role, profile_id,
-        profile:profiles(id, full_name, role, pm_directory_id)
+        profile:profiles!pm_directory_profile_id_fkey(id, full_name, role, pm_directory_id)
       `)
       .order("last_name")
       .order("first_name");

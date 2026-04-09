@@ -482,7 +482,7 @@ async function loadPortalReconcileSnapshot() {
       .eq("is_active", true),
     supabase
       .from("pm_directory")
-      .select("id, first_name, last_name, email, phone, profile_id, profile:profiles(id, role)")
+      .select("id, first_name, last_name, email, phone, profile_id, profile:profiles!pm_directory_profile_id_fkey(id, role)")
       .order("last_name")
       .order("first_name"),
     supabase
