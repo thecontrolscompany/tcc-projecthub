@@ -1,5 +1,5 @@
 # TCC ProjectHub — Session Continuity
-**Last updated:** 2026-03-31
+**Last updated:** 2026-04-08
 
 ---
 
@@ -36,6 +36,23 @@
 - Shared project editor extracted to `src/components/project-modal.tsx`
 - Ops manager table column alignment fixed (table-fixed + colgroup widths)
 - Login page mojibake characters fixed
+- New `/time` module scaffolded inside ProjectHub:
+  - `/time`
+  - `/time/clock`
+  - `/time/employees`
+  - `/time/projects`
+- merged time foundation now lives in ProjectHub Supabase via `037_time_merge_foundation.sql`
+- one-time merge script `scripts/merge-tcc-time-data.ts` copied live TCC Time data into ProjectHub on `2026-04-08`
+- current merged counts in ProjectHub:
+  - `28` QuickBooks users
+  - `57` QuickBooks jobcodes
+  - `453` QuickBooks timesheets
+  - `33` legacy time projects
+  - `8` exact profile mappings by email
+  - `18` legacy-project-to-portal-project mappings
+  - `18` QuickBooks-jobcode-to-portal-project mappings
+- `/time` now prefers ProjectHub's merged tables locally and only falls back to the legacy bridge when local merged tables are unavailable
+- Portal sidebar and middleware now recognize the `/time` module for `admin`, `pm`, `lead`, and `ops_manager`
 
 ### Infrastructure (live)
 | Item | Value |
@@ -65,6 +82,19 @@
 ---
 
 ## Next Tasks — READY TO RUN
+
+### Time Module Follow-On
+**What exists now:**
+- portal route structure for `/time`
+- ProjectHub-hosted merged QuickBooks/import tables
+- profile and project crosswalk tables for the initial database merge
+- clock page positioned as the first-priority workflow home
+
+**Next useful work:**
+- review and resolve the remaining `20` unmatched QuickBooks users against ProjectHub profiles
+- review and resolve the remaining unmatched projects and jobcodes before clocking becomes authoritative
+- port real clock in / clock out writes into the portal module
+- decide whether `/pm/time` should be retired or folded into `/time`
 
 ### Task 031 — Quote Requests Workflow (not yet written)
 **What it does:**

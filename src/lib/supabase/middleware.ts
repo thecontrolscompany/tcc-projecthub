@@ -70,6 +70,11 @@ export async function updateSession(request: NextRequest) {
       url.pathname = roleHome(role);
       return NextResponse.redirect(url);
     }
+    if (pathname.startsWith("/time") && !["admin", "pm", "lead", "ops_manager"].includes(role ?? "")) {
+      const url = request.nextUrl.clone();
+      url.pathname = roleHome(role);
+      return NextResponse.redirect(url);
+    }
     if (pathname.startsWith("/installer") && role !== "installer") {
       const url = request.nextUrl.clone();
       url.pathname = roleHome(role);

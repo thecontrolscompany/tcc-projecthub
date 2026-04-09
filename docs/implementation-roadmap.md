@@ -147,6 +147,31 @@ This is purely operational setup. No new code.
 
 ---
 
+## Phase 4c - AI-Assisted PM & Change Order Workflows
+**Target duration:** 2-3 weeks
+**Delivers:** AI assistance that improves PM throughput on weekly reporting and protects margin on change orders
+
+### Tasks
+- [ ] Confirm Microsoft 365 licensing posture for Microsoft 365 Copilot, SharePoint agents, Copilot Studio, and Power Automate / AI Builder
+- [ ] Define a human-in-the-loop policy: AI can draft and recommend, but never auto-submit weekly reports or auto-price change orders
+- [ ] Build an AI-assisted weekly report drafting flow for PMs
+  - Suggest polished report language from crew logs, notes, blockers, deliveries, inspections, and prior project context
+  - Produce both an internal draft and a customer-facing summary where appropriate
+  - Flag missing sections, inconsistent dates, weak wording, and incomplete narratives before submission
+- [ ] Build a project knowledge agent grounded in project documents and prior weekly reports so PMs and leadership can ask questions across report history
+- [ ] Build an AI-assisted change order coverage review
+  - Expand PM rough scope notes into a structured checklist of direct and indirect cost drivers
+  - Require review of labor, material, lost time, travel, storage/handling, supervision, programming/engineering, access constraints, labor escalation, material escalation, schedule impact, testing/commissioning, overhead, profit, assumptions, and exclusions
+  - Separate customer-facing narrative from internal commercial notes
+- [ ] Build an AI-assisted change order drafting flow that turns reviewed inputs into formal change order language
+- [ ] Store AI outputs as editable draft suggestions tied to the weekly update / change order record for auditability
+- [ ] Log prompt/output metadata and source references so leadership can trace how a draft was produced
+- [ ] Add role-based access so PMs, ops managers, and admins can use AI features without exposing sensitive internal pricing logic to customer users
+
+**Success criteria:** PMs can generate cleaner weekly report drafts in less time, and change orders consistently capture indirect costs and commercial risks that would otherwise be missed by a time-and-material-only mindset.
+
+---
+
 ## Phase 5 - Estimating Module (`hvac-estimator` Integration)
 **Target duration:** 6-10 weeks
 **Delivers:** One unified app. `hvac-estimator` can be retired.
@@ -219,9 +244,10 @@ This is the largest phase. Approach it incrementally.
 | 3 - Quote Requests | 2-3 weeks | Week 7 |
 | 4 - Estimate to Project Lifecycle | 2-3 weeks | Week 10 |
 | 4b - Standardized Project Reports | 1-2 weeks | Week 12 |
-| 5 - Estimating Module Migration | 6-10 weeks | Week 22 |
-| 6 - Analytics | 2-3 weeks | Week 25 |
-| 7 - QBO Integrations | 4-6 weeks | Week 31 |
+| 4c - AI-Assisted PM & Change Order Workflows | 2-3 weeks | Week 15 |
+| 5 - Estimating Module Migration | 6-10 weeks | Week 25 |
+| 6 - Analytics | 2-3 weeks | Week 28 |
+| 7 - QBO Integrations | 4-6 weeks | Week 34 |
 
 **Platform is operationally useful from Phase 0. Full unification completes at Phase 5.**
 

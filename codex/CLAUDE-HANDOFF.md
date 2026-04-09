@@ -1,5 +1,5 @@
 # Claude Session Handoff — TCC ProjectHub
-**Last updated:** 2026-04-01
+**Last updated:** 2026-04-08
 
 Paste this file into a new Claude session to restore full context.
 
@@ -72,6 +72,17 @@ Replaces an Excel-based monthly billing tracker with a multi-role portal.
 - Login page mojibake characters fixed
 - SharePoint document uploads: contract, scope, estimate (task-026)
 - Admin "View As" role preview (sessionStorage, amber banner) (task-027)
+- `/time` module added inside ProjectHub as the first TCC Time migration slice
+- `/time/clock`, `/time/employees`, and `/time/projects` now prefer ProjectHub's merged TCC Time tables and fall back to the legacy bridge only if local merged tables are unavailable
+- ProjectHub Supabase now contains merged TCC Time data from the one-time sync run on `2026-04-08`
+- Current merged counts:
+  - `28` QuickBooks users
+  - `57` QuickBooks jobcodes
+  - `453` QuickBooks timesheets
+  - `33` legacy time projects
+  - `8` exact profile mappings by email
+  - `18` legacy-project-to-portal-project mappings
+  - `18` QuickBooks-jobcode-to-portal-project mappings
 
 ### Migrations run in Supabase (all 11)
 - `001_initial_schema.sql` ✅
@@ -89,6 +100,12 @@ Replaces an Excel-based monthly billing tracker with a multi-role portal.
 ---
 
 ## Current / Next Task
+
+**TCC Time integration follow-on**
+- Review and resolve the remaining `20` unmatched QuickBooks users against ProjectHub profiles
+- Review and resolve the remaining unmatched projects and jobcodes before clocking becomes authoritative
+- Port real clock in / clock out writes into ProjectHub
+- Decide whether legacy `/pm/time` remains, redirects, or gets retired
 
 **Task 031 — Quote Requests Workflow** (spec not yet written)
 
@@ -109,11 +126,21 @@ What it adds:
 
 ### Database
 - `projects.name` format: `"YYYY-NNN - Project Name"` (job number prefixed during SharePoint migration)
+- `projects.project_number` now exists and the merge script backfills it from `projects.name` when the prefix matches `YYYY-NNN`
 - `pm_directory` stores all PM emails (including external: Trane, JCI, Siemens PMs)
 - `projects.pm_directory_id` references `pm_directory(id)` for assignment
 - `project_assignments` junction table: multiple people per project with `role_on_project`
 - `billing_periods.estimated_income_snapshot` locked at roll-forward time
 - `billing_periods.to_bill` is a generated column: `MAX(estimated_income_snapshot * pct_complete - prev_billed, 0)`
+- `037_time_merge_foundation.sql` added:
+  - `qb_time_users`
+  - `qb_time_jobcodes`
+  - `qb_time_timesheets`
+  - `integration_sync_runs`
+  - `legacy_time_projects`
+  - `profile_qb_time_mappings`
+  - `legacy_time_project_portal_mappings`
+  - `project_qb_time_mappings`
 
 ### Auth
 - Admin + PMs: Microsoft SSO via Supabase Azure provider
