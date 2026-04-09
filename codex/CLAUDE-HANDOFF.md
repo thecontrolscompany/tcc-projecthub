@@ -74,6 +74,8 @@ Replaces an Excel-based monthly billing tracker with a multi-role portal.
 - Admin "View As" role preview (sessionStorage, amber banner) (task-027)
 - `/time` module added inside ProjectHub as the first TCC Time migration slice
 - `/time/clock`, `/time/employees`, and `/time/projects` now prefer ProjectHub's merged TCC Time tables and fall back to the legacy bridge only if local merged tables are unavailable
+- `/time/reconcile` is now an admin-only reconciliation queue for unmatched QuickBooks users
+- `/pm/time` has been restyled to match the shared design system with surfaced cards, tokenized inputs, metric-style summary cards, and week-step navigation
 - ProjectHub Supabase now contains merged TCC Time data from the one-time sync run on `2026-04-08`
 - Current merged counts:
   - `28` QuickBooks users
@@ -103,6 +105,7 @@ Replaces an Excel-based monthly billing tracker with a multi-role portal.
 
 **TCC Time integration follow-on**
 - Review and resolve the remaining `20` unmatched QuickBooks users against ProjectHub profiles
+- use `/time/reconcile` first before doing manual SQL mapping
 - Review and resolve the remaining unmatched projects and jobcodes before clocking becomes authoritative
 - Port real clock in / clock out writes into ProjectHub
 - Decide whether legacy `/pm/time` remains, redirects, or gets retired
@@ -141,6 +144,9 @@ What it adds:
   - `profile_qb_time_mappings`
   - `legacy_time_project_portal_mappings`
   - `project_qb_time_mappings`
+- `039_qb_user_reconciliation_state.sql` added:
+  - `qb_time_user_review_states`
+  - persisted ignore state for the admin reconciliation queue
 
 ### Auth
 - Admin + PMs: Microsoft SSO via Supabase Azure provider

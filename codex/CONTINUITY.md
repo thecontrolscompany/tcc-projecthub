@@ -41,6 +41,7 @@
   - `/time/clock`
   - `/time/employees`
   - `/time/projects`
+  - `/time/reconcile`
 - merged time foundation now lives in ProjectHub Supabase via `037_time_merge_foundation.sql`
 - one-time merge script `scripts/merge-tcc-time-data.ts` copied live TCC Time data into ProjectHub on `2026-04-08`
 - current merged counts in ProjectHub:
@@ -52,6 +53,13 @@
   - `18` legacy-project-to-portal-project mappings
   - `18` QuickBooks-jobcode-to-portal-project mappings
 - `/time` now prefers ProjectHub's merged tables locally and only falls back to the legacy bridge when local merged tables are unavailable
+- `/time/reconcile` now exists as an admin-only mapping queue for unmatched QuickBooks users
+- admins can now:
+  - map a QuickBooks user to an existing ProjectHub profile
+  - create a new portal user directly from a QuickBooks user
+  - ignore a QuickBooks user for now using persisted review state
+- `/pm/time` has been visually rebuilt to use the app design system instead of prototype white/blue Tailwind styles
+- `TimeEntryForm.tsx`, `WeeklyTimeReport.tsx`, and `/pm/time` now match the rounded surface card language used by the `/time/*` module
 - Portal sidebar and middleware now recognize the `/time` module for `admin`, `pm`, `lead`, and `ops_manager`
 
 ### Infrastructure (live)
@@ -91,7 +99,7 @@
 - clock page positioned as the first-priority workflow home
 
 **Next useful work:**
-- review and resolve the remaining `20` unmatched QuickBooks users against ProjectHub profiles
+- use `/time/reconcile` to work through the remaining unmatched QuickBooks users against ProjectHub profiles
 - review and resolve the remaining unmatched projects and jobcodes before clocking becomes authoritative
 - port real clock in / clock out writes into the portal module
 - decide whether `/pm/time` should be retired or folded into `/time`
