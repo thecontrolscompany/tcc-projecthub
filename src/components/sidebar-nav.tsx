@@ -159,6 +159,7 @@ export const NAV_LINKS: NavItem[] = [
   { label: "PM Portal", href: "/pm", roles: ["pm", "lead", "ops_manager"], icon: ClipboardIcon },
   { label: "TCC Time", href: "/time", roles: ["admin", "pm", "lead", "ops_manager"], icon: ClockIcon },
   { label: "Time Reconcile", href: "/time/reconcile", roles: ["admin"], icon: UserIcon },
+  { label: "Project Reconcile", href: "/time/reconcile/projects", roles: ["admin"], icon: FolderIcon },
   { label: "Time Tracking", href: "/pm/time", roles: ["pm", "lead", "ops_manager"], icon: ClockIcon },
   { label: "Installer", href: "/installer", roles: ["installer"], icon: WrenchIcon },
   { label: "Analytics", href: "/admin/analytics", roles: ["admin", "ops_manager"], icon: ChartIcon },
@@ -189,6 +190,7 @@ const PAGE_TITLE_OVERRIDES: Record<string, string> = {
   "/time/employees": "Time Employees",
   "/time/projects": "Time Projects",
   "/time/reconcile": "Time Reconcile",
+  "/time/reconcile/projects": "Project Reconcile",
 };
 
 export function getUserInitials(userEmail: string) {

@@ -182,7 +182,13 @@ export function TimeEmployeesPage({
   );
 }
 
-export function TimeProjectsPage({ projects }: { projects: TimeModuleProject[] }) {
+export function TimeProjectsPage({
+  projects,
+  canManage = false
+}: {
+  projects: TimeModuleProject[];
+  canManage?: boolean;
+}) {
   const childJobcodes = projects.filter((project) => (project.parentQbJobcodeId ?? 0) > 0).length;
 
   return (
@@ -200,6 +206,17 @@ export function TimeProjectsPage({ projects }: { projects: TimeModuleProject[] }
       </div>
 
       <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
+        {canManage && (
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-default bg-surface-overlay px-4 py-3">
+            <div>
+              <p className="text-sm font-medium text-text-primary">Need to match imported jobcodes to portal projects?</p>
+              <p className="text-sm text-text-secondary">Open the admin reconciliation queue to map existing projects or ignore jobcodes for now.</p>
+            </div>
+            <Link href="/time/reconcile/projects" className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-primary-hover">
+              Open project reconcile
+            </Link>
+          </div>
+        )}
         <div className="rounded-2xl border border-border-default bg-surface-overlay px-4 py-3 text-sm text-text-secondary">
           {childJobcodes} imported jobcode{childJobcodes === 1 ? "" : "s"} have a parent jobcode and likely represent project-level entries.
         </div>

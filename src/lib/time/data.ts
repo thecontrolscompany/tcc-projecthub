@@ -109,6 +109,44 @@ type PortalReviewStateRow = {
   status: "ignored";
 };
 
+type PortalJobcodeReviewStateRow = {
+  qb_jobcode_id: number;
+  status: "ignored";
+};
+
+type PortalProjectRow = {
+  id: string;
+  name: string;
+  project_number: string | null;
+  is_active: boolean;
+  customers: { name: string } | { name: string }[] | null;
+};
+
+export interface ProjectReconcileCandidate {
+  id: string;
+  name: string;
+  projectNumber: string | null;
+  customerName: string | null;
+  isActive: boolean;
+  score: number;
+  reasons: string[];
+}
+
+export interface ProjectReconcileJobcode {
+  qbJobcodeId: number;
+  name: string;
+  type: string | null;
+  active: boolean;
+  billable: boolean;
+  suggestions: ProjectReconcileCandidate[];
+}
+
+export interface ProjectReconcileSnapshot {
+  jobcodes: ProjectReconcileJobcode[];
+  ignoredCount: number;
+  mappedCount: number;
+}
+
 type PortalProfileMappingRow = {
   qb_user_id: number;
   profile:
@@ -497,6 +535,120 @@ async function loadPortalReconcileSnapshot() {
   } satisfies TimeReconcileSnapshot;
 }
 
+function buildProjectCandidate(
+  jobcode: Pick<QbJobcodeRow, "qb_jobcode_id" | "name">,
+  project: PortalProjectRow
+): ProjectReconcileCandidate | null {
+  const reasons: string[] = [];
+  let score = 0;
+
+  const jobcodeName = normalizeName(jobcode.name);
+  const projectName = normalizeName(project.name);
+  const projectNumber = normalizeValue(project.project_number);
+
+  if (jobcodeName && projectName && jobcodeName === projectName) {
+    score += 100;
+    reasons.push("Exact name match");
+  }
+
+  if (projectNumber && jobcode.name.toLowerCase().includes(projectNumber)) {
+    score += 80;
+    reasons.push(`Project number match (${project.project_number})`);
+  }
+
+  const jobcodeParts = splitNameParts(jobcode.name);
+  const projectParts = splitNameParts(project.name);
+  const overlapping = jobcodeParts.filter((part) => part.length > 2 && projectParts.includes(part));
+
+  if (!score && overlapping.length >= 3) {
+    score += 70;
+    reasons.push(`Strong word overlap: ${overlapping.slice(0, 3).join(", ")}`);
+  } else if (!score && overlapping.length === 2) {
+    score += 40;
+    reasons.push(`Word overlap: ${overlapping.join(", ")}`);
+  } else if (!score && overlapping.length === 1) {
+    score += 15;
+    reasons.push(`Partial match: ${overlapping[0]}`);
+  }
+
+  if (!score) return null;
+
+  const customerName = Array.isArray(project.customers)
+    ? (project.customers[0]?.name ?? null)
+    : (project.customers?.name ?? null);
+
+  return {
+    id: project.id,
+    name: project.name,
+    projectNumber: project.project_number,
+    customerName,
+    isActive: project.is_active,
+    score,
+    reasons
+  };
+}
+
+async function loadPortalProjectReconcileSnapshot() {
+  const supabase = createPortalTimeClient();
+
+  const [jobcodesResult, mappingsResult, projectsResult, reviewStatesResult] = await Promise.all([
+    supabase
+      .from("qb_time_jobcodes")
+      .select("qb_jobcode_id, parent_qb_jobcode_id, name, type, active, billable")
+      .order("name"),
+    supabase
+      .from("project_qb_time_mappings")
+      .select("qb_jobcode_id, project_id")
+      .eq("is_active", true),
+    supabase
+      .from("projects")
+      .select("id, name, project_number, is_active, customers(name)")
+      .eq("is_active", true)
+      .order("name"),
+    supabase.from("qb_time_jobcode_review_states").select("qb_jobcode_id, status")
+  ]);
+
+  if (jobcodesResult.error) throw jobcodesResult.error;
+  if (mappingsResult.error) throw mappingsResult.error;
+  if (projectsResult.error) throw projectsResult.error;
+  if (reviewStatesResult.error) throw reviewStatesResult.error;
+
+  const mappedJobcodeIds = new Set(
+    (mappingsResult.data ?? []).map((m: { qb_jobcode_id: number }) => m.qb_jobcode_id)
+  );
+  const ignoredJobcodeIds = new Set(
+    ((reviewStatesResult.data ?? []) as PortalJobcodeReviewStateRow[])
+      .filter((s) => s.status === "ignored")
+      .map((s) => s.qb_jobcode_id)
+  );
+
+  const projects = (projectsResult.data ?? []) as PortalProjectRow[];
+
+  const jobcodes = ((jobcodesResult.data ?? []) as Array<
+    Pick<QbJobcodeRow, "qb_jobcode_id" | "parent_qb_jobcode_id" | "name" | "type" | "active" | "billable">
+  >)
+    .filter((j) => !mappedJobcodeIds.has(j.qb_jobcode_id) && !ignoredJobcodeIds.has(j.qb_jobcode_id))
+    .map((jobcode) => ({
+      qbJobcodeId: jobcode.qb_jobcode_id,
+      name: jobcode.name,
+      type: jobcode.type,
+      active: jobcode.active,
+      billable: jobcode.billable,
+      suggestions: projects
+        .map((project) => buildProjectCandidate(jobcode, project))
+        .filter((c): c is ProjectReconcileCandidate => Boolean(c))
+        .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
+        .slice(0, 5)
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  return {
+    jobcodes,
+    ignoredCount: ignoredJobcodeIds.size,
+    mappedCount: mappedJobcodeIds.size
+  } satisfies ProjectReconcileSnapshot;
+}
+
 export async function getTimeModuleSnapshot(): Promise<TimeModuleSnapshot> {
   try {
     return await loadPortalSnapshot();
@@ -511,4 +663,8 @@ export async function getTimeModuleSnapshot(): Promise<TimeModuleSnapshot> {
 
 export async function getTimeReconcileSnapshot(): Promise<TimeReconcileSnapshot> {
   return loadPortalReconcileSnapshot();
+}
+
+export async function getProjectReconcileSnapshot(): Promise<ProjectReconcileSnapshot> {
+  return loadPortalProjectReconcileSnapshot();
 }
