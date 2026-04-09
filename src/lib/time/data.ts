@@ -67,8 +67,16 @@ export interface TimeReconcileUser {
   suggestions: TimeReconcileCandidate[];
 }
 
+export interface TimeReconcileProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  role: UserRole;
+}
+
 export interface TimeReconcileSnapshot {
   users: TimeReconcileUser[];
+  eligibleProfiles: TimeReconcileProfile[];
   ignoredCount: number;
   mappedCount: number;
 }
@@ -530,6 +538,12 @@ async function loadPortalReconcileSnapshot() {
 
   return {
     users,
+    eligibleProfiles: eligibleProfiles.map((p) => ({
+      id: p.id,
+      fullName: p.full_name ?? "Unnamed profile",
+      email: p.email,
+      role: p.role
+    })),
     ignoredCount: ignoredQbUserIds.size,
     mappedCount: mappedQbUserIds.size
   } satisfies TimeReconcileSnapshot;
