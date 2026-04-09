@@ -67,7 +67,7 @@ export async function POST(request: Request) {
         {
           project_id: projectId,
           qb_jobcode_id: qbJobcodeId,
-          match_source: "manual_admin_map",
+          mapping_source: "manual_admin_map",
           confidence_score: 100,
           is_active: true
         },
