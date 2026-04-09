@@ -15,6 +15,8 @@ export interface Profile {
   full_name: string | null;
   role: UserRole;
   email: string;
+  pm_directory_id: string | null;
+  phone: string | null;
 }
 
 export interface Customer {

@@ -231,6 +231,38 @@ export async function POST() {
       }
     }
 
+    const upsertedEmails = upserts
+      .map((candidate) => candidate.email.toLowerCase());
+
+    if (upsertedEmails.length > 0) {
+      const { data: matchedProfiles } = await adminClient
+        .from("profiles")
+        .select("id, email")
+        .in("email", upsertedEmails);
+
+      for (const profile of matchedProfiles ?? []) {
+        const { data: pmdEntry } = await adminClient
+          .from("pm_directory")
+          .select("id, profile_id")
+          .ilike("email", profile.email)
+          .maybeSingle();
+
+        if (pmdEntry) {
+          if (!pmdEntry.profile_id) {
+            await adminClient
+              .from("pm_directory")
+              .update({ profile_id: profile.id })
+              .eq("id", pmdEntry.id);
+          }
+          await adminClient
+            .from("profiles")
+            .update({ pm_directory_id: pmdEntry.id })
+            .eq("id", profile.id)
+            .is("pm_directory_id", null);
+        }
+      }
+    }
+
     return NextResponse.json({
       rawCount: rawGraphCount,
       inserted,

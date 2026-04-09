@@ -55,11 +55,13 @@
 - `/time` now prefers ProjectHub's merged tables locally and only falls back to the legacy bridge when local merged tables are unavailable
 - `/time/reconcile` now exists as an admin-only mapping queue for unmatched QuickBooks users
 - admins can now:
-  - map a QuickBooks user to an existing ProjectHub profile
-  - create a new portal user directly from a QuickBooks user
+  - map a QuickBooks user to an existing `pm_directory` people record
+  - auto-create a portal account during mapping when the selected people record does not have one yet
   - ignore a QuickBooks user for now using persisted review state
 - `/pm/time` has been visually rebuilt to use the app design system instead of prototype white/blue Tailwind styles
 - `TimeEntryForm.tsx`, `WeeklyTimeReport.tsx`, and `/pm/time` now match the rounded surface card language used by the `/time/*` module
+- `pm_directory` is now the authoritative people directory; `profiles.pm_directory_id` exists and was backfilled by email via migrations `041` and `042`
+- admin contacts data now loads from one joined `pm_directory + profiles` query instead of stitching separate contact and profile lists
 - Portal sidebar and middleware now recognize the `/time` module for `admin`, `pm`, `lead`, and `ops_manager`
 
 ### Infrastructure (live)
@@ -99,7 +101,8 @@
 - clock page positioned as the first-priority workflow home
 
 **Next useful work:**
-- use `/time/reconcile` to work through the remaining unmatched QuickBooks users against ProjectHub profiles
+- use `/time/reconcile` to work through the remaining unmatched QuickBooks users against `pm_directory`
+- continue consolidating identity reads toward `pm_directory` where appropriate
 - review and resolve the remaining unmatched projects and jobcodes before clocking becomes authoritative
 - port real clock in / clock out writes into the portal module
 - decide whether `/pm/time` should be retired or folded into `/time`

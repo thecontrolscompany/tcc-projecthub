@@ -387,24 +387,20 @@ export async function GET(request: Request) {
     if (requesterRole !== "admin") {
       return NextResponse.json({ error: "Admin access required." }, { status: 403 });
     }
-    const [contactResult, profileResult] = await Promise.all([
-      adminClient
-        .from("pm_directory")
-        .select("id, email, first_name, last_name, phone, profile_id, intended_role, profile:profiles(full_name)")
-        .order("email"),
-      adminClient.from("profiles").select("email, role"),
-    ]);
+    const { data, error } = await adminClient
+      .from("pm_directory")
+      .select(`
+        id, email, first_name, last_name, phone, intended_role, profile_id,
+        profile:profiles(id, full_name, role, pm_directory_id)
+      `)
+      .order("last_name")
+      .order("first_name");
 
-    if (contactResult.error || profileResult.error) {
-      return NextResponse.json({
-        error: contactResult.error?.message || profileResult.error?.message || "Failed to load contacts.",
-      }, { status: 500 });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({
-      contacts: contactResult.data ?? [],
-      profiles: profileResult.data ?? [],
-    });
+    return NextResponse.json({ contacts: data ?? [] });
   }
 
   if (section === "weekly-updates") {

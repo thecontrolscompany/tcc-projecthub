@@ -70,12 +70,57 @@ export async function POST(request: Request) {
 
   // Update profile (trigger should auto-create it, but set role explicitly)
   if (newUser.user) {
+    const userId = newUser.user.id;
+
     await adminClient.from("profiles").upsert({
-      id: newUser.user.id,
+      id: userId,
       email,
       full_name: fullName,
       role,
     });
+
+    const nameParts = fullName.trim().split(/\s+/);
+    const firstName = nameParts[0] ?? fullName;
+    const lastName = nameParts.slice(1).join(" ") || null;
+
+    const { data: existingPmd } = await adminClient
+      .from("pm_directory")
+      .select("id, profile_id")
+      .ilike("email", email)
+      .maybeSingle();
+
+    let pmdId: string;
+
+    if (existingPmd) {
+      pmdId = existingPmd.id;
+      if (!existingPmd.profile_id) {
+        await adminClient
+          .from("pm_directory")
+          .update({ profile_id: userId })
+          .eq("id", pmdId);
+      }
+    } else {
+      const { data: newPmd } = await adminClient
+        .from("pm_directory")
+        .insert({
+          email,
+          first_name: firstName,
+          last_name: lastName,
+          profile_id: userId,
+          intended_role: ["pm", "lead", "installer", "ops_manager"].includes(role)
+            ? role
+            : null,
+        })
+        .select("id")
+        .single();
+      pmdId = newPmd!.id;
+    }
+
+    await adminClient
+      .from("profiles")
+      .update({ pm_directory_id: pmdId })
+      .eq("id", userId)
+      .is("pm_directory_id", null);
   }
 
   return NextResponse.json({ success: true, userId: newUser.user?.id });

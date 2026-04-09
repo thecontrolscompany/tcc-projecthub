@@ -86,6 +86,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: profileError.message }, { status: 500 });
     }
 
+    await adminClient
+      .from("profiles")
+      .update({ pm_directory_id: pmDirectoryId })
+      .eq("id", resolvedProfileId)
+      .is("pm_directory_id", null);
+
     const { error: updateDirectoryError } = await adminClient
       .from("pm_directory")
       .update({ profile_id: resolvedProfileId })

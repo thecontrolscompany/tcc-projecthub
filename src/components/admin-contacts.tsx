@@ -16,8 +16,12 @@ type PmDirectoryRow = {
   phone: string | null;
   profile_id: string | null;
   intended_role: InternalContactRole | null;
-  profile?: { full_name: string | null } | null;
-  matchedProfileRole?: UserRole | null;
+  profile?: {
+    id: string;
+    full_name: string | null;
+    role: UserRole;
+    pm_directory_id: string | null;
+  } | null;
 };
 
 function formatPhone(raw: string): string {
@@ -86,21 +90,18 @@ function ContactsPanel() {
       });
       const json = await res.json();
       const contactData = res.ok ? json?.contacts : null;
-      const profileData = res.ok ? json?.profiles : null;
-
-      const profileRoleByEmail = new Map(
-        ((profileData as Array<{ email: string; role: UserRole }> | null) ?? []).map((profile) => [
-          profile.email.toLowerCase(),
-          profile.role,
-        ])
-      );
 
       const normalized = (
-        (contactData as Array<PmDirectoryRow & { profile?: { full_name: string | null } | Array<{ full_name: string | null }> }> | null) ?? []
+        (contactData as Array<
+          PmDirectoryRow & {
+            profile?:
+              | PmDirectoryRow["profile"]
+              | Array<NonNullable<PmDirectoryRow["profile"]>>;
+          }
+        > | null) ?? []
       ).map((item) => ({
         ...item,
         profile: Array.isArray(item.profile) ? item.profile[0] ?? null : item.profile ?? null,
-        matchedProfileRole: profileRoleByEmail.get(item.email.toLowerCase()) ?? null,
       }));
 
       setPms(normalized);
@@ -139,8 +140,8 @@ function ContactsPanel() {
     setFormLastName(pm.last_name ?? "");
     setFormPhone(formatPhone(pm.phone ?? ""));
     setFormRole(
-      pm.matchedProfileRole && INTERNAL_CONTACT_ROLES.includes(pm.matchedProfileRole as InternalContactRole)
-        ? (pm.matchedProfileRole as InternalContactRole)
+      pm.profile?.role && INTERNAL_CONTACT_ROLES.includes(pm.profile.role as InternalContactRole)
+        ? (pm.profile.role as InternalContactRole)
         : pm.intended_role ?? "pm"
     );
     setStatus(null);
@@ -379,9 +380,9 @@ function ContactsPanel() {
                         <span className="inline-flex w-fit rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-xs font-medium text-brand-primary">
                           Internal - Not Yet Signed In
                         </span>
-                        {(pm.intended_role ?? pm.matchedProfileRole) && (
+                        {(pm.intended_role ?? pm.profile?.role) && (
                           <span className="text-xs text-text-secondary">
-                            Intended role: {pm.intended_role ?? pm.matchedProfileRole}
+                            Intended role: {pm.intended_role ?? pm.profile?.role}
                           </span>
                         )}
                       </div>

@@ -42,6 +42,14 @@ export async function GET(request: Request) {
             .eq("email", normalizedEmail)
             .is("profile_id", null);
 
+          if (pmDirectory?.id) {
+            await adminClient
+              .from("profiles")
+              .update({ pm_directory_id: pmDirectory.id })
+              .eq("id", user.id)
+              .is("pm_directory_id", null);
+          }
+
           if (
             pmDirectory?.id &&
             typeof pmDirectory.intended_role === "string" &&

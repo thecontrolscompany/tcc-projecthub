@@ -4,18 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
-const roleSchema = z.enum(["admin", "pm", "lead", "installer", "ops_manager", "customer"]);
-
 const requestSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("map_existing_profile"),
     qbUserId: z.number().int().positive(),
-    profileId: z.uuid()
-  }),
-  z.object({
-    action: z.literal("create_portal_user"),
-    qbUserId: z.number().int().positive(),
-    role: roleSchema
+    pmDirectoryId: z.uuid()
   }),
   z.object({
     action: z.literal("ignore_user"),
@@ -25,10 +18,6 @@ const requestSchema = z.discriminatedUnion("action", [
 
 function adminClient() {
   return createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-}
-
-function normalizeEmail(value: string | null | undefined) {
-  return value?.trim().toLowerCase() ?? "";
 }
 
 function generateTemporaryPassword() {
@@ -54,25 +43,6 @@ async function requireAdmin() {
   return { profileId: profile.id };
 }
 
-async function ensureProfileNotAlreadyMapped(client: ReturnType<typeof adminClient>, profileId: string, qbUserId: number) {
-  const { data: existingMapping, error } = await client
-    .from("profile_qb_time_mappings")
-    .select("qb_user_id")
-    .eq("profile_id", profileId)
-    .eq("is_active", true)
-    .neq("qb_user_id", qbUserId)
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    throw error;
-  }
-
-  if (existingMapping) {
-    throw new Error("That portal profile is already mapped to another QuickBooks user.");
-  }
-}
-
 export async function POST(request: Request) {
   const auth = await requireAdmin();
   if ("error" in auth) {
@@ -88,23 +58,68 @@ export async function POST(request: Request) {
 
   try {
     if (parsed.data.action === "map_existing_profile") {
-      const { qbUserId, profileId } = parsed.data;
+      const { qbUserId, pmDirectoryId } = parsed.data;
 
-      const [{ data: qbUser, error: qbUserError }, { data: profile, error: profileError }] = await Promise.all([
-        client.from("qb_time_users").select("qb_user_id").eq("qb_user_id", qbUserId).maybeSingle(),
-        client.from("profiles").select("id, full_name, email").eq("id", profileId).maybeSingle()
-      ]);
+      const [{ data: qbUser, error: qbUserError }, { data: pmdEntry, error: pmdError }] =
+        await Promise.all([
+          client.from("qb_time_users").select("qb_user_id").eq("qb_user_id", qbUserId).maybeSingle(),
+          client
+            .from("pm_directory")
+            .select("id, email, first_name, last_name, profile_id")
+            .eq("id", pmDirectoryId)
+            .maybeSingle(),
+        ]);
 
       if (qbUserError) throw qbUserError;
-      if (profileError) throw profileError;
-      if (!qbUser) {
-        return NextResponse.json({ error: "QuickBooks user not found." }, { status: 404 });
-      }
-      if (!profile) {
-        return NextResponse.json({ error: "Portal profile not found." }, { status: 404 });
-      }
+      if (pmdError) throw pmdError;
+      if (!qbUser) return NextResponse.json({ error: "QuickBooks user not found." }, { status: 404 });
+      if (!pmdEntry) return NextResponse.json({ error: "Contact not found." }, { status: 404 });
 
-      await ensureProfileNotAlreadyMapped(client, profileId, qbUserId);
+      let profileId = pmdEntry.profile_id;
+
+      if (!profileId) {
+        if (!pmdEntry.email) {
+          return NextResponse.json(
+            { error: "This contact has no email — cannot create a portal account." },
+            { status: 400 }
+          );
+        }
+        const fullName =
+          [pmdEntry.first_name, pmdEntry.last_name].filter(Boolean).join(" ").trim() ||
+          pmdEntry.email;
+        const tempPassword = generateTemporaryPassword();
+
+        const { data: created, error: createError } = await client.auth.admin.createUser({
+          email: pmdEntry.email,
+          password: tempPassword,
+          email_confirm: true,
+          user_metadata: { full_name: fullName, role: "installer" },
+        });
+
+        if (createError) throw createError;
+        profileId = created.user?.id ?? null;
+        if (!profileId) {
+          return NextResponse.json({ error: "Failed to create portal account." }, { status: 500 });
+        }
+
+        await client.from("profiles").upsert({
+          id: profileId,
+          email: pmdEntry.email,
+          full_name: fullName,
+          role: "installer",
+          pm_directory_id: pmDirectoryId,
+        });
+        await client
+          .from("pm_directory")
+          .update({ profile_id: profileId })
+          .eq("id", pmDirectoryId);
+      } else {
+        await client
+          .from("profiles")
+          .update({ pm_directory_id: pmDirectoryId })
+          .eq("id", profileId)
+          .is("pm_directory_id", null);
+      }
 
       const { error: upsertError } = await client.from("profile_qb_time_mappings").upsert(
         {
@@ -112,11 +127,10 @@ export async function POST(request: Request) {
           qb_user_id: qbUserId,
           match_source: "manual_admin_map",
           confidence_score: 100,
-          is_active: true
+          is_active: true,
         },
         { onConflict: "profile_id,qb_user_id" }
       );
-
       if (upsertError) throw upsertError;
 
       await client.from("qb_time_user_review_states").delete().eq("qb_user_id", qbUserId);
@@ -124,105 +138,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true });
     }
 
-    if (parsed.data.action === "ignore_user") {
-      const { qbUserId } = parsed.data;
+    const { qbUserId } = parsed.data;
 
-      const { error } = await client.from("qb_time_user_review_states").upsert(
-        {
-          qb_user_id: qbUserId,
-          status: "ignored",
-          ignored_by_profile_id: auth.profileId
-        },
-        { onConflict: "qb_user_id" }
-      );
-
-      if (error) throw error;
-
-      return NextResponse.json({ success: true });
-    }
-
-    const { qbUserId, role } = parsed.data;
-    const { data: qbUser, error: qbUserError } = await client
-      .from("qb_time_users")
-      .select("qb_user_id, email, display_name")
-      .eq("qb_user_id", qbUserId)
-      .maybeSingle();
-
-    if (qbUserError) throw qbUserError;
-    if (!qbUser) {
-      return NextResponse.json({ error: "QuickBooks user not found." }, { status: 404 });
-    }
-
-    const email = normalizeEmail(qbUser.email);
-    if (!email) {
-      return NextResponse.json({ error: "This QuickBooks user has no email, so a portal user cannot be created automatically." }, { status: 400 });
-    }
-
-    const { data: existingProfile, error: existingProfileError } = await client
-      .from("profiles")
-      .select("id, email")
-      .ilike("email", email)
-      .maybeSingle();
-
-    if (existingProfileError) throw existingProfileError;
-    if (existingProfile) {
-      return NextResponse.json({ error: "A portal profile with this email already exists. Use Map existing profile instead." }, { status: 400 });
-    }
-
-    const temporaryPassword = generateTemporaryPassword();
-    const { data: createdUser, error: createError } = await client.auth.admin.createUser({
-      email,
-      password: temporaryPassword,
-      email_confirm: true,
-      user_metadata: {
-        full_name: qbUser.display_name,
-        role
-      }
-    });
-
-    if (createError) {
-      return NextResponse.json({ error: createError.message }, { status: 400 });
-    }
-
-    const newUserId = createdUser.user?.id;
-    if (!newUserId) {
-      return NextResponse.json({ error: "Portal user was created without a user id." }, { status: 500 });
-    }
-
-    const { error: profileUpsertError } = await client.from("profiles").upsert({
-      id: newUserId,
-      email,
-      full_name: qbUser.display_name,
-      role
-    });
-
-    if (profileUpsertError) throw profileUpsertError;
-
-    const { error: mappingError } = await client.from("profile_qb_time_mappings").upsert(
+    const { error } = await client.from("qb_time_user_review_states").upsert(
       {
-        profile_id: newUserId,
         qb_user_id: qbUserId,
-        match_source: "admin_created_from_qb_user",
-        confidence_score: 100,
-        is_active: true
+        status: "ignored",
+        ignored_by_profile_id: auth.profileId
       },
-      { onConflict: "profile_id,qb_user_id" }
+      { onConflict: "qb_user_id" }
     );
 
-    if (mappingError) throw mappingError;
+    if (error) throw error;
 
-    await client.from("qb_time_user_review_states").delete().eq("qb_user_id", qbUserId);
-
-    return NextResponse.json({
-      success: true,
-      tempPassword: temporaryPassword,
-      createdUser: {
-        id: newUserId,
-        email,
-        fullName: qbUser.display_name,
-        role
-      }
-    });
+    return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unable to update reconciliation state." },

@@ -2,31 +2,24 @@
 
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
-import type { UserRole } from "@/types/database";
 import type { TimeReconcileSnapshot } from "@/lib/time/data";
 
-type PendingState = Record<number, "map" | "create" | "ignore" | undefined>;
-type RoleState = Record<number, UserRole | undefined>;
+type PendingState = Record<number, "map" | "ignore" | undefined>;
 type ManualPickState = Record<number, string | undefined>;
-
-const DEFAULT_ROLE: UserRole = "installer";
-const ROLE_OPTIONS: UserRole[] = ["installer", "lead", "pm", "ops_manager", "admin", "customer"];
 
 export function TimeReconcilePage({ snapshot }: { snapshot: TimeReconcileSnapshot }) {
   const router = useRouter();
   const [pending, setPending] = useState<PendingState>({});
   const [messages, setMessages] = useState<Record<number, string>>({});
   const [errors, setErrors] = useState<Record<number, string>>({});
-  const [selectedRoles, setSelectedRoles] = useState<RoleState>({});
   const [manualPicks, setManualPicks] = useState<ManualPickState>({});
 
   async function runAction(
     qbUserId: number,
     payload:
-      | { action: "map_existing_profile"; profileId: string }
-      | { action: "create_portal_user"; role: UserRole }
+      | { action: "map_existing_profile"; pmDirectoryId: string }
       | { action: "ignore_user" },
-    pendingState: "map" | "create" | "ignore"
+    pendingState: "map" | "ignore"
   ) {
     setPending((current) => ({ ...current, [qbUserId]: pendingState }));
     setErrors((current) => ({ ...current, [qbUserId]: "" }));
@@ -39,24 +32,16 @@ export function TimeReconcilePage({ snapshot }: { snapshot: TimeReconcileSnapsho
         body: JSON.stringify({ qbUserId, ...payload })
       });
 
-      const result = (await response.json()) as {
-        error?: string;
-        tempPassword?: string;
-        createdUser?: { email: string; role: string };
-      };
+      const result = (await response.json()) as { error?: string };
 
       if (!response.ok) {
         throw new Error(result.error ?? "Action failed.");
       }
 
-      const message =
-        payload.action === "create_portal_user" && result.createdUser
-          ? `Created ${result.createdUser.email} with temporary password: ${result.tempPassword}`
-          : payload.action === "ignore_user"
-            ? "Ignored for now."
-            : "Mapping saved.";
-
-      setMessages((current) => ({ ...current, [qbUserId]: message }));
+      setMessages((current) => ({
+        ...current,
+        [qbUserId]: payload.action === "ignore_user" ? "Ignored for now." : "Mapping saved."
+      }));
       startTransition(() => {
         router.refresh();
       });
@@ -77,8 +62,7 @@ export function TimeReconcilePage({ snapshot }: { snapshot: TimeReconcileSnapsho
         <h1 className="mt-2 font-heading text-3xl font-bold text-text-primary">Map imported employees to portal users</h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-text-secondary">
           This admin queue shows QuickBooks Time users that are still unmatched in ProjectHub. Use the
-          suggestions if the algorithm found likely matches, or pick any portal profile manually from
-          the dropdown.
+          suggested people records when possible, or pick any contact manually from the directory.
         </p>
       </section>
 
@@ -97,13 +81,11 @@ export function TimeReconcilePage({ snapshot }: { snapshot: TimeReconcileSnapsho
           ) : (
             snapshot.users.map((user) => {
               const pendingState = pending[user.qbUserId];
-              const role = selectedRoles[user.qbUserId] ?? DEFAULT_ROLE;
               const manualPickId = manualPicks[user.qbUserId] ?? "";
 
               return (
                 <article key={user.qbUserId} className="rounded-2xl border border-border-default bg-surface-overlay p-4">
                   <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-                    {/* QB user identity */}
                     <div className="space-y-2 xl:max-w-sm">
                       <div className="flex flex-wrap items-center gap-2">
                         <h2 className="text-lg font-semibold text-text-primary">{user.displayName}</h2>
@@ -118,41 +100,52 @@ export function TimeReconcilePage({ snapshot }: { snapshot: TimeReconcileSnapsho
                     </div>
 
                     <div className="grid flex-1 gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-                      {/* Left col: suggestions + manual pick */}
                       <div className="space-y-3">
-                        {/* Auto suggestions */}
                         <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-tertiary">
                             Suggested matches
                           </p>
                           <div className="mt-3 space-y-3">
                             {user.suggestions.length === 0 ? (
-                              <p className="text-sm text-text-secondary">No automatic suggestions — use the manual picker below.</p>
+                              <p className="text-sm text-text-secondary">No automatic suggestions. Use the manual picker below.</p>
                             ) : (
                               user.suggestions.map((candidate) => (
                                 <div key={candidate.id} className="rounded-2xl border border-border-default bg-surface-overlay px-4 py-3">
                                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
-                                      <p className="font-medium text-text-primary">{candidate.fullName}</p>
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <p className="font-medium text-text-primary">{candidate.fullName}</p>
+                                        <StateChip
+                                          label={candidate.hasPortalAccount ? "portal active" : "no portal account"}
+                                          tone={candidate.hasPortalAccount ? "success" : "warn"}
+                                        />
+                                      </div>
                                       <p className="text-sm text-text-secondary">{candidate.email}</p>
-                                      <p className="mt-1 text-xs uppercase tracking-[0.16em] text-text-tertiary">
-                                        {candidate.role} · score {candidate.score}
-                                      </p>
+                                      <div className="mt-1 flex flex-wrap gap-4 text-xs uppercase tracking-[0.16em] text-text-tertiary">
+                                        <span>{candidate.profileRole ?? "no role"}</span>
+                                        <span>score {candidate.score}</span>
+                                        {candidate.phone && <span>Phone: {candidate.phone}</span>}
+                                      </div>
                                       <p className="mt-1 text-sm text-text-secondary">{candidate.reasons.join(" · ")}</p>
                                     </div>
-                                    <button
-                                      onClick={() =>
-                                        runAction(
-                                          user.qbUserId,
-                                          { action: "map_existing_profile", profileId: candidate.id },
-                                          "map"
-                                        )
-                                      }
-                                      disabled={Boolean(pendingState)}
-                                      className="shrink-0 rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-                                    >
-                                      {pendingState === "map" ? "Saving..." : "Map"}
-                                    </button>
+                                    <div className="shrink-0">
+                                      <button
+                                        onClick={() =>
+                                          runAction(
+                                            user.qbUserId,
+                                            { action: "map_existing_profile", pmDirectoryId: candidate.id },
+                                            "map"
+                                          )
+                                        }
+                                        disabled={Boolean(pendingState)}
+                                        className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+                                      >
+                                        {pendingState === "map" ? "Saving..." : "Map"}
+                                      </button>
+                                      {!candidate.hasPortalAccount && (
+                                        <p className="mt-1 text-xs text-text-secondary">A portal account will be created automatically.</p>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               ))
@@ -160,11 +153,10 @@ export function TimeReconcilePage({ snapshot }: { snapshot: TimeReconcileSnapsho
                           </div>
                         </div>
 
-                        {/* Manual pick — always visible */}
                         <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-tertiary">Pick manually</p>
                           <p className="mt-1 text-sm text-text-secondary">
-                            Choose any portal profile if the suggestions missed the right person.
+                            Choose any people record if the suggestions missed the right person.
                           </p>
                           <div className="mt-3 flex gap-2">
                             <select
@@ -174,10 +166,13 @@ export function TimeReconcilePage({ snapshot }: { snapshot: TimeReconcileSnapsho
                               }
                               className="flex-1 rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary"
                             >
-                              <option value="">Select a portal profile…</option>
+                              <option value="">Select a contact…</option>
                               {snapshot.eligibleProfiles.map((profile) => (
                                 <option key={profile.id} value={profile.id}>
-                                  {profile.fullName} ({profile.email}) · {profile.role}
+                                  {profile.fullName} ({profile.email})
+                                  {profile.phone ? ` · ${profile.phone}` : ""}
+                                  {" · "}
+                                  {profile.role ?? (profile.profileId ? "portal user" : "no portal account")}
                                 </option>
                               ))}
                             </select>
@@ -186,7 +181,7 @@ export function TimeReconcilePage({ snapshot }: { snapshot: TimeReconcileSnapsho
                                 if (manualPickId) {
                                   runAction(
                                     user.qbUserId,
-                                    { action: "map_existing_profile", profileId: manualPickId },
+                                    { action: "map_existing_profile", pmDirectoryId: manualPickId },
                                     "map"
                                   );
                                 }
@@ -200,46 +195,7 @@ export function TimeReconcilePage({ snapshot }: { snapshot: TimeReconcileSnapsho
                         </div>
                       </div>
 
-                      {/* Right col: create + ignore */}
                       <div className="space-y-3">
-                        <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-tertiary">Create portal user</p>
-                          <p className="mt-2 text-sm text-text-secondary">
-                            Creates a new ProjectHub login using the QuickBooks email.
-                          </p>
-                          <label className="mt-4 block text-sm font-medium text-text-primary">
-                            Role
-                            <select
-                              value={role}
-                              onChange={(e) =>
-                                setSelectedRoles((current) => ({
-                                  ...current,
-                                  [user.qbUserId]: e.target.value as UserRole
-                                }))
-                              }
-                              className="mt-2 w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary"
-                            >
-                              {ROLE_OPTIONS.map((option) => (
-                                <option key={option} value={option}>{option}</option>
-                              ))}
-                            </select>
-                          </label>
-                          <button
-                            onClick={() =>
-                              runAction(user.qbUserId, { action: "create_portal_user", role }, "create")
-                            }
-                            disabled={Boolean(pendingState) || !user.email}
-                            className="mt-4 w-full rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm font-medium text-text-primary hover:border-brand-primary disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {pendingState === "create" ? "Creating..." : "Create portal user"}
-                          </button>
-                          {!user.email && (
-                            <p className="mt-2 text-xs text-amber-700">
-                              No email on QB record — cannot auto-create.
-                            </p>
-                          )}
-                        </div>
-
                         <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-tertiary">Ignore</p>
                           <p className="mt-2 text-sm text-text-secondary">

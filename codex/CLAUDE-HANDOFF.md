@@ -75,6 +75,8 @@ Replaces an Excel-based monthly billing tracker with a multi-role portal.
 - `/time` module added inside ProjectHub as the first TCC Time migration slice
 - `/time/clock`, `/time/employees`, and `/time/projects` now prefer ProjectHub's merged TCC Time tables and fall back to the legacy bridge only if local merged tables are unavailable
 - `/time/reconcile` is now an admin-only reconciliation queue for unmatched QuickBooks users
+- `/time/reconcile` now matches against `pm_directory` instead of only `profiles`
+- selecting a `pm_directory` contact with no portal account now auto-creates the account during mapping
 - `/pm/time` has been restyled to match the shared design system with surfaced cards, tokenized inputs, metric-style summary cards, and week-step navigation
 - ProjectHub Supabase now contains merged TCC Time data from the one-time sync run on `2026-04-08`
 - Current merged counts:
@@ -130,6 +132,8 @@ What it adds:
 ### Database
 - `projects.name` format: `"YYYY-NNN - Project Name"` (job number prefixed during SharePoint migration)
 - `projects.project_number` now exists and the merge script backfills it from `projects.name` when the prefix matches `YYYY-NNN`
+- `pm_directory` is the master people record
+- `profiles.pm_directory_id` now exists as the reverse link back to `pm_directory`
 - `pm_directory` stores all PM emails (including external: Trane, JCI, Siemens PMs)
 - `projects.pm_directory_id` references `pm_directory(id)` for assignment
 - `project_assignments` junction table: multiple people per project with `role_on_project`
@@ -147,6 +151,12 @@ What it adds:
 - `039_qb_user_reconciliation_state.sql` added:
   - `qb_time_user_review_states`
   - persisted ignore state for the admin reconciliation queue
+- `041_profiles_pm_directory_link.sql` added:
+  - `profiles.pm_directory_id`
+  - `profiles.phone`
+- `042_backfill_people_links.sql` added:
+  - backfills `profiles.pm_directory_id` by email
+  - backfills `pm_directory.profile_id` by email
 
 ### Auth
 - Admin + PMs: Microsoft SSO via Supabase Azure provider
