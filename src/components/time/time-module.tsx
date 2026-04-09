@@ -109,7 +109,13 @@ export function TimeClockPage({
   );
 }
 
-export function TimeEmployeesPage({ users }: { users: TimeModuleUser[] }) {
+export function TimeEmployeesPage({
+  users,
+  canManage = false
+}: {
+  users: TimeModuleUser[];
+  canManage?: boolean;
+}) {
   return (
     <div className="space-y-6">
       <HeaderBlock
@@ -125,6 +131,17 @@ export function TimeEmployeesPage({ users }: { users: TimeModuleUser[] }) {
       </div>
 
       <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
+        {canManage && (
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-default bg-surface-overlay px-4 py-3">
+            <div>
+              <p className="text-sm font-medium text-text-primary">Need to match imported employees to portal logins?</p>
+              <p className="text-sm text-text-secondary">Open the admin reconciliation queue to map existing profiles, create users, or ignore people for now.</p>
+            </div>
+            <Link href="/time/reconcile" className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-primary-hover">
+              Open reconcile queue
+            </Link>
+          </div>
+        )}
         <div className="space-y-3">
           {users.map((user) => (
             <article key={user.qbUserId} className="rounded-2xl border border-border-default bg-surface-overlay p-4">

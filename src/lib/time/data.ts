@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import type { UserRole } from "@/types/database";
 
 export interface TimeModuleRunSummary {
   id: string;
@@ -47,6 +48,31 @@ export interface TimeModuleSnapshot {
   latestRun: TimeModuleRunSummary | null;
 }
 
+export interface TimeReconcileCandidate {
+  id: string;
+  fullName: string;
+  email: string;
+  role: UserRole;
+  score: number;
+  reasons: string[];
+}
+
+export interface TimeReconcileUser {
+  qbUserId: number;
+  displayName: string;
+  email: string;
+  username: string;
+  payrollId: string;
+  active: boolean;
+  suggestions: TimeReconcileCandidate[];
+}
+
+export interface TimeReconcileSnapshot {
+  users: TimeReconcileUser[];
+  ignoredCount: number;
+  mappedCount: number;
+}
+
 type QbUserRow = {
   qb_user_id: number;
   display_name: string;
@@ -69,6 +95,30 @@ type QbJobcodeRow = {
   billable: boolean;
   last_modified_at: string | null;
   last_synced_at: string;
+};
+
+type PortalProfileRow = {
+  id: string;
+  full_name: string | null;
+  email: string;
+  role: UserRole;
+};
+
+type PortalReviewStateRow = {
+  qb_user_id: number;
+  status: "ignored";
+};
+
+type PortalProfileMappingRow = {
+  qb_user_id: number;
+  profile:
+    | {
+        id?: string;
+        full_name?: string;
+        email?: string;
+      }
+    | null
+    | undefined;
 };
 
 function createPortalTimeClient() {
@@ -94,6 +144,70 @@ function createBridgeTimeClient() {
       autoRefreshToken: false
     }
   });
+}
+
+function normalizeValue(value: string | null | undefined) {
+  return value?.trim().toLowerCase() ?? "";
+}
+
+function normalizeName(value: string | null | undefined) {
+  return normalizeValue(value).replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function splitNameParts(value: string | null | undefined) {
+  return normalizeName(value).split(" ").filter(Boolean);
+}
+
+function buildCandidate(user: QbUserRow, profile: PortalProfileRow): TimeReconcileCandidate | null {
+  const reasons: string[] = [];
+  let score = 0;
+
+  const userEmail = normalizeValue(user.email);
+  const profileEmail = normalizeValue(profile.email);
+  const userName = normalizeName(user.display_name);
+  const profileName = normalizeName(profile.full_name);
+  const userEmailLocal = userEmail.split("@")[0] ?? "";
+  const profileEmailLocal = profileEmail.split("@")[0] ?? "";
+
+  if (userEmail && profileEmail && userEmail === profileEmail) {
+    score += 100;
+    reasons.push("Exact email match");
+  }
+
+  if (userName && profileName && userName === profileName) {
+    score += 85;
+    reasons.push("Exact full-name match");
+  }
+
+  if (userEmailLocal && profileEmailLocal && userEmailLocal === profileEmailLocal) {
+    score += 45;
+    reasons.push("Email local-part match");
+  }
+
+  const userParts = splitNameParts(user.display_name);
+  const profileParts = splitNameParts(profile.full_name);
+  const overlappingParts = userParts.filter((part) => profileParts.includes(part));
+
+  if (overlappingParts.length >= 2) {
+    score += 40;
+    reasons.push("First and last name overlap");
+  } else if (overlappingParts.length === 1) {
+    score += 18;
+    reasons.push(`Name overlap: ${overlappingParts[0]}`);
+  }
+
+  if (!score) {
+    return null;
+  }
+
+  return {
+    id: profile.id,
+    fullName: profile.full_name ?? "Unnamed profile",
+    email: profile.email,
+    role: profile.role,
+    score,
+    reasons
+  };
 }
 
 async function loadPortalSnapshot() {
@@ -310,6 +424,79 @@ async function loadBridgeSnapshot() {
   } satisfies TimeModuleSnapshot;
 }
 
+async function loadPortalReconcileSnapshot() {
+  const supabase = createPortalTimeClient();
+
+  const [usersResult, mappingsResult, profilesResult, reviewStatesResult] = await Promise.all([
+    supabase.from("qb_time_users").select("qb_user_id, display_name, email, username, payroll_id, active").order("display_name"),
+    supabase.from("profile_qb_time_mappings").select("qb_user_id, profile_id, profile:profiles(id, full_name, email)").eq("is_active", true),
+    supabase.from("profiles").select("id, full_name, email, role").order("full_name"),
+    supabase.from("qb_time_user_review_states").select("qb_user_id, status")
+  ]);
+
+  if (usersResult.error) throw usersResult.error;
+  if (mappingsResult.error) throw mappingsResult.error;
+  if (profilesResult.error) throw profilesResult.error;
+  if (reviewStatesResult.error) throw reviewStatesResult.error;
+
+  const activeMappings = (mappingsResult.data ?? []) as Array<{
+    qb_user_id: number;
+    profile_id: string;
+    profile?: { id?: string; full_name?: string; email?: string } | null;
+  }>;
+  const mappedQbUserIds = new Set(activeMappings.map((mapping) => mapping.qb_user_id));
+  const mappedProfileIds = new Set(activeMappings.map((mapping) => mapping.profile_id));
+  const ignoredQbUserIds = new Set(
+    ((reviewStatesResult.data ?? []) as PortalReviewStateRow[])
+      .filter((state) => state.status === "ignored")
+      .map((state) => state.qb_user_id)
+  );
+
+  const eligibleProfiles = ((profilesResult.data ?? []) as PortalProfileRow[]).filter(
+    (profile) => !mappedProfileIds.has(profile.id)
+  );
+
+  const users = ((usersResult.data ?? []) as Array<
+    Pick<QbUserRow, "qb_user_id" | "display_name" | "email" | "username" | "payroll_id" | "active">
+  >)
+    .filter((user) => !mappedQbUserIds.has(user.qb_user_id) && !ignoredQbUserIds.has(user.qb_user_id))
+    .map((user) => ({
+      qbUserId: user.qb_user_id,
+      displayName: user.display_name,
+      email: user.email ?? "",
+      username: user.username ?? "",
+      payrollId: user.payroll_id ?? "",
+      active: user.active,
+      suggestions: eligibleProfiles
+        .map((profile) =>
+          buildCandidate(
+            {
+              qb_user_id: user.qb_user_id,
+              display_name: user.display_name,
+              email: user.email,
+              username: user.username,
+              payroll_id: user.payroll_id,
+              active: user.active,
+              group_id: null,
+              last_active_at: null,
+              last_synced_at: ""
+            },
+            profile
+          )
+        )
+        .filter((candidate): candidate is TimeReconcileCandidate => Boolean(candidate))
+        .sort((a, b) => b.score - a.score || a.fullName.localeCompare(b.fullName))
+        .slice(0, 5)
+    }))
+    .sort((a, b) => a.displayName.localeCompare(b.displayName));
+
+  return {
+    users,
+    ignoredCount: ignoredQbUserIds.size,
+    mappedCount: mappedQbUserIds.size
+  } satisfies TimeReconcileSnapshot;
+}
+
 export async function getTimeModuleSnapshot(): Promise<TimeModuleSnapshot> {
   try {
     return await loadPortalSnapshot();
@@ -320,4 +507,8 @@ export async function getTimeModuleSnapshot(): Promise<TimeModuleSnapshot> {
     }
     return loadBridgeSnapshot();
   }
+}
+
+export async function getTimeReconcileSnapshot(): Promise<TimeReconcileSnapshot> {
+  return loadPortalReconcileSnapshot();
 }
