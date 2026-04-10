@@ -329,6 +329,11 @@ function UpdateForm({
   const [pocSaveMessage, setPocSaveMessage] = useState<string | null>(null);
   const [pocSaveError, setPocSaveError] = useState<string | null>(null);
   const [currentPeriod, setCurrentPeriod] = useState<BillingPeriod | null | undefined>(project.current_period);
+  const [allPeriods, setAllPeriods] = useState<BillingPeriod[]>([]);
+  const [periodEdits, setPeriodEdits] = useState<Record<string, string>>({});
+  const [savingPeriod, setSavingPeriod] = useState<string | null>(null);
+  const [periodSaveError, setPeriodSaveError] = useState<Record<string, string>>({});
+  const [periodSaveOk, setPeriodSaveOk] = useState<Record<string, boolean>>({});
 
   const totalWeight = pocItems.reduce((sum, item) => sum + item.weight, 0);
   const pocPctDecimal =
@@ -424,6 +429,14 @@ function UpdateForm({
       const editHistoryData = (response.ok ? json?.editHistory : []) as WeeklyUpdateEdit[];
       if (response.ok && json?.currentPeriod !== undefined) {
         setCurrentPeriod(json.currentPeriod);
+      }
+      if (response.ok && Array.isArray(json?.allPeriods)) {
+        setAllPeriods(json.allPeriods as BillingPeriod[]);
+        const initEdits: Record<string, string> = {};
+        for (const p of json.allPeriods as BillingPeriod[]) {
+          initEdits[p.id] = (p.pct_complete * 100).toFixed(1);
+        }
+        setPeriodEdits(initEdits);
       }
       setContacts((json?.contacts ?? []).map((c: ProjectContact) => ({
         ...c,
@@ -621,6 +634,38 @@ function UpdateForm({
       setPocSaveError(err instanceof Error ? err.message : "Unable to save POC changes.");
     } finally {
       setSavingPoc(false);
+    }
+  }
+
+  async function savePeriodPct(periodId: string) {
+    const raw = periodEdits[periodId];
+    const val = parseFloat(raw);
+    if (isNaN(val) || val < 0 || val > 100) {
+      setPeriodSaveError((prev) => ({ ...prev, [periodId]: "Enter a value between 0 and 100." }));
+      return;
+    }
+    setSavingPeriod(periodId);
+    setPeriodSaveError((prev) => ({ ...prev, [periodId]: "" }));
+    setPeriodSaveOk((prev) => ({ ...prev, [periodId]: false }));
+    try {
+      const res = await fetch("/api/pm/billing-period", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ billingPeriodId: periodId, projectId: project.id, pctComplete: val }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error ?? "Failed to save.");
+      setAllPeriods((prev) => prev.map((p) => p.id === periodId ? { ...p, pct_complete: val / 100 } : p));
+      if (currentPeriod?.id === periodId) {
+        setCurrentPeriod((prev) => prev ? { ...prev, pct_complete: val / 100 } : prev);
+      }
+      setPeriodSaveOk((prev) => ({ ...prev, [periodId]: true }));
+      setTimeout(() => setPeriodSaveOk((prev) => ({ ...prev, [periodId]: false })), 3000);
+    } catch (err) {
+      setPeriodSaveError((prev) => ({ ...prev, [periodId]: err instanceof Error ? err.message : "Failed to save." }));
+    } finally {
+      setSavingPeriod(null);
     }
   }
 
@@ -899,6 +944,92 @@ function UpdateForm({
                   </button>
                 </div>
               ))}
+            </div>
+          )}
+
+          {allPeriods.length > 0 && (
+            <div className="rounded-2xl border border-border-default bg-surface-raised p-5">
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-text-primary">Billing Period % Complete</h3>
+                <p className="mt-0.5 text-xs text-text-tertiary">
+                  Adjust the % complete for any billing month. Current month is updated via weekly reports.
+                </p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border-default text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                      <th className="pb-2 pr-4">Month</th>
+                      <th className="pb-2 pr-4 text-center">% Complete</th>
+                      <th className="pb-2 pr-4 text-right">Prev. Billed</th>
+                      <th className="pb-2 text-right">To Bill</th>
+                      <th className="pb-2 pl-4"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allPeriods.map((period) => {
+                      const isCurrentMonth = currentPeriod?.id === period.id;
+                      const editVal = periodEdits[period.id] ?? (period.pct_complete * 100).toFixed(1);
+                      const isSaving = savingPeriod === period.id;
+                      const saveOk = periodSaveOk[period.id];
+                      const saveErr = periodSaveError[period.id];
+                      const toBill = Math.max(period.estimated_income_snapshot * period.pct_complete - period.prev_billed, 0);
+                      return (
+                        <tr key={period.id} className="border-b border-border-default last:border-0">
+                          <td className="py-3 pr-4">
+                            <span className="font-medium text-text-primary">
+                              {format(new Date(period.period_month + "T12:00:00"), "MMM yyyy")}
+                            </span>
+                            {isCurrentMonth && (
+                              <span className="ml-2 inline-flex rounded-full bg-brand-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-brand-primary">
+                                Current
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 pr-4">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                step={0.1}
+                                value={editVal}
+                                onChange={(e) => setPeriodEdits((prev) => ({ ...prev, [period.id]: e.target.value }))}
+                                className="w-20 rounded-lg border border-border-default bg-surface-overlay px-2 py-1.5 text-center text-sm font-semibold text-text-primary focus:border-status-success/50 focus:outline-none"
+                              />
+                              <span className="text-xs text-text-tertiary">%</span>
+                            </div>
+                          </td>
+                          <td className="py-3 pr-4 text-right text-sm text-text-secondary">
+                            {fmtCurrency(period.prev_billed)}
+                          </td>
+                          <td className="py-3 text-right text-sm font-medium text-text-primary">
+                            {fmtCurrency(toBill)}
+                          </td>
+                          <td className="py-3 pl-4">
+                            <div className="flex flex-col items-end gap-1">
+                              <button
+                                type="button"
+                                onClick={() => void savePeriodPct(period.id)}
+                                disabled={isSaving}
+                                className="rounded-lg bg-status-success px-3 py-1.5 text-xs font-semibold text-text-inverse transition hover:opacity-90 disabled:opacity-50"
+                              >
+                                {isSaving ? "Saving..." : "Save"}
+                              </button>
+                              {saveOk && (
+                                <span className="text-[10px] font-medium text-status-success">Saved</span>
+                              )}
+                              {saveErr && (
+                                <span className="text-[10px] font-medium text-status-danger">{saveErr}</span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>

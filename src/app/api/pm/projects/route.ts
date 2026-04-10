@@ -50,7 +50,7 @@ export async function GET(request: Request) {
     const currentMonthForPeriod = new Date();
     const currentMonthStrForPeriod = `${currentMonthForPeriod.getUTCFullYear()}-${String(currentMonthForPeriod.getUTCMonth() + 1).padStart(2, "0")}-01`;
 
-    const [updatesResult, pocResult, contactsResult, periodResult] = await Promise.all([
+    const [updatesResult, pocResult, contactsResult, allPeriodsResult] = await Promise.all([
       adminClient
         .from("weekly_updates")
         .select("id, project_id, pm_id, week_of, pct_complete, notes, blockers, poc_snapshot, crew_log, material_delivered, equipment_set, safety_incidents, inspections_tests, delays_impacts, other_remarks, imported_from, status, submitted_at")
@@ -71,8 +71,7 @@ export async function GET(request: Request) {
         .from("billing_periods")
         .select("*")
         .eq("project_id", projectId)
-        .eq("period_month", currentMonthStrForPeriod)
-        .maybeSingle(),
+        .order("period_month", { ascending: false }),
     ]);
 
     if (updatesResult.error || pocResult.error || contactsResult.error) {
@@ -99,12 +98,16 @@ export async function GET(request: Request) {
       editHistory = (edits as WeeklyUpdateEdit[] | null) ?? [];
     }
 
+    const allPeriods = allPeriodsResult.data ?? [];
+    const currentPeriod = allPeriods.find((p) => p.period_month === currentMonthStrForPeriod) ?? null;
+
     return NextResponse.json({
       updates,
       pocItems: pocResult.data ?? [],
       contacts: (contactsResult.data ?? []) as ProjectContact[],
       editHistory,
-      currentPeriod: periodResult.data ?? null,
+      currentPeriod,
+      allPeriods,
     });
   }
 

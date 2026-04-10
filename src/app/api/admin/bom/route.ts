@@ -4,7 +4,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 
 const WRITE_ROLES = ["admin", "ops_manager"];
-const READ_ROLES = ["admin", "ops_manager", "pm", "lead", "installer"];
+const READ_ROLES = ["admin", "ops_manager", "pm", "lead", "installer", "customer"];
 
 function adminClient() {
   return createAdminClient(
@@ -23,7 +23,19 @@ async function getRequester() {
   return { user, role: profile?.role ?? null };
 }
 
-async function verifyProjectAccess(client: ReturnType<typeof adminClient>, userId: string, projectId: string) {
+async function verifyProjectAccess(client: ReturnType<typeof adminClient>, userId: string, projectId: string, role: string | null) {
+  if (role === "customer") {
+    const { data, error } = await client
+      .from("project_customer_contacts")
+      .select("id")
+      .eq("project_id", projectId)
+      .eq("profile_id", userId)
+      .eq("portal_access", true)
+      .maybeSingle();
+    if (error) throw error;
+    return Boolean(data);
+  }
+
   const { data, error } = await client
     .from("project_assignments")
     .select("id")
@@ -48,7 +60,7 @@ export async function GET(request: Request) {
 
   const client = adminClient();
   if (!WRITE_ROLES.includes(role ?? "")) {
-    const allowed = await verifyProjectAccess(client, user.id, projectId).catch((err) => {
+    const allowed = await verifyProjectAccess(client, user.id, projectId, role).catch((err) => {
       throw err;
     });
     if (!allowed) {

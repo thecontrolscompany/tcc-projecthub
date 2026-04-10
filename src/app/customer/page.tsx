@@ -21,6 +21,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ViewReportLink } from "@/components/view-report-link";
+import { BomTab } from "@/components/bom-tab";
 import type { BillingPeriod, CrewLogEntry, WeeklyUpdate } from "@/types/database";
 import { fmtCurrency, fmtCurrencyCompact } from "@/lib/utils/format";
 
@@ -538,7 +539,7 @@ function ProjectDetail({
   userId: string;
   onBack: () => void;
 }) {
-  const [view, setView] = useState<"updates" | "billing">("updates");
+  const [view, setView] = useState<"updates" | "billing" | "bom">("updates");
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackSaving, setFeedbackSaving] = useState(false);
@@ -903,7 +904,7 @@ function ProjectDetail({
       )}
 
       <div className="customer-print-hide flex gap-2 border-b pb-1" style={{ borderColor: BORDER }}>
-        {(["updates", "billing"] as const).map((tab) => (
+        {(["updates", "billing", "bom"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setView(tab)}
@@ -914,7 +915,7 @@ function ProjectDetail({
                 : { backgroundColor: "#ffffff", color: "#475569", border: `1px solid ${BORDER}` }
             }
           >
-            {tab === "updates" ? "Weekly Updates" : "Billing History"}
+            {tab === "updates" ? "Weekly Updates" : tab === "billing" ? "Billing History" : "Materials"}
           </button>
         ))}
       </div>
@@ -974,6 +975,22 @@ function ProjectDetail({
               )}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <section className={view === "bom" ? "block" : "hidden"}>
+        <div className="customer-print-card rounded-3xl border bg-white shadow-sm" style={{ borderColor: BORDER }}>
+          <div className="px-6 pt-5 pb-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: HEADER_BG }}>
+              Bill of Materials
+            </p>
+            <p className="mt-0.5 text-sm text-slate-500">
+              Material schedule and receipt status for this project.
+            </p>
+          </div>
+          <div className="px-2 pb-4">
+            <BomTab projectId={project.id} readOnly />
+          </div>
         </div>
       </section>
 
