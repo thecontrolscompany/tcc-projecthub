@@ -671,7 +671,7 @@ function ProjectDetail({
                   {project.scope_description}
                 </p>
               )}
-              {project.scheduled_completion ? (
+              {project.scheduled_completion && (
                 <div className="mt-2 flex items-center gap-2 text-sm text-slate-600">
                   <CalendarIcon />
                   <span>
@@ -684,13 +684,6 @@ function ProjectDetail({
                       {format(new Date(project.scheduled_completion), "MMMM d, yyyy")}
                     </span>
                   </span>
-                </div>
-              ) : (
-                <div className="mt-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
-                  <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                  </svg>
-                  Schedule not received — please provide your project schedule so we can set a completion date.
                 </div>
               )}
               {project.photo_count > 0 && (
@@ -746,6 +739,15 @@ function ProjectDetail({
               </div>
             );
           })()}
+
+          {!project.scheduled_completion && (
+            <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+              <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+              </svg>
+              Schedule not received ? please provide your project schedule so we can set a completion date.
+            </div>
+          )}
         </div>
       </section>
 

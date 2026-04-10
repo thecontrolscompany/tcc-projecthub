@@ -129,14 +129,6 @@ async function resolvePmName(
   projectId: string,
   submittedPm: UpdateRow["pm"]
 ) {
-  const pmProfile = normalizeSingle(submittedPm);
-  if (pmProfile?.full_name?.trim()) {
-    return pmProfile.full_name.trim();
-  }
-  if (pmProfile?.email?.trim()) {
-    return pmProfile.email.trim();
-  }
-
   const { data } = await supabase
     .from("project_assignments")
     .select("is_primary, profile:profiles(full_name, email), pm_directory:pm_directory(first_name, last_name, email)")
@@ -161,6 +153,14 @@ async function resolvePmName(
   }
   if (directory?.email?.trim()) {
     return directory.email.trim();
+  }
+
+  const pmProfile = normalizeSingle(submittedPm);
+  if (pmProfile?.full_name?.trim()) {
+    return pmProfile.full_name.trim();
+  }
+  if (pmProfile?.email?.trim()) {
+    return pmProfile.email.trim();
   }
 
   return "The Controls Company";
