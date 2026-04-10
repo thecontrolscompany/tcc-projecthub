@@ -402,25 +402,32 @@ function ProjectList({
       <div className="customer-print-chart grid gap-5 lg:grid-cols-[1.3fr_0.9fr]">
         <ChartCard title="Financial Snapshot by Project">
           {summary.financialChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={summary.financialChartData} margin={{ top: 8, right: 12, left: -8, bottom: 8 }}>
-                <CartesianGrid vertical={false} stroke="#dbe7e5" />
+            <ResponsiveContainer width="100%" height={Math.max(160, summary.financialChartData.length * 52)}>
+              <BarChart
+                data={summary.financialChartData}
+                layout="vertical"
+                margin={{ top: 4, right: 16, left: 0, bottom: 4 }}
+                barSize={22}
+              >
+                <CartesianGrid horizontal={false} stroke="#dbe7e5" />
                 <XAxis
-                  dataKey="name"
-                  tick={{ fill: "#475569", fontSize: 12 }}
+                  type="number"
+                  tickFormatter={(value) => compactCurrency(value)}
+                  tick={{ fill: "#475569", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
-                  tickFormatter={(value) => compactCurrency(value)}
+                  type="category"
+                  dataKey="name"
+                  width={110}
                   tick={{ fill: "#475569", fontSize: 12 }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <Tooltip content={<PortfolioTooltip />} />
-                <Bar dataKey="contractValue" fill="#b2dfdb" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="billed" fill={HEADER_BG} radius={[8, 8, 0, 0]} />
-                <Bar dataKey="backlog" fill={ACCENT} radius={[8, 8, 0, 0]} />
+                <Bar dataKey="billed" stackId="a" fill={HEADER_BG} radius={[0, 0, 0, 0]} name="billed" />
+                <Bar dataKey="backlog" stackId="a" fill={ACCENT} radius={[4, 4, 4, 4]} name="backlog" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -1396,10 +1403,11 @@ function PortfolioTooltip({
   if (!active || !payload?.length) return null;
 
   const labels: Record<string, string> = {
-    contractValue: "Contract Value",
     billed: "Billed",
-    backlog: "Backlog",
+    backlog: "Remaining",
   };
+
+  const total = payload.reduce((sum, e) => sum + e.value, 0);
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-lg">
@@ -1409,6 +1417,9 @@ function PortfolioTooltip({
           {labels[entry.name] ?? entry.name}: {currency(entry.value)}
         </p>
       ))}
+      <p className="mt-1 border-t border-slate-100 pt-1 font-semibold text-slate-700">
+        Contract: {currency(total)}
+      </p>
     </div>
   );
 }
@@ -1451,14 +1462,10 @@ const currency = fmtCurrency;
 const compactCurrency = fmtCurrencyCompact;
 
 function getProjectBilledToDate(project: CustomerProject) {
-  // Use the most recent period's prev_billed (cumulative billed before this period)
-  // plus its actual_billed if recorded, otherwise fall back to prev_billed alone.
-  // billing_periods are ordered by period_month descending (most recent first).
-  const latest = project.billing_periods[0];
-  if (!latest) return 0;
-  return latest.actual_billed !== null
-    ? latest.prev_billed + latest.actual_billed
-    : latest.prev_billed;
+  return project.billing_periods.reduce(
+    (sum, p) => sum + (p.actual_billed ?? 0),
+    0,
+  );
 }
 
 function getProjectApprovedCoTotal(project: CustomerProject): number {
