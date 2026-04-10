@@ -48,6 +48,10 @@ type BomReportItem = {
   status: "missing" | "partial" | "received" | "surplus";
 };
 
+function customerProjectName(name: string | null | undefined) {
+  return (name ?? "").replace(/^\d{4}-\d{3}\s*-\s*/, "").trim() || (name ?? "");
+}
+
 async function canAccess(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   admin: any,
@@ -171,7 +175,7 @@ export default async function BomReportPage({ params }: PageProps) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>{project.name} - Bill of Materials</title>
+        <title>{customerProjectName(project.name)} - Bill of Materials</title>
         <style>{`
           :root { color-scheme: light; }
           * { box-sizing: border-box; }
@@ -191,7 +195,7 @@ export default async function BomReportPage({ params }: PageProps) {
             }
 
             @top-right {
-              content: "${project.name.replace(/"/g, '\\"')} - Bill of Materials";
+              content: "${customerProjectName(project.name).replace(/"/g, '\\"')} - Bill of Materials";
               font-family: Arial, Helvetica, sans-serif;
               font-size: 8pt;
               color: #4b5563;
@@ -368,9 +372,7 @@ export default async function BomReportPage({ params }: PageProps) {
 
             <div className="meta-grid">
               <div className="meta-label">Project Name:</div>
-              <div>{project.name}</div>
-              <div className="meta-label">Job Number:</div>
-              <div>{project.job_number || "Not assigned"}</div>
+              <div>{customerProjectName(project.name)}</div>
 
               <div className="meta-label">Customer:</div>
               <div>{customer?.name || "Not provided"}</div>

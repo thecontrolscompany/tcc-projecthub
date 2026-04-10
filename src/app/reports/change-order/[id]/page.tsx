@@ -44,6 +44,10 @@ function statusLabel(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+function customerProjectName(name: string | null | undefined) {
+  return (name ?? "").replace(/^\d{4}-\d{3}\s*-\s*/, "").trim() || (name ?? "");
+}
+
 function tryParseLineItems(notes: string | null): LineItem[] | null {
   if (!notes) return null;
   try {
@@ -155,7 +159,7 @@ export default async function ChangeOrderReportPage({ params }: PageProps) {
             }
 
             @top-right {
-              content: "${(project.name ?? "").replace(/"/g, '\\"')} — Change Order ${(co.co_number ?? "").replace(/"/g, '\\"')}";
+              content: "${customerProjectName(project.name).replace(/"/g, '\\"')} — Change Order ${(co.co_number ?? "").replace(/"/g, '\\"')}";
               font-family: Arial, Helvetica, sans-serif;
               font-size: 8pt;
               color: #4b5563;
@@ -398,7 +402,7 @@ export default async function ChangeOrderReportPage({ params }: PageProps) {
             </div>
             <div className="meta-grid">
               <span className="meta-label">Project:</span>
-              <span>{project.name}{project.job_number ? ` (${project.job_number})` : ""}</span>
+              <span>{customerProjectName(project.name)}</span>
               <span className="meta-label">Change Order #:</span>
               <span>{co.co_number || "—"}</span>
 

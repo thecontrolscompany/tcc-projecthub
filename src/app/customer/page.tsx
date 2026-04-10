@@ -83,6 +83,7 @@ export default function CustomerPage() {
   const [userEmail, setUserEmail] = useState("");
   const [userId, setUserId] = useState("");
   const [loadedAt, setLoadedAt] = useState<Date | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   const selectedProjectId = searchParams.get("project");
   const selectedProject = projects.find((p) => p.id === selectedProjectId) ?? null;
@@ -234,6 +235,13 @@ export default function CustomerPage() {
           </div>
 
           <div className="customer-print-hide flex items-center gap-3 self-start md:self-center">
+            <button
+              type="button"
+              onClick={() => setShowHelp(true)}
+              className="rounded-full border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+            >
+              Help
+            </button>
             <div className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm text-white/90">
               {userEmail || "Signed in"}
             </div>
@@ -284,6 +292,8 @@ export default function CustomerPage() {
       >
         The Controls Company, LLC | Service Disabled Veteran Owned Small Business | TheControlsCompany.com
       </footer>
+
+      {showHelp && <CustomerHelpDialog onClose={() => setShowHelp(false)} />}
     </div>
   );
 }
@@ -531,7 +541,7 @@ function ProjectList({
                 <div className="min-w-0 space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-xl font-bold" style={{ color: CHARCOAL }}>
-                      {project.name}
+                      {customerFacingProjectName(project.name)}
                     </p>
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${status.className}`}>
                       {status.label}
@@ -637,7 +647,7 @@ function ProjectDetail({
                 Project Status
               </p>
               <h2 className="text-3xl font-bold" style={{ color: CHARCOAL }}>
-                {project.name}
+                {customerFacingProjectName(project.name)}
               </h2>
               <p className="mt-1 text-sm text-slate-500">{project.customer_name || "Customer project"}</p>
               {publicStatusPath && (
@@ -1145,6 +1155,121 @@ function ProjectDetail({
   );
 }
 
+function CustomerHelpDialog({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="customer-print-hide fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 py-6">
+      <div
+        className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-[28px] border bg-white shadow-[0_28px_80px_rgba(15,23,42,0.28)]"
+        style={{ borderColor: BORDER }}
+      >
+        <div
+          className="flex items-start justify-between gap-4 border-b px-6 py-5"
+          style={{ borderColor: BORDER, background: "linear-gradient(135deg, #f4fffd 0%, #e8f7f4 100%)" }}
+        >
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: HEADER_BG }}>
+              Customer Help
+            </p>
+            <h2 className="mt-1 text-2xl font-bold" style={{ color: CHARCOAL }}>
+              Using the Project Portal
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+              This portal gives you a read-only view of your projects, billing activity, updates, materials, and key
+              contacts. Use it to stay informed without having to request status information separately.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-800"
+          >
+            Close
+          </button>
+        </div>
+
+        <div className="max-h-[calc(90vh-108px)] overflow-y-auto px-6 py-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            <HelpCard
+              title="Dashboard"
+              items={[
+                "Summary cards show progress, billed this period, and total contract value.",
+                "The Financial Snapshot chart compares billed and remaining value by project.",
+                "Use search and filters to narrow the list when you have multiple active jobs.",
+              ]}
+            />
+            <HelpCard
+              title="Opening a Project"
+              items={[
+                "Select any project card to open its detail view.",
+                "You will see project status, team contacts, schedule details, and current progress.",
+                "If a public status link is available, you can copy it from the project header.",
+              ]}
+            />
+            <HelpCard
+              title="Billing and Financials"
+              items={[
+                "Contract value includes approved change orders.",
+                "Billing charts and history are read-only and show billed amounts by month.",
+                "If a chart or table is empty, that usually means billing data has not been entered yet.",
+              ]}
+            />
+            <HelpCard
+              title="Weekly Updates"
+              items={[
+                "The Weekly Updates tab shows submitted updates from the project team.",
+                "Each update may include notes, crew activity, delays, safety items, and percent complete.",
+                "Use View Report to open the printable weekly report for that update.",
+              ]}
+            />
+            <HelpCard
+              title="Materials / BOM"
+              items={[
+                "The Materials tab is a read-only bill of materials view for the project.",
+                "Statuses may include missing, partial, received, or surplus.",
+                "Generate BOM Report opens a printable report for the project material schedule.",
+              ]}
+            />
+            <HelpCard
+              title="Change Orders and Team Contacts"
+              items={[
+                "Only approved change orders appear in the customer portal.",
+                "The project team section lists the primary people to contact for questions.",
+                "If you need clarification, start with the listed Project Manager when available.",
+              ]}
+            />
+          </div>
+
+          <div className="mt-5 rounded-3xl border bg-slate-50 px-5 py-4" style={{ borderColor: BORDER }}>
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">Need Help</p>
+            <p className="mt-2 text-sm leading-6 text-slate-700">
+              If you cannot access a project, believe information is missing, or have a billing or update question,
+              use the project feedback form inside the portal or contact The Controls Company directly.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HelpCard({ title, items }: { title: string; items: string[] }) {
+  return (
+    <section className="rounded-3xl border bg-white px-5 py-4 shadow-sm" style={{ borderColor: BORDER }}>
+      <h3 className="text-lg font-bold" style={{ color: CHARCOAL }}>
+        {title}
+      </h3>
+      <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
+        {items.map((item) => (
+          <li key={item} className="flex items-start gap-2">
+            <span className="mt-2 h-1.5 w-1.5 rounded-full" style={{ backgroundColor: HEADER_BG }} />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function CustomerProjectListSkeleton() {
   return (
     <div className="space-y-6">
@@ -1540,8 +1665,12 @@ function getProjectStatus(project: CustomerProject) {
   return { label: "Active", className: "bg-surface-overlay text-text-secondary" };
 }
 
+function customerFacingProjectName(name: string) {
+  return name.replace(/^\d{4}-\d{3}\s*-\s*/, "").trim();
+}
+
 function getProjectChartLabel(project: CustomerProject) {
-  const customerFacingName = project.name.replace(/^\d{4}-\d{3}\s*-\s*/, "").trim();
+  const customerFacingName = customerFacingProjectName(project.name);
 
   if (customerFacingName.length <= 24) {
     return customerFacingName;

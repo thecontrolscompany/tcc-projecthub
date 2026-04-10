@@ -58,6 +58,7 @@ type UpdateRow = {
 };
 
 type AssignmentPmRow = {
+  is_primary?: boolean | null;
   profile?: { full_name: string | null; email: string | null } | Array<{ full_name: string | null; email: string | null }> | null;
   pm_directory?:
     | { first_name: string | null; last_name: string | null; email: string }
@@ -85,6 +86,10 @@ function formatDate(value: string | null | undefined, fallback = "Not submitted"
 
 function coalesceText(value: string | null | undefined, fallback = "None") {
   return value && value.trim() ? value : fallback;
+}
+
+function customerProjectName(name: string | null | undefined) {
+  return (name ?? "").replace(/^\d{4}-\d{3}\s*-\s*/, "").trim() || (name ?? "");
 }
 
 async function canAccessReport(supabase: Awaited<ReturnType<typeof createClient>>, role: UserRole, userId: string, projectId: string) {
@@ -134,13 +139,13 @@ async function resolvePmName(
 
   const { data } = await supabase
     .from("project_assignments")
-    .select("profile:profiles(full_name, email), pm_directory:pm_directory(first_name, last_name, email)")
+    .select("is_primary, profile:profiles(full_name, email), pm_directory:pm_directory(first_name, last_name, email)")
     .eq("project_id", projectId)
     .eq("role_on_project", "pm")
-    .limit(1)
-    .maybeSingle();
+    .order("is_primary", { ascending: false })
+    .limit(1);
 
-  const assignment = data as AssignmentPmRow | null;
+  const assignment = Array.isArray(data) ? (data[0] as AssignmentPmRow | undefined) ?? null : (data as AssignmentPmRow | null);
   const assignmentProfile = normalizeSingle(assignment?.profile);
   if (assignmentProfile?.full_name?.trim()) {
     return assignmentProfile.full_name.trim();
@@ -319,7 +324,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
             }
 
             @top-right {
-              content: "${project.name.replace(/"/g, '\\"')} — Week ending ${formatWeekEndingSaturday(update.week_of, "MMM d, yyyy")}";
+              content: "${customerProjectName(project.name).replace(/"/g, '\\"')} — Week ending ${formatWeekEndingSaturday(update.week_of, "MMM d, yyyy")}";
               font-family: Arial, Helvetica, sans-serif;
               font-size: 8pt;
               color: #4b5563;
@@ -550,7 +555,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
             }
 
             @top-right {
-              content: "${project.name.replace(/"/g, '\\"')} — Bill of Materials";
+              content: "${customerProjectName(project.name).replace(/"/g, '\\"')} — Bill of Materials";
               font-family: Arial, Helvetica, sans-serif;
               font-size: 8pt;
               color: #4b5563;
@@ -653,9 +658,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
               <div className="meta-label">Company Name:</div>
               <div>The Controls Company, LLC</div>
               <div className="meta-label">Project Name:</div>
-              <div>{project.name}</div>
-              <div className="meta-label">Job Number:</div>
-              <div>{project.job_number || "Not assigned"}</div>
+              <div>{customerProjectName(project.name)}</div>
               <div className="meta-label">Site Address:</div>
               <div>{project.site_address || "Not provided"}</div>
               <div className="meta-label">Customer:</div>
