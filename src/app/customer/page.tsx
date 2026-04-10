@@ -401,7 +401,43 @@ function ProjectList({
 
       <div className="customer-print-chart grid gap-5 lg:grid-cols-[1.3fr_0.9fr]">
         <ChartCard title="Financial Snapshot by Project">
-          {summary.financialChartData.length > 0 ? (
+          {summary.financialChartData.length === 0 ? (
+            <EmptyChartMessage message="Contract and billing totals will appear here as project data is recorded." />
+          ) : summary.financialChartData.length === 1 ? (
+            (() => {
+              const d = summary.financialChartData[0];
+              const total = d.billed + d.backlog;
+              const pct = total > 0 ? Math.round((d.billed / total) * 100) : 0;
+              return (
+                <div className="flex flex-col gap-4 py-2">
+                  <p className="text-sm font-semibold text-text-primary">{d.name}</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Billed</p>
+                      <p className="mt-1 text-lg font-bold" style={{ color: HEADER_BG }}>{currency(d.billed)}</p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Remaining</p>
+                      <p className="mt-1 text-lg font-bold" style={{ color: ACCENT }}>{currency(d.backlog)}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mb-1 flex justify-between text-xs text-slate-500">
+                      <span>Progress</span>
+                      <span>{pct}%</span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${pct}%`, backgroundColor: HEADER_BG }}
+                      />
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">Contract: {currency(total)}</p>
+                  </div>
+                </div>
+              );
+            })()
+          ) : (
             <ResponsiveContainer width="100%" height={Math.max(160, summary.financialChartData.length * 52)}>
               <BarChart
                 data={summary.financialChartData}
@@ -420,8 +456,8 @@ function ProjectList({
                 <YAxis
                   type="category"
                   dataKey="name"
-                  width={110}
-                  tick={{ fill: "#475569", fontSize: 12 }}
+                  width={160}
+                  tick={{ fill: "#475569", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -430,8 +466,6 @@ function ProjectList({
                 <Bar dataKey="backlog" stackId="a" fill={ACCENT} radius={[4, 4, 4, 4]} name="backlog" />
               </BarChart>
             </ResponsiveContainer>
-          ) : (
-            <EmptyChartMessage message="Contract and billing totals will appear here as project data is recorded." />
           )}
         </ChartCard>
 
@@ -1506,11 +1540,11 @@ function getProjectStatus(project: CustomerProject) {
 }
 
 function getProjectChartLabel(project: CustomerProject) {
-  if (project.name.length <= 18) {
+  if (project.name.length <= 24) {
     return project.name;
   }
 
-  return `${project.name.slice(0, 15)}...`;
+  return `${project.name.slice(0, 21)}...`;
 }
 
 function PackageIcon() {
