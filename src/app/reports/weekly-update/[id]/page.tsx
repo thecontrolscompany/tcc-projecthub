@@ -392,6 +392,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
             background: #ffffff;
             padding: 28px;
             border: 1px solid #d1d5db;
+            overflow: visible;
           }
 
           .brand-row {
@@ -582,6 +583,21 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
             page-break-before: always;
           }
 
+          @media screen {
+            .bom-section {
+              width: min(calc(100vw - 48px), 12.5in);
+              margin-top: 32px;
+              margin-left: calc(50% - min(calc(100vw - 48px), 12.5in) / 2 - 28px);
+              background: #ffffff;
+              border: 1px solid #d1d5db;
+              padding: 28px;
+            }
+
+            .bom-section .section-divider:first-child {
+              margin-top: 0;
+            }
+          }
+
           @media print {
             body {
               background: #ffffff;
@@ -600,6 +616,14 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
             .report {
               border: 0;
               padding: 0;
+            }
+
+            .bom-section {
+              width: auto;
+              margin: 0;
+              border: 0;
+              padding: 0;
+              background: transparent;
             }
 
             .footer {
