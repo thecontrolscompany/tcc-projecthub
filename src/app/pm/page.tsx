@@ -1118,6 +1118,17 @@ function UpdateForm({
                 <SummaryField label="Inspections & Tests" value={inspectionsTests} />
                 <SummaryField label="Delays / Impacts" value={delaysImpacts} />
                 <SummaryField label="Other Remarks" value={otherRemarks} />
+                <div className="flex items-center gap-2 rounded-xl border border-border-default bg-surface-overlay px-4 py-3">
+                  <span
+                    className={[
+                      "inline-flex h-4 w-4 rounded-sm border",
+                      includeBomReport ? "border-brand-primary bg-brand-primary" : "border-border-default bg-surface-base",
+                    ].join(" ")}
+                  />
+                  <span className="text-sm text-text-primary">
+                    {includeBomReport ? "BOM report included" : "BOM report not included"}
+                  </span>
+                </div>
               </div>
 
               <SummaryField label="Additional Notes" value={notes} />

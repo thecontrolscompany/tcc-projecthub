@@ -1197,8 +1197,19 @@ function WeeklyUpdateCard({ update }: { update: WeeklyUpdate }) {
         )}
       </div>
 
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap items-center gap-3">
         <ViewReportLink updateId={update.id} />
+        {update.include_bom_report && (
+          <span
+            className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold"
+            style={{ backgroundColor: "#e6f6f4", color: HEADER_BG }}
+          >
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Includes BOM
+          </span>
+        )}
       </div>
 
       {update.notes && <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700">{update.notes}</p>}

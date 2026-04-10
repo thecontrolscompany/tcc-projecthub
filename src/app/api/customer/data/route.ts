@@ -81,7 +81,8 @@ export async function GET(request: Request) {
           safety_incidents,
           inspections_tests,
           delays_impacts,
-          other_remarks
+          other_remarks,
+          include_bom_report
         `)
         .in("project_id", projectIds)
         .eq("status", "submitted")
