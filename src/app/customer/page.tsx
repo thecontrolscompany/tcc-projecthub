@@ -1506,10 +1506,6 @@ function getProjectStatus(project: CustomerProject) {
 }
 
 function getProjectChartLabel(project: CustomerProject) {
-  if (project.job_number) {
-    return project.job_number;
-  }
-
   if (project.name.length <= 18) {
     return project.name;
   }
