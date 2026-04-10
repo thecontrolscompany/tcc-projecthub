@@ -502,6 +502,12 @@ export default function AdminPage() {
               >
                 Export Excel
               </button>
+              <Link
+                href="/admin/billing-import"
+                className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm font-semibold text-text-primary transition hover:bg-surface-base"
+              >
+                Import Historical Billing
+              </Link>
             </div>
 
             {actionStatus && (
