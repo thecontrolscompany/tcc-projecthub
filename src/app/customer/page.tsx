@@ -1540,11 +1540,13 @@ function getProjectStatus(project: CustomerProject) {
 }
 
 function getProjectChartLabel(project: CustomerProject) {
-  if (project.name.length <= 24) {
-    return project.name;
+  const customerFacingName = project.name.replace(/^\d{4}-\d{3}\s*-\s*/, "").trim();
+
+  if (customerFacingName.length <= 24) {
+    return customerFacingName;
   }
 
-  return `${project.name.slice(0, 21)}...`;
+  return `${customerFacingName.slice(0, 21)}...`;
 }
 
 function PackageIcon() {
