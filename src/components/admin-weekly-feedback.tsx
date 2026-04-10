@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { ViewReportLink } from "@/components/view-report-link";
+import { formatWeekEndingSaturday } from "@/lib/utils/week-ending";
 import type { CustomerFeedback, PortalFeedback } from "@/types/database";
 
 export function FeedbackTab() {
@@ -453,7 +454,7 @@ export function WeeklyUpdatesTab() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border-default bg-surface-raised/60">
-                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Week Of</th>
+                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Week Ending</th>
                         <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">PM</th>
                         <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
                         <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">% Complete</th>
@@ -483,7 +484,7 @@ export function WeeklyUpdatesTab() {
 
                 return (
                   <tr key={update.id} className="border-b border-border-default hover:bg-surface-raised">
-                    <td className="px-4 py-3 text-text-secondary">{format(new Date(update.week_of), "MMM d, yyyy")}</td>
+                    <td className="px-4 py-3 text-text-secondary">{formatWeekEndingSaturday(update.week_of, "MMM d, yyyy")}</td>
                     <td className="px-4 py-3 text-text-secondary">{pmName}</td>
                     <td className="px-4 py-3">
                       <span

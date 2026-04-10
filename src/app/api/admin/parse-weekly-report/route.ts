@@ -3,6 +3,7 @@ import ExcelJS from "exceljs";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
+import { normalizeWeekEndingSaturday } from "@/lib/utils/week-ending";
 
 type ParsedWeeklyUpdate = {
   sheetName: string;
@@ -71,12 +72,12 @@ function parseWeekOf(row: ExcelJS.Row | null, sheetName: string) {
   if (row) {
     const rawValue = row.getCell(3).value;
     if (rawValue instanceof Date && !Number.isNaN(rawValue.getTime())) {
-      return formatIsoDate(rawValue);
+      return normalizeWeekEndingSaturday(rawValue);
     }
     if (typeof rawValue === "number") {
       const excelDate = excelSerialToDate(rawValue);
       if (!Number.isNaN(excelDate.getTime())) {
-        return formatIsoDate(excelDate);
+        return normalizeWeekEndingSaturday(excelDate);
       }
     }
 
@@ -84,13 +85,13 @@ function parseWeekOf(row: ExcelJS.Row | null, sheetName: string) {
     if (dateText) {
       const parsed = new Date(dateText);
       if (!Number.isNaN(parsed.getTime())) {
-        return formatIsoDate(parsed);
+        return normalizeWeekEndingSaturday(parsed);
       }
     }
   }
 
   const sheetDate = parseDateFromSheetName(sheetName);
-  return sheetDate ? formatIsoDate(sheetDate) : null;
+  return sheetDate ? normalizeWeekEndingSaturday(sheetDate) : null;
 }
 
 function parseWorksheet(ws: ExcelJS.Worksheet): ParsedWeeklyUpdate {

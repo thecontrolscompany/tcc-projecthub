@@ -22,6 +22,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ViewReportLink } from "@/components/view-report-link";
 import { BomTab } from "@/components/bom-tab";
+import { formatWeekEndingSaturday } from "@/lib/utils/week-ending";
 import type { BillingPeriod, CrewLogEntry, WeeklyUpdate } from "@/types/database";
 import { fmtCurrency, fmtCurrencyCompact } from "@/lib/utils/format";
 
@@ -516,7 +517,7 @@ function ProjectList({
           const pct = latestPeriod ? latestPeriod.pct_complete * 100 : 0;
           const status = getProjectStatus(project);
           const lastUpdateLabel = latestUpdate
-            ? `Last update: ${format(new Date(latestUpdate.week_of), "MMM d, yyyy")} (${formatDistanceToNow(new Date(latestUpdate.week_of), { addSuffix: true })})`
+            ? `Last update: ${formatWeekEndingSaturday(latestUpdate.week_of, "MMM d, yyyy")} (${formatDistanceToNow(new Date(latestUpdate.week_of), { addSuffix: true })})`
             : "Last update: No update yet";
 
           return (
@@ -1231,7 +1232,7 @@ function WeeklyUpdateCard({ update }: { update: WeeklyUpdate }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="text-xl font-bold" style={{ color: CHARCOAL }}>
-            Week of {format(new Date(update.week_of), "MMMM d, yyyy")}
+            Week ending {formatWeekEndingSaturday(update.week_of, "MMMM d, yyyy")}
           </h3>
           {update.submitted_at && (
             <p className="mt-1 text-sm text-slate-500">

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
+import { normalizeWeekEndingSaturday } from "@/lib/utils/week-ending";
 
 type ParsedWeeklyUpdate = {
   sheetName: string;
@@ -59,6 +60,8 @@ export async function POST(request: Request) {
       continue;
     }
 
+    const normalizedWeekOf = normalizeWeekEndingSaturday(row.weekOf);
+
     const shouldOverwrite = row.alreadyExists && overwriteDates.has(row.weekOf);
 
     if (row.alreadyExists && !shouldOverwrite) {
@@ -72,7 +75,7 @@ export async function POST(request: Request) {
           .from("weekly_updates")
           .delete()
           .eq("project_id", projectId)
-          .eq("week_of", row.weekOf);
+          .eq("week_of", normalizedWeekOf);
         if (deleteError) throw deleteError;
       }
 
@@ -81,7 +84,7 @@ export async function POST(request: Request) {
         .insert({
           project_id: projectId,
           pm_id: null,
-          week_of: row.weekOf,
+          week_of: normalizedWeekOf,
           crew_log: row.crewLog,
           material_delivered: row.materialDelivered,
           equipment_set: row.equipmentSet,

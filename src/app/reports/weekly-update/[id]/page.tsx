@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { PrintButton } from "@/app/reports/weekly-update/[id]/PrintButton";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeSingle } from "@/lib/utils/normalize";
+import { formatWeekEndingSaturday } from "@/lib/utils/week-ending";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import type { CrewLogEntry, PocSnapshotEntry, UserRole } from "@/types/database";
@@ -318,7 +319,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
             }
 
             @top-right {
-              content: "${project.name.replace(/"/g, '\\"')} — Week of ${format(new Date(update.week_of), "MMM d, yyyy")}";
+              content: "${project.name.replace(/"/g, '\\"')} — Week ending ${formatWeekEndingSaturday(update.week_of, "MMM d, yyyy")}";
               font-family: Arial, Helvetica, sans-serif;
               font-size: 8pt;
               color: #4b5563;
@@ -649,7 +650,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
                 }
               </div>
               <div className="meta-label">Report Date:</div>
-              <div>{formatDate(update.week_of)}</div>
+              <div>{formatWeekEndingSaturday(update.week_of, "MMMM d, yyyy")}</div>
             </div>
 
             <div className="section-divider">

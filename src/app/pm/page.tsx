@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ViewReportLink } from "@/components/view-report-link";
 import { BomTab } from "@/components/bom-tab";
+import { formatWeekEndingSaturday } from "@/lib/utils/week-ending";
 import type { ChangeOrder } from "@/types/database";
 import type {
   BillingPeriod,
@@ -855,7 +856,7 @@ function UpdateForm({
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h3 className="text-sm font-semibold text-text-primary">
-                    Latest Submitted Report - Week of {format(new Date(latestSubmittedUpdate.week_of), "MMM d, yyyy")}
+                    Latest Submitted Report - Week ending {formatWeekEndingSaturday(latestSubmittedUpdate.week_of, "MMM d, yyyy")}
                   </h3>
                   <p className="mt-1 text-xs text-text-tertiary">Most recent submitted field summary.</p>
                 </div>
@@ -925,7 +926,7 @@ function UpdateForm({
               {recentOverviewUpdates.map((update) => (
                 <div key={update.id} className="flex flex-col gap-2 rounded-xl border border-border-default bg-surface-raised p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-medium text-text-primary">Week of {format(new Date(update.week_of), "MMM d, yyyy")}</span>
+                    <span className="text-sm font-medium text-text-primary">Week ending {formatWeekEndingSaturday(update.week_of, "MMM d, yyyy")}</span>
                     <span
                       className={[
                         "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
@@ -1095,7 +1096,7 @@ function UpdateForm({
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Submitted Report</p>
-                  <p className="mt-1 text-sm text-text-secondary">Week of {format(new Date(weekOf), "MMMM d, yyyy")}</p>
+                  <p className="mt-1 text-sm text-text-secondary">Week ending {formatWeekEndingSaturday(weekOf, "MMMM d, yyyy")}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   {submittedUpdateId && <ViewReportLink updateId={submittedUpdateId} />}

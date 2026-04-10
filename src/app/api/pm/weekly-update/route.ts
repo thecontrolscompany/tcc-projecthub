@@ -3,6 +3,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import { sendWeeklyUpdateNotification } from "@/lib/email/notifications";
+import { normalizeWeekEndingSaturday } from "@/lib/utils/week-ending";
 import type { CrewLogEntry, PocSnapshotEntry, WeeklyUpdate, WeeklyUpdateStatus } from "@/types/database";
 
 type UpdatePayload = {
@@ -98,7 +99,7 @@ function normalizePayload(body: UpdatePayload): { value: NormalizedPayload } | {
   return {
     value: {
       projectId,
-      weekOf,
+      weekOf: normalizeWeekEndingSaturday(weekOf),
       status,
       pctComplete,
       pocSnapshot: Array.isArray(body.pocSnapshot) ? body.pocSnapshot : null,

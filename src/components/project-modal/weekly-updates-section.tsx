@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { format } from "date-fns";
 import { ViewReportLink } from "@/components/view-report-link";
+import { formatWeekEndingSaturday } from "@/lib/utils/week-ending";
 
 type UpdateRow = {
   id: string;
@@ -68,7 +68,7 @@ export function WeeklyUpdatesSection({ projectId }: { projectId: string }) {
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-medium text-text-secondary">
-                    Week of {format(new Date(u.week_of), "MMM d, yyyy")}
+                    Week ending {formatWeekEndingSaturday(u.week_of, "MMM d, yyyy")}
                   </span>
                   <ViewReportLink updateId={u.id} />
                 </div>
