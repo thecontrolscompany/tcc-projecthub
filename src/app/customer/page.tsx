@@ -84,6 +84,7 @@ export default function CustomerPage() {
   const [userId, setUserId] = useState("");
   const [loadedAt, setLoadedAt] = useState<Date | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
   const selectedProjectId = searchParams.get("project");
   const selectedProject = projects.find((p) => p.id === selectedProjectId) ?? null;
@@ -238,13 +239,20 @@ export default function CustomerPage() {
             <button
               type="button"
               onClick={() => setShowHelp(true)}
-              className="rounded-full border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+              aria-label="Help"
+              title="Help"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/10 text-base font-bold text-white transition hover:bg-white/20"
             >
-              Help
+              ?
             </button>
-            <div className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm text-white/90">
+            <button
+              type="button"
+              onClick={() => setShowPasswordDialog(true)}
+              className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm text-white/90 transition hover:bg-white/20"
+              title="Account settings"
+            >
               {userEmail || "Signed in"}
-            </div>
+            </button>
             <SignOutButton />
           </div>
         </div>
@@ -294,6 +302,7 @@ export default function CustomerPage() {
       </footer>
 
       {showHelp && <CustomerHelpDialog onClose={() => setShowHelp(false)} />}
+      {showPasswordDialog && <CustomerPasswordDialog onClose={() => setShowPasswordDialog(false)} />}
     </div>
   );
 }
@@ -1247,6 +1256,109 @@ function CustomerHelpDialog({ onClose }: { onClose: () => void }) {
             </p>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CustomerPasswordDialog({ onClose }: { onClose: () => void }) {
+  const supabase = createClient();
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setMessage(null);
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setSaving(true);
+    const { error: updateError } = await supabase.auth.updateUser({ password });
+
+    if (updateError) {
+      setError(updateError.message);
+      setSaving(false);
+      return;
+    }
+
+    setMessage("Password updated.");
+    setPassword("");
+    setConfirmPassword("");
+    setSaving(false);
+    window.setTimeout(onClose, 900);
+  }
+
+  return (
+    <div className="customer-print-hide fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 py-6">
+      <div className="w-full max-w-md rounded-[28px] border bg-white p-6 shadow-[0_28px_80px_rgba(15,23,42,0.28)]" style={{ borderColor: BORDER }}>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: HEADER_BG }}>
+              Account
+            </p>
+            <h2 className="mt-1 text-2xl font-bold" style={{ color: CHARCOAL }}>
+              Change Password
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-800"
+          >
+            Close
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-slate-600">New password</label>
+            <input
+              type="password"
+              autoComplete="new-password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[color:#20b2aa] focus:outline-none"
+              placeholder="At least 8 characters"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-slate-600">Confirm password</label>
+            <input
+              type="password"
+              autoComplete="new-password"
+              required
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:border-[color:#20b2aa] focus:outline-none"
+            />
+          </div>
+
+          {error && <p className="rounded-xl bg-status-danger/10 px-4 py-2.5 text-sm text-status-danger">{error}</p>}
+          {message && <p className="rounded-xl bg-status-success/10 px-4 py-2.5 text-sm text-status-success">{message}</p>}
+
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition disabled:opacity-50"
+            style={{ backgroundColor: HEADER_BG }}
+          >
+            {saving ? "Saving..." : "Update password"}
+          </button>
+        </form>
       </div>
     </div>
   );
