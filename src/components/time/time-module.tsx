@@ -27,10 +27,11 @@ export function TimeModuleHome({ snapshot }: { snapshot: TimeModuleSnapshot }) {
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Next routes</p>
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
             <ActionCard href="/time/clock" title="Clock" description="Primary workflow home and active jobcode list." />
             <ActionCard href="/time/employees" title="Employees" description="Imported QuickBooks Time users." />
             <ActionCard href="/time/projects" title="Projects" description="Imported QuickBooks Time jobcodes." />
+            <ActionCard href="/time/export" title="Export" description="Download QB Time entries for a project to Excel." />
           </div>
         </section>
 
