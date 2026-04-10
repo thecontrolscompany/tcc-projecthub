@@ -1726,6 +1726,20 @@ function UpdateForm({
 
       {activeTab === "bom" && (
         <div className="rounded-2xl border border-border-default bg-surface-raised p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-semibold text-text-primary">Bill of Materials</h3>
+              <p className="mt-0.5 text-sm text-text-tertiary">Material schedule and receipt tracking for this project.</p>
+            </div>
+            <a
+              href={`/reports/bom/${project.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-xl bg-brand-primary px-4 py-2.5 text-sm font-semibold text-text-inverse transition hover:opacity-90"
+            >
+              Generate BOM Report
+            </a>
+          </div>
           <BomTab projectId={project.id} readOnly />
         </div>
       )}

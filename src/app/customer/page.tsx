@@ -980,13 +980,24 @@ function ProjectDetail({
 
       <section className={view === "bom" ? "block" : "hidden"}>
         <div className="customer-print-card rounded-3xl border bg-white shadow-sm" style={{ borderColor: BORDER }}>
-          <div className="px-6 pt-5 pb-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: HEADER_BG }}>
-              Bill of Materials
-            </p>
-            <p className="mt-0.5 text-sm text-slate-500">
-              Material schedule and receipt status for this project.
-            </p>
+          <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-2">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: HEADER_BG }}>
+                Bill of Materials
+              </p>
+              <p className="mt-0.5 text-sm text-slate-500">
+                Material schedule and receipt status for this project.
+              </p>
+            </div>
+            <a
+              href={`/reports/bom/${project.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition"
+              style={{ backgroundColor: HEADER_BG, color: "#ffffff" }}
+            >
+              Generate BOM Report
+            </a>
           </div>
           <div className="px-2 pb-4">
             <BomTab projectId={project.id} readOnly />
