@@ -92,6 +92,10 @@ function customerProjectName(name: string | null | undefined) {
   return (name ?? "").replace(/^\d{4}-\d{3}\s*-\s*/, "").trim() || (name ?? "");
 }
 
+function fileSafeName(value: string) {
+  return value.replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, " ").trim();
+}
+
 async function canAccessReport(supabase: Awaited<ReturnType<typeof createClient>>, role: UserRole, userId: string, projectId: string) {
   if (role === "admin" || role === "ops_manager") {
     return true;
@@ -250,6 +254,9 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
 
   const customer = normalizeSingle(project.customer);
   const pmName = await resolvePmName(admin, project.id, update.pm);
+  const printableTitle = fileSafeName(
+    `${customerProjectName(project.name)} - Weekly Report - ${formatWeekEndingSaturday(update.week_of, "yyyy-MM-dd")}`
+  );
 
   const crewLog = update.crew_log && update.crew_log.length > 0 ? update.crew_log : emptyCrewLog();
   const totalManHours = crewLog.reduce((sum, row) => sum + (Number(row.men) || 0) * (Number(row.hours) || 0), 0);
@@ -298,6 +305,9 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
 
   return (
     <html lang="en">
+      <head>
+        <title>{printableTitle}</title>
+      </head>
       <body>
         <style>{`
           :root {
