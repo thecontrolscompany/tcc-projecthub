@@ -305,9 +305,6 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
 
   return (
     <html lang="en">
-      <head>
-        <title>{printableTitle}</title>
-      </head>
       <body>
         <style>{`
           :root {
@@ -648,7 +645,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
         `}</style>
 
         <main className="page">
-          <PrintButton />
+          <PrintButton documentTitle={printableTitle} />
 
           <article className="report">
             <div className="brand-row">
