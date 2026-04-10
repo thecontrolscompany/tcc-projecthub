@@ -322,9 +322,8 @@ function UpdateForm({
   const [rfisLoading, setRfisLoading] = useState(false);
   const [coError, setCoError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ProjectTab>("overview");
-  const [manualOverride, setManualOverride] = useState<string>(() =>
-    project.current_period ? (project.current_period.pct_complete * 100).toFixed(1) : ""
-  );
+  const [manualOverride, setManualOverride] = useState<string>("");
+  const [isManualOverride, setIsManualOverride] = useState(false);
   const [savingPoc, setSavingPoc] = useState(false);
   const [pocSaveMessage, setPocSaveMessage] = useState<string | null>(null);
   const [pocSaveError, setPocSaveError] = useState<string | null>(null);
@@ -341,13 +340,15 @@ function UpdateForm({
       ? pocItems.reduce((sum, item) => sum + item.weight * ((pocPcts[item.id] ?? item.pct_complete * 100) / 100), 0) / totalWeight
       : null;
   const pctComplete =
-    manualOverride !== ""
+    isManualOverride && manualOverride !== ""
       ? Number(manualOverride)
       : pocPctDecimal !== null
         ? pocPctDecimal * 100
-        : currentPeriod
-          ? currentPeriod.pct_complete * 100
-          : 0;
+        : manualOverride !== ""
+          ? Number(manualOverride)
+          : currentPeriod
+            ? currentPeriod.pct_complete * 100
+            : 0;
 
   function seedFromLatest(latestUpdate: WeeklyUpdate | null) {
     const latestCrewLog = latestUpdate?.crew_log ?? [];
@@ -385,7 +386,8 @@ function UpdateForm({
     setDelaysImpacts(update.delays_impacts ?? "");
     setOtherRemarks(update.other_remarks ?? "");
     setIncludeBomReport(update.include_bom_report ?? false);
-    setManualOverride(update.pct_complete !== null ? (update.pct_complete * 100).toFixed(1) : "");
+    setManualOverride("");
+    setIsManualOverride(false);
   }
 
   function resetForNewWeek(latestUpdate: WeeklyUpdate | null) {
@@ -399,7 +401,8 @@ function UpdateForm({
     setDelaysImpacts("");
     setOtherRemarks("");
     setIncludeBomReport(false);
-    setManualOverride(currentPeriod ? (currentPeriod.pct_complete * 100).toFixed(1) : "");
+    setManualOverride("");
+    setIsManualOverride(false);
     setDraftUpdateId(null);
     setSubmittedUpdateId(null);
     setIsEditing(false);
@@ -1182,12 +1185,14 @@ function UpdateForm({
                   <p className="mb-1 text-xs text-text-tertiary">Overall % Complete</p>
                   <p className="mb-1 text-2xl font-bold text-status-success">{pctComplete.toFixed(1)}%</p>
                   {pocItems.length > 0 ? (
-                    <div className="space-y-2">
-                      <p className="text-xs text-text-tertiary">Calculated from POC</p>
+                    <div className="space-y-3">
                       <div className="flex flex-wrap items-center gap-3">
-                        <p className="text-lg font-semibold text-text-primary">
-                          {pocPctDecimal !== null ? `${(pocPctDecimal * 100).toFixed(1)}%` : "Not configured"}
-                        </p>
+                        <div>
+                          <p className="text-xs text-text-tertiary">Calculated from POC</p>
+                          <p className="text-lg font-semibold text-text-primary">
+                            {pocPctDecimal !== null ? `${(pocPctDecimal * 100).toFixed(1)}%` : "Not configured"}
+                          </p>
+                        </div>
                         <button
                           type="button"
                           onClick={() => setActiveTab("poc")}
@@ -1196,6 +1201,41 @@ function UpdateForm({
                           Update POC -&gt;
                         </button>
                       </div>
+                      <label className="flex cursor-pointer items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={isManualOverride}
+                          onChange={(e) => {
+                            setIsManualOverride(e.target.checked);
+                            if (e.target.checked && manualOverride === "") {
+                              setManualOverride(pocPctDecimal !== null ? (pocPctDecimal * 100).toFixed(1) : "0.0");
+                            }
+                          }}
+                          className="h-4 w-4 rounded border-border-default accent-status-success"
+                        />
+                        <span className="text-sm text-text-secondary">Override % complete manually</span>
+                      </label>
+                      {isManualOverride && (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={0.1}
+                            value={manualOverride}
+                            onChange={(e) => setManualOverride(e.target.value)}
+                            className="w-32 rounded-lg border border-border-default bg-surface-base px-3 py-2 text-center text-sm font-semibold text-text-primary focus:border-status-success/50 focus:outline-none"
+                          />
+                          <span className="text-sm text-text-secondary">%</span>
+                          <button
+                            type="button"
+                            onClick={() => { setIsManualOverride(false); setManualOverride(""); }}
+                            className="text-xs text-text-tertiary hover:text-status-danger"
+                          >
+                            Clear override
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="mt-3 rounded-xl border border-dashed border-status-success/30 bg-white/50 p-4">
@@ -1211,7 +1251,7 @@ function UpdateForm({
                           placeholder={currentPeriod ? (currentPeriod.pct_complete * 100).toFixed(1) : "0.0"}
                           className="w-32 rounded-lg border border-border-default bg-surface-base px-3 py-2 text-center text-sm font-semibold text-text-primary focus:border-status-success/50 focus:outline-none"
                         />
-                        <span className="text-sm text-text-secondary">Manual override is used when no POC categories are configured.</span>
+                        <span className="text-sm text-text-secondary">%</span>
                       </div>
                     </div>
                   )}
@@ -1544,7 +1584,7 @@ function UpdateForm({
             </>
           ) : (
             <div className="rounded-xl border border-dashed border-border-default p-4">
-              <label className="mb-1 block text-sm font-medium text-text-primary">Enter % Complete</label>
+              <label className="mb-1.5 block text-sm font-medium text-text-primary">Enter % Complete</label>
               <div className="flex flex-wrap items-center gap-2">
                 <input
                   type="number"
@@ -1556,10 +1596,11 @@ function UpdateForm({
                   placeholder={currentPeriod ? (currentPeriod.pct_complete * 100).toFixed(1) : "0.0"}
                   className="w-32 rounded-lg border border-border-default bg-surface-base px-3 py-2 text-center text-sm font-semibold text-text-primary focus:border-status-success/50 focus:outline-none"
                 />
-                <span className="text-sm text-text-secondary">
-                  No POC categories are configured for this project. Enter % complete manually on the Weekly Update tab, or ask admin to set up POC categories.
-                </span>
+                <span className="text-sm text-text-secondary">%</span>
               </div>
+              <p className="mt-2 text-xs text-text-tertiary">
+                No POC categories configured. Ask admin to set up POC line items for weighted auto-calculation.
+              </p>
             </div>
           )}
         </div>
