@@ -172,6 +172,30 @@ This is purely operational setup. No new code.
 
 ---
 
+## Phase 4d - Employee Safety Certification Tracking
+**Target duration:** 1-2 weeks
+**Delivers:** A workforce compliance view that shows certification status at a glance and keeps source documents organized in SharePoint
+
+### Tasks
+- [ ] Define certification tracking schema for employee safety records
+  - Store employee, certification name/type, certification received date, expiration-required flag, expiration date, status, notes, SharePoint path/item ID
+- [ ] Build an employee certification matrix quickview
+  - Rows: employees
+  - Columns: tracked certifications
+  - Cell states: current, expiring soon, expired, missing, non-expiring
+- [ ] Add employee detail workflow for managing certification records and uploading supporting files
+- [ ] Support certifications that do not expire without forcing an expiration date
+- [ ] Add dashboard filtering for expiring soon, expired, missing, and by certification type
+- [ ] Add reminders / reporting hooks for upcoming expirations
+- [ ] Create SharePoint folder structure for employee certification documents
+  - Example: `/Employees/{Employee Name or ID}/Safety Certifications/`
+- [ ] Upload and link certification files to the employee certification record so app data and SharePoint stay connected
+- [ ] Define permissions so only appropriate internal roles can view or manage employee certification files
+
+**Success criteria:** Leadership can open a matrix view and immediately see which employees are current, expiring, expired, or missing required safety certifications, and every certification document is stored in a SharePoint folder organized by employee.
+
+---
+
 ## Phase 5 - Estimating Module (`hvac-estimator` Integration)
 **Target duration:** 6-10 weeks
 **Delivers:** One unified app. `hvac-estimator` can be retired.
@@ -245,9 +269,10 @@ This is the largest phase. Approach it incrementally.
 | 4 - Estimate to Project Lifecycle | 2-3 weeks | Week 10 |
 | 4b - Standardized Project Reports | 1-2 weeks | Week 12 |
 | 4c - AI-Assisted PM & Change Order Workflows | 2-3 weeks | Week 15 |
-| 5 - Estimating Module Migration | 6-10 weeks | Week 25 |
-| 6 - Analytics | 2-3 weeks | Week 28 |
-| 7 - QBO Integrations | 4-6 weeks | Week 34 |
+| 4d - Employee Safety Certification Tracking | 1-2 weeks | Week 17 |
+| 5 - Estimating Module Migration | 6-10 weeks | Week 27 |
+| 6 - Analytics | 2-3 weeks | Week 30 |
+| 7 - QBO Integrations | 4-6 weeks | Week 36 |
 
 **Platform is operationally useful from Phase 0. Full unification completes at Phase 5.**
 

@@ -362,7 +362,7 @@ export async function GET(request: Request) {
     }
     const [customersResult, profilesResult, contactsResult] = await Promise.all([
       adminClient.from("customers").select("id, name, contact_email").order("name"),
-      adminClient.from("profiles").select("id, full_name, email, role").in("role", ["pm", "lead", "installer", "ops_manager"]).order("full_name"),
+      adminClient.from("profiles").select("id, full_name, email, role").in("role", ["admin", "pm", "lead", "installer", "ops_manager"]).order("full_name"),
       adminClient.from("pm_directory").select("id, first_name, last_name, email, profile_id").order("email"),
     ]);
 

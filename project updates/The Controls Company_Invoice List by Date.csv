@@ -1,0 +1,883 @@
+Invoice List by Date,,,,,,,,
+The Controls Company,,,,,,,,
+"April, 2020-December, 2025",,,,,,,,
+
+Date,Transaction type,Num,Name,Location full name,Memo,Due date,Amount,Open balance
+10/21/2020,Invoice,2,Engineered Cooling Services:Autozone (deleted),,,10/21/2020,"3,131.94",0.00
+10/26/2020,Invoice,3,Engineered Cooling Services:Autozone (deleted),,,10/26/2020,"2,400.00",0.00
+11/18/2020,Invoice,4,Engineered Cooling Services:Autozone (deleted),,,11/18/2020,"2,400.00",0.00
+12/15/2020,Invoice,5,Engineered Cooling Services:Autozone (deleted),,,12/15/2020,"2,400.00",0.00
+01/12/2021,Invoice,8,Engineered Cooling Services:Autozone (deleted),,,01/12/2021,"1,200.00",0.00
+01/25/2021,Invoice,001,Johnson Controls:Gulf County Schools,,,02/24/2021,"18,600.00",0.00
+01/26/2021,Invoice,002,Johnson Controls:West Florida FSER,,4869874,02/25/2021,"10,000.00",0.00
+02/23/2021,Invoice,003,Johnson Controls:Gulf County Schools,,,03/25/2021,"9,300.00",0.00
+02/23/2021,Invoice,J007,Johnson Controls:West Florida Penthouse,,,03/25/2021,"10,000.00",0.00
+03/10/2021,Invoice,J003,Johnson Controls:Gulf County Schools,,,04/09/2021,"9,300.00",0.00
+03/10/2021,Invoice,J001,Johnson Controls:Airbus Programming,,,04/09/2021,"3,597.00",0.00
+03/15/2021,Invoice,9,Engineered Cooling Services:Autozone (deleted),,,04/14/2021,"2,400.00",0.00
+03/18/2021,Invoice,J005,Johnson Controls:West Florida Penthouse,,4857750,04/17/2021,"5,000.00",0.00
+03/18/2021,Invoice,S003,Siemens Industry:Orange Beach School Auditorium,,,04/17/2021,"7,100.00",0.00
+03/19/2021,Invoice,S002,Siemens Industry:Orange Beach School Auditorium,,,04/18/2021,"6,000.00",0.00
+03/29/2021,Invoice,J008,Johnson Controls:Airbus Programming,,,04/28/2021,"5,001.00",0.00
+04/19/2021,Invoice,S004,Siemens Industry:Orange Beach School Auditorium,,,05/19/2021,"2,676.00",0.00
+04/19/2021,Invoice,J009,Johnson Controls:Gulf County Schools,,,05/19/2021,"9,300.00",0.00
+04/26/2021,Invoice,S005,Siemens Industry:Fairhope High School,,,05/26/2021,"3,500.00",0.00
+04/29/2021,Invoice,J011,Johnson Controls:West Florida FSER,,,05/29/2021,"5,000.00",0.00
+05/03/2021,Invoice,S007,Siemens Industry:Hobbs Middle School,,,06/02/2021,"2,500.00",0.00
+05/21/2021,Invoice,S006,Siemens Industry:Fairhope High School,,,06/20/2021,"4,000.00",0.00
+05/26/2021,Invoice,J012,Johnson Controls:West Florida FSER,,,06/25/2021,"5,000.00",0.00
+05/26/2021,Invoice,J013,Johnson Controls:West Florida Penthouse,,,06/25/2021,"5,000.00",0.00
+05/30/2021,Invoice,J014,Johnson Controls:Gulf County Schools,,,06/29/2021,"18,500.00",0.00
+05/30/2021,Invoice,J015,Johnson Controls:West Florida FSER,,,06/29/2021,"5,556.00",0.00
+06/21/2021,Invoice,S009,Siemens Industry:Hobbs Middle School,,,07/21/2021,"4,500.00",0.00
+06/21/2021,Invoice,S010,Siemens Industry:Fairhope High School,,,07/21/2021,"3,000.00",0.00
+06/21/2021,Invoice,S008,Siemens Industry:Daphne Middle School,,Daphne,07/21/2021,"2,000.00",0.00
+06/30/2021,Invoice,J010,Johnson Controls:Airbus Programming,,,07/30/2021,"4,290.00",0.00
+07/20/2021,Invoice,S013,Siemens Industry:Stonebridge Elementary,,HOBBS,08/19/2021,"4,000.00",0.00
+07/20/2021,Invoice,S011,Siemens Industry:Fairhope High School,,FAIRHOPE,08/19/2021,"5,500.00",0.00
+07/20/2021,Invoice,S012,Siemens Industry:Hobbs Middle School,,HOBBS,08/19/2021,"6,500.00",0.00
+07/29/2021,Invoice,S014,.,,,08/28/2021,"2,000.00",0.00
+08/01/2021,Invoice,dummy,.,,VOID: Opening balance,08/01/2021,0.00,0.00
+08/23/2021,Invoice,S015,Siemens Industry:Hobbs Middle School,,,09/22/2021,"20,770.00",0.00
+08/23/2021,Invoice,S017,.,,,09/22/2021,"4,000.00",0.00
+09/05/2021,Invoice,S016,Siemens Industry:Fairhope High School,,,10/05/2021,"2,000.00",0.00
+09/10/2021,Invoice,J017,Johnson Controls:GCRMC Patients Choice,,,10/10/2021,"15,000.00",0.00
+09/20/2021,Invoice,S018,Siemens Industry:Daphne Middle School,,,10/20/2021,"2,000.00",0.00
+09/20/2021,Invoice,S019,.,,,10/20/2021,"4,500.00",0.00
+09/20/2021,Invoice,S020,Siemens Industry:Daphne Middle School,,,10/20/2021,"3,000.00",0.00
+09/20/2021,Invoice,S021,Siemens Industry:Stonebridge Elementary,,,10/20/2021,"5,000.00",0.00
+09/20/2021,Invoice,J018,Johnson Controls:FWB Hospital,,,10/20/2021,"50,000.00",0.00
+09/20/2021,Invoice,J019,Johnson Controls:GCRMC Patients Choice,,,10/20/2021,"10,000.00",0.00
+09/28/2021,Invoice,J016,Johnson Controls:FWB Hospital,,,10/28/2021,"25,000.00",0.00
+10/10/2021,Invoice,J020,Johnson Controls:FWB Hospital,,,11/09/2021,"5,000.00",0.00
+10/22/2021,Invoice,J021,Johnson Controls:West Florida 2nd Floor Surgery,,,11/21/2021,"10,000.00",0.00
+10/22/2021,Invoice,J022,Johnson Controls:GCRMC Patients Choice,,"4911559  975.52 owed in retainage
+Paid in full (I missed a received payment on this)",11/21/2021,"9,752.00",0.00
+10/22/2021,Invoice,S022,Siemens Industry:J. Larry Newton (deleted),,,11/21/2021,"3,500.00",0.00
+10/22/2021,Invoice,S023,Siemens Industry:Stonebridge Elementary,,,11/21/2021,"3,000.00",0.00
+10/22/2021,Invoice,S024,Siemens Industry:Daphne Middle School,,,11/21/2021,"2,500.00",0.00
+11/16/2021,Invoice,J023,Johnson Controls:Airbus Programming,,J022,12/16/2021,"1,716.00",0.00
+11/18/2021,Invoice,E010,Engineered Cooling Services,,,12/18/2021,"2,400.00",0.00
+11/29/2021,Invoice,J026,Johnson Controls:FWB Hospital,,"Billed 5000, 250 retainage, 60.58 in fees",12/29/2021,"5,000.00",0.00
+12/06/2021,Invoice,J024,Johnson Controls:West Florida 2nd Floor Surgery,,,01/05/2022,"7,626.00",0.00
+12/06/2021,Invoice,J025,Johnson Controls:Keesler Labor,,,01/05/2022,"3,000.00",0.00
+12/10/2021,Invoice,S025,Siemens Industry:Stonebridge Elementary,,,01/09/2022,"3,200.00",0.00
+12/20/2021,Invoice,J027,Johnson Controls:OWA,,"1,500 Retainage owed 12/31/23",01/19/2022,"30,000.00",0.00
+12/20/2021,Invoice,J028,Johnson Controls:FWB Hospital,,,01/19/2022,"5,000.00",0.00
+12/20/2021,Invoice,J029,Johnson Controls:Forrest General Programming,,,01/19/2022,"4,500.00",0.00
+12/20/2021,Invoice,J030,Johnson Controls:Keesler Labor,,,01/19/2022,"1,500.00",0.00
+12/29/2021,Invoice,S026,Siemens Industry:Daphne Middle School,,,01/28/2022,"3,000.00",0.00
+12/29/2021,Invoice,S029,Siemens Industry:NAS Corry,,,01/28/2022,"1,935.00",0.00
+12/29/2021,Invoice,S027,Siemens Industry:Stonebridge Elementary,,,01/28/2022,"3,000.00",0.00
+01/21/2022,Invoice,E013,Engineered Cooling Services,,,02/20/2022,"2,400.00",0.00
+01/21/2022,Invoice,S028,Siemens Industry:Milton High School,,,02/20/2022,750.00,0.00
+01/21/2022,Invoice,S030,Siemens Industry:Stonebridge Elementary,,,02/20/2022,"3,500.00",0.00
+01/21/2022,Invoice,S032,Siemens Industry:Pace K-8,,,02/20/2022,"3,600.00",0.00
+01/21/2022,Invoice,S033,Siemens Industry:Fairhope West,,,02/20/2022,"1,500.00",0.00
+01/21/2022,Invoice,J031,Johnson Controls:FWB Hospital,,,02/20/2022,"5,000.00",0.00
+02/01/2022,Invoice,E014,Engineered Cooling Services,,,03/03/2022,"2,400.00",0.00
+02/09/2022,Invoice,S031,Siemens Industry:Stonebridge Elementary,,,03/11/2022,"3,500.00",0.00
+03/02/2022,Invoice,E016,Engineered Cooling Services,,,04/01/2022,"2,400.00",0.00
+03/03/2022,Invoice,J032,Johnson Controls:FWB Hospital,,,04/02/2022,"10,000.00",0.00
+03/03/2022,Invoice,J033,Johnson Controls:OWA,,500 unpaid retainage 12/31/23,04/02/2022,"10,000.00",0.00
+03/03/2022,Invoice,J037,Johnson Controls:Portico,,,04/02/2022,"7,163.00",0.00
+03/09/2022,Invoice,S034,Siemens Industry:Spanish Fort Elementary,,,04/08/2022,"4,000.00",0.00
+03/09/2022,Invoice,J036,Johnson Controls:Keesler NDI Lab Submittal (deleted),,,04/08/2022,"1,500.00",0.00
+03/09/2022,Invoice,S039,Siemens Industry:Spanish Fort Elementary,,,04/08/2022,"2,000.00",0.00
+03/11/2022,Invoice,S035,Siemens Industry:Stonebridge Elementary,,,04/10/2022,"10,000.00",0.00
+03/11/2022,Invoice,S036,Siemens Industry:Daphne Middle School,,,04/10/2022,"9,027.00",0.00
+03/11/2022,Invoice,S033,Siemens Industry:Pace K-8,,,04/10/2022,"5,000.00",0.00
+03/11/2022,Invoice,J034,Johnson Controls:Ms Museum of Natural Science (deleted),,,04/10/2022,"1,500.00",0.00
+03/14/2022,Invoice,E017,Engineered Cooling Services,,,04/13/2022,"2,400.00",0.00
+03/28/2022,Invoice,J041,Johnson Controls:Keesler Chiller Replacement (deleted),,,04/27/2022,"1,500.00",0.00
+04/13/2022,Invoice,J039,Johnson Controls:FWB Hospital,,,05/13/2022,"1,500.00",0.00
+04/13/2022,Invoice,J038,Johnson Controls:OWA,,1500 unpaid retainage 12/31/23,05/13/2022,"30,000.00",0.00
+04/13/2022,Invoice,J040,Johnson Controls:OWA,,250 unpaid retainage 12/31/2023,05/13/2022,"5,000.00",0.00
+04/13/2022,Invoice,J035,Johnson Controls:Keesler Visitors Center (deleted),,,05/13/2022,"1,500.00",0.00
+04/13/2022,Invoice,J39,Johnson Controls:FWB Hospital,,,05/13/2022,"15,000.00",0.00
+04/13/2022,Invoice,S041,Siemens Industry:Stonebridge Elementary,,,05/13/2022,"10,000.00",0.00
+04/13/2022,Invoice,S038,Siemens Industry:Daphne Middle School,,,05/13/2022,"2,000.00",0.00
+04/13/2022,Invoice,S037,Siemens Industry:Maritime 2nd Floor Reno,,,05/13/2022,"1,875.00",0.00
+04/13/2022,Invoice,S040,Siemens Industry:Pace K-8,,,05/13/2022,"5,000.00",0.00
+04/13/2022,Invoice,S042,Siemens Industry:Merchants Plaza (deleted),,,05/13/2022,"1,500.00",0.00
+04/21/2022,Invoice,E018,Engineered Cooling Services,,,05/21/2022,"4,800.00",0.00
+05/09/2022,Invoice,J042,Johnson Controls:OWA,,,06/08/2022,"28,500.00",0.00
+05/09/2022,Invoice,J043,Johnson Controls:Portico,,10% retainage and 144.48 in fees,06/08/2022,"7,018.52",0.00
+05/12/2022,Invoice,S001,Florida Department of Health in Santa Ros (deleted),,,05/12/2022,850.00,0.00
+05/12/2022,Invoice,S044,Siemens Industry:Stonebridge Elementary,,,06/11/2022,"25,000.00",0.00
+06/01/2022,Invoice,S045,Siemens Industry:Spanish Fort Elementary,,,07/01/2022,"1,500.00",0.00
+06/01/2022,Invoice,S046,Siemens Industry:Pace K-8,,,07/01/2022,"1,500.00",0.00
+06/06/2022,Invoice,J049,Johnson Controls:FWB Hospital,,,07/06/2022,"30,000.00",0.00
+06/06/2022,Invoice,J048,Johnson Controls:Portico,,725 unpaid in retainage 12/31/2023,07/06/2022,"14,500.00",0.00
+06/08/2022,Invoice,J046,Johnson Controls:Portico,,725 unpaid retainage 12/31/2023,07/08/2022,"14,500.00",0.00
+06/08/2022,Invoice,J045,Johnson Controls:OWA,,387.65 unpaid retainage 12/31/2023,07/08/2022,"7,750.00",0.00
+06/08/2022,Invoice,J044,Johnson Controls:FWB Hospital,,,07/08/2022,"10,000.00",0.00
+06/08/2022,Invoice,J047,Johnson Controls:OWA,,4928745 916 unpaid retainage 12/31/2023,07/08/2022,"18,320.00",0.00
+06/15/2022,Invoice,S047,Siemens Industry:Stonebridge Elementary,,,07/15/2022,"12,000.00",0.00
+06/15/2022,Invoice,S049,Siemens Industry:Spanish Fort Elementary,,,07/15/2022,"1,500.00",0.00
+06/15/2022,Invoice,S048,Siemens Industry:Pace K-8,,,07/15/2022,"2,000.00",0.00
+06/15/2022,Invoice,S050,Siemens Industry:Hobbs Phase 2,,,07/15/2022,"2,000.00",0.00
+06/16/2022,Invoice,S043,Siemens Industry:Stonebridge Elementary,,,07/16/2022,"5,000.00",0.00
+06/22/2022,Invoice,S051,Siemens Industry:UWF Bldg 18,,,07/22/2022,"4,500.00",0.00
+07/25/2022,Invoice,S051,Siemens Industry:Stonebridge Elementary,,,08/24/2022,"20,000.00",0.00
+07/25/2022,Invoice,S052,Siemens Industry:Pace K-8,,,08/24/2022,"2,500.00",0.00
+07/25/2022,Invoice,S054,Siemens Industry:Orange Beach Elementary,,,08/24/2022,"1,200.00",0.00
+07/25/2022,Invoice,S053,Siemens Industry:Elberta High School,,,08/24/2022,"2,800.00",0.00
+08/08/2022,Invoice,J051,Johnson Controls:FWB Hospital,,,09/07/2022,"4,743.00",0.00
+08/08/2022,Invoice,J052,Johnson Controls:OWA,,,09/07/2022,"2,591.00",0.00
+08/08/2022,Invoice,J053,Johnson Controls:Portico,,,09/07/2022,"10,000.00",0.00
+08/08/2022,Invoice,T001,Trane U.S. Inc.:Project Titan,,,08/08/2022,"10,000.00",0.00
+08/12/2022,Invoice,T002,Trane U.S. Inc.:Eglin Cyberspace,,,09/11/2022,"10,000.00",0.00
+08/18/2022,Invoice,J050,Johnson Controls:RSA Maintenance (deleted),,,09/17/2022,"6,000.00",0.00
+09/12/2022,Invoice,J054,Johnson Controls:Portico,,500 retainage unpaid 12/31/23,10/12/2022,"9,500.00",0.00
+09/14/2022,Invoice,S061,Siemens Industry:Elberta High School,,,10/14/2022,"1,200.00",0.00
+09/14/2022,Invoice,S063,Siemens Industry:Hobbs Phase 2,,,10/14/2022,"14,000.00",0.00
+09/14/2022,Invoice,S059,Siemens Industry:Pace K-8,,,10/14/2022,"3,500.00",0.00
+09/14/2022,Invoice,S058,Siemens Industry:Spanish Fort Elementary,,,10/14/2022,"3,000.00",0.00
+09/14/2022,Invoice,S057,Siemens Industry:Pace K-8,,,10/14/2022,"4,500.00",0.00
+09/14/2022,Invoice,S055,Siemens Industry:NAS Sally repairs,,,10/14/2022,"4,500.00",0.00
+09/14/2022,Invoice,S062,Siemens Industry:NAS Sally repairs,,,10/14/2022,"2,558.00",0.00
+09/14/2022,Invoice,S056,Siemens Industry:Stonebridge Elementary,,,10/14/2022,"5,895.00",0.00
+09/19/2022,Invoice,J055,Johnson Controls:GCMC Breakfast Point,,,10/19/2022,"6,459.00",0.00
+09/19/2022,Invoice,J056,Johnson Controls:Portico,,250 unpaid in retainage 12/31/23,10/19/2022,"5,000.00",0.00
+09/21/2022,Invoice,J057/T003,Trane U.S. Inc.:MSU Humphreys (deleted),,,10/21/2022,"4,500.00",0.00
+09/21/2022,Invoice,T004,Trane U.S. Inc.:Project Titan,,,10/21/2022,"70,000.00",0.00
+09/21/2022,Invoice,T005,Trane U.S. Inc.:Eglin Cyberspace,,,10/21/2022,"10,000.00",0.00
+09/27/2022,Invoice,J057,Johnson Controls:Perdido FSER,,,10/27/2022,"3,222.00",0.00
+10/26/2022,Invoice,S064,Siemens Industry:Hobbs Phase 2,,,11/25/2022,"2,000.00",0.00
+11/07/2022,Invoice,T006,Trane U.S. Inc.:Project Titan,,,12/07/2022,"22,451.00",0.00
+11/08/2022,Invoice,J058,Johnson Controls:GCMC Breakfast Point,,,12/08/2022,"6,459.00",0.00
+11/08/2022,Invoice,J059,Johnson Controls:West Florida FSER,,4965263 Retainage paid in full,12/08/2022,"3,221.00",0.00
+11/17/2022,Invoice,J060,Johnson Controls:Perdido FSER,,,12/17/2022,"3,222.00",0.00
+11/17/2022,Invoice,J061,Johnson Controls:GCRMC Cardiac Services,,,12/17/2022,"5,000.00",0.00
+11/17/2022,Invoice,J062,Johnson Controls:GCMC Breakfast Point,,,12/17/2022,"6,461.00",0.00
+11/17/2022,Invoice,S066,Siemens Industry:Pace K-8,,,12/17/2022,"2,500.00",0.00
+11/17/2022,Invoice,S067,Siemens Industry:NAS Sally repairs,,,12/17/2022,500.00,0.00
+11/17/2022,Invoice,S068,Siemens Industry:UWF Bldg 58,,,12/17/2022,"6,000.00",0.00
+11/17/2022,Invoice,S069,Siemens Industry:Hobbs Phase 2,,,12/17/2022,"3,500.00",0.00
+12/07/2022,Invoice,S065,Siemens Industry:UWF Bldg 58,,,01/06/2023,"4,000.00",0.00
+12/13/2022,Invoice,T008,Trane U.S. Inc.:Hurlburt Help,,,01/12/2023,"3,000.00",0.00
+12/13/2022,Invoice,J063,Johnson Controls:GCMC Breakfast Point,,,01/12/2023,"6,459.00",0.00
+12/13/2022,Invoice,J064,Johnson Controls:Portico,,158 unpaid in retainage 12/31/23,01/12/2023,"3,160.00",0.00
+12/13/2022,Invoice,J065,Johnson Controls:GCRMC Cardiac Services,,,01/12/2023,"5,000.00",0.00
+12/13/2022,Invoice,J066,Johnson Controls:FWB Addition,,,01/12/2023,"8,532.00",0.00
+12/13/2022,Invoice,S070,Siemens Industry:Spanish Fort Elementary,,,01/12/2023,"2,500.00",0.00
+12/13/2022,Invoice,S071,Siemens Industry:Pace K-8,,,01/12/2023,"2,000.00",0.00
+12/13/2022,Invoice,S072,Siemens Industry:NAS Sally repairs,,,01/12/2023,"1,200.00",0.00
+12/13/2022,Invoice,S073,Siemens Industry:UWF Bldg 58,,,01/12/2023,"1,950.00",0.00
+12/13/2022,Invoice,S074,Siemens Industry:Hobbs Phase 2,,,01/12/2023,"5,000.00",0.00
+12/13/2022,Invoice,T007,Trane U.S. Inc.:Eglin Cyberspace,,,01/12/2023,"26,700.00",0.00
+01/01/2023,Invoice,J054.1,Johnson Controls:Portico,,,01/31/2023,235.58,0.00
+01/10/2023,Invoice,S075,Siemens Industry:Spanish Fort Elementary,,,02/09/2023,"2,500.00",0.00
+01/10/2023,Invoice,S076,Siemens Industry:Pace K-8,,,02/09/2023,"3,000.00",0.00
+01/10/2023,Invoice,S077,Siemens Industry:Orange Beach Elementary,,,02/09/2023,"2,500.00",0.00
+01/10/2023,Invoice,S079,Siemens Industry:Elberta High School,,,02/09/2023,"1,200.00",0.00
+01/10/2023,Invoice,S080,Siemens Industry:UWF Bld 54,,,02/09/2023,"1,200.00",0.00
+01/10/2023,Invoice,S081,Siemens Industry:Hobbs Phase 2,,,02/09/2023,"7,000.00",0.00
+01/10/2023,Invoice,S078,Siemens Industry:NAS Package 1,,,02/09/2023,"2,000.00",0.00
+01/17/2023,Invoice,J067,Johnson Controls:Portico,,4949045 158 unpaid retainage 12/31/23,02/16/2023,"3,160.00",0.00
+01/17/2023,Invoice,J068,Johnson Controls:GCRMC Cardiac Services,,,02/16/2023,"10,333.00",0.00
+01/17/2023,Invoice,J070,Johnson Controls:MSU Ice Plant,,,02/16/2023,"1,500.00",0.00
+01/17/2023,Invoice,J071,Johnson Controls:Jackson Academy,,,02/16/2023,"1,500.00",0.00
+01/17/2023,Invoice,J072,Johnson Controls:UMC Neuro,,,02/16/2023,"1,500.00",0.00
+01/19/2023,Invoice,T009,Trane U.S. Inc.:NOMC MRI Addition,,,02/18/2023,"11,059.00",0.00
+02/14/2023,Invoice,J074,Johnson Controls:FWB Hospital,,,03/16/2023,"21,000.00",0.00
+02/14/2023,Invoice,J075,Johnson Controls:FWB AHU 34,,,03/16/2023,"9,100.00",0.00
+02/14/2023,Invoice,J076,Johnson Controls:Twin Cities Hospital,,361.60 unpaid retainage 12/31/23,03/16/2023,"3,616.00",0.00
+02/14/2023,Invoice,S083,Siemens Industry:NAS Sally repairs,,,03/16/2023,"3,000.00",0.00
+02/14/2023,Invoice,S084,Siemens Industry:UWF Bld 54,,,03/16/2023,"2,000.00",0.00
+02/14/2023,Invoice,S085,Siemens Industry:Hobbs Phase 2,,,03/16/2023,"4,500.00",0.00
+02/14/2023,Invoice,T010,Trane U.S. Inc.:Eglin Cyberspace,,,03/16/2023,"10,000.00",0.00
+02/14/2023,Invoice,T011,Trane U.S. Inc.:Navy Fed Warehouse,,,03/16/2023,"4,500.00",0.00
+02/14/2023,Invoice,T012,Trane U.S. Inc.:Emerald Coast Learning Center,,,03/16/2023,"8,900.00",0.00
+02/14/2023,Invoice,J073,Johnson Controls:GCRMC Cardiac Services,,,03/16/2023,"10,000.00",0.00
+02/21/2023,Invoice,J069,Johnson Controls:GCMC Breakfast Point,,,03/23/2023,"6,459.00",0.00
+03/11/2023,Invoice,J077,Johnson Controls:GCRMC Cardiac Services,,,04/10/2023,"10,000.00",0.00
+03/11/2023,Invoice,J078,Johnson Controls:FWB Addition,,,04/10/2023,"11,000.00",0.00
+03/11/2023,Invoice,J079,Johnson Controls:Twin Cities Hospital,,Invoice needs to be deleted,04/10/2023,"5,682.60",0.00
+03/11/2023,Invoice,S086,Siemens Industry:Spanish Fort Elementary,,,04/10/2023,"4,000.00",0.00
+03/11/2023,Invoice,S087,Siemens Industry:NAS Package 1,,,04/10/2023,"3,500.00",0.00
+03/11/2023,Invoice,S088,Siemens Industry:UWF Bld 54,,,04/10/2023,"2,000.00",0.00
+03/22/2023,Invoice,T014,Trane U.S. Inc.:Emerald Coast Learning Center,,,04/21/2023,"1,000.00",0.00
+03/23/2023,Invoice,T015,Trane U.S. Inc.:Navy Fed Warehouse,,,04/22/2023,"4,600.00",0.00
+04/13/2023,Invoice,J080,Johnson Controls:NWFSC,,252 unpaid retainage 12/31/23,05/13/2023,"2,520.00",0.00
+04/13/2023,Invoice,J081,Johnson Controls:GCRMC Cardiac Services,,,05/13/2023,"17,576.00",0.00
+04/13/2023,Invoice,J082,Johnson Controls:FWB Addition,,,05/13/2023,"5,500.00",0.00
+04/13/2023,Invoice,J083,Johnson Controls:Twin Cities Hospital,,631.40 unpaid retainage 12/31/23,05/13/2023,"6,314.00",0.00
+04/13/2023,Invoice,T016,Trane U.S. Inc.:Navy Fed Warehouse,,,05/13/2023,"4,000.00",0.00
+04/14/2023,Invoice,T017,Trane U.S. Inc.:Eglin Cyberspace,,,05/14/2023,"10,048.00",0.00
+04/20/2023,Invoice,S090,Siemens Industry:Elberta High School,,,05/20/2023,"1,200.00",0.00
+04/25/2023,Invoice,S093,Siemens Industry:UWF Bld 54,,,05/25/2023,"1,500.00",0.00
+04/25/2023,Invoice,S094,Siemens Industry:Pace K-8,,,05/25/2023,"9,000.00",0.00
+04/25/2023,Invoice,S092,Siemens Industry:NAS Package 1,,,05/25/2023,"3,200.00",0.00
+04/25/2023,Invoice,S091,Siemens Industry:Spanish Fort Elementary,,,05/25/2023,"6,500.00",0.00
+05/09/2023,Invoice,J084,Johnson Controls:Twin Cities Hospital,,921 unpaid retainage 12/31/23,06/08/2023,"9,012.00",0.00
+05/09/2023,Invoice,J085,Johnson Controls:Oriole Beach,,125 unpaid retainage 12/31/23,06/08/2023,"2,500.00",0.00
+05/09/2023,Invoice,J086,Johnson Controls:FWB Addition,,,06/08/2023,"3,618.00",0.00
+05/09/2023,Invoice,S099,Siemens Industry:Elberta High School,,,06/08/2023,"1,500.00",0.00
+05/09/2023,Invoice,S099a,Siemens Industry:Hobbs Phase 2,,,06/08/2023,"5,500.00",0.00
+05/09/2023,Invoice,S097,Siemens Industry:NAS Package 1,,,06/08/2023,"4,000.00",0.00
+05/09/2023,Invoice,S098,Siemens Industry:UWF Bld 54,,,06/08/2023,"3,500.00",0.00
+05/09/2023,Invoice,S096,Siemens Industry:Pace K-8,,,06/08/2023,"10,000.00",0.00
+05/10/2023,Invoice,S100,Siemens Industry:TAFB Clinic,,,06/09/2023,"2,767.00",0.00
+05/10/2023,Invoice,S101,Siemens Industry:TAFB Mobility Storage TRA,,Voided,06/09/2023,0.00,0.00
+05/10/2023,Invoice,S102,Siemens Industry:TAFB Mobility Storage BAU 335815,,,06/09/2023,"1,287.00",0.00
+05/10/2023,Invoice,S103,Siemens Industry:TAFB Commercial Gate,,,06/09/2023,"1,078.00",0.00
+05/10/2023,Invoice,S104,Siemens Industry:TAFB Refueler IOT,,,06/09/2023,"1,628.00",0.00
+05/10/2023,Invoice,S105,Siemens Industry:TAFB Refueler BAU,,,06/09/2023,"1,724.00",0.00
+05/10/2023,Invoice,T018,Trane U.S. Inc.:Emerald Coast Learning Center,,,06/09/2023,"2,100.00",0.00
+05/10/2023,Invoice,T019,Trane U.S. Inc.:Navy Fed Warehouse,,,06/09/2023,"2,100.00",0.00
+06/10/2023,Invoice,T021,Trane U.S. Inc.:Navy Fed Warehouse,,,07/10/2023,"6,200.00",0.00
+06/13/2023,Invoice,J089,Johnson Controls:Twin Cities Hospital,,Invoice needs to be deleted,07/13/2023,"5,684.40",0.00
+06/15/2023,Invoice,T020.,Trane U.S. Inc.:Emerald Coast Learning Center,,,07/15/2023,"1,100.00",0.00
+06/19/2023,Invoice,T031,Engineered Cooling Services:Baptist Pershing,,,07/19/2023,"10,000.00",0.00
+06/19/2023,Invoice,E0107,Engineered Cooling Services:IHMC,,,07/19/2023,"3,000.00",0.00
+06/19/2023,Invoice,E0108,Engineered Cooling Services:Pall Corp,,,07/19/2023,"12,000.00",0.00
+06/20/2023,Invoice,T020,Siemens Industry:Spanish Fort Elementary,,,07/20/2023,"4,000.00",0.00
+06/26/2023,Invoice,S107,Siemens Industry:Pace K-8,,1992.03 in Professional fees,07/26/2023,"35,000.00",0.00
+06/26/2023,Invoice,S113,Siemens Industry:TAFB Mobility Storage BAU 335815,,,07/26/2023,"3,700.00",0.00
+06/27/2023,Invoice,S114,Siemens Industry:TAFB Mobility Storage IOT 334929,,,07/27/2023,"3,500.00",0.00
+06/30/2023,Invoice,J087,Johnson Controls:Pea Ridge,,337 unpaid retainage 12/31/23,07/30/2023,"6,415.35",0.00
+06/30/2023,Invoice,J088,Johnson Controls:Santa Rosa Test Kitchen,,,07/30/2023,"1,922.40",0.00
+06/30/2023,Invoice,J090,Johnson Controls:Oriole Beach,,,07/30/2023,"3,749.65",0.00
+06/30/2023,Invoice,S117,Siemens Industry:TAFB Refueler IOT,,,07/30/2023,"1,800.00",0.00
+07/03/2023,Invoice,S116,Siemens Industry:TAFB Refueler BAU,,,08/02/2023,"2,600.00",0.00
+07/05/2023,Invoice,J093,Johnson Controls:Santa Rosa Test Kitchen,,"250 unpaid retainage 12/31/23 Customer shows paid, I do not",08/04/2023,"5,000.00",0.00
+07/05/2023,Invoice,J094,Johnson Controls:Pea Ridge,,,08/04/2023,"11,000.00",0.00
+07/14/2023,Invoice,E0100,Engineered Cooling Services:Crestview Medical,,,08/13/2023,"48,762.00",0.00
+07/14/2023,Invoice,S118,Siemens Industry:TAFB Commercial Gate,,,08/13/2023,"5,000.00",0.00
+07/14/2023,Invoice,S119,Siemens Industry:TAFB Clinic,,,08/13/2023,"15,000.00",0.00
+07/14/2023,Invoice,S120,Siemens Industry:TAFB Mobility Storage IOT 334929,,,08/13/2023,"8,000.00",0.00
+07/14/2023,Invoice,S121,Siemens Industry:TAFB Refueler BAU,,,08/13/2023,"5,000.00",0.00
+07/14/2023,Invoice,S122,Siemens Industry:TAFB Refueler IOT,,,08/13/2023,"5,000.00",0.00
+07/15/2023,Invoice,S123,Siemens Industry:Hobbs Phase 2,,,08/14/2023,"5,401.00",0.00
+07/15/2023,Invoice,S124,Siemens Industry:NAS Package 1,,,08/14/2023,"4,000.00",0.00
+07/15/2023,Invoice,S125,Siemens Industry:Orange Beach Elementary,,,08/14/2023,"1,500.00",0.00
+07/15/2023,Invoice,S126,Siemens Industry:Pace K-8,,,08/14/2023,"25,000.00",0.00
+07/15/2023,Invoice,S127,Siemens Industry:Spanish Fort Elementary,,,08/14/2023,"21,000.00",0.00
+07/15/2023,Invoice,S128,Siemens Industry:UWF Bld 54,,,08/14/2023,"5,500.00",0.00
+07/15/2023,Invoice,S129,Siemens Industry:NAS Hurricane Sally 3828,,,08/14/2023,"1,769.00",0.00
+07/15/2023,Invoice,S131,Siemens Industry:NAS Bld 607,,,08/14/2023,"2,000.00",0.00
+07/17/2023,Invoice,S130,Siemens Industry:TAFB Mobility Storage BAU 335815,,,08/16/2023,"8,000.00",0.00
+07/19/2023,Invoice,T023,Trane U.S. Inc.:Freeport Middle School,,,08/18/2023,"16,500.00",0.00
+07/19/2023,Invoice,T022,Trane U.S. Inc.:Emerald Coast Learning Center,,,08/18/2023,"8,000.00",0.00
+07/19/2023,Invoice,T021a,Trane U.S. Inc.:Navy Fed Warehouse,,,08/18/2023,"5,600.00",0.00
+07/19/2023,Invoice,T022a,Trane U.S. Inc.:Emerald Coast Learning Center,,,08/18/2023,"3,500.00",0.00
+07/28/2023,Invoice,J091,Johnson Controls:NWFSC,,,08/27/2023,"7,200.00",0.00
+07/28/2023,Invoice,S050.,Siemens Industry:UWF Bld 18,,,08/27/2023,"4,500.00",0.00
+08/09/2023,Invoice,S132,Siemens Industry:TAFB Refueler BAU,,,09/08/2023,"7,500.00",0.00
+08/09/2023,Invoice,E0102,Engineered Cooling Services:Baptist Pershing,,,09/08/2023,"5,000.00",0.00
+08/09/2023,Invoice,S133,Siemens Industry:TAFB Clinic,,,09/08/2023,"12,000.00",0.00
+08/09/2023,Invoice,S134,Siemens Industry:TAFB Refueler IOT,,,09/08/2023,"5,000.00",0.00
+08/09/2023,Invoice,J095,Johnson Controls:NWFSC,,,09/08/2023,"9,787.00",0.00
+08/09/2023,Invoice,S135,Siemens Industry:TAFB Commercial Gate,,,09/08/2023,"5,000.00",0.00
+08/09/2023,Invoice,S136,Siemens Industry:TAFB Mobility Storage IOT 334929,,,09/08/2023,"8,000.00",0.00
+08/09/2023,Invoice,S137,Siemens Industry:TAFB Mobility Storage BAU 335815,,,09/08/2023,"8,000.00",0.00
+08/09/2023,Invoice,T024,Trane U.S. Inc.:Navy Fed Warehouse,,,09/08/2023,"6,900.00",0.00
+08/09/2023,Invoice,T026,Trane U.S. Inc.:Emerald Coast Learning Center,,,09/08/2023,"1,600.00",0.00
+08/09/2023,Invoice,S138,Siemens Industry:Pace K-8,,,09/08/2023,"18,000.00",0.00
+08/09/2023,Invoice,S139,Siemens Industry:Spanish Fort Elementary,,,09/08/2023,"15,000.00",0.00
+08/09/2023,Invoice,S141,Siemens Industry:UWF Bld 54,,,09/08/2023,"6,000.00",0.00
+08/09/2023,Invoice,S142,Siemens Industry:NAS Bld 607,,,09/08/2023,"2,000.00",0.00
+08/09/2023,Invoice,S143,Siemens Industry:NAS Package 6 B3581,,,09/08/2023,"2,000.00",0.00
+08/10/2023,Invoice,J098,Johnson Controls:Twin Cities Hospital,,,09/09/2023,"8,000.00",0.00
+08/10/2023,Invoice,J097,Johnson Controls:Oriole Beach,,125 unpaid retainage 12/31/23,09/09/2023,"2,500.00",0.00
+08/10/2023,Invoice,J096,Johnson Controls:Santa Rosa Test Kitchen,,5001592 206.80 unpaid retainage 12/31/23,09/09/2023,"4,136.00",0.00
+08/24/2023,Invoice,T027,Trane U.S. Inc.:Eglin Munitions,,,09/23/2023,"10,000.00",0.00
+08/28/2023,Invoice,S115,Siemens Industry:TAFB Commercial Gate,,,09/27/2023,"8,000.00",0.00
+09/11/2023,Invoice,J100,Johnson Controls:Twin Cities Hospital,,,10/11/2023,"10,000.00",0.00
+09/12/2023,Invoice,S140,Siemens Industry:NAS Package 1,,,10/12/2023,"7,000.00",0.00
+09/12/2023,Invoice,E0103,Engineered Cooling Services:Crestview Medical,,,10/12/2023,"5,427.00",0.00
+09/12/2023,Invoice,E0104,Engineered Cooling Services:Pall Corp,,,10/12/2023,"8,000.00",0.00
+09/12/2023,Invoice,E0105,Engineered Cooling Services:Baptist Pershing,,,10/12/2023,"10,000.00",0.00
+09/12/2023,Invoice,E0106,Engineered Cooling Services:IHMC,,,10/12/2023,"5,000.00",0.00
+09/12/2023,Invoice,J099,Johnson Controls:Twin Cities Hospital,,5014210 800 unpaid retainage 12/31/23,10/12/2023,"8,000.00",0.00
+09/14/2023,Invoice,S144,Siemens Industry:Pace K-8,,,10/14/2023,"8,000.00",0.00
+09/14/2023,Invoice,S145,Siemens Industry:Spanish Fort Elementary,,,10/14/2023,"12,000.00",0.00
+09/14/2023,Invoice,S146,Siemens Industry:NAS Package 6 B3581,,Voided,10/14/2023,0.00,0.00
+09/14/2023,Invoice,S147,Siemens Industry:Eglin B8840,,,10/14/2023,"3,000.00",0.00
+09/14/2023,Invoice,T028,Trane U.S. Inc.:Eglin Munitions,,,10/14/2023,"10,000.00",0.00
+09/14/2023,Invoice,S148,Siemens Industry:TAFB Clinic,,,10/14/2023,"10,000.00",0.00
+09/14/2023,Invoice,S149,Siemens Industry:TAFB Refueler BAU,,,10/14/2023,"10,000.00",0.00
+09/14/2023,Invoice,S150,Siemens Industry:TAFB Refueler IOT,,,10/14/2023,"7,500.00",0.00
+09/14/2023,Invoice,S151,Siemens Industry:TAFB Commercial Gate,,,10/14/2023,"2,500.00",0.00
+09/14/2023,Invoice,S152,Siemens Industry:TAFB Mobility Storage IOT 334929,,,10/14/2023,"3,500.00",0.00
+10/09/2023,Invoice,P0101,Path Controls:MAAS Paint Booth,,,11/08/2023,"9,000.00",0.00
+10/12/2023,Invoice,J102,Johnson Controls:Twin Cities Hospital,,5014210 800 unpaid retainage 12/31/23,11/11/2023,"8,000.00",0.00
+10/12/2023,Invoice,J101,Johnson Controls:NWFSC,,5022186 1000 unpaid retainage 12/31/23,11/11/2023,"10,000.00",0.00
+10/12/2023,Invoice,T025,Trane U.S. Inc.:Freeport Middle School,,,11/11/2023,"18,000.00",0.00
+10/12/2023,Invoice,T030,Trane U.S. Inc.:Beulah Fire Station,,,11/11/2023,"8,000.00",0.00
+10/12/2023,Invoice,S155,Siemens Industry:NAS Package 6 B3581,,,11/11/2023,"2,500.00",0.00
+10/12/2023,Invoice,S157,Siemens Industry:Pace K-8,,,11/11/2023,"13,000.00",0.00
+10/12/2023,Invoice,S158,Siemens Industry:Spanish Fort Elementary,,,11/11/2023,"15,307.00",0.00
+10/12/2023,Invoice,S159,Siemens Industry:UWF Bld 54,,,11/11/2023,"5,000.00",0.00
+10/12/2023,Invoice,S160,Siemens Industry:TAFB Clinic,,,11/11/2023,"18,000.00",0.00
+10/12/2023,Invoice,S161,Siemens Industry:TAFB Refueler BAU,,,11/11/2023,"15,000.00",0.00
+10/12/2023,Invoice,S162,Siemens Industry:TAFB Refueler IOT,,Voided,11/11/2023,0.00,0.00
+10/12/2023,Invoice,S163,Siemens Industry:TAFB Commercial Gate,,,11/11/2023,"3,000.00",0.00
+10/13/2023,Invoice,T029,Trane U.S. Inc.:Emerald Coast Learning Center,,,11/12/2023,"2,151.00",0.00
+10/13/2023,Invoice,T034,Trane U.S. Inc.:Navy Fed Warehouse,,,11/12/2023,"3,251.00",0.00
+11/09/2023,Invoice,E0109,Engineered Cooling Services:Careertech,,,12/09/2023,"5,500.00",0.00
+11/09/2023,Invoice,E0110,Engineered Cooling Services:Pall Corp,,,12/09/2023,"4,500.00",0.00
+11/09/2023,Invoice,P0102,Path Controls:MAAS Paint Booth,,,12/09/2023,"36,000.00",0.00
+11/10/2023,Invoice,J103,Johnson Controls:NWFSC,,5022186 2500 retainage unpaid,12/10/2023,"25,000.00",0.00
+11/10/2023,Invoice,J104,Johnson Controls:Twin Cities Hospital,,4869874,12/10/2023,"3,550.00",0.00
+11/10/2023,Invoice,T035,Trane U.S. Inc.:Freeport Middle School,,,12/10/2023,"4,500.00",0.00
+11/10/2023,Invoice,S164,Siemens Industry:TAFB Clinic,,,12/10/2023,"29,000.00",0.00
+11/10/2023,Invoice,S165,Siemens Industry:TAFB Refueler BAU,,,12/10/2023,"8,000.00",0.00
+11/10/2023,Invoice,S168,Siemens Industry:TAFB Commercial Gate,,,12/10/2023,"1,500.00",0.00
+11/10/2023,Invoice,S166,Siemens Industry:TAFB Refueler IOT,,,12/10/2023,"8,000.00",0.00
+11/20/2023,Invoice,T032,Trane U.S. Inc.:Eglin Munitions,,,12/20/2023,"10,000.00",0.00
+11/27/2023,Invoice,S170,Siemens Industry:TAFB Marina BAU 353283,,"This has been paid in full. It was coded to Siemens Industry, rather than the Marina BAU job.",12/27/2023,"6,700.00",0.00
+11/27/2023,Invoice,S169,Siemens Industry,,,12/27/2023,"11,000.00",0.00
+12/04/2023,Invoice,S171,Siemens Industry,,130.90 to be written off in fees,01/03/2024,"4,500.00",0.00
+12/04/2023,Invoice,S174,Siemens Industry,,,01/03/2024,"2,000.00",0.00
+12/19/2023,Invoice,P0103,Path Controls:MAAS Paint Booth,,,01/18/2024,"54,000.00",0.00
+12/19/2023,Invoice,S176,Siemens Industry:TAFB Mobility Storage BAU 335815,,,01/18/2024,"7,500.00",0.00
+12/19/2023,Invoice,S177,Siemens Industry:TAFB Mobility Storage IOT 334929,,,01/18/2024,"5,750.00",0.00
+12/19/2023,Invoice,S178,Siemens Industry:TAFB Commercial Gate,,,01/18/2024,"2,000.00",0.00
+12/19/2023,Invoice,S179,Siemens Industry:TAFB Clinic,,,01/18/2024,"3,000.00",0.00
+12/19/2023,Invoice,S180,Siemens Industry:TAFB Refueler BAU,,,01/18/2024,"7,000.00",0.00
+12/19/2023,Invoice,S181,Siemens Industry:TAFB Refueler IOT,,,01/18/2024,"7,000.00",0.00
+12/19/2023,Invoice,S182,Siemens Industry:TAFB Z8 Small Arms BAU 340113,,,01/18/2024,"7,750.00",0.00
+12/19/2023,Invoice,S183,Siemens Industry:TAFB Z8 Small Arms IOT 340592,,,01/18/2024,"5,000.00",0.00
+12/19/2023,Invoice,S184,Siemens Industry:TAFB Marina IOT 353312,,,01/18/2024,"5,500.00",0.00
+12/19/2023,Invoice,S185,Siemens Industry:TAFB WEG FIRE 339113,,,01/18/2024,"10,000.00",0.00
+12/19/2023,Invoice,S186,Siemens Industry:TAFB WEG BAU 337878,,,01/18/2024,"10,000.00",0.00
+12/21/2023,Invoice,J105,Johnson Controls:NWFSC,,,01/20/2024,"5,514.00",0.00
+12/21/2023,Invoice,S190,Siemens Industry:NAS Package 6 B3581,,,01/20/2024,"2,500.00",0.00
+12/21/2023,Invoice,S191,Siemens Industry:Eglin B8840,,,01/20/2024,"3,500.00",0.00
+01/01/2024,Invoice,S060,Siemens Industry:Orange Beach Elementary,,,01/31/2024,"2,000.00",0.00
+01/01/2024,Invoice,S082,Siemens Industry:Orange Beach Elementary,,,01/31/2024,"5,500.00",0.00
+01/01/2024,Invoice,S089,Siemens Industry:Orange Beach Elementary,,,01/31/2024,"15,000.00",0.00
+01/08/2024,Invoice,S187a,Siemens Industry:Spanish Fort Elementary,,,02/07/2024,"30,000.00",0.00
+01/15/2024,Invoice,P0104,Path Controls:MAAS Paint Booth,,,02/14/2024,"72,000.00",0.00
+01/15/2024,Invoice,E0111,Engineered Cooling Services:IHMC,,,02/14/2024,"9,000.00",0.00
+01/15/2024,Invoice,S192,Siemens Industry:Pace K-8,,,02/14/2024,"7,500.00",0.00
+01/15/2024,Invoice,S193,Siemens Industry:Eglin B8840,,,02/14/2024,"5,000.00",0.00
+01/15/2024,Invoice,S194,Siemens Industry:Spanish Fort Elementary,,,02/14/2024,"3,500.00",0.00
+01/15/2024,Invoice,S196,Siemens Industry:Orange Beach Elementary,,,02/14/2024,"2,457.00",0.00
+01/15/2024,Invoice,S198,Siemens Industry:TAFB WEG FIRE 339113,,,02/14/2024,"30,000.00",0.00
+01/15/2024,Invoice,S199,Siemens Industry:TAFB Marina Fire 353397,,,02/14/2024,"7,000.00",0.00
+01/15/2024,Invoice,S200,Siemens Industry:TAFB Mobility Storage BAU 335815,,,02/14/2024,"3,500.00",0.00
+01/15/2024,Invoice,S201.,Siemens Industry:TAFB Clinic,,,02/14/2024,"3,000.00",0.00
+01/24/2024,Invoice,J106,Johnson Controls:Chart Industries,,,02/23/2024,"8,000.00",0.00
+01/29/2024,Invoice,S203a,Siemens Industry:TAFB WEG FIRE 339113,,,02/28/2024,"10,000.00",0.00
+02/09/2024,Invoice,E0112,Engineered Cooling Services:Baptist Pershing,,,03/10/2024,"10,000.00",0.00
+02/09/2024,Invoice,E0113,Engineered Cooling Services:Pall Corp,,,03/10/2024,"7,500.00",0.00
+02/09/2024,Invoice,E0114,Engineered Cooling Services:IHMC,,,03/10/2024,"6,000.00",0.00
+02/09/2024,Invoice,S214,Siemens Industry:Spanish Fort Elementary,,,03/10/2024,"4,000.00",0.00
+02/12/2024,Invoice,S216.,Siemens Industry:TAFB Marina BAU 353283,,,03/13/2024,"10,000.00",0.00
+02/12/2024,Invoice,S217.,Siemens Industry:TAFB Marina Fire 353397,,,03/13/2024,"28,000.00",0.00
+02/12/2024,Invoice,S218.,Siemens Industry:TAFB WEG IOT 337876,,,03/13/2024,"10,000.00",0.00
+02/12/2024,Invoice,S219.,Siemens Industry:TAFB Z8 Small Arms IOT 340592,,,03/13/2024,"7,500.00",0.00
+02/12/2024,Invoice,S220.,Siemens Industry:TAFB Marina IOT 353312,,,03/13/2024,"5,500.00",0.00
+02/12/2024,Invoice,S221.,Siemens Industry:TAFB Z8 Small Arms BAU 340113,,,03/13/2024,"5,000.00",0.00
+02/12/2024,Invoice,S222.,Siemens Industry:TAFB Airey Gate BAU 351377,,,03/13/2024,"2,000.00",0.00
+02/13/2024,Invoice,T036,Trane U.S. Inc.:Beulah Fire Station,,,03/14/2024,"4,500.00",0.00
+02/13/2024,Invoice,T038,Trane U.S. Inc.:Freeport Middle School,,,03/14/2024,"7,500.00",0.00
+02/26/2024,Invoice,T033,Trane U.S. Inc.:Eglin Munitions,,,03/27/2024,"11,463.00",0.00
+02/27/2024,Invoice,S224.,Siemens Industry:TAFB WEG FIRE 339113,,,03/28/2024,"10,000.00",0.00
+02/27/2024,Invoice,S225.,Siemens Industry:TAFB WEG GS 364281,,,03/28/2024,"10,000.00",0.00
+02/29/2024,Invoice,S223.,Siemens Industry:TAFB Mobility Storage Fire 339493,,,03/30/2024,"1,500.00",0.00
+03/13/2024,Invoice,S246.,Siemens Industry:NAS Hurricane Sally 3828,,,04/12/2024,"3,320.00",0.00
+03/13/2024,Invoice,S230,Siemens Industry:TAFB Marina IOT 353312,,,04/12/2024,"28,000.00",0.00
+03/13/2024,Invoice,S231.,Siemens Industry:TAFB WEG FIRE 339113,,,04/12/2024,"14,500.00",0.00
+03/13/2024,Invoice,S232.,Siemens Industry:TAFB Marina Fire 353397,,,04/12/2024,"10,500.00",0.00
+03/13/2024,Invoice,S233.,Siemens Industry:TAFB WEG BAU 337878,,,04/12/2024,"10,000.00",0.00
+03/13/2024,Invoice,S234.,Siemens Industry:TAFB WEG IOT 337876,,,04/12/2024,"5,000.00",0.00
+03/13/2024,Invoice,S235.,Siemens Industry:TAFB Refueler BAU,,,04/12/2024,"1,600.00",0.00
+03/13/2024,Invoice,S236.,Siemens Industry:TAFB Airey Gate BAU 351377,,,04/12/2024,"3,500.00",0.00
+03/13/2024,Invoice,S238.,Siemens Industry:TAFB Refueler IOT,,,04/12/2024,"1,804.00",0.00
+03/13/2024,Invoice,S239.,Siemens Industry:TAFB Z8 Small Arms IOT 340592,,,04/12/2024,"17,000.00",0.00
+03/13/2024,Invoice,S240.,Siemens Industry:TAFB FMS Facilities Fire 342054,,,04/12/2024,"8,000.00",0.00
+03/13/2024,Invoice,S241.,Siemens Industry:TAFB Fire Truck Fire 347056,,,04/12/2024,"10,500.00",0.00
+03/13/2024,Invoice,S242.,Siemens Industry:TAFB Z8 Small Arms BAU 340113,,,04/12/2024,"22,500.00",0.00
+03/13/2024,Invoice,E0115,Engineered Cooling Services:IHMC,,,04/12/2024,"23,000.00",0.00
+03/13/2024,Invoice,E0116,Engineered Cooling Services:Pall Corp,,,04/12/2024,"21,589.00",0.00
+03/13/2024,Invoice,E0117,Engineered Cooling Services:Baptist Pershing,,,04/12/2024,"3,320.00",0.00
+03/13/2024,Invoice,S243.,Siemens Industry:TAFB Mobility Storage BAU 335815,,,04/12/2024,"1,484.00",0.00
+03/13/2024,Invoice,S244.,Siemens Industry:TAFB Mobility Storage Fire 339493,,,04/12/2024,"4,341.00",0.00
+03/13/2024,Invoice,S245.,Siemens Industry:Spanish Fort Elementary,,,04/12/2024,"4,000.00",0.00
+03/13/2024,Invoice,S247.,Siemens Industry:NAS Package 6 B3581,,,04/12/2024,844.00,0.00
+03/13/2024,Invoice,S248.,Siemens Industry:Pace K-8,,,04/12/2024,"4,000.00",0.00
+03/13/2024,Invoice,J108,Johnson Controls:Chart Industries,,,04/12/2024,"2,791.00",0.00
+03/13/2024,Invoice,T039,Trane U.S. Inc.:Freeport Middle School,,,04/12/2024,"5,000.00",0.00
+03/15/2024,Invoice,S249.,Siemens Industry:TAFB Small Arms Fire 338549,,,04/14/2024,"35,000.00",0.00
+03/15/2024,Invoice,S250.,Siemens Industry:TAFB Chapel IOT 355486,,,04/14/2024,"2,500.00",0.00
+03/15/2024,Invoice,S251.,Siemens Industry:TAFB WEG GS 364281,,,04/14/2024,"2,500.00",0.00
+03/15/2024,Invoice,S252.,Siemens Industry:TAFB Bowling Rec Center Fire 355479,,,04/14/2024,"2,500.00",0.00
+03/15/2024,Invoice,S253.,Siemens Industry:TAFB Rec Center BAU 355483,,,04/14/2024,"2,500.00",0.00
+03/15/2024,Invoice,S254.,Siemens Industry:TAFB Chapel Fire 355488,,,04/14/2024,"2,500.00",0.00
+03/15/2024,Invoice,S255.,Siemens Industry:TAFB Clinic,,,04/14/2024,"2,218.00",0.00
+03/15/2024,Invoice,S257,Siemens Industry:TAFB Pumphouse BAU 351459,,,04/14/2024,"2,500.00",0.00
+03/15/2024,Invoice,S258,Siemens Industry:TAFB Concessions BAU 351461,,,04/14/2024,"2,500.00",0.00
+03/15/2024,Invoice,S259,Siemens Industry:TAFB Bathhouse BAU 353220,,,04/14/2024,"2,500.00",0.00
+03/15/2024,Invoice,S261,Siemens Industry:TAFB Airey Gate IOT 350991,,,04/14/2024,"2,500.00",0.00
+03/15/2024,Invoice,S262,Siemens Industry:TAFB Marina BAU 353283,,,04/14/2024,"4,500.00",0.00
+03/15/2024,Invoice,T041,Trane U.S. Inc.:Beulah Fire Station,,,04/14/2024,"4,000.00",0.00
+03/15/2024,Invoice,S264,Siemens Industry:TAFB Airey Gate SES 351960,,,04/14/2024,"2,500.00",0.00
+03/18/2024,Invoice,S265,Siemens Industry:TAFB Chapel GS 355490,,,04/17/2024,"2,500.00",0.00
+03/18/2024,Invoice,S266,Siemens Industry:TAFB Rec Center IOT 355569,,,04/17/2024,"2,500.00",0.00
+03/18/2024,Invoice,S256.,Siemens Industry:TAFB Mobility Storage IOT 334929,,,04/17/2024,"6,500.00",0.00
+03/18/2024,Invoice,S268,Siemens Industry:TAFB Bowling Rec Center GS 355492,,,04/17/2024,"2,500.00",0.00
+04/09/2024,Invoice,E0118,Engineered Cooling Services:Careertech,,,05/09/2024,"38,500.00",0.00
+04/09/2024,Invoice,S267,Siemens Industry:Eglin B8840,,,05/09/2024,"4,000.00",0.00
+04/09/2024,Invoice,E119,Engineered Cooling Services:Silverhill Elementary,,,05/09/2024,"12,500.00",0.00
+04/09/2024,Invoice,S273,Siemens Industry:TAFB Marina BAU 353283,,,05/09/2024,"22,000.00",0.00
+04/09/2024,Invoice,S274,Siemens Industry:TAFB Marina IOT 353312,,,05/09/2024,"16,500.00",0.00
+04/09/2024,Invoice,S275,Siemens Industry:TAFB Marina Fire 353397,,,05/09/2024,"3,500.00",0.00
+04/09/2024,Invoice,S276,Siemens Industry:TAFB WEG BAU 337878,,,05/09/2024,"15,000.00",0.00
+04/09/2024,Invoice,S277,Siemens Industry:TAFB WEG IOT 337876,,,05/09/2024,"4,000.00",0.00
+04/09/2024,Invoice,S278,Siemens Industry:TAFB WEG FIRE 339113,,,05/09/2024,"23,000.00",0.00
+04/09/2024,Invoice,S279,Siemens Industry:TAFB FMS Facilities Fire 342054,,,05/09/2024,"5,500.00",0.00
+04/17/2024,Invoice,E0119,Engineered Cooling Services:IHMC,,,05/17/2024,"2,813.00",0.00
+04/17/2024,Invoice,S269,Siemens Industry:Pace K-8,,,05/17/2024,"1,000.00",0.00
+04/18/2024,Invoice,J109,Johnson Controls:GCRMC Chiller 3,,,05/18/2024,"10,000.00",0.00
+04/23/2024,Invoice,S283,Siemens Industry:TAFB Bowling BAU 355570,,,05/23/2024,"5,000.00",0.00
+04/23/2024,Invoice,S280,Siemens Industry:TAFB Bowling IOT 355493,,,05/23/2024,"2,500.00",0.00
+04/23/2024,Invoice,S281,Siemens Industry:TAFB Rec Center BAU 355483,,,05/23/2024,"2,500.00",0.00
+04/23/2024,Invoice,S282,Siemens Industry:TAFB Rec Center IOT 355569,,,05/23/2024,"2,500.00",0.00
+04/26/2024,Invoice,S284,Siemens Industry:TAFB WEG HQ BAU 349067,,,05/26/2024,"5,000.00",0.00
+04/26/2024,Invoice,S285,Siemens Industry:TAFB WEG HQ IOT 348868,,,05/26/2024,"5,000.00",0.00
+04/30/2024,Invoice,E120,Engineered Cooling Services:Careertech,,,05/30/2024,"38,500.00",0.00
+05/17/2024,Invoice,S285a,Siemens Industry:TAFB Marina IOT 353312,,,06/16/2024,"27,500.00",0.00
+05/17/2024,Invoice,S288,Siemens Industry:TAFB WEG BAU 337878,,,06/16/2024,"10,000.00",0.00
+05/17/2024,Invoice,S289,Siemens Industry:TAFB WEG IOT 337876,,,06/16/2024,"8,000.00",0.00
+05/17/2024,Invoice,S290,Siemens Industry:TAFB Z8 Small Arms BAU 340113,,,06/16/2024,"9,000.00",0.00
+05/17/2024,Invoice,S291,Siemens Industry:TAFB Airey Gate BAU 351377,,,06/16/2024,"1,500.00",0.00
+05/17/2024,Invoice,S292,Siemens Industry:TAFB Marina BAU 353283,,,06/16/2024,"17,500.00",0.00
+05/17/2024,Invoice,S293,Siemens Industry:TAFB Z8 Small Arms IOT 340592,,,06/16/2024,"13,000.00",0.00
+05/17/2024,Invoice,S294,Siemens Industry:TAFB Pumphouse BAU 351459,,,06/16/2024,"1,500.00",0.00
+05/17/2024,Invoice,S295,Siemens Industry:TAFB Concessions BAU 351461,,,06/16/2024,"1,500.00",0.00
+05/17/2024,Invoice,S296,Siemens Industry:TAFB Bathhouse BAU 353220,,,06/16/2024,"1,500.00",0.00
+05/17/2024,Invoice,S297,Siemens Industry:TAFB Marina GS SES 353402,,,06/16/2024,"4,000.00",0.00
+05/17/2024,Invoice,S299,Siemens Industry:TAFB Chapel BAU 355480,,,06/16/2024,"2,500.00",0.00
+05/17/2024,Invoice,S300,Siemens Industry:TAFB Chapel IOT 355486,,,06/16/2024,"2,500.00",0.00
+05/17/2024,Invoice,S302,Siemens Industry:TAFB Chapel GS 355490,,,06/16/2024,"2,500.00",0.00
+05/17/2024,Invoice,S303,Siemens Industry:TAFB Bowling BAU 355570,,,06/16/2024,"9,500.00",0.00
+05/17/2024,Invoice,S304,Siemens Industry:TAFB Rec Center BAU 355483,,,06/16/2024,"14,000.00",0.00
+05/17/2024,Invoice,S305,Siemens Industry:TAFB Bowling IOT 355493,,,06/16/2024,"2,500.00",0.00
+05/18/2024,Invoice,S286,Siemens Industry:TAFB WEG FIRE 339113,,,06/17/2024,"26,000.00",0.00
+05/18/2024,Invoice,S287,Siemens Industry:TAFB Marina Fire 353397,,,06/17/2024,"10,500.00",0.00
+05/18/2024,Invoice,S298,Siemens Industry:TAFB FMS Facilities Fire 342054,,,06/17/2024,"5,000.00",0.00
+05/18/2024,Invoice,S301,Siemens Industry:TAFB Chapel Fire 355488,,,06/17/2024,"4,000.00",0.00
+05/18/2024,Invoice,T048,Trane U.S. Inc.:Freeport Middle School,,,06/17/2024,"4,500.00",0.00
+05/20/2024,Invoice,T049,Engineered Cooling Services:Careertech,,,06/19/2024,"11,000.00",0.00
+05/20/2024,Invoice,T050,Path Controls:MAAS Paint Booth,,,06/19/2024,"8,827.00",0.00
+05/20/2024,Invoice,T051,Engineered Cooling Services:Silverhill Elementary,,,06/19/2024,"12,500.00",0.00
+05/20/2024,Invoice,T052,Engineered Cooling Services:GE Vernova,,,06/19/2024,"13,000.00",0.00
+05/20/2024,Invoice,T054,Trane U.S. Inc.:Allied Health,,,06/19/2024,"25,000.00",0.00
+05/20/2024,Invoice,S306,Siemens Industry:TAFB Bowling Rec Center Fire 355479,,,06/19/2024,"28,000.00",0.00
+05/20/2024,Invoice,S307,Siemens Industry:Eglin B8840,,,06/19/2024,"4,000.00",0.00
+05/20/2024,Invoice,S306b,Siemens Industry:NAS Bld 603,,,06/19/2024,"4,500.00",0.00
+05/23/2024,Invoice,J111,Johnson Controls:GCRMC AHU 30,,,06/22/2024,"5,585.00",0.00
+05/23/2024,Invoice,J110,Johnson Controls:GCRMC Chiller 3,,,06/22/2024,"14,397.00",0.00
+05/28/2024,Invoice,S305b,Siemens Industry:Pace K-8,,,06/27/2024,"4,100.00",0.00
+06/11/2024,Invoice,E121,Engineered Cooling Services:Silverhill Elementary,,,07/11/2024,"7,500.00",0.00
+06/11/2024,Invoice,T053,Trane U.S. Inc.:Allied Health,,,07/11/2024,"6,000.00",0.00
+06/11/2024,Invoice,E122,Engineered Cooling Services:GE Vernova,,,07/11/2024,"6,500.00",0.00
+06/11/2024,Invoice,S309,Siemens Industry:NAS Bld 603,,,07/11/2024,"6,000.00",0.00
+06/11/2024,Invoice,C0101,CCI Mechanical:Eglin C-6,,,07/11/2024,"35,649.00",0.00
+06/11/2024,Invoice,S308,Siemens Industry:UWF Bld 54,,,07/11/2024,"6,326.00",0.00
+06/11/2024,Invoice,S310,Siemens Industry:TAFB Marina IOT 353312,,,07/11/2024,"18,000.00",0.00
+06/11/2024,Invoice,S311,Siemens Industry:TAFB Marina Fire 353397,,,07/11/2024,"4,000.00",0.00
+06/11/2024,Invoice,S312,Siemens Industry:TAFB WEG IOT 337876,,,07/11/2024,"1,800.00",0.00
+06/11/2024,Invoice,S313,Siemens Industry:TAFB Z8 Small Arms IOT 340592,,,07/11/2024,"4,500.00",0.00
+06/11/2024,Invoice,S315,Siemens Industry:TAFB Marina BAU 353283,,,07/11/2024,"2,500.00",0.00
+06/11/2024,Invoice,S318,Siemens Industry:TAFB Chapel BAU 355480,,,07/11/2024,"6,500.00",0.00
+06/11/2024,Invoice,S319,Siemens Industry:TAFB Chapel Fire 355488,,,07/11/2024,"1,500.00",0.00
+06/11/2024,Invoice,S320,Siemens Industry:TAFB Bowling BAU 355570,,,07/11/2024,"9,500.00",0.00
+06/11/2024,Invoice,S321,Siemens Industry:TAFB WEG HQ BAU 349067,,,07/11/2024,"15,000.00",0.00
+06/11/2024,Invoice,S322,Siemens Industry:TAFB Bowling Rec Center Fire 355479,,,07/11/2024,"15,000.00",0.00
+06/11/2024,Invoice,S323,Siemens Industry:TAFB Rec Center BAU 355483,,,07/11/2024,"13,000.00",0.00
+06/11/2024,Invoice,S324,Siemens Industry:TAFB WEG HQ IOT 348868,,,07/11/2024,"10,000.00",0.00
+06/11/2024,Invoice,S325,Siemens Industry:TAFB WEG HQ FIRE  348872,,,07/11/2024,"15,000.00",0.00
+06/11/2024,Invoice,S326,Siemens Industry:TAFB WEG HQ SES 348875,,,07/11/2024,"5,000.00",0.00
+07/15/2024,Invoice,Retainage,Johnson Controls,,,08/14/2024,"9,560.90",0.00
+07/16/2024,Invoice,S316,Siemens Industry:TAFB Z8 Small Arms BAU 340113,,,08/15/2024,"4,500.00",0.00
+07/16/2024,Invoice,T046,Trane U.S. Inc.:Freeport Middle School,,,08/15/2024,"25,500.00",0.00
+07/16/2024,Invoice,E124,Engineered Cooling Services:Careertech,,,08/15/2024,"5,385.70",0.00
+07/16/2024,Invoice,S342,Siemens Industry:Eglin B8840,,,08/15/2024,"12,000.00",0.00
+07/16/2024,Invoice,S326.,Siemens Industry:TAFB Marina IOT 353312,,,08/15/2024,"3,500.00",0.00
+07/16/2024,Invoice,S327,Siemens Industry:TAFB Marina Fire 353397,,,08/15/2024,"4,000.00",0.00
+07/16/2024,Invoice,S328,Siemens Industry:TAFB WEG BAU 337878,,,08/15/2024,"7,000.00",0.00
+07/16/2024,Invoice,S329,Siemens Industry:TAFB WEG IOT 337876,,,08/15/2024,"18,000.00",0.00
+07/16/2024,Invoice,S331,Siemens Industry:TAFB Airey Gate BAU 351377,,,08/15/2024,"5,500.00",0.00
+07/16/2024,Invoice,S332,Siemens Industry:TAFB Marina BAU 353283,,,08/15/2024,"3,808.00",0.00
+07/16/2024,Invoice,S334,Siemens Industry:TAFB Marina GS SES 353402,,,08/15/2024,"5,000.00",0.00
+07/16/2024,Invoice,S335,Siemens Industry:TAFB FMS Facilities Fire 342054,,,08/15/2024,"2,000.00",0.00
+07/16/2024,Invoice,S336,Siemens Industry:TAFB Airey Gate IOT 350991,,,08/15/2024,"3,000.00",0.00
+07/16/2024,Invoice,S337,Siemens Industry:TAFB Chapel BAU 355480,,,08/15/2024,"5,000.00",0.00
+07/16/2024,Invoice,S338,Siemens Industry:TAFB Chapel Fire 355488,,,08/15/2024,"3,000.00",0.00
+07/16/2024,Invoice,S339,Siemens Industry:TAFB Bowling BAU 355570,,,08/15/2024,"3,200.00",0.00
+07/16/2024,Invoice,S340,Siemens Industry:TAFB Bowling Rec Center Fire 355479,,,08/15/2024,"10,000.00",0.00
+07/16/2024,Invoice,S341,Siemens Industry:TAFB Rec Center BAU 355483,,,08/15/2024,"6,500.00",0.00
+07/23/2024,Invoice,T055,Trane U.S. Inc.:Myrtle Grove Elementary,,,08/22/2024,"15,000.00",0.00
+07/25/2024,Invoice,T056,Trane U.S. Inc.:Allied Health,,,08/24/2024,"6,000.00",0.00
+07/25/2024,Invoice,T057,Trane U.S. Inc.:Workman Middle Media Center,,,08/24/2024,"6,953.00",0.00
+07/30/2024,Invoice,S343,Siemens Industry:NAS Bld 603,,,08/29/2024,"5,000.00",0.00
+07/31/2024,Invoice,E123a,Engineered Cooling Services:Soundside High School,,,08/30/2024,"8,627.00",0.00
+08/07/2024,Invoice,T059,Trane U.S. Inc.:Freeport Middle School,,,09/06/2024,"15,000.00",0.00
+08/13/2024,Invoice,E125,Engineered Cooling Services:GE Vernova,,,09/12/2024,"2,978.40",0.00
+08/13/2024,Invoice,E126,Engineered Cooling Services:Soundside High School,,,09/12/2024,"16,647.85",0.00
+08/13/2024,Invoice,E127,Engineered Cooling Services:UWF BLD 50,,,09/12/2024,"20,240.00",0.00
+08/13/2024,Invoice,E128,Engineered Cooling Services:Whiting Control Tower,,,09/12/2024,"1,819.45",0.00
+08/13/2024,Invoice,J112,Johnson Controls:USA CEP,,,09/12/2024,"2,686.60",0.00
+08/13/2024,Invoice,J113,Johnson Controls:Gulf Coast Dietary Reno,,,09/12/2024,"1,800.00",0.00
+08/14/2024,Invoice,S352,Siemens Industry:TAFB Airey Gate BAU 351377,,,09/13/2024,"5,393.25",0.00
+08/14/2024,Invoice,S354,Siemens Industry:TAFB Airey Gate SES 351960,,,09/13/2024,"4,417.90",0.00
+08/14/2024,Invoice,S355,Siemens Industry:TAFB Bowling BAU 355570,,,09/13/2024,"1,185.10",0.00
+08/14/2024,Invoice,S356,Siemens Industry:TAFB Bowling Rec Center Fire 355479,,,09/13/2024,"4,535.10",0.00
+08/14/2024,Invoice,S363,Siemens Industry:TAFB Chapel BAU 355480,,,09/13/2024,"3,000.00",0.00
+08/14/2024,Invoice,S357,Siemens Industry:TAFB Chapel Fire 355488,,,09/13/2024,"3,000.00",0.00
+08/14/2024,Invoice,S358,Siemens Industry:TAFB Concessions BAU 351461,,,09/13/2024,"1,022.85",0.00
+08/14/2024,Invoice,S350,Siemens Industry:TAFB FMS Facilities Fire 342054,,,09/13/2024,"6,000.00",0.00
+08/14/2024,Invoice,S360,Siemens Industry:TAFB Marina GS SES 353402,,,09/13/2024,789.00,0.00
+08/14/2024,Invoice,S345,Siemens Industry:TAFB Mobility Storage IOT 334929,,,09/13/2024,"1,008.00",0.00
+08/14/2024,Invoice,S361,Siemens Industry:TAFB Pumphouse BAU 351459,,,09/13/2024,"2,566.40",0.00
+08/14/2024,Invoice,S362,Siemens Industry:TAFB Rec Center BAU 355483,,,09/13/2024,"2,000.00",0.00
+08/15/2024,Invoice,T043,Trane U.S. Inc.:Beulah Fire Station,,,09/14/2024,"4,396.00",0.00
+08/15/2024,Invoice,S346,Siemens Industry:TAFB WEG BAU 337878,,,09/14/2024,"10,000.00",0.00
+08/15/2024,Invoice,S364,Siemens Industry:TAFB WEG FIRE 339113,,,09/14/2024,"21,253.00",0.00
+08/15/2024,Invoice,S365,Siemens Industry:TAFB WEG GS 364281,,,09/14/2024,"3,000.00",0.00
+08/15/2024,Invoice,S351,Siemens Industry:TAFB WEG HQ IOT 348868,,,09/14/2024,"5,000.00",0.00
+08/15/2024,Invoice,S347,Siemens Industry:TAFB WEG IOT 337876,,,09/14/2024,"5,000.00",0.00
+08/15/2024,Invoice,T062,Trane U.S. Inc.:Allied Health,,,09/14/2024,"10,000.00",0.00
+08/16/2024,Invoice,S348,Siemens Industry:TAFB Small Arms Fire 338549,,,09/15/2024,"16,687.00",0.00
+08/16/2024,Invoice,S349,Siemens Industry:TAFB Z8 Small Arms BAU 340113,,,09/15/2024,"2,989.00",0.00
+08/16/2024,Invoice,S366a,Siemens Industry:NAS Bld 603,,,09/15/2024,"3,000.00",0.00
+08/20/2024,Invoice,E123,Engineered Cooling Services:Careertech,,,09/19/2024,"10,987.30",0.00
+08/27/2024,Invoice,S345A,Siemens Industry:TAFB Airey Gate IOT 350991,,,09/26/2024,"4,983.00",0.00
+08/31/2024,Invoice,T063,Trane U.S. Inc.:Kaleo Hall,,,11/14/2024,"10,000.00",0.00
+09/03/2024,Invoice,T0124,Trane U.S. Inc.:Freeport Middle School,,,11/17/2024,"28,679.20",0.00
+09/06/2024,Invoice,S366,Siemens Industry:TAFB Bathhouse BAU 353220,,,10/06/2024,"14,600.00",0.00
+09/06/2024,Invoice,S367,Siemens Industry:TAFB Bowling IOT 355493,,,10/06/2024,"6,752.00",0.00
+09/06/2024,Invoice,S368,Siemens Industry:TAFB Bowling Rec Center Fire 355479,,,10/06/2024,"3,186.00",0.00
+09/06/2024,Invoice,S369,Siemens Industry:TAFB Chapel BAU 355480,,,10/06/2024,"1,181.00",0.00
+09/06/2024,Invoice,S370,Siemens Industry:TAFB Chapel Fire 355488,,,10/06/2024,"1,266.00",0.00
+09/06/2024,Invoice,S371,Siemens Industry:TAFB Chapel IOT 355486,,,10/06/2024,"1,300.00",0.00
+09/09/2024,Invoice,T061,Trane U.S. Inc.:Freeport Middle School,,,11/23/2024,"10,000.00",0.00
+09/09/2024,Invoice,E129,Engineered Cooling Services:GE Vernova,,,10/09/2024,"12,612.00",0.00
+09/09/2024,Invoice,E130,Engineered Cooling Services:Silverhill Elementary,,,10/09/2024,"5,153.00",0.00
+09/09/2024,Invoice,E131,Engineered Cooling Services:Soundside High School,,,10/09/2024,"8,020.00",0.00
+09/09/2024,Invoice,E132,Engineered Cooling Services:UWF BLD 50,,,10/09/2024,"25,300.00",0.00
+09/09/2024,Invoice,E133,Engineered Cooling Services:Whiting Control Tower,,,10/09/2024,"1,819.00",0.00
+09/11/2024,Invoice,J033R,Johnson Controls,,,10/11/2024,500.00,0.00
+09/11/2024,Invoice,J038R,Johnson Controls,,,10/11/2024,"1,500.00",0.00
+09/11/2024,Invoice,J040R,Johnson Controls,,,10/11/2024,250.00,0.00
+09/11/2024,Invoice,J042R,Johnson Controls,,,10/11/2024,"1,500.00",0.00
+09/11/2024,Invoice,J045R,Johnson Controls,,,10/11/2024,387.65,0.00
+09/11/2024,Invoice,J047R,Johnson Controls,,,10/11/2024,916.00,0.00
+09/11/2024,Invoice,J052R,Johnson Controls,,,10/11/2024,129.55,0.00
+09/11/2024,Invoice,J075R,Johnson Controls,,,10/11/2024,910.00,0.00
+09/11/2024,Invoice,S376,Siemens Industry:TAFB Pumphouse BAU 351459,,,10/11/2024,"3,830.00",0.00
+09/11/2024,Invoice,S375,Siemens Industry:NAS Package 1,,,10/11/2024,"1,200.00",0.00
+09/12/2024,Invoice,J027R,Johnson Controls,,,10/12/2024,"1,500.00",0.00
+09/12/2024,Invoice,S377,Siemens Industry:TAFB WEG IOT 337876,,,10/12/2024,"15,878.00",0.00
+09/12/2024,Invoice,S378,Siemens Industry:TAFB Marina IOT 353312,,,10/12/2024,"6,278.00",0.00
+09/12/2024,Invoice,S380,Siemens Industry:TAFB WEG GS 364281,,,10/12/2024,"2,122.00",0.00
+09/12/2024,Invoice,S381,Siemens Industry:TAFB FMS Facilities Fire 342054,,,10/12/2024,"3,000.00",0.00
+09/12/2024,Invoice,S379,Siemens Industry:TAFB WEG FIRE 339113,,,10/12/2024,"19,300.00",0.00
+09/13/2024,Invoice,S374,Siemens Industry:TAFB Rec Center IOT 355569,,,10/13/2024,"6,752.00",0.00
+09/15/2024,Invoice,E138,Trane U.S. Inc.:Chipola Building D,,,10/15/2024,"12,038.75",0.00
+09/20/2024,Invoice,S382,Siemens Industry:TAFB WEG HQ BAU 349067,,,10/20/2024,"15,000.00",0.00
+09/23/2024,Invoice,S383,Siemens Industry:TAFB WEG HQ IOT 348868,,,10/23/2024,"5,000.00",0.00
+09/25/2024,Invoice,T064,Trane U.S. Inc.:Freeport Middle School,,,10/25/2024,"10,000.00",0.00
+09/30/2024,Invoice,T066,Trane U.S. Inc.:Allied Health,,,10/30/2024,"7,137.80",0.00
+09/30/2024,Invoice,T067,Trane U.S. Inc.:Freeport Middle School,,,10/30/2024,"11,294.80",0.00
+09/30/2024,Invoice,T068,Trane U.S. Inc.:Kaleo Hall,,,10/30/2024,"11,117.30",0.00
+10/10/2024,Invoice,E134,Engineered Cooling Services:GE Vernova,,,11/09/2024,"6,422.40",0.00
+10/10/2024,Invoice,E135,Engineered Cooling Services:Soundside High School,,,11/09/2024,"16,649.55",0.00
+10/10/2024,Invoice,E136,Engineered Cooling Services:UWF BLD 50,,,11/09/2024,"2,530.00",0.00
+10/10/2024,Invoice,E137,Engineered Cooling Services:Silverhill Elementary,,,11/09/2024,"18,827.40",0.00
+10/15/2024,Invoice,S384,Siemens Industry:TAFB Airey Gate BAU 351377,,,11/14/2024,941.75,0.00
+10/15/2024,Invoice,S385,Siemens Industry:TAFB Airey Gate SES 351960,,,11/14/2024,364.10,0.00
+10/15/2024,Invoice,S386,Siemens Industry:TAFB Bathhouse BAU 353220,,,11/14/2024,978.00,0.00
+10/15/2024,Invoice,S387,Siemens Industry:TAFB Bowling BAU 355570,,,11/14/2024,"4,730.85",0.00
+10/15/2024,Invoice,S388,Siemens Industry:TAFB Bowling IOT 355493,,,11/14/2024,"5,876.60",0.00
+10/15/2024,Invoice,S389,Siemens Industry:TAFB Bowling Rec Center Fire 355479,,,11/14/2024,"16,825.70",0.00
+10/15/2024,Invoice,S390,Siemens Industry:TAFB Bowling Rec Center GS 355492,,,11/14/2024,"11,715.50",0.00
+10/15/2024,Invoice,S391,Siemens Industry:TAFB Chapel BAU 355480,,,11/14/2024,"9,091.10",0.00
+10/15/2024,Invoice,S392,Siemens Industry:TAFB Chapel Fire 355488,,,11/14/2024,"7,633.00",0.00
+10/15/2024,Invoice,S393,Siemens Industry:TAFB Chapel IOT 355486,,,11/14/2024,"9,074.75",0.00
+10/15/2024,Invoice,S394,Siemens Industry:TAFB Concessions BAU 351461,,,11/14/2024,841.15,0.00
+10/15/2024,Invoice,S397,Siemens Industry:TAFB Marina GS SES 353402,,,11/14/2024,"5,247.00",0.00
+10/15/2024,Invoice,S398,Siemens Industry:TAFB Pumphouse BAU 351459,,,11/14/2024,547.60,0.00
+10/15/2024,Invoice,S399,Siemens Industry:TAFB Rec Center BAU 355483,,,11/14/2024,"11,698.40",0.00
+10/15/2024,Invoice,S400,Siemens Industry:TAFB Rec Center IOT 355569,,,11/14/2024,"14,740.80",0.00
+10/15/2024,Invoice,V100,VA Jackson:Jackson Valve Replacement,,,11/14/2024,"40,000.00",0.00
+10/15/2024,Invoice,T070,Trane U.S. Inc.:Chipola Building M,,,11/14/2024,"4,400.00",0.00
+10/15/2024,Invoice,T071,Trane U.S. Inc.:Chipola Building I,,,11/14/2024,"2,600.00",0.00
+10/15/2024,Invoice,T073,Trane U.S. Inc.:Allied Health,,,11/14/2024,"12,610.00",0.00
+10/15/2024,Invoice,T074,Trane U.S. Inc.:Chipola Building O,,,11/14/2024,"2,500.00",0.00
+10/15/2024,Invoice,T075,Trane U.S. Inc.:Kaleo Hall,,,11/14/2024,"7,039.00",0.00
+10/15/2024,Invoice,T076,Trane U.S. Inc.:Myrtle Grove Elementary,,,11/14/2024,"7,383.00",0.00
+10/29/2024,Invoice,J116,Johnson Controls:Gulf Coast Dietary Reno,,,11/28/2024,"8,200.00",0.00
+10/29/2024,Invoice,K1001,Keesler AFB:Keesler Phase 2,,Voided,11/28/2024,0.00,0.00
+10/30/2024,Invoice,T072,Trane U.S. Inc.:Seacoast High School,,,11/29/2024,"9,500.00",0.00
+11/01/2024,Invoice,E138a,Engineered Cooling Services:GE Vernova,,,12/01/2024,"12,844.80",0.00
+11/01/2024,Invoice,E139a,Engineered Cooling Services:Leonardo Hangar,,,12/01/2024,"7,116.00",0.00
+11/01/2024,Invoice,E140,Engineered Cooling Services:Okaloosa Gas,,,12/01/2024,"18,931.30",0.00
+11/01/2024,Invoice,E141,Engineered Cooling Services:Silverhill Elementary,,,12/01/2024,"31,378.00",0.00
+11/01/2024,Invoice,E142,Engineered Cooling Services:Soundside High School,,,12/01/2024,"16,647.00",0.00
+11/01/2024,Invoice,E143,Engineered Cooling Services:UWF BLD 50,,,12/01/2024,"22,770.00",0.00
+11/05/2024,Invoice,J117,Johnson Controls:Twin Cities AHU 3,,,12/05/2024,"3,544.20",0.00
+11/05/2024,Invoice,J118,Johnson Controls:Twin Cities AHU 5,,,12/05/2024,"7,760.40",0.00
+11/05/2024,Invoice,J115A,Johnson Controls:Daytona State College,,,12/05/2024,"12,400.00",0.00
+11/05/2024,Invoice,S410,Siemens Industry:TAFB Z8 Small Arms IOT 340592,,,12/05/2024,"2,622.00",0.00
+11/07/2024,Invoice,T069,Trane U.S. Inc.:Chipola Building C,,,12/07/2024,"5,400.00",0.00
+11/08/2024,Invoice,S401,Siemens Industry:TAFB Fire Truck Fire 347056,,,12/08/2024,"7,023.00",0.00
+11/08/2024,Invoice,S402,Siemens Industry:TAFB Marina Fire 353397,,,12/08/2024,"2,721.00",0.00
+11/08/2024,Invoice,S403,Siemens Industry:TAFB Rec Center BAU 355483,,,12/08/2024,"39,148.00",0.00
+11/08/2024,Invoice,S404,Siemens Industry:TAFB Rec Center IOT 355569,,,12/08/2024,"23,181.00",0.00
+11/08/2024,Invoice,S405,Siemens Industry:TAFB Small Arms Fire 338549,,,12/08/2024,"1,650.00",0.00
+11/13/2024,Invoice,J119,Johnson Controls:Daytona State College,,,12/13/2024,"25,700.00",0.00
+11/15/2024,Invoice,T077,Trane U.S. Inc.:Chipola Building D,,,12/15/2024,"36,116.00",0.00
+11/15/2024,Invoice,T078,Trane U.S. Inc.:Chipola Building C,,,12/15/2024,"9,097.00",0.00
+11/15/2024,Invoice,T079,Trane U.S. Inc.:Kaleo Hall,,,12/15/2024,"10,558.00",0.00
+11/15/2024,Invoice,T080,Trane U.S. Inc.:Seacoast High School,,,12/15/2024,"3,187.00",0.00
+11/15/2024,Invoice,J120,Johnson Controls:Twin Cities AHU 3,,,12/15/2024,"7,088.40",0.00
+11/15/2024,Invoice,J121,Johnson Controls:Twin Cities AHU 5,,,12/15/2024,"10,347.20",0.00
+11/20/2024,Invoice,K1001,Keesler AFB:Keesler Phase 2,,,12/20/2024,"139,614.90",0.00
+11/22/2024,Invoice,S409,Siemens Industry:TAFB Concessions BAU 351461,,,12/22/2024,"10,955.00",0.00
+12/02/2024,Invoice,E144,Engineered Cooling Services:GE Vernova,,,01/01/2025,"9,866.40",0.00
+12/02/2024,Invoice,E145,Engineered Cooling Services:Leonardo Hangar,,,01/01/2025,"7,116.00",0.00
+12/02/2024,Invoice,E146,Engineered Cooling Services:Okaloosa Gas,,,01/01/2025,"18,931.00",0.00
+12/02/2024,Invoice,E147,Engineered Cooling Services:Silverhill Elementary,,,01/01/2025,"12,551.00",0.00
+12/06/2024,Invoice,T081,Trane U.S. Inc.:Allied Health,,,01/31/2025,"36,750.00",0.00
+12/06/2024,Invoice,T082,Trane U.S. Inc.:Chipola Building C,,,01/31/2025,"9,226.00",0.00
+12/06/2024,Invoice,T083,Trane U.S. Inc.:Chipola Building I,,,01/31/2025,"9,702.00",0.00
+12/06/2024,Invoice,T084,Trane U.S. Inc.:Chipola Building O,,,01/31/2025,"6,418.00",0.00
+12/06/2024,Invoice,T085,Trane U.S. Inc.:Freeport Middle School,,,01/31/2025,"3,200.00",0.00
+12/06/2024,Invoice,T086,Trane U.S. Inc.:Kaleo Hall,,,01/31/2025,"10,560.00",0.00
+12/06/2024,Invoice,T087,Trane U.S. Inc.:Myrtle Grove Elementary,,,01/31/2025,"5,600.00",0.00
+12/06/2024,Invoice,T088,Trane U.S. Inc.:Pirates Voyage,,,01/31/2025,"5,000.00",0.00
+12/06/2024,Invoice,T089,Trane U.S. Inc.:Seacoast High School,,,01/31/2025,"9,000.00",0.00
+12/08/2024,Invoice,S413,Siemens Industry:TAFB Fire Truck Fire 347056,,,01/07/2025,"3,505.00",0.00
+12/09/2024,Invoice,VA002,VA Jackson:Jackson Valve Replacement,,,01/08/2025,"40,085.00",0.00
+12/30/2024,Invoice,K1003,Keesler AFB:Keesler Phase 2,,,01/29/2025,"157,066.20",0.00
+12/30/2024,Invoice,S418,Siemens Industry:Eglin B8840,,,01/29/2025,"5,842.00",0.00
+01/02/2025,Invoice,S422,Siemens Industry:TAFB Rec Center IOT 355569,,,02/01/2025,"2,960.00",0.00
+01/06/2025,Invoice,E148,Engineered Cooling Services:Leonardo Hangar,,,02/05/2025,"10,674.00",0.00
+01/06/2025,Invoice,E149,Engineered Cooling Services:Okaloosa Gas,,,02/05/2025,"18,930.00",0.00
+01/06/2025,Invoice,E150,Engineered Cooling Services:Silverhill Elementary,,,02/05/2025,"25,102.00",0.00
+01/06/2025,Invoice,E151,Engineered Cooling Services:Soundside High School,,,02/05/2025,"16,650.00",0.00
+01/13/2025,Invoice,S421,Siemens Industry:TAFB Rec Center BAU 355483,,,02/12/2025,"26,100.00",0.00
+01/13/2025,Invoice,S419,Siemens Industry:TAFB Fire Truck Fire 347056,,,02/12/2025,"7,025.00",0.00
+01/13/2025,Invoice,J122,Johnson Controls:Daytona State College,,,02/12/2025,"9,900.00",0.00
+01/13/2025,Invoice,J123,Johnson Controls:Twin Cities AHU 3,,,02/12/2025,"6,000.00",0.00
+01/13/2025,Invoice,J124,Johnson Controls:Twin Cities AHU 5,,,02/12/2025,"7,760.40",0.00
+01/13/2025,Invoice,S424,Siemens Industry:TAFB Z8 Small Arms BAU 340113,,,02/12/2025,"1,825.00",0.00
+01/15/2025,Invoice,T090,Trane U.S. Inc.:Kaleo Hall,,,03/31/2025,"7,040.00",0.00
+01/15/2025,Invoice,T092,Trane U.S. Inc.:Seacoast High School,,,03/31/2025,"13,200.00",0.00
+01/15/2025,Invoice,T093,Trane U.S. Inc.:Chipola Building O,,,02/14/2025,"8,920.00",0.00
+01/15/2025,Invoice,T094,Trane U.S. Inc.:Pirates Voyage,,,02/14/2025,"13,085.00",0.00
+01/15/2025,Invoice,T095,Trane U.S. Inc.:Myrtle Grove Elementary,,,02/14/2025,"16,785.00",0.00
+01/15/2025,Invoice,T096,Trane U.S. Inc.:Enterprise State Community College,,,02/14/2025,"8,935.00",0.00
+02/01/2025,Invoice,S426,Siemens Industry:NAS Fitness Center B832,,,03/03/2025,"4,220.00",0.00
+02/03/2025,Invoice,T097,Trane U.S. Inc.:Allied Health,,,03/05/2025,"22,610.20",0.00
+02/03/2025,Invoice,T098,Trane U.S. Inc.:Seacoast High School,,,03/05/2025,"9,516.80",0.00
+02/03/2025,Invoice,T099,Trane U.S. Inc.:Enterprise State Community College,,,03/05/2025,"4,467.50",0.00
+02/03/2025,Invoice,T100,Trane U.S. Inc.:Chipola Building O,,,03/05/2025,"5,350.10",0.00
+02/03/2025,Invoice,T101,Trane U.S. Inc.:Pirates Voyage,,,03/05/2025,"4,932.40",0.00
+02/03/2025,Invoice,T102,Trane U.S. Inc.:Myrtle Grove Elementary,,,03/05/2025,"33,575.30",0.00
+02/03/2025,Invoice,T103,Trane U.S. Inc.:Chipola Building M,,,03/05/2025,"2,160.10",0.00
+02/05/2025,Invoice,T091,Trane U.S. Inc.:Chipola Building C,,,03/07/2025,"2,636.00",0.00
+02/06/2025,Invoice,E152,Engineered Cooling Services:Baldwin County High School Additions,,,03/08/2025,"2,010.00",0.00
+02/06/2025,Invoice,E154,Engineered Cooling Services:Soundside High School,,,03/08/2025,"16,650.00",0.00
+02/06/2025,Invoice,E153,Engineered Cooling Services:Robertsdale High School,,,03/08/2025,"5,350.00",0.00
+02/06/2025,Invoice,E155,Engineered Cooling Services:Leonardo Hangar,,Voided,03/08/2025,0.00,0.00
+02/07/2025,Invoice,S428,Siemens Industry:TAFB Rec Center BAU 355483,,,03/09/2025,"13,049.60",0.00
+02/07/2025,Invoice,S429,Siemens Industry:TAFB Fire Truck Fire 347056,,,03/09/2025,"3,490.00",0.00
+02/07/2025,Invoice,S430,Siemens Industry:TAFB Rec Center IOT 355569,,,03/09/2025,"11,098.20",0.00
+02/07/2025,Invoice,S431,Siemens Industry:TAFB Marina Fire 353397,,,03/09/2025,"12,875.00",0.00
+02/07/2025,Invoice,S427,Siemens Industry:TAFB FMS Facilities Fire 342054,,,03/09/2025,870.00,0.00
+02/07/2025,Invoice,J125,Johnson Controls:Twin Cities AHU 3,,,03/09/2025,"1,088.40",0.00
+02/07/2025,Invoice,J126,Johnson Controls:Daytona State College,,,03/09/2025,"10,000.00",0.00
+02/25/2025,Invoice,S432,Siemens Industry:TAFB FMS Facilities Fire 342054,,,03/27/2025,"2,110.00",0.00
+03/02/2025,Invoice,K1004,Keesler AFB:Keesler Phase 2,,,04/01/2025,"226,873.40",0.00
+03/03/2025,Invoice,E157,Engineered Cooling Services:Foley High School,,,04/02/2025,"3,268.80",0.00
+03/03/2025,Invoice,E158,Engineered Cooling Services:Magnolia Elementary,,,04/02/2025,"2,301.40",0.00
+03/03/2025,Invoice,E159,Engineered Cooling Services:Soundside High School,,,04/02/2025,"16,643.55",0.00
+03/03/2025,Invoice,E160,Engineered Cooling Services:Elberta Elementary,,,04/02/2025,"6,379.80",0.00
+03/03/2025,Invoice,E161,Engineered Cooling Services:Daphne Elementary North,,,04/02/2025,"1,946.90",0.00
+03/03/2025,Invoice,E162,Engineered Cooling Services:Leonardo Hangar,,,04/02/2025,"5,692.00",0.00
+03/03/2025,Invoice,E163,Engineered Cooling Services:Robertsdale High School,,,04/02/2025,"13,369.40",0.00
+03/10/2025,Invoice,E164,Engineered Cooling Services:IHMC,,,04/09/2025,"8,000.00",0.00
+03/10/2025,Invoice,S112,Siemens Industry:UWF Bld 54,,Voided - Invoice should have been dated 6/12/23.  Vendor is stating that the project has been paid in full.  Spreadsheet is attached in the attachments section of the project.   Voided invoice dated in 2025 since payment was received in 2023.  Project is complete.,04/09/2025,0.00,0.00
+03/14/2025,Invoice,T110,Trane U.S. Inc.:Myrtle Grove Elementary,,,04/13/2025,"16,785.00",0.00
+03/14/2025,Invoice,E165,Engineered Cooling Services:Baldwin County High School Additions,,,04/13/2025,"5,025.00",0.00
+03/15/2025,Invoice,T104,Trane U.S. Inc.:Chipola Building M,,,04/14/2025,"4,375.00",0.00
+03/15/2025,Invoice,T105,Trane U.S. Inc.:Chipola Building O,,,04/14/2025,"10,700.00",0.00
+03/15/2025,Invoice,T106,Trane U.S. Inc.:Kaleo Hall,,,04/14/2025,"7,040.00",0.00
+03/15/2025,Invoice,T107,Trane U.S. Inc.:Pirates Voyage,,,04/14/2025,"8,225.00",0.00
+03/15/2025,Invoice,T108,Trane U.S. Inc.:Seacoast High School,,,04/14/2025,"12,700.00",0.00
+03/27/2025,Invoice,J127.,Johnson Controls:Daytona State College,,,04/26/2025,"6,500.00",0.00
+04/01/2025,Invoice,VA004,VA Jackson:Jackson VA VFD Replacement,,,05/01/2025,"119,987.00",0.00
+04/01/2025,Invoice,E166,Engineered Cooling Services:Foley High School,,,05/01/2025,"1,635.00",0.00
+04/01/2025,Invoice,E167,Engineered Cooling Services:Leonardo Hangar,,,05/01/2025,"10,675.00",0.00
+04/01/2025,Invoice,E168,Engineered Cooling Services:Okaloosa Gas,,,05/01/2025,"151,450.00",0.00
+04/01/2025,Invoice,E169,Engineered Cooling Services:Robertsdale High School,,,05/01/2025,"4,015.00",0.00
+04/01/2025,Invoice,E170,Engineered Cooling Services:Soundside High School,,,05/01/2025,"16,650.00",0.00
+04/01/2025,Invoice,E171,Engineered Cooling Services:Whiting Control Tower,,,05/01/2025,"7,280.00",0.00
+04/02/2025,Invoice,T109,Trane U.S. Inc.:Tommy Smith Elementary,,,04/17/2025,"23,550.00",0.00
+04/04/2025,Invoice,J128,Johnson Controls:Gulf Coast Dietary Reno,,,05/04/2025,"16,000.00",0.00
+04/15/2025,Invoice,T111,Trane U.S. Inc.:Chipola Building M,,,05/15/2025,"5,465.00",0.00
+04/15/2025,Invoice,T113,Trane U.S. Inc.:Kaleo Hall,,,05/15/2025,"3,517.00",0.00
+04/15/2025,Invoice,T115,Trane U.S. Inc.:Myrtle Grove Elementary,,,05/15/2025,"13,430.00",0.00
+04/15/2025,Invoice,T118,Trane U.S. Inc.:South Baldwin Ambulatory Surgery Center,,,05/15/2025,"7,711.00",0.00
+04/17/2025,Invoice,K1009,Keesler AFB:Keesler Phase 2,,,05/17/2025,"261,776.50",0.00
+05/05/2025,Invoice,E172,Engineered Cooling Services:Baldwin County High School Additions,,,06/04/2025,"10,040.00",0.00
+05/05/2025,Invoice,E173,Engineered Cooling Services:Foley High School,,,06/04/2025,"1,634.00",0.00
+05/05/2025,Invoice,E174,Engineered Cooling Services:Leonardo Hangar,,,06/04/2025,"18,500.00",0.00
+05/05/2025,Invoice,E175,Engineered Cooling Services:Loxley Elementary,,,06/04/2025,"6,768.00",0.00
+05/05/2025,Invoice,E176,Engineered Cooling Services:Magnolia Elementary,,,06/04/2025,"2,301.00",0.00
+05/05/2025,Invoice,E177,Engineered Cooling Services:Okaloosa Gas,,,06/04/2025,"18,933.00",0.00
+05/05/2025,Invoice,E178,Engineered Cooling Services:Robertsdale High School,,,06/04/2025,"4,007.60",0.00
+05/05/2025,Invoice,E179,Engineered Cooling Services:Soundside High School,,Voided,06/04/2025,0.00,0.00
+05/05/2025,Invoice,E180,Engineered Cooling Services:Whiting Control Tower,,,06/04/2025,"9,095.00",0.00
+05/05/2025,Invoice,S433,Siemens Industry:NAS Fitness Center B832,,,06/04/2025,"2,117.00",0.00
+05/05/2025,Invoice,T112,Trane U.S. Inc.:Chipola Building O,,,06/04/2025,"1,758.90",0.00
+05/05/2025,Invoice,T114,Trane U.S. Inc.:MLK Rec Center,,,06/04/2025,"3,775.00",0.00
+05/05/2025,Invoice,T116,Trane U.S. Inc.:Pirates Voyage,,,06/04/2025,"1,640.00",0.00
+05/05/2025,Invoice,T117,Trane U.S. Inc.:Seacoast High School,,,06/04/2025,"1,255.00",0.00
+05/05/2025,Invoice,T119,Trane U.S. Inc.:Tommy Smith Elementary,,,06/04/2025,"27,060.00",0.00
+05/06/2025,Invoice,N001,Northwest Florida State College:NWFSC Controls,,,06/05/2025,"11,405.00",0.00
+05/15/2025,Invoice,T125,Trane U.S. Inc.:Kaleo Hall,,,06/14/2025,"3,520.00",0.00
+05/15/2025,Invoice,T126,Trane U.S. Inc.:Myrtle Grove Elementary,,,06/14/2025,"3,360.70",0.00
+05/15/2025,Invoice,T127,Trane U.S. Inc.:Seacoast High School,,,06/14/2025,"1,905.00",0.00
+06/03/2025,Invoice,T121,Trane U.S. Inc.:Bay County Jail,,,07/03/2025,"7,784.00",0.00
+06/03/2025,Invoice,T122,Trane U.S. Inc.:Chipola Building M,,,07/03/2025,"5,466.00",0.00
+06/03/2025,Invoice,T123,Trane U.S. Inc.:Enterprise State Community College,,,07/03/2025,"4,470.00",0.00
+06/03/2025,Invoice,T124,Trane U.S. Inc.:MLK Rec Center,,,07/03/2025,"7,555.00",0.00
+06/03/2025,Invoice,T128,Trane U.S. Inc.:South Baldwin Ambulatory Surgery Center,,,07/03/2025,"3,855.00",0.00
+06/03/2025,Invoice,T129,Trane U.S. Inc.:Tommy Smith Elementary,,,07/03/2025,"8,238.00",0.00
+06/03/2025,Invoice,E185,Engineered Cooling Services:Baldwin County High School Additions,,,07/03/2025,"3,014.00",0.00
+06/03/2025,Invoice,E186,Engineered Cooling Services:Cytiva Belt 8,,,07/03/2025,"18,065.00",0.00
+06/03/2025,Invoice,E187,Engineered Cooling Services:Leonardo Hangar,,,07/03/2025,"9,963.00",0.00
+06/03/2025,Invoice,E188,Engineered Cooling Services:Loxley Elementary,,,07/03/2025,"20,035.00",0.00
+06/03/2025,Invoice,E189,Engineered Cooling Services:Magnolia Elementary,,,07/03/2025,"1,151.00",0.00
+06/03/2025,Invoice,E190,Engineered Cooling Services:Okaloosa Gas,,,07/03/2025,"37,863.00",0.00
+06/03/2025,Invoice,K1010,Keesler AFB:Keesler Phase 2,,,07/03/2025,"226,873.40",0.00
+06/03/2025,Invoice,E191,Engineered Cooling Services:Soundside High School,,,07/03/2025,"49,945.00",0.00
+06/03/2025,Invoice,E192,Engineered Cooling Services:Whiting Control Tower,,,07/03/2025,"5,459.00",0.00
+06/30/2025,Invoice,K1011,Keesler AFB:Keesler Phase 2,,,07/30/2025,"320,402.43",0.00
+06/30/2025,Invoice,E194,Engineered Cooling Services:Daphne Elementary South,,,07/30/2025,"6,768.00",0.00
+06/30/2025,Invoice,E195,Engineered Cooling Services:Foley High School,,,07/30/2025,"3,269.00",0.00
+06/30/2025,Invoice,E196,Engineered Cooling Services:Leonardo Hangar,,,07/30/2025,"1,424.00",0.00
+06/30/2025,Invoice,E197,Engineered Cooling Services:Loxley Elementary,,,07/30/2025,"13,804.00",0.00
+06/30/2025,Invoice,E198,Engineered Cooling Services:Soundside High School,,,07/30/2025,"6,658.00",0.00
+06/30/2025,Invoice,E200,Engineered Cooling Services:Whiting Control Tower,,,07/30/2025,"10,916.55",0.00
+06/30/2025,Invoice,S435,Siemens Industry:NAS Bld 603,,,07/30/2025,"3,631.00",0.00
+06/30/2025,Invoice,T130,Trane U.S. Inc.:American Magic,,,07/30/2025,"4,649.00",0.00
+06/30/2025,Invoice,T131,Trane U.S. Inc.:Chipola Building I,,,07/30/2025,648.00,0.00
+06/30/2025,Invoice,T133,Trane U.S. Inc.:Crestview Elementary,,,07/30/2025,"15,375.00",0.00
+06/30/2025,Invoice,T134,Trane U.S. Inc.:MLK Rec Center,,,07/30/2025,"15,100.00",0.00
+06/30/2025,Invoice,T135,Trane U.S. Inc.:Myrtle Grove Elementary,,,07/30/2025,"4,032.00",0.00
+06/30/2025,Invoice,T137,Trane U.S. Inc.:Seacoast High School,,,07/30/2025,"3,170.20",0.00
+06/30/2025,Invoice,T138,Trane U.S. Inc.:Tommy Smith Elementary,,,07/30/2025,"5,885.00",0.00
+06/30/2025,Invoice,T130a,Trane U.S. Inc.:American Magic,,,07/30/2025,"1,992.00",0.00
+07/06/2025,Invoice,T144,Trane U.S. Inc.:Rutherford High School Building 2,,,08/30/2025,"28,038.00",0.00
+07/09/2025,Invoice,E199,Engineered Cooling Services:Magnolia Elementary,,,08/08/2025,"13,809.00",0.00
+07/09/2025,Invoice,S800,Siemens Industry:TAFB Fire Truck Fire 347056,,,08/08/2025,"3,504.00",0.00
+07/09/2025,Invoice,T136,Trane U.S. Inc.:Rutherford High School Building 2,,,08/08/2025,"8,160.00",0.00
+07/15/2025,Invoice,T143,Trane U.S. Inc.:Enterprise State Community College,,,08/14/2025,"9,826.00",0.00
+07/15/2025,Invoice,T145,Trane U.S. Inc.:South Baldwin Ambulatory Surgery Center,,,08/14/2025,"11,566.10",0.00
+07/15/2025,Invoice,T147,Trane U.S. Inc.:Kaleo Hall,,,08/14/2025,"12,725.00",0.00
+07/16/2025,Invoice,J130,Engineered Cooling Services:Soundside High School,,Voided,08/15/2025,0.00,0.00
+07/31/2025,Invoice,T139,Trane U.S. Inc.:American Magic,,,08/30/2025,"6,641.55",0.00
+07/31/2025,Invoice,T140,Trane U.S. Inc.:Crestview Elementary,,,08/30/2025,"15,376.20",0.00
+07/31/2025,Invoice,T141,Trane U.S. Inc.:Bay County Jail,,,08/30/2025,"7,784.00",0.00
+07/31/2025,Invoice,T142,Trane U.S. Inc.:Eglin Wildcat Facility,,,08/30/2025,"14,241.20",0.00
+07/31/2025,Invoice,T146,Trane U.S. Inc.:Tommy Smith Elementary,,,08/30/2025,"12,946.36",0.00
+07/31/2025,Invoice,E203,Engineered Cooling Services:Okaloosa Gas,,,08/30/2025,"41,648.76",0.00
+07/31/2025,Invoice,E204,Engineered Cooling Services:Robertsdale High School,,,08/30/2025,802.00,0.00
+07/31/2025,Invoice,E205,Engineered Cooling Services:Soundside High School,,,08/30/2025,"53,270.66",0.00
+07/31/2025,Invoice,K1012,Keesler AFB:Keesler Phase 2,,,08/30/2025,"301,545.95",0.00
+07/31/2025,Invoice,E206,Engineered Cooling Services:Whiting Control Tower,,,08/30/2025,"4,578.00",0.00
+07/31/2025,Invoice,E207,Engineered Cooling Services:Okaloosa Gas,,,08/30/2025,"5,008.00",0.00
+07/31/2025,Invoice,E202,Engineered Cooling Services:Loxley Elementary,,,08/30/2025,"27,071.50",0.00
+07/31/2025,Invoice,T148,Trane U.S. Inc.:Destin Elementary,,,08/30/2025,"7,085.00",0.00
+08/07/2025,Invoice,T149,Trane U.S. Inc.:Tommy Smith Elementary,,,09/06/2025,"1,875.00",0.00
+08/15/2025,Invoice,T151,Trane U.S. Inc.:Enterprise State Community College,,,09/14/2025,"17,870.00",0.00
+08/19/2025,Invoice,E207,Engineered Cooling Services:Soundside High School,,,09/18/2025,"5,875.00",0.00
+08/29/2025,Invoice,E208,Engineered Cooling Services:Cytiva Belt 8,,,09/28/2025,"13,969.00",0.00
+08/29/2025,Invoice,E209,Engineered Cooling Services:Daphne Elementary North,,,09/28/2025,"6,778.00",0.00
+08/29/2025,Invoice,E210,Engineered Cooling Services:Magnolia Elementary,,,09/28/2025,"1,734.00",0.00
+08/29/2025,Invoice,E211,Engineered Cooling Services:Okaloosa Gas,,,09/28/2025,"48,000.00",0.00
+08/29/2025,Invoice,E212,Engineered Cooling Services:Soundside High School,,,09/28/2025,"6,660.00",0.00
+09/01/2025,Invoice,T152,Trane U.S. Inc.:MLK Rec Center,,,10/01/2025,"9,440.00",0.00
+09/01/2025,Invoice,T154,Trane U.S. Inc.:South Baldwin Ambulatory Surgery Center,,,10/01/2025,"31,614.00",0.00
+09/01/2025,Invoice,T155,Trane U.S. Inc.:Tommy Smith Elementary,,,10/01/2025,"20,008.00",0.00
+09/01/2025,Invoice,T156,Walters Controls:Eglin Airman,,,10/01/2025,"8,317.00",0.00
+09/09/2025,Invoice,K1013,Keesler AFB:Keesler Phase 2,,,10/09/2025,"157,075.48",0.00
+09/29/2025,Invoice,W101,Walters Controls:NSA B147,,,10/29/2025,"5,000.00",0.00
+10/01/2025,Invoice,E213,Engineered Cooling Services:Cytiva Belt 8,,,10/31/2025,"40,539.89",0.00
+10/01/2025,Invoice,E214,Engineered Cooling Services:Daphne Elementary North,,,10/31/2025,"13,086.60",0.00
+10/01/2025,Invoice,E215,Engineered Cooling Services:Daphne Elementary South,,,10/31/2025,"6,767.70",0.00
+10/01/2025,Invoice,E216,Engineered Cooling Services:Daphne HS Additions,,,10/31/2025,"6,964.60",0.00
+10/01/2025,Invoice,E217,Engineered Cooling Services:Elberta Elementary,,,10/31/2025,"6,379.80",0.00
+10/01/2025,Invoice,E218,Engineered Cooling Services:Foley High School,,,10/31/2025,"19,612.40",0.00
+10/01/2025,Invoice,E219,Engineered Cooling Services:Okaloosa Gas,,,10/31/2025,"11,358.42",0.00
+10/01/2025,Invoice,E220,Engineered Cooling Services:Soundside High School,,,10/31/2025,"16,646.99",0.00
+10/01/2025,Invoice,T157,Trane U.S. Inc.:American Magic,,,10/31/2025,"17,932.50",0.00
+10/01/2025,Invoice,T158,Trane U.S. Inc.:Crestview Elementary,,,10/31/2025,"15,375.60",0.00
+10/01/2025,Invoice,W102,Walters Controls:NSA B147,,,10/31/2025,"15,395.20",0.00
+10/01/2025,Invoice,T159,Trane U.S. Inc.:Enterprise State Community College,,,10/31/2025,"29,485.50",0.00
+10/01/2025,Invoice,T161,Trane U.S. Inc.:South Baldwin Ambulatory Surgery Center,,,10/31/2025,"30,464.83",0.00
+10/01/2025,Invoice,T160,Trane U.S. Inc.:Titan Hangar 3,,,10/31/2025,"10,644.45",0.00
+10/07/2025,Invoice,K1015,Keesler AFB:Keesler Phase 2,,,11/06/2025,"23,721.83",0.00
+10/15/2025,Invoice,T165,Trane U.S. Inc.:Enterprise State Community College,,,11/14/2025,"14,296.00",0.00
+11/01/2025,Invoice,T162,Trane U.S. Inc.:American Magic,,,12/01/2025,"35,199.95",0.00
+11/01/2025,Invoice,T164,Trane U.S. Inc.:Eglin Special Forces,,,12/01/2025,"11,550.93",0.00
+11/01/2025,Invoice,T166,Trane U.S. Inc.:MLK Rec Center,,,12/01/2025,"1,888.00",0.00
+11/01/2025,Invoice,T167,Trane U.S. Inc.:Tommy Smith Elementary,,,12/01/2025,"19,990.70",0.00
+11/01/2025,Invoice,W1003,Walters Controls:NSA B147,,,12/01/2025,"7,138.32",0.00
+11/01/2025,Invoice,E221,Engineered Cooling Services:Cytiva Belt 8,,,12/01/2025,"11,500.00",0.00
+11/01/2025,Invoice,E222,Engineered Cooling Services:Daphne Elementary North,,,12/01/2025,"15,268.05",0.00
+11/01/2025,Invoice,E223,Engineered Cooling Services:Elberta Elementary,,,12/01/2025,"31,899.00",0.00
+11/01/2025,Invoice,E224,Engineered Cooling Services:Daphne Elementary South,,,12/01/2025,"6,767.85",0.00
+11/01/2025,Invoice,E225,Engineered Cooling Services:Elberta Middle School,,,12/01/2025,"7,231.75",0.00
+11/01/2025,Invoice,E226,Engineered Cooling Services:Fairhope High School Multipurpose Room,,,12/01/2025,855.00,0.00
+11/01/2025,Invoice,E227,Engineered Cooling Services:Foley High School,,,12/01/2025,"3,268.80",0.00
+11/01/2025,Invoice,E228,Engineered Cooling Services:Loxley Elementary,,,12/01/2025,"6,767.85",0.00
+11/01/2025,Invoice,E229,Engineered Cooling Services:Okaloosa Gas,,,12/01/2025,"12,580.52",0.00
+11/01/2025,Invoice,E230,Engineered Cooling Services:Soundside High School,,,12/01/2025,"6,659.14",0.00
+11/01/2025,Invoice,T163,Trane U.S. Inc.:Crestview Elementary,,,12/01/2025,"6,150.24",0.00
+11/05/2025,Invoice,T168,Trane U.S. Inc.:Eglin Special Forces,,,12/05/2025,"8,451.90",0.00
+12/01/2025,Invoice,T171,Trane U.S. Inc.:Eglin Special Forces,,,12/31/2025,"8,451.90",0.00
+12/01/2025,Invoice,T176,Trane U.S. Inc.:Crestview Elementary,,,12/31/2025,"6,150.24",0.00
+12/01/2025,Invoice,T178,Trane U.S. Inc.:Tommy Smith Elementary,,,12/31/2025,"19,990.70",0.00
+12/01/2025,Invoice,T177,Trane U.S. Inc.:MLK Rec Center,,,12/31/2025,"1,888.00",0.00
+12/01/2025,Invoice,E232,Engineered Cooling Services:Daphne Elementary North,,,12/31/2025,"4,362.30",0.00
+12/01/2025,Invoice,E233,Engineered Cooling Services:Daphne Elementary South,,,12/31/2025,"6,667.85",0.00
+12/01/2025,Invoice,E234,Engineered Cooling Services:Fairhope High School Multipurpose Room,,,12/31/2025,"16,178.00",0.00
+12/01/2025,Invoice,E235,Engineered Cooling Services:Loxley Elementary,,,12/31/2025,"33,839.25",0.00
+12/01/2025,Invoice,E236,Engineered Cooling Services:Soundside High School,,,12/31/2025,"36,625.27",0.00
+12/01/2025,Invoice,T180,Trane U.S. Inc.:Destin Elementary,,,12/31/2025,"8,659.60",0.00
+12/01/2025,Invoice,E231,Engineered Cooling Services:Cytiva Belt 8,,,12/31/2025,"13,877.28",0.00
+12/01/2025,Invoice,T179,Trane U.S. Inc.:Crestview Elementary,,,12/31/2025,"21,525.84",0.00
+12/02/2025,Invoice,T181,Trane U.S. Inc.:Eglin Special Forces,,,01/01/2026,"8,170.17",0.00
+12/02/2025,Invoice,T182,Trane U.S. Inc.:Eglin Wildcat Facility,,,01/01/2026,"6,408.54",0.00
+12/02/2025,Invoice,W1005,Walters Controls:Eglin Airman,,,01/01/2026,"2,626.25",0.00
+12/02/2025,Invoice,W1004,Walters Controls:NSA B147,,,01/01/2026,"12,747.00",0.00
+12/10/2025,Invoice,T184,Trane U.S. Inc.:MLK Rec Center,,,01/09/2026,"2,750.00",0.00
+12/10/2025,Invoice,E237,Engineered Cooling Services:Okaloosa Gas,,,01/09/2026,"9,875.00",0.00
+12/16/2025,Invoice,R1001,RQ Construction:Hurlburt Dorms B90369,,,01/15/2026,"11,132.00",0.00
+12/17/2025,Invoice,E238,Engineered Cooling Services:Okaloosa Gas,,,01/16/2026,"19,018.00",0.00
+12/31/2025,Invoice,E239,Engineered Cooling Services:Cytiva Belt 8,,,01/30/2026,"11,448.25",0.00
+12/31/2025,Invoice,E243,Engineered Cooling Services:Daphne Elementary North,,,01/30/2026,"2,181.15",0.00
+12/31/2025,Invoice,E244,Engineered Cooling Services:Daphne Elementary South,,,01/30/2026,"13,635.70",0.00
+12/31/2025,Invoice,E245,Engineered Cooling Services:Loxley Elementary,,,01/30/2026,"27,071.40",0.00
+12/31/2025,Invoice,E246,Engineered Cooling Services:Mobile Arena,,,01/30/2026,"29,372.50",0.00
+12/31/2025,Invoice,E247,Engineered Cooling Services:Soundside High School,,,01/30/2026,"16,647.85",0.00
+12/31/2025,Invoice,T185,Trane U.S. Inc.:Crestview Elementary,,,01/30/2026,"33,826.32",0.00
+12/31/2025,Invoice,T186,Trane U.S. Inc.:Eglin Wildcat Facility,,,01/30/2026,"16,377.38",0.00
+12/31/2025,Invoice,W1006,Walters Controls:Eglin Airman,,,01/30/2026,"10,505.52",0.00
+12/31/2025,Invoice,W1007,Walters Controls:NSA B147,,,01/30/2026,"10,707.48",0.00
+TOTAL,,,,,,,"$9,644,329.08",$0.00
+
+
+
+" Friday, April 10, 2026 10:18 AM GMT-05:00",,,,,,,,

@@ -1,4 +1,4 @@
-import type { ProjectAssignmentRole } from "@/types/database";
+import type { ProjectAssignmentRole, UserRole } from "@/types/database";
 import type {
   ProjectAssignmentDraft,
   ProjectContactOption,
@@ -9,7 +9,7 @@ export type ProfileOption = {
   id: string;
   full_name: string | null;
   email: string;
-  role: ProjectAssignmentRole;
+  role: UserRole;
 };
 
 type AssignmentBase = {
@@ -49,15 +49,29 @@ export function buildTeamMemberOptions(
 
   for (const contact of contacts) {
     const email = contact.email.trim().toLowerCase();
-    if (!email || !email.endsWith("@controlsco.net") || contact.profile_id) continue;
-    if (byEmail.has(email)) continue;
+    if (!email || !email.endsWith("@controlsco.net")) continue;
+
     const fullName = [contact.first_name, contact.last_name].filter(Boolean).join(" ").trim();
+    const existing = byEmail.get(email);
+
+    if (existing) {
+      byEmail.set(email, {
+        ...existing,
+        profileId: existing.profileId ?? contact.profile_id ?? null,
+        pmDirectoryId: existing.pmDirectoryId ?? contact.id,
+      });
+      continue;
+    }
+
+    const hasLinkedProfile = Boolean(contact.profile_id);
     byEmail.set(email, {
-      id: `directory:${contact.id}`,
+      id: hasLinkedProfile ? `profile:${contact.profile_id}` : `directory:${contact.id}`,
       email: contact.email,
-      displayLabel: `${fullName || contact.email} (${contact.email}) - not yet signed in`,
-      source: "directory",
-      profileId: null,
+      displayLabel: hasLinkedProfile
+        ? `${fullName || contact.email} (${contact.email})`
+        : `${fullName || contact.email} (${contact.email}) - not yet signed in`,
+      source: hasLinkedProfile ? "profile" : "directory",
+      profileId: contact.profile_id ?? null,
       pmDirectoryId: contact.id,
     });
   }
