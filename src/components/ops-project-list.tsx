@@ -597,7 +597,18 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
                   <tbody>
                     {person.projects.map((proj) => (
                       <tr key={proj.project_id} className="border-b border-border-default last:border-0 hover:bg-surface-raised">
-                        <td className="px-4 py-2.5 text-text-primary">{proj.project_name}</td>
+                        <td className="px-4 py-2.5 text-text-primary">
+                          <div className="flex items-center gap-2">
+                            <span>{proj.project_name}</span>
+                            <button
+                              type="button"
+                              onClick={() => void openProject(proj.project_id)}
+                              className="shrink-0 rounded border border-border-default bg-surface-overlay px-2 py-0.5 text-xs font-medium text-text-secondary hover:bg-surface-raised hover:text-text-primary"
+                            >
+                              {loadingProjectId === proj.project_id ? "Loading..." : "Edit"}
+                            </button>
+                          </div>
+                        </td>
                         <td className="px-4 py-2.5 text-center">
                           {proj.portal_access ? (
                             <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-status-success/15 text-status-success">
