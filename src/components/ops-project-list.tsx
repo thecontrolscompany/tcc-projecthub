@@ -91,7 +91,7 @@ function normalizeProject(item: Record<string, unknown>): ProjectEditorRow {
 export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] }) {
   const supabase = createClient();
   const [showCompleted, setShowCompleted] = useState(false);
-  const [viewMode, setViewMode] = useState<"grouped" | "all">("grouped");
+  const [viewMode, setViewMode] = useState<"grouped" | "all" | "by-customer">("grouped");
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
   const [projectUpdates, setProjectUpdates] = useState<Record<string, WeeklyUpdateSummary[]>>({});
   const [loadingUpdatesFor, setLoadingUpdatesFor] = useState<string | null>(null);
@@ -137,6 +137,23 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
       return a.localeCompare(b);
     });
   }, [groupedProjects]);
+
+  const groupedByCustomer = useMemo(() => {
+    return visibleProjects.reduce((acc, project) => {
+      const key = project.customerName?.trim() || "No Customer";
+      if (!acc.has(key)) acc.set(key, []);
+      acc.get(key)?.push(project);
+      return acc;
+    }, new Map<string, OpsProjectListItem[]>());
+  }, [visibleProjects]);
+
+  const sortedCustomerGroups = useMemo(() => {
+    return Array.from(groupedByCustomer.entries()).sort(([a], [b]) => {
+      if (a === "No Customer") return 1;
+      if (b === "No Customer") return -1;
+      return a.localeCompare(b);
+    });
+  }, [groupedByCustomer]);
 
   useEffect(() => {
     async function loadLookups() {
@@ -495,6 +512,17 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
           >
             By Project
           </button>
+          <button
+            onClick={() => setViewMode("by-customer")}
+            className={[
+              "rounded-lg px-4 py-2 text-sm font-medium transition",
+              viewMode === "by-customer"
+                ? "bg-surface-overlay text-text-primary shadow-sm"
+                : "text-text-secondary hover:bg-surface-overlay/70 hover:text-text-primary",
+            ].join(" ")}
+          >
+            By Customer
+          </button>
         </div>
         <label className="inline-flex items-center gap-2 text-sm text-text-secondary">
           <input
@@ -507,7 +535,72 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
         </label>
       </div>
 
-      {viewMode === "all" ? (
+      {viewMode === "by-customer" ? (
+        sortedCustomerGroups.length === 0 ? (
+          <div className="rounded-2xl border border-border-default bg-surface-raised px-4 py-6 text-sm text-text-secondary">
+            No projects match the current filter.
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {sortedCustomerGroups.map(([customerName, customerProjects]) => (
+              <section key={customerName} className="overflow-hidden rounded-2xl border border-border-default">
+                <div className="flex items-center justify-between border-b border-border-default bg-surface-raised px-4 py-3">
+                  <div>
+                    <h2 className="text-lg font-semibold text-text-primary">{customerName}</h2>
+                    <p className="text-xs text-text-secondary">
+                      {customerProjects.length} project{customerProjects.length === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full table-fixed text-sm">
+                    <colgroup>
+                      <col style={{ width: "42%" }} />
+                      <col style={{ width: "30%" }} />
+                      <col style={{ width: "16%" }} />
+                      <col style={{ width: "12%" }} />
+                    </colgroup>
+                    <thead>
+                      <tr className="border-b border-border-default bg-surface-raised/60">
+                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Project</th>
+                        <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">PM</th>
+                        <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
+                        <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">% Complete</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {customerProjects.map((project) => (
+                        <Fragment key={project.id}>
+                          <tr
+                            onClick={() => void toggleProjectUpdates(project.id)}
+                            className="cursor-pointer border-b border-border-default hover:bg-surface-raised"
+                          >
+                            <td className="px-4 py-2.5 font-medium text-text-primary">{renderProjectNameCell(project)}</td>
+                            <td className="px-4 py-2.5 text-text-secondary">{project.pmGroupName !== "Unassigned" ? project.pmGroupName : "-"}</td>
+                            <td className="px-4 py-2.5 text-center">
+                              <span className={["rounded-full px-2 py-0.5 text-xs font-medium", project.is_active ? "bg-status-success/10 text-status-success" : "bg-surface-overlay text-text-secondary"].join(" ")}>
+                                {project.is_active ? "Active" : "Completed"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5 text-right text-text-primary">{project.pctComplete.toFixed(1)}%</td>
+                          </tr>
+                          {expandedProjectId === project.id && (
+                            <tr className="border-b border-border-default bg-surface-raised/40">
+                              <td colSpan={4} className="px-6 py-3">
+                                {renderExpandedUpdates(project.id)}
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            ))}
+          </div>
+        )
+      ) : viewMode === "all" ? (
         <div className="overflow-hidden rounded-2xl border border-border-default">
           <table className="w-full text-sm">
             <thead>
