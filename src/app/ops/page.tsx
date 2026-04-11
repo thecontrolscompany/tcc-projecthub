@@ -14,6 +14,7 @@ type OpsProject = {
   sharepoint_folder?: string | null;
   pm_id?: string | null;
   pm_directory_id?: string | null;
+  customer_id?: string | null;
   customer?: { name?: string | null } | Array<{ name?: string | null }> | null;
   project_assignments?: Array<{
     role_on_project?: string | null;
@@ -32,6 +33,7 @@ export type OpsProjectListItem = {
   id: string;
   name: string;
   is_active: boolean;
+  customerId: string | null;
   customerName: string | null;
   pmGroupName: string;
   pctComplete: number;
@@ -67,6 +69,7 @@ export default async function OpsPage() {
         sharepoint_folder,
         pm_id,
         pm_directory_id,
+        customer_id,
         customer:customers(name),
         project_assignments(
           role_on_project,
@@ -80,7 +83,7 @@ export default async function OpsPage() {
     `)
     .eq("role_on_project", "ops_manager");
 
-  const [{ data: assignedProjects }, { data: allProjects }, { data: recentUpdates }] = await Promise.all([
+  const [{ data: assignedProjects }, { data: allProjects }, { data: recentUpdates }, { data: portalProfiles }] = await Promise.all([
     linkedPmDirectoryIds.length
       ? assignedProjectsQuery.or(`profile_id.eq.${user.id},pm_directory_id.in.(${linkedPmDirectoryIds.join(",")})`)
       : assignedProjectsQuery.eq("profile_id", user.id),
@@ -94,6 +97,7 @@ export default async function OpsPage() {
             sharepoint_folder,
             pm_id,
             pm_directory_id,
+            customer_id,
             customer:customers(name),
             project_assignments(
               role_on_project,
@@ -110,6 +114,11 @@ export default async function OpsPage() {
       .from("billing_periods")
       .select("project_id, pct_complete, period_month")
       .order("period_month", { ascending: false }),
+    adminClient
+      .from("profiles")
+      .select("customer_id")
+      .eq("role", "customer")
+      .not("customer_id", "is", null),
   ]);
 
   const projectMap = new Map<string, OpsProject>();
@@ -162,12 +171,19 @@ export default async function OpsPage() {
       id: project.id,
       name: project.name,
       is_active: project.is_active !== false,
+      customerId: project.customer_id ?? null,
       customerName: customer?.name ?? null,
       pmGroupName,
       pctComplete: (pctByProjectId.get(project.id) ?? 0) * 100,
       sharepointFolder: project.sharepoint_folder ?? null,
     };
   }).sort((a, b) => a.name.localeCompare(b.name));
+
+  const portalCustomerIds = new Set(
+    ((portalProfiles ?? []) as Array<{ customer_id: string | null }>)
+      .map((p) => p.customer_id)
+      .filter(Boolean) as string[]
+  );
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -179,7 +195,7 @@ export default async function OpsPage() {
         </p>
       </div>
 
-      <OpsProjectList projects={normalizedProjects} />
+      <OpsProjectList projects={normalizedProjects} portalCustomerIds={portalCustomerIds} />
     </div>
   );
 }

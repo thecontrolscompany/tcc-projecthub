@@ -88,7 +88,7 @@ function normalizeProject(item: Record<string, unknown>): ProjectEditorRow {
   };
 }
 
-export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] }) {
+export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsProjectListItem[]; portalCustomerIds: Set<string> }) {
   const supabase = createClient();
   const [showCompleted, setShowCompleted] = useState(false);
   const [viewMode, setViewMode] = useState<"grouped" | "all" | "by-customer">("grouped");
@@ -148,12 +148,16 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
   }, [visibleProjects]);
 
   const sortedCustomerGroups = useMemo(() => {
-    return Array.from(groupedByCustomer.entries()).sort(([a], [b]) => {
-      if (a === "No Customer") return 1;
-      if (b === "No Customer") return -1;
-      return a.localeCompare(b);
+    return Array.from(groupedByCustomer.entries()).sort(([aName, aProjects], [bName, bProjects]) => {
+      if (aName === "No Customer") return 1;
+      if (bName === "No Customer") return -1;
+      const aHasPortal = aProjects.some((p) => p.customerId && portalCustomerIds.has(p.customerId));
+      const bHasPortal = bProjects.some((p) => p.customerId && portalCustomerIds.has(p.customerId));
+      if (aHasPortal && !bHasPortal) return -1;
+      if (!aHasPortal && bHasPortal) return 1;
+      return aName.localeCompare(bName);
     });
-  }, [groupedByCustomer]);
+  }, [groupedByCustomer, portalCustomerIds]);
 
   useEffect(() => {
     async function loadLookups() {
@@ -542,14 +546,23 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
           </div>
         ) : (
           <div className="space-y-6">
-            {sortedCustomerGroups.map(([customerName, customerProjects]) => (
+            {sortedCustomerGroups.map(([customerName, customerProjects]) => {
+              const hasPortal = customerProjects.some((p) => p.customerId && portalCustomerIds.has(p.customerId));
+              return (
               <section key={customerName} className="overflow-hidden rounded-2xl border border-border-default">
                 <div className="flex items-center justify-between border-b border-border-default bg-surface-raised px-4 py-3">
-                  <div>
-                    <h2 className="text-lg font-semibold text-text-primary">{customerName}</h2>
-                    <p className="text-xs text-text-secondary">
-                      {customerProjects.length} project{customerProjects.length === 1 ? "" : "s"}
-                    </p>
+                  <div className="flex items-center gap-2">
+                    <div>
+                      <h2 className="text-lg font-semibold text-text-primary">{customerName}</h2>
+                      <p className="text-xs text-text-secondary">
+                        {customerProjects.length} project{customerProjects.length === 1 ? "" : "s"}
+                      </p>
+                    </div>
+                    {hasPortal && (
+                      <span className="rounded-full border border-brand-primary/30 bg-brand-primary/10 px-2 py-0.5 text-xs font-medium text-brand-primary">
+                        Portal
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="overflow-x-auto">
@@ -597,7 +610,8 @@ export function OpsProjectList({ projects }: { projects: OpsProjectListItem[] })
                   </table>
                 </div>
               </section>
-            ))}
+            );
+            })}
           </div>
         )
       ) : viewMode === "all" ? (
