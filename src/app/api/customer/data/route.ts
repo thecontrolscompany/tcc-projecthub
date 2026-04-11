@@ -25,11 +25,16 @@ export async function GET(request: Request) {
   const section = searchParams.get("section");
   const previewAs = searchParams.get("previewAs");
 
-  // Admin/ops_manager may pass ?previewAs=profileId to view as a customer
+  // Admin/ops_manager may pass ?previewAs=profileId to view as another customer.
+  // Any authenticated user may view their own portal if they have project_customer_contacts rows.
   const isAdminPreview = previewAs && ["admin", "ops_manager"].includes(requesterRole);
 
   if (!isAdminPreview && requesterRole !== "customer") {
-    return NextResponse.json({ error: "Customer access required." }, { status: 403 });
+    // Non-customer viewing their own portal — allow if they have contact rows (checked below)
+    // Anything other than their own data is denied
+    if (previewAs && previewAs !== user.id) {
+      return NextResponse.json({ error: "Access denied." }, { status: 403 });
+    }
   }
 
   const viewingAs = isAdminPreview ? previewAs : user.id;
