@@ -8,6 +8,8 @@ export function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [passwordUser, setPasswordUser] = useState<Profile | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   useEffect(() => {
     void loadProfiles();
@@ -73,13 +75,29 @@ export function AdminUsersPage() {
           onClose={() => setShowCreateForm(false)}
           onCreated={() => {
             setShowCreateForm(false);
+            setStatusMessage("Account created.");
             void loadProfiles();
+          }}
+        />
+      )}
+
+      {passwordUser && (
+        <SetPasswordForm
+          profile={passwordUser}
+          onClose={() => setPasswordUser(null)}
+          onSaved={() => {
+            setStatusMessage(`Password updated for ${passwordUser.email}.`);
+            setPasswordUser(null);
           }}
         />
       )}
 
       {loadError && (
         <div className="rounded-xl bg-status-danger/10 px-4 py-3 text-sm text-status-danger">{loadError}</div>
+      )}
+
+      {statusMessage && (
+        <div className="rounded-xl bg-status-success/10 px-4 py-3 text-sm text-status-success">{statusMessage}</div>
       )}
 
       {loading ? (
@@ -93,6 +111,7 @@ export function AdminUsersPage() {
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Name</th>
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Role</th>
                 <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Change Role</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Password</th>
               </tr>
             </thead>
             <tbody>
@@ -119,12 +138,99 @@ export function AdminUsersPage() {
                       <option value="customer">customer</option>
                     </select>
                   </td>
+                  <td className="px-4 py-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setPasswordUser(p)}
+                      className="rounded-lg bg-surface-overlay px-3 py-1 text-xs font-medium text-text-primary hover:bg-surface-overlay/80"
+                    >
+                      Set Password
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+    </div>
+  );
+}
+
+function SetPasswordForm({
+  profile,
+  onClose,
+  onSaved,
+}: {
+  profile: Profile;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSaving(true);
+
+    const res = await fetch("/api/admin/set-user-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ userId: profile.id, password }),
+    });
+
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(json?.error ?? "Failed to update password.");
+      setSaving(false);
+      return;
+    }
+
+    onSaved();
+  }
+
+  return (
+    <div className="rounded-2xl border border-border-default bg-surface-raised p-5">
+      <h3 className="mb-1 font-semibold text-text-primary">Set Temporary Password</h3>
+      <p className="mb-4 text-sm text-text-secondary">
+        Assign a password for <span className="font-medium text-text-primary">{profile.email}</span> so you can test their login before enabling portal access.
+      </p>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div>
+          <label className="mb-1 block text-xs font-medium text-text-secondary">Temporary password</label>
+          <input
+            type="text"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+            placeholder="min 8 characters"
+          />
+        </div>
+
+        {error && <p className="rounded-xl bg-status-danger/10 px-3 py-2 text-sm text-status-danger">{error}</p>}
+
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-brand-hover disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Save Password"}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl bg-surface-overlay px-4 py-2 text-sm text-text-secondary hover:bg-surface-overlay"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
