@@ -91,7 +91,7 @@ function normalizeProject(item: Record<string, unknown>): ProjectEditorRow {
 export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsProjectListItem[]; portalCustomerIds: Set<string> }) {
   const supabase = createClient();
   const [showCompleted, setShowCompleted] = useState(false);
-  const [viewMode, setViewMode] = useState<"grouped" | "all" | "by-customer">("grouped");
+  const [viewMode, setViewMode] = useState<"grouped" | "all" | "by-customer" | "customer-access">("grouped");
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
   const [projectUpdates, setProjectUpdates] = useState<Record<string, WeeklyUpdateSummary[]>>({});
   const [loadingUpdatesFor, setLoadingUpdatesFor] = useState<string | null>(null);
@@ -110,6 +110,15 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
   const [primaryPersonId, setPrimaryPersonId] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<ProjectFormErrors>({});
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  type CustomerAccessEntry = {
+    profile_id: string;
+    full_name: string | null;
+    email: string;
+    projects: Array<{ project_id: string; project_name: string; portal_access: boolean; email_digest: boolean }>;
+  };
+  const [customerAccess, setCustomerAccess] = useState<CustomerAccessEntry[] | null>(null);
+  const [loadingCustomerAccess, setLoadingCustomerAccess] = useState(false);
 
   const teamMemberOptions = useMemo(() => buildTeamMemberOptions(profiles, contacts), [contacts, profiles]);
   const externalContacts = useMemo(
@@ -181,6 +190,16 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
 
     void loadLookups();
   }, []);
+
+  useEffect(() => {
+    if (viewMode !== "customer-access" || customerAccess !== null) return;
+    setLoadingCustomerAccess(true);
+    fetch("/api/admin/data?section=customer-access", { credentials: "include" })
+      .then((res) => res.json())
+      .then((json) => setCustomerAccess((json?.contacts as CustomerAccessEntry[]) ?? []))
+      .catch(() => setCustomerAccess([]))
+      .finally(() => setLoadingCustomerAccess(false));
+  }, [viewMode, customerAccess]);
 
   function resetModal() {
     setShowModal(false);
@@ -527,19 +546,89 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
           >
             By Customer
           </button>
+          <button
+            onClick={() => setViewMode("customer-access")}
+            className={[
+              "rounded-lg px-4 py-2 text-sm font-medium transition",
+              viewMode === "customer-access"
+                ? "bg-surface-overlay text-text-primary shadow-sm"
+                : "text-text-secondary hover:bg-surface-overlay/70 hover:text-text-primary",
+            ].join(" ")}
+          >
+            Customer Access
+          </button>
         </div>
-        <label className="inline-flex items-center gap-2 text-sm text-text-secondary">
-          <input
-            type="checkbox"
-            checked={showCompleted}
-            onChange={(event) => setShowCompleted(event.target.checked)}
-            className="h-4 w-4 accent-[var(--color-brand-primary)]"
-          />
-          Show completed
-        </label>
+        {viewMode !== "customer-access" && (
+          <label className="inline-flex items-center gap-2 text-sm text-text-secondary">
+            <input
+              type="checkbox"
+              checked={showCompleted}
+              onChange={(event) => setShowCompleted(event.target.checked)}
+              className="h-4 w-4 accent-[var(--color-brand-primary)]"
+            />
+            Show completed
+          </label>
+        )}
       </div>
 
-      {viewMode === "by-customer" ? (
+      {viewMode === "customer-access" ? (
+        loadingCustomerAccess ? (
+          <div className="py-16 text-center text-text-tertiary">Loading customer access...</div>
+        ) : !customerAccess || customerAccess.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border-default px-6 py-12 text-center text-sm text-text-secondary">
+            No customer portal access has been configured. Open a project, go to Team, and add contacts under Customer Portal Access.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {customerAccess.map((person) => (
+              <section key={person.profile_id} className="overflow-hidden rounded-2xl border border-border-default">
+                <div className="border-b border-border-default bg-surface-raised px-4 py-3">
+                  <p className="font-semibold text-text-primary">{person.full_name ?? person.email}</p>
+                  <p className="text-xs text-text-tertiary">{person.email}</p>
+                </div>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border-default bg-surface-raised/50">
+                      <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Project</th>
+                      <th className="px-4 py-2 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">Portal</th>
+                      <th className="px-4 py-2 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">Email</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {person.projects.map((proj) => (
+                      <tr key={proj.project_id} className="border-b border-border-default last:border-0 hover:bg-surface-raised">
+                        <td className="px-4 py-2.5 text-text-primary">{proj.project_name}</td>
+                        <td className="px-4 py-2.5 text-center">
+                          {proj.portal_access ? (
+                            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-status-success/15 text-status-success">
+                              <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg>
+                            </span>
+                          ) : (
+                            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-border-default text-text-tertiary">
+                              <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3"><path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"/></svg>
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2.5 text-center">
+                          {proj.email_digest ? (
+                            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-status-success/15 text-status-success">
+                              <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg>
+                            </span>
+                          ) : (
+                            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-border-default text-text-tertiary">
+                              <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3"><path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"/></svg>
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </section>
+            ))}
+          </div>
+        )
+      ) : viewMode === "by-customer" ? (
         sortedCustomerGroups.length === 0 ? (
           <div className="rounded-2xl border border-border-default bg-surface-raised px-4 py-6 text-sm text-text-secondary">
             No projects match the current filter.

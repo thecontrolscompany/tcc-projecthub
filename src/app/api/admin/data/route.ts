@@ -696,5 +696,58 @@ export async function GET(request: Request) {
     return NextResponse.json({ items: data ?? [] });
   }
 
+  if (section === "customer-access") {
+    if (!["admin", "ops_manager"].includes(requesterRole)) {
+      return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });
+    }
+
+    const { data, error } = await adminClient
+      .from("project_customer_contacts")
+      .select("profile_id, portal_access, email_digest, project:projects(id, name), profile:profiles(id, full_name, email)")
+      .or("portal_access.eq.true,email_digest.eq.true")
+      .order("profile_id");
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Group by profile
+    const byProfile = new Map<string, {
+      profile_id: string;
+      full_name: string | null;
+      email: string;
+      projects: Array<{ project_id: string; project_name: string; portal_access: boolean; email_digest: boolean }>;
+    }>();
+
+    for (const row of (data ?? [])) {
+      const profile = Array.isArray(row.profile) ? row.profile[0] : row.profile;
+      const project = Array.isArray(row.project) ? row.project[0] : row.project;
+      if (!profile || !project) continue;
+
+      if (!byProfile.has(row.profile_id)) {
+        byProfile.set(row.profile_id, {
+          profile_id: row.profile_id,
+          full_name: profile.full_name ?? null,
+          email: profile.email ?? "",
+          projects: [],
+        });
+      }
+      byProfile.get(row.profile_id)!.projects.push({
+        project_id: project.id,
+        project_name: project.name,
+        portal_access: row.portal_access,
+        email_digest: row.email_digest,
+      });
+    }
+
+    const contacts = Array.from(byProfile.values()).sort((a, b) => {
+      const an = a.full_name ?? a.email;
+      const bn = b.full_name ?? b.email;
+      return an.localeCompare(bn);
+    });
+
+    return NextResponse.json({ contacts });
+  }
+
   return NextResponse.json({ error: "Unknown section." }, { status: 400 });
 }
