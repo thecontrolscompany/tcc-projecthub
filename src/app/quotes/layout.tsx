@@ -5,5 +5,5 @@ export const dynamic = "force-dynamic";
 
 export default async function QuotesLayout({ children }: { children: React.ReactNode }) {
   const identity = await getShellIdentity("customer");
-  return <AppShell role={identity.role} userEmail={identity.email}>{children}</AppShell>;
+  return <AppShell role={identity.role} userEmail={identity.email} hasPortalAccess={identity.hasPortalAccess}>{children}</AppShell>;
 }

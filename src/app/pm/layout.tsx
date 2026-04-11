@@ -7,7 +7,7 @@ export default async function PmLayout({ children }: { children: React.ReactNode
   const identity = await getShellIdentity("pm");
 
   return (
-    <AppShell role={identity.role} userEmail={identity.email}>
+    <AppShell role={identity.role} userEmail={identity.email} hasPortalAccess={identity.hasPortalAccess}>
       {children}
     </AppShell>
   );

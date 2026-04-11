@@ -7,7 +7,7 @@ export default async function InstallerLayout({ children }: { children: React.Re
   const identity = await getShellIdentity("installer");
 
   return (
-    <AppShell role={identity.role} userEmail={identity.email}>
+    <AppShell role={identity.role} userEmail={identity.email} hasPortalAccess={identity.hasPortalAccess}>
       {children}
     </AppShell>
   );

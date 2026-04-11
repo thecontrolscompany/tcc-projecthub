@@ -82,6 +82,7 @@ export default function CustomerPage() {
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState("");
   const [userId, setUserId] = useState("");
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [loadedAt, setLoadedAt] = useState<Date | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
@@ -108,6 +109,10 @@ export default function CustomerPage() {
 
       setUserEmail(user.email ?? "");
       setUserId(user.id);
+
+      // Detect non-customer staff viewing their own portal
+      const { data: profileData } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+      setUserRole(profileData?.role ?? null);
 
       const url = previewAs
         ? `/api/customer/data?section=projects&previewAs=${encodeURIComponent(previewAs)}`
@@ -220,10 +225,28 @@ export default function CustomerPage() {
         }
       `}</style>
 
-      {previewAs && (
+      {(previewAs || (userRole && userRole !== "customer")) && (
         <div className="customer-print-hide flex items-center justify-between gap-3 bg-amber-500/10 border-b border-amber-500/30 px-6 py-2.5 text-sm text-amber-700">
-          <span>Admin preview — viewing as customer <span className="font-semibold">{userEmail || previewAs}</span></span>
-          <a href="/ops" className="rounded-lg border border-amber-500/40 px-3 py-1 text-xs font-medium hover:bg-amber-500/10 transition">← Back to Operations</a>
+          {previewAs
+            ? <span>Admin preview — viewing as <span className="font-semibold">{userEmail || previewAs}</span></span>
+            : <span>Viewing as <span className="font-semibold">{userEmail}</span></span>
+          }
+          <a
+            href={
+              userRole === "admin" ? "/admin"
+              : userRole === "ops_manager" ? "/ops"
+              : userRole === "installer" ? "/installer"
+              : "/pm"
+            }
+            className="rounded-lg border border-amber-500/40 px-3 py-1 text-xs font-medium hover:bg-amber-500/10 transition"
+          >
+            ← Back to {
+              userRole === "admin" ? "Admin"
+              : userRole === "ops_manager" ? "Operations"
+              : userRole === "installer" ? "Installer"
+              : "PM Portal"
+            }
+          </a>
         </div>
       )}
 
