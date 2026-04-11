@@ -582,9 +582,19 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
           <div className="space-y-4">
             {customerAccess.map((person) => (
               <section key={person.profile_id} className="overflow-hidden rounded-2xl border border-border-default">
-                <div className="border-b border-border-default bg-surface-raised px-4 py-3">
-                  <p className="font-semibold text-text-primary">{person.full_name ?? person.email}</p>
-                  <p className="text-xs text-text-tertiary">{person.email}</p>
+                <div className="flex items-center justify-between gap-3 border-b border-border-default bg-surface-raised px-4 py-3">
+                  <div>
+                    <p className="font-semibold text-text-primary">{person.full_name ?? person.email}</p>
+                    <p className="text-xs text-text-tertiary">{person.email}</p>
+                  </div>
+                  <a
+                    href={`/customer?previewAs=${encodeURIComponent(person.profile_id)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 rounded-lg border border-brand-primary/30 bg-brand-primary/10 px-3 py-1.5 text-xs font-medium text-brand-primary hover:bg-brand-primary/20 transition"
+                  >
+                    Customer Portal →
+                  </a>
                 </div>
                 <table className="w-full text-sm">
                   <thead>

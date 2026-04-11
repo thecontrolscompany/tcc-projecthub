@@ -87,6 +87,7 @@ export default function CustomerPage() {
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
   const selectedProjectId = searchParams.get("project");
+  const previewAs = searchParams.get("previewAs");
   const selectedProject = projects.find((p) => p.id === selectedProjectId) ?? null;
 
   useEffect(() => {
@@ -108,7 +109,11 @@ export default function CustomerPage() {
       setUserEmail(user.email ?? "");
       setUserId(user.id);
 
-      const response = await fetch("/api/customer/data?section=projects", {
+      const url = previewAs
+        ? `/api/customer/data?section=projects&previewAs=${encodeURIComponent(previewAs)}`
+        : "/api/customer/data?section=projects";
+
+      const response = await fetch(url, {
         credentials: "include",
       });
       const json = await response.json();
@@ -214,6 +219,13 @@ export default function CustomerPage() {
           }
         }
       `}</style>
+
+      {previewAs && (
+        <div className="customer-print-hide flex items-center justify-between gap-3 bg-amber-500/10 border-b border-amber-500/30 px-6 py-2.5 text-sm text-amber-700">
+          <span>Admin preview — viewing as customer <span className="font-semibold">{userEmail || previewAs}</span></span>
+          <a href="/ops" className="rounded-lg border border-amber-500/40 px-3 py-1 text-xs font-medium hover:bg-amber-500/10 transition">← Back to Operations</a>
+        </div>
+      )}
 
       <header className="customer-print-shell shadow-lg" style={{ backgroundColor: HEADER_BG }}>
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-5 md:flex-row md:items-center md:justify-between">

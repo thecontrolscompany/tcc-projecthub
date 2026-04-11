@@ -16,10 +16,6 @@ export async function GET(request: Request) {
   const resolvedProfile = await resolveUserRole(user);
   const requesterRole = resolvedProfile?.role ?? "customer";
 
-  if (requesterRole !== "customer") {
-    return NextResponse.json({ error: "Customer access required." }, { status: 403 });
-  }
-
   const adminClient = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -27,12 +23,22 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const section = searchParams.get("section");
+  const previewAs = searchParams.get("previewAs");
+
+  // Admin/ops_manager may pass ?previewAs=profileId to view as a customer
+  const isAdminPreview = previewAs && ["admin", "ops_manager"].includes(requesterRole);
+
+  if (!isAdminPreview && requesterRole !== "customer") {
+    return NextResponse.json({ error: "Customer access required." }, { status: 403 });
+  }
+
+  const viewingAs = isAdminPreview ? previewAs : user.id;
 
   if (section === "projects") {
     const { data: contactRows, error: contactError } = await adminClient
       .from("project_customer_contacts")
       .select("project_id")
-      .eq("profile_id", user.id)
+      .eq("profile_id", viewingAs)
       .eq("portal_access", true);
 
     if (contactError) {
