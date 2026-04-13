@@ -74,6 +74,22 @@ const ACCENT = "#20b2aa";
 const BORDER = "#b2dfdb";
 const CHARCOAL = "#2d3748";
 
+function normalizeCrewLogRows(rows: CrewLogEntry[] | null | undefined): CrewLogEntry[] {
+  return (rows ?? []).map((row) => {
+    const legacyWorkers = (row as CrewLogEntry & { men?: number }).men;
+    return {
+      ...row,
+      workers: row.workers ?? legacyWorkers ?? 0,
+    };
+  });
+}
+
+function effectiveHours(update: WeeklyUpdate): number | null {
+  if (update.labor_hours_override != null) return update.labor_hours_override;
+  if (update.labor_hours_pulled != null) return update.labor_hours_pulled;
+  return null;
+}
+
 export default function CustomerPage() {
   const supabase = createClient();
   const router = useRouter();
@@ -1468,7 +1484,10 @@ function PhotoIcon() {
 }
 
 function WeeklyUpdateCard({ update }: { update: WeeklyUpdate }) {
-  const visibleCrewRows = (update.crew_log ?? []).filter((row) => row.men > 0 || row.hours > 0 || row.activities);
+  const visibleCrewRows = normalizeCrewLogRows(update.crew_log).filter(
+    (row) => row.workers > 0 || row.hours > 0 || row.activities
+  );
+  const totalLaborHours = effectiveHours(update);
   const reportRows = [
     { label: "Material Delivered", value: update.material_delivered, icon: <PackageIcon /> },
     { label: "Equipment Set", value: update.equipment_set, icon: <WrenchIcon /> },
@@ -1516,13 +1535,66 @@ function WeeklyUpdateCard({ update }: { update: WeeklyUpdate }) {
 
       {update.notes && <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700">{update.notes}</p>}
 
-      {visibleCrewRows.length > 0 && (
+      {update.labor_hours_detail && update.labor_hours_detail.length > 0 ? (
+        <div className="mt-5 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Labor Hours</p>
+            {totalLaborHours != null && (
+              <p className="text-sm font-semibold text-slate-700">Total labor hours this week: {totalLaborHours.toFixed(1)} hrs</p>
+            )}
+          </div>
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                  <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3 text-center">Mon</th>
+                  <th className="px-4 py-3 text-center">Tue</th>
+                  <th className="px-4 py-3 text-center">Wed</th>
+                  <th className="px-4 py-3 text-center">Thu</th>
+                  <th className="px-4 py-3 text-center">Fri</th>
+                  <th className="px-4 py-3 text-center">Sat</th>
+                  <th className="px-4 py-3 text-center">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {update.labor_hours_detail.map((worker) => (
+                  <tr key={worker.display_name} className="border-t border-slate-100">
+                    <td className="px-4 py-3 font-medium text-slate-700">{worker.display_name}</td>
+                    <td className="px-4 py-3 text-center text-slate-600">{worker.mon || "-"}</td>
+                    <td className="px-4 py-3 text-center text-slate-600">{worker.tue || "-"}</td>
+                    <td className="px-4 py-3 text-center text-slate-600">{worker.wed || "-"}</td>
+                    <td className="px-4 py-3 text-center text-slate-600">{worker.thu || "-"}</td>
+                    <td className="px-4 py-3 text-center text-slate-600">{worker.fri || "-"}</td>
+                    <td className="px-4 py-3 text-center text-slate-600">{worker.sat || "-"}</td>
+                    <td className="px-4 py-3 text-center font-semibold text-slate-700">{worker.total}</td>
+                  </tr>
+                ))}
+                <tr className="border-t border-slate-200 bg-slate-50 font-semibold text-slate-700">
+                  <td className="px-4 py-3">Total</td>
+                  <td className="px-4 py-3 text-center">-</td>
+                  <td className="px-4 py-3 text-center">-</td>
+                  <td className="px-4 py-3 text-center">-</td>
+                  <td className="px-4 py-3 text-center">-</td>
+                  <td className="px-4 py-3 text-center">-</td>
+                  <td className="px-4 py-3 text-center">-</td>
+                  <td className="px-4 py-3 text-center">{totalLaborHours?.toFixed(1) ?? "-"}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : totalLaborHours != null ? (
+        <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+          Total labor hours this week: {totalLaborHours.toFixed(1)} hrs
+        </div>
+      ) : visibleCrewRows.length > 0 ? (
         <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                 <th className="px-4 py-3">Day</th>
-                <th className="px-4 py-3 text-center">Men</th>
+                <th className="px-4 py-3 text-center">Workers</th>
                 <th className="px-4 py-3 text-center">Hours</th>
                 <th className="px-4 py-3">Activities</th>
               </tr>
@@ -1531,7 +1603,7 @@ function WeeklyUpdateCard({ update }: { update: WeeklyUpdate }) {
               {visibleCrewRows.map((row: CrewLogEntry) => (
                 <tr key={row.day} className="border-t border-slate-100">
                   <td className="px-4 py-3 font-medium text-slate-700">{row.day}</td>
-                  <td className="px-4 py-3 text-center text-slate-600">{row.men}</td>
+                  <td className="px-4 py-3 text-center text-slate-600">{row.workers}</td>
                   <td className="px-4 py-3 text-center text-slate-600">{row.hours}</td>
                   <td className="px-4 py-3 text-slate-600">{row.activities || "-"}</td>
                 </tr>
@@ -1539,7 +1611,7 @@ function WeeklyUpdateCard({ update }: { update: WeeklyUpdate }) {
             </tbody>
           </table>
         </div>
-      )}
+      ) : null}
 
       {reportRows.length > 0 && (
         <div className="mt-5 grid gap-3">

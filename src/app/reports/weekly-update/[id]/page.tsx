@@ -8,7 +8,7 @@ import { normalizeSingle } from "@/lib/utils/normalize";
 import { formatWeekEndingSaturday } from "@/lib/utils/week-ending";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
-import type { CrewLogEntry, PocSnapshotEntry, UserRole } from "@/types/database";
+import type { CrewLogEntry, LaborHoursWorker, PocSnapshotEntry, UserRole } from "@/types/database";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -24,6 +24,11 @@ type UpdateRow = {
   blockers: string | null;
   poc_snapshot: PocSnapshotEntry[] | null;
   crew_log: CrewLogEntry[] | null;
+  labor_hours_pulled: number | null;
+  labor_hours_override: number | null;
+  labor_hours_source: "qb_time" | "manual" | null;
+  labor_hours_pulled_at: string | null;
+  labor_hours_detail: LaborHoursWorker[] | null;
   material_delivered: string | null;
   equipment_set: string | null;
   safety_incidents: string | null;
@@ -69,10 +74,23 @@ type AssignmentPmRow = {
 function emptyCrewLog(): CrewLogEntry[] {
   return ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => ({
     day,
-    men: 0,
+    workers: 0,
     hours: 0,
     activities: "",
   })) as CrewLogEntry[];
+}
+
+function normalizeCrewLog(rows: CrewLogEntry[] | null | undefined) {
+  return (rows ?? []).map((row) => ({
+    ...row,
+    workers: row.workers ?? (row as CrewLogEntry & { men?: number }).men ?? 0,
+  }));
+}
+
+function effectiveLaborHours(update: UpdateRow) {
+  if (update.labor_hours_override != null) return update.labor_hours_override;
+  if (update.labor_hours_pulled != null) return update.labor_hours_pulled;
+  return null;
 }
 
 function formatPercent(value: number | null | undefined) {
@@ -237,6 +255,11 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
       blockers,
       poc_snapshot,
       crew_log,
+      labor_hours_pulled,
+      labor_hours_override,
+      labor_hours_source,
+      labor_hours_pulled_at,
+      labor_hours_detail,
       material_delivered,
       equipment_set,
       safety_incidents,
@@ -277,8 +300,9 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
     `${customerProjectName(project.name)} - Weekly Report - ${format(generatedAt, "yyyy-MM-dd")}`
   );
 
-  const crewLog = update.crew_log && update.crew_log.length > 0 ? update.crew_log : emptyCrewLog();
-  const totalManHours = crewLog.reduce((sum, row) => sum + (Number(row.men) || 0) * (Number(row.hours) || 0), 0);
+  const crewLog = update.crew_log && update.crew_log.length > 0 ? normalizeCrewLog(update.crew_log) : emptyCrewLog();
+  const totalManHours = crewLog.reduce((sum, row) => sum + (Number(row.workers) || 0) * (Number(row.hours) || 0), 0);
+  const totalLaborHours = effectiveLaborHours(update);
   const pocSnapshot = Array.isArray(update.poc_snapshot) ? update.poc_snapshot : [];
   const totalWeight = pocSnapshot.reduce((sum, item) => sum + (Number(item.weight) || 0), 0);
 
@@ -709,35 +733,71 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
             </div>
 
             <div className="section-divider">
-              <h2>CREW LOG</h2>
+              <h2>{update.labor_hours_detail?.length ? "LABOR HOURS" : "CREW LOG"}</h2>
             </div>
 
-            <table>
-              <thead>
-                <tr>
-                  <th>Day</th>
-                  <th className="number-cell"># of Men</th>
-                  <th className="number-cell">Hours</th>
-                  <th>Activities</th>
-                </tr>
-              </thead>
-              <tbody>
-                {crewLog.map((row) => (
-                  <tr key={row.day}>
-                    <td>
-                      <div>{row.day}</div>
-                      <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
-                        {getCrewLogDateLabel(update.week_of, row.day)}
-                      </div>
-                    </td>
-                    <td className="number-cell">{row.men || ""}</td>
-                    <td className="number-cell">{row.hours || ""}</td>
-                    <td>{row.activities || ""}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="summary-line">Total Man-Hours: {totalManHours.toFixed(1)}</div>
+            {update.labor_hours_detail?.length ? (
+              <>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th className="number-cell">Mon</th>
+                      <th className="number-cell">Tue</th>
+                      <th className="number-cell">Wed</th>
+                      <th className="number-cell">Thu</th>
+                      <th className="number-cell">Fri</th>
+                      <th className="number-cell">Sat</th>
+                      <th className="number-cell">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {update.labor_hours_detail.map((worker) => (
+                      <tr key={worker.display_name}>
+                        <td>{worker.display_name}</td>
+                        <td className="number-cell">{worker.mon || ""}</td>
+                        <td className="number-cell">{worker.tue || ""}</td>
+                        <td className="number-cell">{worker.wed || ""}</td>
+                        <td className="number-cell">{worker.thu || ""}</td>
+                        <td className="number-cell">{worker.fri || ""}</td>
+                        <td className="number-cell">{worker.sat || ""}</td>
+                        <td className="number-cell">{worker.total || ""}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="summary-line">Total Labor Hours: {totalLaborHours?.toFixed(1) ?? "0.0"}</div>
+              </>
+            ) : (
+              <>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Day</th>
+                      <th className="number-cell"># of Workers</th>
+                      <th className="number-cell">Hours</th>
+                      <th>Activities</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {crewLog.map((row) => (
+                      <tr key={row.day}>
+                        <td>
+                          <div>{row.day}</div>
+                          <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
+                            {getCrewLogDateLabel(update.week_of, row.day)}
+                          </div>
+                        </td>
+                        <td className="number-cell">{row.workers || ""}</td>
+                        <td className="number-cell">{row.hours || ""}</td>
+                        <td>{row.activities || ""}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="summary-line">Total Man-Hours: {totalManHours.toFixed(1)}</div>
+              </>
+            )}
 
             <div className="section-divider">
               <h2>NOTES</h2>

@@ -98,9 +98,20 @@ export interface PocSnapshotEntry {
 
 export interface CrewLogEntry {
   day: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
-  men: number;
+  workers: number;
   hours: number;
   activities: string;
+}
+
+export interface LaborHoursWorker {
+  display_name: string;
+  mon: number;
+  tue: number;
+  wed: number;
+  thu: number;
+  fri: number;
+  sat: number;
+  total: number;
 }
 
 export interface WeeklyUpdate {
@@ -114,6 +125,11 @@ export interface WeeklyUpdate {
   blockers: string | null;
   poc_snapshot: PocSnapshotEntry[] | null;
   crew_log: CrewLogEntry[] | null;
+  labor_hours_pulled: number | null;
+  labor_hours_override: number | null;
+  labor_hours_source: "qb_time" | "manual" | null;
+  labor_hours_pulled_at: string | null;
+  labor_hours_detail: LaborHoursWorker[] | null;
   material_delivered: string | null;
   equipment_set: string | null;
   safety_incidents: string | null;

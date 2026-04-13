@@ -4,7 +4,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import { sendWeeklyUpdateNotification } from "@/lib/email/notifications";
 import { normalizeWeekEndingSaturday } from "@/lib/utils/week-ending";
-import type { CrewLogEntry, PocSnapshotEntry, WeeklyUpdate, WeeklyUpdateStatus } from "@/types/database";
+import type { CrewLogEntry, LaborHoursWorker, PocSnapshotEntry, WeeklyUpdate, WeeklyUpdateStatus } from "@/types/database";
 
 type UpdatePayload = {
   updateId?: string;
@@ -26,6 +26,11 @@ type UpdatePayload = {
   billingPeriodId?: string | null;
   editNote?: string | null;
   includeBomReport?: boolean;
+  laborHoursPulled?: number | null;
+  laborHoursOverride?: number | null;
+  laborHoursSource?: "qb_time" | "manual" | null;
+  laborHoursPulledAt?: string | null;
+  laborHoursDetail?: LaborHoursWorker[] | null;
 };
 
 type NormalizedPayload = {
@@ -47,6 +52,11 @@ type NormalizedPayload = {
   billingPeriodId: string | null;
   editNote: string | null;
   includeBomReport: boolean;
+  laborHoursPulled: number | null;
+  laborHoursOverride: number | null;
+  laborHoursSource: "qb_time" | "manual" | null;
+  laborHoursPulledAt: string | null;
+  laborHoursDetail: LaborHoursWorker[] | null;
 };
 
 function adminClient() {
@@ -116,6 +126,18 @@ function normalizePayload(body: UpdatePayload): { value: NormalizedPayload } | {
       billingPeriodId: typeof body.billingPeriodId === "string" ? body.billingPeriodId : null,
       editNote: typeof body.editNote === "string" ? body.editNote : null,
       includeBomReport: body.includeBomReport === true,
+      laborHoursPulled:
+        typeof body.laborHoursPulled === "number" && Number.isFinite(body.laborHoursPulled)
+          ? body.laborHoursPulled
+          : null,
+      laborHoursOverride:
+        typeof body.laborHoursOverride === "number" && Number.isFinite(body.laborHoursOverride)
+          ? body.laborHoursOverride
+          : null,
+      laborHoursSource:
+        body.laborHoursSource === "qb_time" || body.laborHoursSource === "manual" ? body.laborHoursSource : null,
+      laborHoursPulledAt: typeof body.laborHoursPulledAt === "string" ? body.laborHoursPulledAt : null,
+      laborHoursDetail: Array.isArray(body.laborHoursDetail) ? body.laborHoursDetail : null,
     },
   };
 }
@@ -180,6 +202,11 @@ function toRow(payload: NormalizedPayload, profileId: string) {
     delays_impacts: payload.delaysImpacts,
     other_remarks: payload.otherRemarks,
     include_bom_report: payload.includeBomReport,
+    labor_hours_pulled: payload.laborHoursPulled ?? null,
+    labor_hours_override: payload.laborHoursOverride ?? null,
+    labor_hours_source: payload.laborHoursSource ?? null,
+    labor_hours_pulled_at: payload.laborHoursPulledAt ?? null,
+    labor_hours_detail: payload.laborHoursDetail ?? null,
     submitted_at: payload.status === "submitted" ? new Date().toISOString() : null,
   };
 }

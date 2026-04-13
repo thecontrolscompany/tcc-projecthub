@@ -8,7 +8,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { ViewReportLink } from "@/components/view-report-link";
 import { BomTab } from "@/components/bom-tab";
 import { formatWeekEndingSaturday } from "@/lib/utils/week-ending";
-import type { ChangeOrder } from "@/types/database";
+import type { ChangeOrder, LaborHoursWorker } from "@/types/database";
 import type {
   BillingPeriod,
   CrewLogEntry,
@@ -92,16 +92,43 @@ const EMPTY_PLACEHOLDERS: LastUpdatePlaceholders = {
 const DAYS: CrewLogEntry["day"][] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 function emptyCrewLog(): CrewLogEntry[] {
-  return DAYS.map((day) => ({ day, men: 0, hours: 0, activities: "" }));
+  return DAYS.map((day) => ({ day, workers: 0, hours: 0, activities: "" }));
 }
 
 function hasCrewLogEntry(row: CrewLogEntry) {
-  return row.men > 0 || row.hours > 0 || Boolean(row.activities?.trim());
+  return row.workers > 0 || row.hours > 0 || Boolean(row.activities?.trim());
 }
 
 function isEglin1416Project(projectName: string) {
   const normalized = projectName.toLowerCase();
   return normalized.includes("eglin") && normalized.includes("1416");
+}
+
+function normalizeCrewLogRows(rows: CrewLogEntry[] | null | undefined): CrewLogEntry[] {
+  const byDay = new Map((rows ?? []).map((row) => {
+    const legacyWorkers = (row as CrewLogEntry & { men?: number }).men;
+    return [row.day, { ...row, workers: row.workers ?? legacyWorkers ?? 0 }];
+  }));
+
+  return emptyCrewLog().map((row) => {
+    const existing = byDay.get(row.day);
+    return existing
+      ? {
+          day: row.day,
+          workers: existing.workers ?? 0,
+          hours: existing.hours ?? 0,
+          activities: existing.activities ?? "",
+        }
+      : row;
+  });
+}
+
+function laborBadgeClasses(source: "qb_time" | "manual" | null) {
+  if (source === "qb_time") {
+    return "border-status-success/20 bg-status-success/10 text-status-success";
+  }
+
+  return "border-status-warning/20 bg-status-warning/10 text-status-warning";
 }
 
 export default function PmPage() {
@@ -339,6 +366,15 @@ function UpdateForm({
   const [savingPeriod, setSavingPeriod] = useState<string | null>(null);
   const [periodSaveError, setPeriodSaveError] = useState<Record<string, string>>({});
   const [periodSaveOk, setPeriodSaveOk] = useState<Record<string, boolean>>({});
+  const [laborPulled, setLaborPulled] = useState<number | null>(null);
+  const [laborDetail, setLaborDetail] = useState<LaborHoursWorker[] | null>(null);
+  const [laborPulledAt, setLaborPulledAt] = useState<string | null>(null);
+  const [laborOverride, setLaborOverride] = useState<string>("");
+  const [laborOverrideActive, setLaborOverrideActive] = useState(false);
+  const [laborSource, setLaborSource] = useState<"qb_time" | "manual" | null>(null);
+  const [laborHasMapping, setLaborHasMapping] = useState<boolean | null>(null);
+  const [pullingHours, setPullingHours] = useState(false);
+  const [laborPullError, setLaborPullError] = useState<string | null>(null);
 
   const totalWeight = pocItems.reduce((sum, item) => sum + item.weight, 0);
   const pocPctDecimal =
@@ -373,7 +409,7 @@ function UpdateForm({
     setCrewLog(
       emptyCrewLog().map((row) => ({
         ...row,
-        men: previousCrewByDay.get(row.day)?.men ?? 0,
+        workers: previousCrewByDay.get(row.day)?.workers ?? (previousCrewByDay.get(row.day) as CrewLogEntry & { men?: number } | undefined)?.men ?? 0,
         hours: 0,
         activities: "",
       }))
@@ -384,7 +420,7 @@ function UpdateForm({
     setWeekOf(update.week_of);
     setNotes(update.notes ?? "");
     setBlockers(update.blockers ?? "");
-    setCrewLog(update.crew_log && update.crew_log.length > 0 ? update.crew_log : emptyCrewLog());
+    setCrewLog(normalizeCrewLogRows(update.crew_log));
     setMaterialDelivered(update.material_delivered ?? "");
     setEquipmentSet(update.equipment_set ?? "");
     setSafetyIncidents(update.safety_incidents ?? "");
@@ -394,6 +430,14 @@ function UpdateForm({
     setIncludeBomReport(update.include_bom_report ?? false);
     setManualOverride("");
     setIsManualOverride(false);
+    setLaborPulled(update.labor_hours_pulled ?? null);
+    setLaborDetail(update.labor_hours_detail ?? null);
+    setLaborPulledAt(update.labor_hours_pulled_at ?? null);
+    setLaborSource(update.labor_hours_source ?? null);
+    setLaborOverrideActive(update.labor_hours_override != null);
+    setLaborOverride(update.labor_hours_override != null ? String(update.labor_hours_override) : "");
+    setLaborHasMapping(null);
+    setLaborPullError(null);
   }
 
   function resetForNewWeek(latestUpdate: WeeklyUpdate | null) {
@@ -414,6 +458,14 @@ function UpdateForm({
     setIsEditing(false);
     setEditHistory([]);
     setEditNote("");
+    setLaborPulled(null);
+    setLaborDetail(null);
+    setLaborPulledAt(null);
+    setLaborOverride("");
+    setLaborOverrideActive(false);
+    setLaborSource(null);
+    setLaborHasMapping(null);
+    setLaborPullError(null);
     seedFromLatest(latestUpdate);
   }
 
@@ -519,6 +571,41 @@ function UpdateForm({
     setCrewLog((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
   }
 
+  async function handlePullHours() {
+    setPullingHours(true);
+    setLaborPullError(null);
+    try {
+      const res = await fetch(
+        `/api/pm/hours-pull?projectId=${encodeURIComponent(project.id)}&weekOf=${encodeURIComponent(weekOf)}`,
+        { credentials: "include" }
+      );
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Pull failed");
+      setLaborHasMapping(json.hasMapping);
+      if (!json.hasMapping) return;
+      setLaborPulled(json.hours);
+      setLaborDetail(json.workers);
+      setLaborPulledAt(json.lastSyncedAt);
+      setLaborSource("qb_time");
+      setLaborOverrideActive(false);
+      setLaborOverride("");
+    } catch (err) {
+      setLaborPullError(err instanceof Error ? err.message : "Pull failed");
+    } finally {
+      setPullingHours(false);
+    }
+  }
+
+  function handleRejectQbTime() {
+    setLaborPulled(null);
+    setLaborDetail(null);
+    setLaborPulledAt(null);
+    setLaborSource(null);
+    setLaborOverrideActive(false);
+    setLaborOverride("");
+    setLaborHasMapping(null);
+  }
+
   async function saveWeeklyUpdate(nextStatus: "draft" | "submitted", options?: { stayOnForm?: boolean }) {
     const activeUpdateId = draftUpdateId ?? submittedUpdateId;
     const isSubmittedEdit = Boolean(submittedUpdateId && isEditing);
@@ -558,6 +645,11 @@ function UpdateForm({
           inspectionsTests: inspectionsTests || null,
           delaysImpacts: delaysImpacts || null,
           otherRemarks: otherRemarks || null,
+          laborHoursPulled: laborPulled,
+          laborHoursOverride: laborOverrideActive && laborOverride !== "" ? parseFloat(laborOverride) : null,
+          laborHoursSource: laborSource,
+          laborHoursPulledAt: laborPulledAt,
+          laborHoursDetail: laborDetail,
           pocUpdates: pocItems.map((item) => ({
             id: item.id,
             pct_complete: Math.min(Math.max((pocPcts[item.id] ?? item.pct_complete * 100) / 100, 0), 1),
@@ -721,6 +813,8 @@ function UpdateForm({
     : !draftUpdateId && !submittedUpdateId && weekOf === thisSaturday;
   const activeChangeOrders = changeOrders.filter((co) => co.status !== "void");
   const showEglinReportBuilder = isEglin1416Project(project.name);
+  const laborEffectiveHours =
+    laborOverrideActive && laborOverride !== "" ? Number(laborOverride) : laborPulled;
 
   return (
     <div className="space-y-6">
@@ -1150,52 +1244,118 @@ function UpdateForm({
 
               <SummaryField label="Additional Notes" value={notes} />
 
-              <div className="space-y-2 md:hidden">
-                {crewLog.filter(hasCrewLogEntry).map((row) => (
-                  <div key={row.day} className="rounded-xl border border-border-default bg-surface-base px-4 py-3">
-                    <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-text-secondary">{row.day}</p>
-                    <div className="flex flex-wrap gap-4 text-sm">
-                      {row.men > 0 && (
-                        <span>
-                          <span className="text-text-tertiary">Men: </span>
-                          <span className="font-medium text-text-primary">{row.men}</span>
-                        </span>
-                      )}
-                      {row.hours > 0 && (
-                        <span>
-                          <span className="text-text-tertiary">Hours: </span>
-                          <span className="font-medium text-text-primary">{row.hours}</span>
-                        </span>
+              {laborDetail && laborDetail.length > 0 ? (
+                <div className="space-y-3 rounded-xl border border-border-default bg-surface-base p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Labor Hours</p>
+                      {laborPulledAt && (
+                        <p className="mt-1 text-xs text-text-tertiary">
+                          Data as of {format(new Date(laborPulledAt), "MMM d, yyyy h:mm a")}
+                        </p>
                       )}
                     </div>
-                    {row.activities?.trim() && <p className="mt-1.5 text-sm text-text-primary">{row.activities}</p>}
+                    {laborEffectiveHours != null && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-text-primary">{laborEffectiveHours.toFixed(1)} hrs</span>
+                        <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${laborBadgeClasses(laborOverrideActive ? "manual" : laborSource)}`}>
+                          {laborOverrideActive ? "Manual" : "QB Time"}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                ))}
-                {crewLog.every((row) => !hasCrewLogEntry(row)) && <p className="text-sm text-text-tertiary">No crew log entries.</p>}
-              </div>
 
-              <div className="hidden overflow-x-auto rounded-xl border border-border-default md:block">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border-default bg-surface-overlay text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">
-                      <th className="px-3 py-2">Day</th>
-                      <th className="px-3 py-2 text-center"># of Men</th>
-                      <th className="px-3 py-2 text-center">Hours</th>
-                      <th className="px-3 py-2">Activities</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {crewLog.map((row) => (
-                      <tr key={row.day} className="border-b border-border-default last:border-0">
-                        <td className="px-3 py-2 text-text-secondary">{row.day}</td>
-                        <td className="px-3 py-2 text-center text-text-primary">{row.men || "-"}</td>
-                        <td className="px-3 py-2 text-center text-text-primary">{row.hours || "-"}</td>
-                        <td className="px-3 py-2 text-text-primary">{row.activities || "-"}</td>
-                      </tr>
+                  <div className="overflow-x-auto rounded-xl border border-border-default">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border-default bg-surface-overlay text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                          <th className="px-3 py-2">Name</th>
+                          <th className="px-3 py-2 text-center">Mon</th>
+                          <th className="px-3 py-2 text-center">Tue</th>
+                          <th className="px-3 py-2 text-center">Wed</th>
+                          <th className="px-3 py-2 text-center">Thu</th>
+                          <th className="px-3 py-2 text-center">Fri</th>
+                          <th className="px-3 py-2 text-center">Sat</th>
+                          <th className="px-3 py-2 text-center">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {laborDetail.map((worker) => (
+                          <tr key={worker.display_name} className="border-b border-border-default last:border-0">
+                            <td className="px-3 py-2 text-text-primary">{worker.display_name}</td>
+                            <td className="px-3 py-2 text-center text-text-secondary">{worker.mon || "-"}</td>
+                            <td className="px-3 py-2 text-center text-text-secondary">{worker.tue || "-"}</td>
+                            <td className="px-3 py-2 text-center text-text-secondary">{worker.wed || "-"}</td>
+                            <td className="px-3 py-2 text-center text-text-secondary">{worker.thu || "-"}</td>
+                            <td className="px-3 py-2 text-center text-text-secondary">{worker.fri || "-"}</td>
+                            <td className="px-3 py-2 text-center text-text-secondary">{worker.sat || "-"}</td>
+                            <td className="px-3 py-2 text-center font-semibold text-text-primary">{worker.total || "-"}</td>
+                          </tr>
+                        ))}
+                        <tr className="bg-surface-overlay font-semibold text-text-primary">
+                          <td className="px-3 py-2">Total</td>
+                          <td className="px-3 py-2 text-center">-</td>
+                          <td className="px-3 py-2 text-center">-</td>
+                          <td className="px-3 py-2 text-center">-</td>
+                          <td className="px-3 py-2 text-center">-</td>
+                          <td className="px-3 py-2 text-center">-</td>
+                          <td className="px-3 py-2 text-center">-</td>
+                          <td className="px-3 py-2 text-center">{laborEffectiveHours?.toFixed(1) ?? "-"}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2 md:hidden">
+                    {crewLog.filter(hasCrewLogEntry).map((row) => (
+                      <div key={row.day} className="rounded-xl border border-border-default bg-surface-base px-4 py-3">
+                        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-text-secondary">{row.day}</p>
+                        <div className="flex flex-wrap gap-4 text-sm">
+                          {row.workers > 0 && (
+                            <span>
+                              <span className="text-text-tertiary">Workers: </span>
+                              <span className="font-medium text-text-primary">{row.workers}</span>
+                            </span>
+                          )}
+                          {row.hours > 0 && (
+                            <span>
+                              <span className="text-text-tertiary">Hours: </span>
+                              <span className="font-medium text-text-primary">{row.hours}</span>
+                            </span>
+                          )}
+                        </div>
+                        {row.activities?.trim() && <p className="mt-1.5 text-sm text-text-primary">{row.activities}</p>}
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                    {crewLog.every((row) => !hasCrewLogEntry(row)) && <p className="text-sm text-text-tertiary">No crew log entries.</p>}
+                  </div>
+
+                  <div className="hidden overflow-x-auto rounded-xl border border-border-default md:block">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border-default bg-surface-overlay text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                          <th className="px-3 py-2">Day</th>
+                          <th className="px-3 py-2 text-center"># of Workers</th>
+                          <th className="px-3 py-2 text-center">Hours</th>
+                          <th className="px-3 py-2">Activities</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {crewLog.map((row) => (
+                          <tr key={row.day} className="border-b border-border-default last:border-0">
+                            <td className="px-3 py-2 text-text-secondary">{row.day}</td>
+                            <td className="px-3 py-2 text-center text-text-primary">{row.workers || "-"}</td>
+                            <td className="px-3 py-2 text-center text-text-primary">{row.hours || "-"}</td>
+                            <td className="px-3 py-2 text-text-primary">{row.activities || "-"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -1294,12 +1454,12 @@ function UpdateForm({
                       <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{row.day}</p>
                       <div className="flex gap-4">
                         <div className="flex-1">
-                          <label className="mb-1 block text-xs text-text-tertiary"># of Men</label>
+                          <label className="mb-1 block text-xs text-text-tertiary"># of Workers</label>
                           <input
                             type="number"
                             min={0}
-                            value={row.men === 0 ? "" : row.men}
-                            onChange={(e) => updateCrewRow(i, "men", Number(e.target.value))}
+                            value={row.workers === 0 ? "" : row.workers}
+                            onChange={(e) => updateCrewRow(i, "workers", Number(e.target.value))}
                             className="w-full rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
                           />
                         </div>
@@ -1333,7 +1493,7 @@ function UpdateForm({
                     <thead>
                       <tr className="border-b border-border-default bg-surface-overlay text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">
                         <th className="w-28 px-3 py-2">Day</th>
-                        <th className="w-20 px-3 py-2 text-center"># of Men</th>
+                        <th className="w-20 px-3 py-2 text-center"># of Workers</th>
                         <th className="w-20 px-3 py-2 text-center">Hours</th>
                         <th className="px-3 py-2">Activities</th>
                       </tr>
@@ -1346,8 +1506,8 @@ function UpdateForm({
                             <input
                               type="number"
                               min={0}
-                              value={row.men === 0 ? "" : row.men}
-                              onChange={(e) => updateCrewRow(i, "men", Number(e.target.value))}
+                              value={row.workers === 0 ? "" : row.workers}
+                              onChange={(e) => updateCrewRow(i, "workers", Number(e.target.value))}
                               className="w-16 rounded-lg border border-border-default bg-surface-base px-2 py-1 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
                             />
                           </td>
@@ -1374,6 +1534,138 @@ function UpdateForm({
                     </tbody>
                   </table>
                 </div>
+              </div>
+
+              <div className="space-y-4 rounded-2xl border border-border-default bg-surface-raised p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-text-primary">Labor Hours</h3>
+                    <p className="mt-1 text-sm text-text-tertiary">
+                      Pull per-person hours from QB Time when a jobcode mapping exists.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handlePullHours()}
+                    disabled={pullingHours}
+                    className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm font-semibold text-text-primary transition hover:bg-surface-base disabled:opacity-50"
+                  >
+                    {pullingHours ? "Pulling..." : "Pull from QB Time"}
+                  </button>
+                </div>
+
+                {laborHasMapping === false && (
+                  <div className="rounded-xl border border-status-warning/30 bg-status-warning/10 px-4 py-3 text-sm text-status-warning">
+                    This project has no QB Time jobcode mapping. Contact admin.
+                  </div>
+                )}
+
+                {laborPullError && (
+                  <div className="rounded-xl border border-status-danger/30 bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
+                    {laborPullError}
+                  </div>
+                )}
+
+                {laborDetail && laborDetail.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-semibold text-text-primary">
+                          Total: {laborEffectiveHours?.toFixed(1) ?? laborPulled?.toFixed(1) ?? "-"} hrs
+                        </span>
+                        <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${laborBadgeClasses(laborOverrideActive ? "manual" : laborSource)}`}>
+                          {laborOverrideActive ? "Manual" : "QB Time"}
+                        </span>
+                      </div>
+                      {laborPulledAt && (
+                        <p className="text-xs text-text-tertiary">
+                          Data as of {format(new Date(laborPulledAt), "MMM d, yyyy h:mm a")}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="overflow-x-auto rounded-xl border border-border-default">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border-default bg-surface-overlay text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                            <th className="px-3 py-2">Name</th>
+                            <th className="px-3 py-2 text-center">Mon</th>
+                            <th className="px-3 py-2 text-center">Tue</th>
+                            <th className="px-3 py-2 text-center">Wed</th>
+                            <th className="px-3 py-2 text-center">Thu</th>
+                            <th className="px-3 py-2 text-center">Fri</th>
+                            <th className="px-3 py-2 text-center">Sat</th>
+                            <th className="px-3 py-2 text-center">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {laborDetail.map((worker) => (
+                            <tr key={worker.display_name} className="border-b border-border-default last:border-0">
+                              <td className="px-3 py-2 text-text-primary">{worker.display_name}</td>
+                              <td className="px-3 py-2 text-center text-text-secondary">{worker.mon || "-"}</td>
+                              <td className="px-3 py-2 text-center text-text-secondary">{worker.tue || "-"}</td>
+                              <td className="px-3 py-2 text-center text-text-secondary">{worker.wed || "-"}</td>
+                              <td className="px-3 py-2 text-center text-text-secondary">{worker.thu || "-"}</td>
+                              <td className="px-3 py-2 text-center text-text-secondary">{worker.fri || "-"}</td>
+                              <td className="px-3 py-2 text-center text-text-secondary">{worker.sat || "-"}</td>
+                              <td className="px-3 py-2 text-center font-semibold text-text-primary">{worker.total || "-"}</td>
+                            </tr>
+                          ))}
+                          <tr className="bg-surface-overlay font-semibold text-text-primary">
+                            <td className="px-3 py-2">Total</td>
+                            <td className="px-3 py-2 text-center">-</td>
+                            <td className="px-3 py-2 text-center">-</td>
+                            <td className="px-3 py-2 text-center">-</td>
+                            <td className="px-3 py-2 text-center">-</td>
+                            <td className="px-3 py-2 text-center">-</td>
+                            <td className="px-3 py-2 text-center">-</td>
+                            <td className="px-3 py-2 text-center">{laborEffectiveHours?.toFixed(1) ?? "-"}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="space-y-3 rounded-xl border border-border-default bg-surface-base p-4">
+                      <label className="flex cursor-pointer items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={laborOverrideActive}
+                          onChange={(e) => {
+                            setLaborOverrideActive(e.target.checked);
+                            setLaborSource(e.target.checked ? "manual" : "qb_time");
+                            if (e.target.checked && laborOverride === "" && laborPulled != null) {
+                              setLaborOverride(laborPulled.toFixed(1));
+                            }
+                          }}
+                          className="h-4 w-4 rounded border-border-default accent-status-success"
+                        />
+                        <span className="text-sm text-text-secondary">Override total</span>
+                      </label>
+
+                      {laborOverrideActive && (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <input
+                            type="number"
+                            min={0}
+                            step={0.5}
+                            value={laborOverride}
+                            onChange={(e) => setLaborOverride(e.target.value)}
+                            className="w-32 rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+                          />
+                          <span className="text-sm text-text-secondary">hrs</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={handleRejectQbTime}
+                        className="text-sm font-medium text-text-tertiary transition hover:text-status-danger"
+                      >
+                        Clear / Use manual entry
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>

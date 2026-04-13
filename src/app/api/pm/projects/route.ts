@@ -53,7 +53,7 @@ export async function GET(request: Request) {
     const [updatesResult, pocResult, contactsResult, allPeriodsResult] = await Promise.all([
       adminClient
         .from("weekly_updates")
-        .select("id, project_id, pm_id, week_of, pct_complete, notes, blockers, poc_snapshot, crew_log, material_delivered, equipment_set, safety_incidents, inspections_tests, delays_impacts, other_remarks, imported_from, status, submitted_at")
+        .select("id, project_id, pm_id, week_of, pct_complete, notes, blockers, poc_snapshot, crew_log, labor_hours_pulled, labor_hours_override, labor_hours_source, labor_hours_pulled_at, labor_hours_detail, material_delivered, equipment_set, safety_incidents, inspections_tests, delays_impacts, other_remarks, imported_from, status, submitted_at")
         .eq("project_id", projectId)
         .order("week_of", { ascending: false }),
       adminClient
