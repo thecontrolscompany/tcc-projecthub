@@ -1,9 +1,46 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import type { TimeModuleProject, TimeModuleSnapshot, TimeModuleUser } from "@/lib/time/data";
 
-export function TimeModuleHome({ snapshot }: { snapshot: TimeModuleSnapshot }) {
+export function TimeModuleHome({
+  snapshot,
+  isAdmin = false,
+}: {
+  snapshot: TimeModuleSnapshot;
+  isAdmin?: boolean;
+}) {
   const activeUsers = snapshot.users.filter((user) => user.active).length;
   const activeProjects = snapshot.projects.filter((project) => project.active).length;
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [syncTimestamp, setSyncTimestamp] = useState<string | null>(null);
+
+  async function handleSync() {
+    setSyncing(true);
+    setSyncResult(null);
+    setSyncError(null);
+    try {
+      const res = await fetch("/api/admin/sync-qb-time", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ days: 30 }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Sync failed");
+      setSyncResult(
+        `Sync complete — ${json.timesheetsImported} timesheets, ${json.usersImported} users, ${json.jobcodesImported} jobcodes imported.`
+      );
+      setSyncTimestamp(new Date().toISOString());
+    } catch (err) {
+      setSyncError(err instanceof Error ? err.message : "Sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -23,6 +60,42 @@ export function TimeModuleHome({ snapshot }: { snapshot: TimeModuleSnapshot }) {
         <MetricCard label="QB jobcodes" value={String(snapshot.projects.length)} />
         <MetricCard label="Active jobcodes" value={String(activeProjects)} />
       </div>
+
+      {isAdmin && (
+        <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Data</p>
+              <h2 className="mt-2 text-xl font-semibold text-text-primary">Sync QB Time</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
+                Pull the last 30 days of QuickBooks Time users, jobcodes, and timesheets into ProjectHub.
+              </p>
+              <p className="mt-2 text-xs text-text-tertiary">Syncs last 30 days of timesheets.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleSync()}
+              disabled={syncing}
+              className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse transition hover:bg-brand-primary-hover disabled:opacity-50"
+            >
+              {syncing ? "Syncing..." : "Sync QB Time"}
+            </button>
+          </div>
+
+          {syncResult && (
+            <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+              <p>{syncResult}</p>
+              {syncTimestamp && <p className="mt-1 text-xs text-emerald-700">Updated {formatDateTime(syncTimestamp)}</p>}
+            </div>
+          )}
+
+          {syncError && (
+            <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+              {syncError}
+            </div>
+          )}
+        </section>
+      )}
 
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
