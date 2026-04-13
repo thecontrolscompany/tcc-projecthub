@@ -243,7 +243,19 @@ export async function importQuickBooksTimeData(days = 30): Promise<QuickBooksTim
     }
 
     if (timesheetRows.length > 0) {
-      const { error } = await supabase.from("qb_time_timesheets").upsert(timesheetRows, { onConflict: "qb_timesheet_id" });
+      // Null out any qb_jobcode_id that isn't in the synced jobcodes set.
+      // Archived/deleted jobcodes may still appear on timesheets but won't be
+      // returned by the jobcodes endpoint, causing FK violations.
+      const knownJobcodeIds = new Set(jobcodeRows.map((j) => j.qb_jobcode_id));
+      const safeTimesheetRows = timesheetRows.map((t) => ({
+        ...t,
+        qb_jobcode_id:
+          t.qb_jobcode_id !== null && knownJobcodeIds.has(t.qb_jobcode_id)
+            ? t.qb_jobcode_id
+            : null,
+      }));
+
+      const { error } = await supabase.from("qb_time_timesheets").upsert(safeTimesheetRows, { onConflict: "qb_timesheet_id" });
       if (error) throw new Error(`Failed to upsert timesheets: ${error.message} (code: ${error.code})`);
     }
 
