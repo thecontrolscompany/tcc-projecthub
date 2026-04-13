@@ -33,9 +33,13 @@ export async function POST(request: NextRequest) {
     const result = await importQuickBooksTimeData(days);
     return NextResponse.json(result);
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Sync failed" },
-      { status: 500 }
-    );
+    const message =
+      err instanceof Error
+        ? err.message
+        : typeof err === "object" && err !== null && "message" in err
+          ? String((err as Record<string, unknown>).message)
+          : JSON.stringify(err);
+    console.error("QB Time sync error:", err);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

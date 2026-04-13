@@ -212,7 +212,7 @@ export async function importQuickBooksTimeData(days = 30): Promise<QuickBooksTim
   });
 
   if (runError) {
-    throw runError;
+    throw new Error(`Failed to create sync run record: ${runError.message} (code: ${runError.code})`);
   }
 
   try {
@@ -234,17 +234,17 @@ export async function importQuickBooksTimeData(days = 30): Promise<QuickBooksTim
 
     if (userRows.length > 0) {
       const { error } = await supabase.from("qb_time_users").upsert(userRows, { onConflict: "qb_user_id" });
-      if (error) throw error;
+      if (error) throw new Error(`Failed to upsert users: ${error.message} (code: ${error.code})`);
     }
 
     if (jobcodeRows.length > 0) {
       const { error } = await supabase.from("qb_time_jobcodes").upsert(jobcodeRows, { onConflict: "qb_jobcode_id" });
-      if (error) throw error;
+      if (error) throw new Error(`Failed to upsert jobcodes: ${error.message} (code: ${error.code})`);
     }
 
     if (timesheetRows.length > 0) {
       const { error } = await supabase.from("qb_time_timesheets").upsert(timesheetRows, { onConflict: "qb_timesheet_id" });
-      if (error) throw error;
+      if (error) throw new Error(`Failed to upsert timesheets: ${error.message} (code: ${error.code})`);
     }
 
     runSummary.users_imported = userRows.length;
