@@ -589,6 +589,9 @@ function UpdateForm({
       setLaborSource("qb_time");
       setLaborOverrideActive(false);
       setLaborOverride("");
+      if ((json.hours ?? 0) === 0) {
+        setLaborPullError("No QB Time hours found for this week on this project. Hours may not be posted yet — try again later or use the crew log below.");
+      }
     } catch (err) {
       setLaborPullError(err instanceof Error ? err.message : "Pull failed");
     } finally {
