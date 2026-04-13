@@ -99,6 +99,11 @@ function hasCrewLogEntry(row: CrewLogEntry) {
   return row.men > 0 || row.hours > 0 || Boolean(row.activities?.trim());
 }
 
+function isEglin1416Project(projectName: string) {
+  const normalized = projectName.toLowerCase();
+  return normalized.includes("eglin") && normalized.includes("1416");
+}
+
 export default function PmPage() {
   const supabase = createClient();
   const router = useRouter();
@@ -715,6 +720,7 @@ function UpdateForm({
     ? draftUpdateId === currentWeekUpdate.id || submittedUpdateId === currentWeekUpdate.id
     : !draftUpdateId && !submittedUpdateId && weekOf === thisSaturday;
   const activeChangeOrders = changeOrders.filter((co) => co.status !== "void");
+  const showEglinReportBuilder = isEglin1416Project(project.name);
 
   return (
     <div className="space-y-6">
@@ -728,6 +734,16 @@ function UpdateForm({
             <p className="text-xs font-semibold uppercase tracking-wide text-status-success">Daily Construction Report</p>
             <h2 className="mt-1 text-xl font-bold text-text-primary">{project.name}</h2>
             <p className="text-sm text-text-secondary">{project.customer?.name}</p>
+            {showEglinReportBuilder && (
+              <div className="mt-3">
+                <a
+                  href={`/pm/reports/eglin-1416?projectId=${encodeURIComponent(project.id)}`}
+                  className="inline-flex items-center rounded-xl border border-brand-primary/20 bg-brand-primary/10 px-3 py-2 text-sm font-semibold text-brand-primary transition hover:bg-brand-primary/20"
+                >
+                  Open Eglin Report Builder
+                </a>
+              </div>
+            )}
           </div>
           <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium ${projectStatus.className}`}>
             {projectStatus.label}
