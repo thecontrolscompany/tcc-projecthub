@@ -280,7 +280,48 @@ export default async function Eglin1416GeneratedReportPage({ searchParams }: Pag
         <style>{`
           :root { color-scheme: light; }
           * { box-sizing: border-box; }
-          @page { size: letter; margin: 0.65in 0.75in; }
+          @page {
+            size: letter;
+            margin: 0.8in 0.75in 0.9in 0.75in;
+
+            @top-left {
+              content: "The Controls Company, LLC";
+              font-family: Arial, Helvetica, sans-serif;
+              font-size: 8pt;
+              color: #4b5563;
+              vertical-align: bottom;
+              padding-bottom: 6pt;
+              border-bottom: 1pt solid #017a6f;
+            }
+
+            @top-right {
+              content: "${customerProjectName(project.name).replace(/"/g, '\\"')} — Progress Report";
+              font-family: Arial, Helvetica, sans-serif;
+              font-size: 8pt;
+              color: #4b5563;
+              vertical-align: bottom;
+              padding-bottom: 6pt;
+              border-bottom: 1pt solid #017a6f;
+            }
+
+            @bottom-left {
+              content: "thecontrolscompany.com  |  Service Disabled Veteran Owned Small Business";
+              font-family: Arial, Helvetica, sans-serif;
+              font-size: 7.5pt;
+              color: #9ca3af;
+              vertical-align: top;
+              padding-top: 6pt;
+            }
+
+            @bottom-right {
+              content: "Page " counter(page) " of " counter(pages);
+              font-family: Arial, Helvetica, sans-serif;
+              font-size: 8pt;
+              color: #4b5563;
+              vertical-align: top;
+              padding-top: 6pt;
+            }
+          }
           body {
             margin: 0;
             background: #eef3f7;
@@ -316,6 +357,42 @@ export default async function Eglin1416GeneratedReportPage({ searchParams }: Pag
             padding: 28px 34px 24px;
           }
           .report-header * { color: inherit; }
+          .brand-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+          }
+          .logo {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            flex-shrink: 0;
+          }
+          .brand-copy {
+            flex: 1;
+            text-align: center;
+          }
+          .brand-copy h1 {
+            margin: 0 0 4px;
+            font-size: 20px;
+            letter-spacing: 0.04em;
+          }
+          .brand-copy p {
+            margin: 0;
+            font-size: 12px;
+            opacity: 0.9;
+          }
+          .sdvosb-badge {
+            width: 92px;
+            height: 92px;
+            object-fit: contain;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            padding: 4px;
+          }
           .header-top {
             display: flex;
             justify-content: space-between;
@@ -452,10 +529,23 @@ export default async function Eglin1416GeneratedReportPage({ searchParams }: Pag
           .risk-high { background: #fee2e2; color: #991b1b; }
           .risk-medium { background: #fef3c7; color: #92400e; }
           .risk-low { background: #dcfce7; color: #166534; }
+          .footer {
+            margin-top: 24px;
+            padding-top: 14px;
+            border-top: 2px solid #017a6f;
+            text-align: center;
+            font-size: 12px;
+            color: #4b5563;
+          }
           .footer-note {
-            margin-top: 22px;
+            margin-top: 6px;
             color: #6b7280;
             font-size: 11px;
+          }
+          @media print {
+            .footer {
+              display: none;
+            }
           }
         `}</style>
 
@@ -463,6 +553,14 @@ export default async function Eglin1416GeneratedReportPage({ searchParams }: Pag
           <PrintButton documentTitle={reportTitle} />
 
           <header className="report-header">
+            <div className="brand-row">
+              <img src="/logo.png" alt="The Controls Company" className="logo" />
+              <div className="brand-copy">
+                <h1>THE CONTROLS COMPANY, LLC</h1>
+                <p>Service Disabled Veteran Owned Small Business</p>
+              </div>
+              <img src="/sdvosb.jpg" alt="SDVOSB badge" className="sdvosb-badge" />
+            </div>
             <div className="header-top">
               <div>
                 <div className="report-title">Project Progress Report</div>
@@ -631,9 +729,11 @@ export default async function Eglin1416GeneratedReportPage({ searchParams }: Pag
               </div>
             </section>
 
-            <div className="footer-note">
-              Prepared from the saved Eglin 1416 report packet in ProjectHub.
-            </div>
+            <footer className="footer">
+              <div>The Controls Company, LLC | thecontrolscompany.com</div>
+              <div>Service Disabled Veteran Owned Small Business</div>
+              <div className="footer-note">Prepared from the saved Eglin 1416 report packet in ProjectHub.</div>
+            </footer>
           </main>
         </div>
       </body>
