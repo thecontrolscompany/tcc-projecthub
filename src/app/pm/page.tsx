@@ -590,7 +590,7 @@ function UpdateForm({
       setLaborOverrideActive(false);
       setLaborOverride("");
       if ((json.hours ?? 0) === 0) {
-        setLaborPullError("No QB Time hours found for this week on this project. Hours may not be posted yet — try again later or use the crew log below.");
+        setLaborPullError("No QB Time hours found for this week on this project. Hours may not be posted yet — try again later or enter hours manually in the crew log.");
       }
     } catch (err) {
       setLaborPullError(err instanceof Error ? err.message : "Pull failed");
@@ -1449,96 +1449,6 @@ function UpdateForm({
                 </div>
               </div>
 
-              <div>
-                <h3 className="mb-3 text-sm font-semibold text-text-primary">Daily Crew Log</h3>
-                <div className="space-y-3 md:hidden">
-                  {crewLog.map((row, i) => (
-                    <div key={row.day} className="space-y-2 rounded-xl border border-border-default bg-surface-base px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{row.day}</p>
-                      <div className="flex gap-4">
-                        <div className="flex-1">
-                          <label className="mb-1 block text-xs text-text-tertiary"># of Workers</label>
-                          <input
-                            type="number"
-                            min={0}
-                            value={row.workers === 0 ? "" : row.workers}
-                            onChange={(e) => updateCrewRow(i, "workers", Number(e.target.value))}
-                            className="w-full rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <label className="mb-1 block text-xs text-text-tertiary">Hours</label>
-                          <input
-                            type="number"
-                            min={0}
-                            value={row.hours === 0 ? "" : row.hours}
-                            onChange={(e) => updateCrewRow(i, "hours", Number(e.target.value))}
-                            className="w-full rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-xs text-text-tertiary">Activities</label>
-                        <input
-                          type="text"
-                          value={row.activities}
-                          onChange={(e) => updateCrewRow(i, "activities", e.target.value)}
-                          placeholder="Work performed..."
-                          className="w-full rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary placeholder-text-tertiary focus:border-status-success/50 focus:outline-none"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="hidden overflow-x-auto rounded-xl border border-border-default md:block">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border-default bg-surface-overlay text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">
-                        <th className="w-28 px-3 py-2">Day</th>
-                        <th className="w-20 px-3 py-2 text-center"># of Workers</th>
-                        <th className="w-20 px-3 py-2 text-center">Hours</th>
-                        <th className="px-3 py-2">Activities</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {crewLog.map((row, i) => (
-                        <tr key={row.day} className="border-b border-border-default last:border-0">
-                          <td className="px-3 py-2 font-medium text-text-secondary">{row.day}</td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="number"
-                              min={0}
-                              value={row.workers === 0 ? "" : row.workers}
-                              onChange={(e) => updateCrewRow(i, "workers", Number(e.target.value))}
-                              className="w-16 rounded-lg border border-border-default bg-surface-base px-2 py-1 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
-                            />
-                          </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="number"
-                              min={0}
-                              value={row.hours === 0 ? "" : row.hours}
-                              onChange={(e) => updateCrewRow(i, "hours", Number(e.target.value))}
-                              className="w-16 rounded-lg border border-border-default bg-surface-base px-2 py-1 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
-                            />
-                          </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="text"
-                              value={row.activities}
-                              onChange={(e) => updateCrewRow(i, "activities", e.target.value)}
-                              placeholder="Work performed..."
-                              className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-1 text-sm text-text-primary placeholder-text-tertiary focus:border-status-success/50 focus:outline-none"
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
               <div className="space-y-4 rounded-2xl border border-border-default bg-surface-raised p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
@@ -1669,6 +1579,96 @@ function UpdateForm({
                     </div>
                   </div>
                 )}
+              </div>
+
+              <div>
+                <h3 className="mb-3 text-sm font-semibold text-text-primary">Daily Crew Log</h3>
+                <div className="space-y-3 md:hidden">
+                  {crewLog.map((row, i) => (
+                    <div key={row.day} className="space-y-2 rounded-xl border border-border-default bg-surface-base px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{row.day}</p>
+                      <div className="flex gap-4">
+                        <div className="flex-1">
+                          <label className="mb-1 block text-xs text-text-tertiary"># of Workers</label>
+                          <input
+                            type="number"
+                            min={0}
+                            value={row.workers === 0 ? "" : row.workers}
+                            onChange={(e) => updateCrewRow(i, "workers", Number(e.target.value))}
+                            className="w-full rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <label className="mb-1 block text-xs text-text-tertiary">Hours</label>
+                          <input
+                            type="number"
+                            min={0}
+                            value={row.hours === 0 ? "" : row.hours}
+                            onChange={(e) => updateCrewRow(i, "hours", Number(e.target.value))}
+                            className="w-full rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs text-text-tertiary">Activities</label>
+                        <input
+                          type="text"
+                          value={row.activities}
+                          onChange={(e) => updateCrewRow(i, "activities", e.target.value)}
+                          placeholder="Work performed..."
+                          className="w-full rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary placeholder-text-tertiary focus:border-status-success/50 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="hidden overflow-x-auto rounded-xl border border-border-default md:block">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border-default bg-surface-overlay text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                        <th className="w-28 px-3 py-2">Day</th>
+                        <th className="w-20 px-3 py-2 text-center"># of Workers</th>
+                        <th className="w-20 px-3 py-2 text-center">Hours</th>
+                        <th className="px-3 py-2">Activities</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {crewLog.map((row, i) => (
+                        <tr key={row.day} className="border-b border-border-default last:border-0">
+                          <td className="px-3 py-2 font-medium text-text-secondary">{row.day}</td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="number"
+                              min={0}
+                              value={row.workers === 0 ? "" : row.workers}
+                              onChange={(e) => updateCrewRow(i, "workers", Number(e.target.value))}
+                              className="w-16 rounded-lg border border-border-default bg-surface-base px-2 py-1 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="number"
+                              min={0}
+                              value={row.hours === 0 ? "" : row.hours}
+                              onChange={(e) => updateCrewRow(i, "hours", Number(e.target.value))}
+                              className="w-16 rounded-lg border border-border-default bg-surface-base px-2 py-1 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="text"
+                              value={row.activities}
+                              onChange={(e) => updateCrewRow(i, "activities", e.target.value)}
+                              placeholder="Work performed..."
+                              className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-1 text-sm text-text-primary placeholder-text-tertiary focus:border-status-success/50 focus:outline-none"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               <div>
