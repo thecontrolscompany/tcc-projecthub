@@ -1583,6 +1583,9 @@ function WeeklyUpdateCard({ update }: { update: WeeklyUpdate }) {
               </tbody>
             </table>
           </div>
+          <p className="text-xs text-slate-400">
+            *Hours rounded to nearest half hour
+          </p>
         </div>
       ) : totalLaborHours != null ? (
         <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">

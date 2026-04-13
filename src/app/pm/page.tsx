@@ -551,6 +551,16 @@ function UpdateForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project.id]);
 
+  useEffect(() => {
+    if (!laborDetail || laborDetail.length === 0) {
+      setLaborPulled(null);
+      return;
+    }
+
+    const total = laborDetail.reduce((sum, worker) => sum + worker.total, 0);
+    setLaborPulled(Math.round(total * 2) / 2);
+  }, [laborDetail]);
+
   async function loadRfis(projectId: string) {
     if (rfisLoading) return;
     setRfisLoading(true);
@@ -597,6 +607,56 @@ function UpdateForm({
     } finally {
       setPullingHours(false);
     }
+  }
+
+  function updateLaborWorker(
+    index: number,
+    field: keyof Omit<LaborHoursWorker, "display_name" | "total">,
+    value: number
+  ) {
+    setLaborDetail((prev) => {
+      if (!prev) return prev;
+      return prev.map((worker, i) => {
+        if (i !== index) return worker;
+        const updated = { ...worker, [field]: value };
+        updated.total =
+          updated.mon + updated.tue + updated.wed +
+          updated.thu + updated.fri + updated.sat;
+        return updated;
+      });
+    });
+  }
+
+  function updateLaborWorkerName(index: number, name: string) {
+    setLaborDetail((prev) => {
+      if (!prev) return prev;
+      return prev.map((worker, i) =>
+        i === index ? { ...worker, display_name: name } : worker
+      );
+    });
+  }
+
+  function addLaborWorker() {
+    const blank: LaborHoursWorker = {
+      display_name: "",
+      mon: 0,
+      tue: 0,
+      wed: 0,
+      thu: 0,
+      fri: 0,
+      sat: 0,
+      total: 0,
+    };
+    setLaborDetail((prev) => (prev ? [...prev, blank] : [blank]));
+    if (!laborSource) setLaborSource("manual");
+  }
+
+  function removeLaborWorker(index: number) {
+    setLaborDetail((prev) => {
+      if (!prev) return prev;
+      const next = prev.filter((_, i) => i !== index);
+      return next.length > 0 ? next : null;
+    });
   }
 
   function handleRejectQbTime() {
@@ -818,6 +878,7 @@ function UpdateForm({
   const showEglinReportBuilder = isEglin1416Project(project.name);
   const laborEffectiveHours =
     laborOverrideActive && laborOverride !== "" ? Number(laborOverride) : laborPulled;
+  const laborGrandTotal = laborDetail?.reduce((sum, worker) => sum + worker.total, 0) ?? 0;
 
   return (
     <div className="space-y-6">
@@ -1308,6 +1369,9 @@ function UpdateForm({
                       </tbody>
                     </table>
                   </div>
+                  <p className="text-xs text-text-tertiary">
+                    *Hours rounded to nearest half hour
+                  </p>
                 </div>
               ) : (
                 <>
@@ -1479,6 +1543,16 @@ function UpdateForm({
                   </div>
                 )}
 
+                {!laborDetail?.length && (
+                  <button
+                    type="button"
+                    onClick={addLaborWorker}
+                    className="text-sm font-medium text-text-tertiary transition hover:text-text-primary"
+                  >
+                    + Add worker manually
+                  </button>
+                )}
+
                 {laborDetail && laborDetail.length > 0 && (
                   <div className="space-y-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1509,19 +1583,44 @@ function UpdateForm({
                             <th className="px-3 py-2 text-center">Fri</th>
                             <th className="px-3 py-2 text-center">Sat</th>
                             <th className="px-3 py-2 text-center">Total</th>
+                            <th className="w-10 px-3 py-2 text-center"></th>
                           </tr>
                         </thead>
                         <tbody>
-                          {laborDetail.map((worker) => (
-                            <tr key={worker.display_name} className="border-b border-border-default last:border-0">
-                              <td className="px-3 py-2 text-text-primary">{worker.display_name}</td>
-                              <td className="px-3 py-2 text-center text-text-secondary">{worker.mon || "-"}</td>
-                              <td className="px-3 py-2 text-center text-text-secondary">{worker.tue || "-"}</td>
-                              <td className="px-3 py-2 text-center text-text-secondary">{worker.wed || "-"}</td>
-                              <td className="px-3 py-2 text-center text-text-secondary">{worker.thu || "-"}</td>
-                              <td className="px-3 py-2 text-center text-text-secondary">{worker.fri || "-"}</td>
-                              <td className="px-3 py-2 text-center text-text-secondary">{worker.sat || "-"}</td>
-                              <td className="px-3 py-2 text-center font-semibold text-text-primary">{worker.total || "-"}</td>
+                          {laborDetail.map((worker, index) => (
+                            <tr key={`${worker.display_name}-${index}`} className="border-b border-border-default last:border-0">
+                              <td className="px-3 py-2">
+                                <input
+                                  type="text"
+                                  value={worker.display_name}
+                                  onChange={(e) => updateLaborWorkerName(index, e.target.value)}
+                                  className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+                                  placeholder="Worker name"
+                                />
+                              </td>
+                              {(["mon", "tue", "wed", "thu", "fri", "sat"] as const).map((day) => (
+                                <td key={day} className="px-3 py-2">
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    step={0.5}
+                                    value={worker[day] === 0 ? "" : worker[day]}
+                                    onChange={(e) => updateLaborWorker(index, day, Number(e.target.value))}
+                                    className="w-16 rounded-lg border border-border-default bg-surface-base px-2 py-1 text-center text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+                                  />
+                                </td>
+                              ))}
+                              <td className="px-3 py-2 text-center font-semibold text-text-primary">{worker.total.toFixed(1)}</td>
+                              <td className="px-3 py-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => removeLaborWorker(index)}
+                                  className="text-base font-semibold text-text-tertiary transition hover:text-status-danger"
+                                  aria-label={`Remove ${worker.display_name || `worker ${index + 1}`}`}
+                                >
+                                  ×
+                                </button>
+                              </td>
                             </tr>
                           ))}
                           <tr className="bg-surface-overlay font-semibold text-text-primary">
@@ -1532,11 +1631,24 @@ function UpdateForm({
                             <td className="px-3 py-2 text-center">-</td>
                             <td className="px-3 py-2 text-center">-</td>
                             <td className="px-3 py-2 text-center">-</td>
-                            <td className="px-3 py-2 text-center">{laborEffectiveHours?.toFixed(1) ?? "-"}</td>
+                            <td className="px-3 py-2 text-center">{laborGrandTotal.toFixed(1)}</td>
+                            <td className="px-3 py-2"></td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
+
+                    <p className="text-xs text-text-tertiary">
+                      *Hours rounded to nearest half hour
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={addLaborWorker}
+                      className="text-sm font-medium text-text-tertiary transition hover:text-text-primary"
+                    >
+                      + Add worker
+                    </button>
 
                     <div className="space-y-3 rounded-xl border border-border-default bg-surface-base p-4">
                       <label className="flex cursor-pointer items-center gap-2">
