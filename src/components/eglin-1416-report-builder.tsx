@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { differenceInCalendarDays, format } from "date-fns";
 
 type RiskLevel = "low" | "medium" | "high";
@@ -208,6 +209,7 @@ export function Eglin1416ReportBuilder({
   projectId: string;
   projectName: string;
 }) {
+  const router = useRouter();
   const [draft, setDraft] = useState<BuilderDraft>(() => createDefaultDraft());
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -353,10 +355,21 @@ export function Eglin1416ReportBuilder({
           ? "Saved to Supabase and SharePoint."
           : "Saved to Supabase. SharePoint upload was skipped."
       );
+      return packet;
     } catch (error) {
       setSaveState("error");
       setSaveMessage(error instanceof Error ? error.message : "Unable to save report packet.");
+      return null;
     }
+  }
+
+  async function handleSaveAndGenerate() {
+    const packet = await savePacket(centralPacketMarkdown);
+    if (!packet) return;
+
+    router.push(
+      `/reports/project/eglin-1416?projectId=${encodeURIComponent(projectId)}&packetDate=${encodeURIComponent(packet.packet_date)}`
+    );
   }
 
   const timeline = useMemo(() => {
@@ -569,6 +582,24 @@ export function Eglin1416ReportBuilder({
             >
               {saveState === "saving" ? "Saving..." : "Save Packet Centrally"}
             </button>
+            <button
+              type="button"
+              onClick={() => void handleSaveAndGenerate()}
+              disabled={saveState === "saving"}
+              className="rounded-xl bg-status-success px-4 py-2 text-sm font-semibold text-text-inverse transition hover:opacity-90 disabled:opacity-60"
+            >
+              {saveState === "saving" ? "Saving..." : "Save + Generate Report"}
+            </button>
+            {latestPacket && (
+              <a
+                href={`/reports/project/eglin-1416?projectId=${encodeURIComponent(projectId)}&packetDate=${encodeURIComponent(latestPacket.packet_date)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-base hover:text-text-primary"
+              >
+                Open Latest Report
+              </a>
+            )}
             {latestPacket?.sharepoint_web_url && (
               <a
                 href={latestPacket.sharepoint_web_url}
