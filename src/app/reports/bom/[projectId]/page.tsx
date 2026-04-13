@@ -412,7 +412,7 @@ export default async function BomReportPage({ params }: PageProps) {
                   <tr>
                     <th>Section</th>
                     <th>Designation</th>
-                    <th>Code Number</th>
+                    <th>Part</th>
                     <th>Description</th>
                     <th className="number-cell">Qty Req&apos;d</th>
                     <th className="number-cell">Qty Rec&apos;d</th>

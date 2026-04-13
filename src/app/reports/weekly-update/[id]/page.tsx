@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { format } from "date-fns";
+import { endOfWeek, format, subDays } from "date-fns";
 import { notFound, redirect } from "next/navigation";
 import { PrintButton } from "@/app/reports/weekly-update/[id]/PrintButton";
 import { createClient } from "@/lib/supabase/server";
@@ -94,6 +94,24 @@ function customerProjectName(name: string | null | undefined) {
 
 function fileSafeName(value: string) {
   return value.replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, " ").trim();
+}
+
+function getGeneratedReportDate() {
+  return new Date();
+}
+
+function getCrewLogDateLabel(weekOf: string, day: CrewLogEntry["day"]) {
+  const weekEnding = endOfWeek(new Date(`${formatWeekEndingSaturday(weekOf, "yyyy-MM-dd")}T00:00:00`), { weekStartsOn: 0 });
+  const dayOffsets: Record<CrewLogEntry["day"], number> = {
+    Monday: 5,
+    Tuesday: 4,
+    Wednesday: 3,
+    Thursday: 2,
+    Friday: 1,
+    Saturday: 0,
+  };
+
+  return format(subDays(weekEnding, dayOffsets[day]), "MM/dd/yy");
 }
 
 async function canAccessReport(supabase: Awaited<ReturnType<typeof createClient>>, role: UserRole, userId: string, projectId: string) {
@@ -254,8 +272,9 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
 
   const customer = normalizeSingle(project.customer);
   const pmName = await resolvePmName(admin, project.id, update.pm);
+  const generatedAt = getGeneratedReportDate();
   const printableTitle = fileSafeName(
-    `${customerProjectName(project.name)} - Weekly Report - ${formatWeekEndingSaturday(update.week_of, "yyyy-MM-dd")}`
+    `${customerProjectName(project.name)} - Weekly Report - ${format(generatedAt, "yyyy-MM-dd")}`
   );
 
   const crewLog = update.crew_log && update.crew_log.length > 0 ? update.crew_log : emptyCrewLog();
@@ -683,8 +702,10 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
                   : <span style={{ color: "#b91c1c", fontWeight: 700 }}>⚠ Schedule not received</span>
                 }
               </div>
-              <div className="meta-label">Report Date:</div>
+              <div className="meta-label">Week Ending:</div>
               <div>{formatWeekEndingSaturday(update.week_of, "MMMM d, yyyy")}</div>
+              <div className="meta-label">Report Date:</div>
+              <div>{format(generatedAt, "MMMM d, yyyy")}</div>
             </div>
 
             <div className="section-divider">
@@ -703,7 +724,12 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
               <tbody>
                 {crewLog.map((row) => (
                   <tr key={row.day}>
-                    <td>{row.day}</td>
+                    <td>
+                      <div>{row.day}</div>
+                      <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
+                        {getCrewLogDateLabel(update.week_of, row.day)}
+                      </div>
+                    </td>
                     <td className="number-cell">{row.men || ""}</td>
                     <td className="number-cell">{row.hours || ""}</td>
                     <td>{row.activities || ""}</td>
@@ -803,7 +829,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
                   <thead>
                     <tr>
                       <th>Designation</th>
-                      <th>Code Number</th>
+                      <th>Part</th>
                       <th>Description</th>
                       <th className="number-cell">Qty Req&apos;d</th>
                       <th className="number-cell">Qty Rec&apos;d</th>
