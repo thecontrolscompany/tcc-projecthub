@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { EmployeeHoursSection } from "@/components/time/employee-hours-section";
 import { ProjectHoursSection } from "@/components/time/project-hours-section";
+import { TimeSubnav } from "@/components/time/time-subnav";
 import type {
   TimeModuleProject,
   TimeModuleSnapshot,
@@ -53,6 +54,7 @@ export function TimeModuleHome({
 
   return (
     <div className="space-y-6">
+      <TimeSubnav />
       <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">TCC Time</p>
         <h1 className="mt-2 font-heading text-3xl font-bold text-text-primary">Clock first, imported data visible now</h1>
@@ -169,6 +171,7 @@ export function TimeClockPage({
 
   return (
     <div className="space-y-6">
+      <TimeSubnav />
       <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Clock</p>
         <h1 className="mt-2 font-heading text-3xl font-bold text-text-primary">Clocking stays first priority</h1>
@@ -216,6 +219,7 @@ export function TimeEmployeesPage({
 }) {
   return (
     <div className="space-y-6">
+      <TimeSubnav />
       <HeaderBlock
         eyebrow="Employees"
         title="Employee hours"
@@ -258,6 +262,7 @@ export function TimeProjectsPage({
 
   return (
     <div className="space-y-6">
+      <TimeSubnav />
       <HeaderBlock
         eyebrow="Projects"
         title="Project hours"

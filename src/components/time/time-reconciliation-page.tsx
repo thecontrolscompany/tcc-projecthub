@@ -4,6 +4,7 @@ import {
   TimeEmployeesDirectorySection,
   TimeProjectsDirectorySection,
 } from "@/components/time/time-module";
+import { TimeSubnav } from "@/components/time/time-subnav";
 import type {
   ProjectReconcileSnapshot,
   TimeModuleSnapshot,
@@ -27,6 +28,7 @@ export function TimeReconciliationPage({
 }) {
   return (
     <div className="space-y-6">
+      <TimeSubnav />
       <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Reconciliation</p>
         <h1 className="mt-2 font-heading text-3xl font-bold text-text-primary">Match imported QB Time data to ProjectHub</h1>

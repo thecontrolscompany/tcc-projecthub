@@ -313,6 +313,11 @@ export interface ProjectWorkerHoursRow {
   total_hours: number;
 }
 
+export interface TimeDayHoursRow {
+  work_date: string;
+  total_hours: number;
+}
+
 export interface EmployeeHoursRow {
   qb_user_id: number;
   display_name: string;
@@ -321,6 +326,7 @@ export interface EmployeeHoursRow {
 }
 
 export interface EmployeeProjectHoursRow {
+  project_key?: string;
   project_id: string | null;
   project_name: string;
   total_hours: number;

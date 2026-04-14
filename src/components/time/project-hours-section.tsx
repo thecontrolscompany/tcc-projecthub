@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { TimeRangePicker } from "@/components/time/time-range-picker";
 import { getPresetRange, type TimeRange, type TimeRangePreset } from "@/lib/time/date-range";
-import type { ProjectHoursRow, ProjectWorkerHoursRow } from "@/types/database";
+import type { ProjectHoursRow, ProjectWorkerHoursRow, TimeDayHoursRow } from "@/types/database";
 
 type ProjectHoursResponse = {
   startDate: string;
@@ -16,6 +16,14 @@ type ProjectWorkerHoursResponse = {
   endDate: string;
   projectId: string;
   rows: ProjectWorkerHoursRow[];
+};
+
+type ProjectWorkerDayResponse = {
+  startDate: string;
+  endDate: string;
+  projectId: string;
+  qbUserId: number;
+  rows: TimeDayHoursRow[];
 };
 
 function formatHours(hours: number) {
@@ -38,6 +46,13 @@ function formatRangeLabel(startDate: string, endDate: string) {
   return `${startFormatter.format(start)} – ${endFormatter.format(end)}`;
 }
 
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  }).format(new Date(`${value}T12:00:00`));
+}
+
 export function ProjectHoursSection() {
   const defaultRange = useMemo(() => getPresetRange("current_week"), []);
   const [selectedRange, setSelectedRange] = useState<TimeRange>(defaultRange);
@@ -46,9 +61,13 @@ export function ProjectHoursSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
+  const [expandedWorkerKey, setExpandedWorkerKey] = useState<string | null>(null);
   const [workerRowsByProjectId, setWorkerRowsByProjectId] = useState<Record<string, ProjectWorkerHoursRow[]>>({});
+  const [dayRowsByWorkerKey, setDayRowsByWorkerKey] = useState<Record<string, TimeDayHoursRow[]>>({});
   const [detailLoadingProjectId, setDetailLoadingProjectId] = useState<string | null>(null);
+  const [dayLoadingWorkerKey, setDayLoadingWorkerKey] = useState<string | null>(null);
   const [detailErrorByProjectId, setDetailErrorByProjectId] = useState<Record<string, string>>({});
+  const [dayErrorByWorkerKey, setDayErrorByWorkerKey] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -57,6 +76,8 @@ export function ProjectHoursSection() {
       setLoading(true);
       setError(null);
       setExpandedProjectId(null);
+      setExpandedWorkerKey(null);
+
       try {
         const params = new URLSearchParams({
           start_date: selectedRange.startDate,
@@ -89,7 +110,7 @@ export function ProjectHoursSection() {
     };
   }, [selectedRange.endDate, selectedRange.startDate]);
 
-  const weekLabel = useMemo(() => {
+  const rangeLabel = useMemo(() => {
     if (!data) {
       return formatRangeLabel(selectedRange.startDate, selectedRange.endDate);
     }
@@ -100,10 +121,13 @@ export function ProjectHoursSection() {
   async function toggleProject(projectId: string) {
     if (expandedProjectId === projectId) {
       setExpandedProjectId(null);
+      setExpandedWorkerKey(null);
       return;
     }
 
     setExpandedProjectId(projectId);
+    setExpandedWorkerKey(null);
+
     if (workerRowsByProjectId[projectId]) {
       return;
     }
@@ -143,13 +167,59 @@ export function ProjectHoursSection() {
     }
   }
 
+  async function toggleWorker(projectId: string, qbUserId: number) {
+    const workerKey = `${projectId}:${qbUserId}`;
+    if (expandedWorkerKey === workerKey) {
+      setExpandedWorkerKey(null);
+      return;
+    }
+
+    setExpandedWorkerKey(workerKey);
+    if (dayRowsByWorkerKey[workerKey]) {
+      return;
+    }
+
+    setDayLoadingWorkerKey(workerKey);
+    setDayErrorByWorkerKey((current) => {
+      const next = { ...current };
+      delete next[workerKey];
+      return next;
+    });
+
+    try {
+      const params = new URLSearchParams({
+        project_id: projectId,
+        qb_user_id: String(qbUserId),
+        start_date: selectedRange.startDate,
+        end_date: selectedRange.endDate,
+      });
+      const response = await fetch(`/api/time/project-hours?${params.toString()}`, { credentials: "include" });
+      const json = (await response.json()) as ProjectWorkerDayResponse & { error?: string };
+      if (!response.ok) {
+        throw new Error(json.error ?? "Unable to load daily worker hours.");
+      }
+
+      setDayRowsByWorkerKey((current) => ({
+        ...current,
+        [workerKey]: json.rows,
+      }));
+    } catch (err) {
+      setDayErrorByWorkerKey((current) => ({
+        ...current,
+        [workerKey]: err instanceof Error ? err.message : "Unable to load daily worker hours.",
+      }));
+    } finally {
+      setDayLoadingWorkerKey((current) => (current === workerKey ? null : current));
+    }
+  }
+
   return (
     <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Project Hours</p>
           <h2 className="mt-2 text-xl font-semibold text-text-primary">Portal-mapped project hours</h2>
-          <p className="mt-2 text-sm text-text-secondary">{weekLabel}</p>
+          <p className="mt-2 text-sm text-text-secondary">{rangeLabel}</p>
         </div>
       </div>
 
@@ -160,8 +230,13 @@ export function ProjectHoursSection() {
           setSelectedRange(range);
           setSelectedPreset(preset);
           setWorkerRowsByProjectId({});
+          setDayRowsByWorkerKey({});
+          setExpandedProjectId(null);
+          setExpandedWorkerKey(null);
           setDetailErrorByProjectId({});
+          setDayErrorByWorkerKey({});
           setDetailLoadingProjectId(null);
+          setDayLoadingWorkerKey(null);
         }}
       />
 
@@ -184,7 +259,7 @@ export function ProjectHoursSection() {
             <thead className="bg-surface-overlay text-left text-text-tertiary">
               <tr>
                 <th className="px-4 py-3 font-medium">Project Name</th>
-                <th className="px-4 py-3 font-medium">Hours This Week</th>
+                <th className="px-4 py-3 font-medium">Hours</th>
                 <th className="px-4 py-3 font-medium">Workers</th>
               </tr>
             </thead>
@@ -215,7 +290,7 @@ export function ProjectHoursSection() {
                       <td className="px-4 py-4">{row.worker_count}</td>
                     </tr>
                     {isExpanded && (
-                      <tr key={`${row.project_id}-detail`} className="bg-surface-overlay">
+                      <tr className="bg-surface-overlay">
                         <td colSpan={3} className="px-4 py-4">
                           {detailLoading ? (
                             <div className="space-y-2">
@@ -232,15 +307,51 @@ export function ProjectHoursSection() {
                             <p className="text-sm text-text-tertiary">No worker breakdown found for this project.</p>
                           ) : (
                             <div className="space-y-2">
-                              {workerRows.map((worker) => (
-                                <div
-                                  key={`${row.project_id}-${worker.qb_user_id}`}
-                                  className="flex items-center justify-between rounded-xl border border-border-default bg-surface-raised px-4 py-3"
-                                >
-                                  <span className="font-medium text-text-primary">{worker.display_name}</span>
-                                  <span>{formatHours(worker.total_hours)} hrs</span>
-                                </div>
-                              ))}
+                              {workerRows.map((worker) => {
+                                const workerKey = `${row.project_id}:${worker.qb_user_id}`;
+                                const dayRows = dayRowsByWorkerKey[workerKey] ?? [];
+                                const dayError = dayErrorByWorkerKey[workerKey];
+                                const dayLoading = dayLoadingWorkerKey === workerKey;
+
+                                return (
+                                  <Fragment key={workerKey}>
+                                    <button
+                                      type="button"
+                                      onClick={() => void toggleWorker(row.project_id, worker.qb_user_id)}
+                                      className="flex w-full items-center justify-between rounded-xl border border-border-default bg-surface-raised px-4 py-3 text-left"
+                                    >
+                                      <span className="font-medium text-text-primary">{worker.display_name}</span>
+                                      <span>{formatHours(worker.total_hours)} hrs</span>
+                                    </button>
+                                    {expandedWorkerKey === workerKey && (
+                                      <div className="ml-4 mt-2 space-y-2 rounded-xl border border-border-default bg-surface-raised p-3">
+                                        {dayLoading ? (
+                                          Array.from({ length: 2 }).map((_, index) => (
+                                            <div
+                                              key={index}
+                                              className="h-9 animate-pulse rounded-lg border border-border-default bg-surface-overlay"
+                                            />
+                                          ))
+                                        ) : dayError ? (
+                                          <p className="text-sm text-rose-300">{dayError}</p>
+                                        ) : dayRows.length === 0 ? (
+                                          <p className="text-sm text-text-tertiary">No daily postings found.</p>
+                                        ) : (
+                                          dayRows.map((day) => (
+                                            <div
+                                              key={day.work_date}
+                                              className="flex items-center justify-between rounded-lg border border-border-default bg-surface-overlay px-3 py-2"
+                                            >
+                                              <span className="text-text-primary">{formatDate(day.work_date)}</span>
+                                              <span>{formatHours(day.total_hours)} hrs</span>
+                                            </div>
+                                          ))
+                                        )}
+                                      </div>
+                                    )}
+                                  </Fragment>
+                                );
+                              })}
                             </div>
                           )}
                         </td>

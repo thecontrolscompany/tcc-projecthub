@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { resolveTimeRange } from "@/lib/time/date-range";
-import type { ProjectHoursRow, ProjectWorkerHoursRow } from "@/types/database";
+import type { ProjectHoursRow, ProjectWorkerHoursRow, TimeDayHoursRow } from "@/types/database";
 
 type MappingWithProjectRow = {
   project_id: string;
@@ -19,6 +19,7 @@ type TimesheetRow = {
   qb_user_id: number;
   qb_jobcode_id: number | null;
   duration_seconds: number | null;
+  timesheet_date?: string;
 };
 
 type UserRow = {
@@ -60,6 +61,8 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get("project_id")?.trim() ?? "";
+  const qbUserIdParam = searchParams.get("qb_user_id")?.trim() ?? "";
+  const parsedQbUserId = qbUserIdParam ? Number(qbUserIdParam) : null;
   const range = resolveTimeRange({
     startDate: searchParams.get("start_date"),
     endDate: searchParams.get("end_date"),
@@ -86,7 +89,46 @@ export async function GET(request: Request) {
           startDate: range.startDate,
           endDate: range.endDate,
           projectId,
-          rows: [] satisfies ProjectWorkerHoursRow[]
+          rows: [] satisfies ProjectWorkerHoursRow[] | TimeDayHoursRow[]
+        });
+      }
+
+      if (parsedQbUserId !== null) {
+        if (!Number.isInteger(parsedQbUserId) || parsedQbUserId <= 0) {
+          return NextResponse.json({ error: "Invalid qb_user_id." }, { status: 400 });
+        }
+
+        const { data: timesheets, error: timesheetsError } = await admin
+          .from("qb_time_timesheets")
+          .select("timesheet_date, duration_seconds")
+          .in("qb_jobcode_id", jobcodeIds)
+          .eq("qb_user_id", parsedQbUserId)
+          .gte("timesheet_date", range.startDate)
+          .lt("timesheet_date", range.endExclusive)
+          .gt("duration_seconds", 0)
+          .order("timesheet_date", { ascending: true });
+
+        if (timesheetsError) {
+          throw timesheetsError;
+        }
+
+        const dayTotals = new Map<string, number>();
+        for (const row of (timesheets ?? []) as TimesheetRow[]) {
+          if (!row.timesheet_date) continue;
+          dayTotals.set(row.timesheet_date, (dayTotals.get(row.timesheet_date) ?? 0) + (row.duration_seconds ?? 0));
+        }
+
+        const rows: TimeDayHoursRow[] = [...dayTotals.entries()].map(([work_date, totalSeconds]) => ({
+          work_date,
+          total_hours: roundHours(totalSeconds),
+        }));
+
+        return NextResponse.json({
+          startDate: range.startDate,
+          endDate: range.endDate,
+          projectId,
+          qbUserId: parsedQbUserId,
+          rows,
         });
       }
 

@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { resolveTimeRange } from "@/lib/time/date-range";
-import type { EmployeeHoursRow, EmployeeProjectHoursRow } from "@/types/database";
+import type { EmployeeHoursRow, EmployeeProjectHoursRow, TimeDayHoursRow } from "@/types/database";
 
 type TimesheetRow = {
   qb_user_id: number;
   qb_jobcode_id: number | null;
   duration_seconds: number | null;
+  timesheet_date?: string;
 };
 
 type UserRow = {
@@ -61,6 +62,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const qbUserIdParam = searchParams.get("qb_user_id")?.trim() ?? "";
   const parsedQbUserId = qbUserIdParam ? Number(qbUserIdParam) : null;
+  const projectKey = searchParams.get("project_key")?.trim() ?? "";
   const range = resolveTimeRange({
     startDate: searchParams.get("start_date"),
     endDate: searchParams.get("end_date"),
@@ -72,6 +74,72 @@ export async function GET(request: Request) {
     if (parsedQbUserId !== null) {
       if (!Number.isInteger(parsedQbUserId) || parsedQbUserId <= 0) {
         return NextResponse.json({ error: "Invalid qb_user_id." }, { status: 400 });
+      }
+
+      if (projectKey) {
+        let jobcodeIds: number[] = [];
+
+        if (projectKey.startsWith("unmapped:")) {
+          const jobcodeId = Number(projectKey.replace("unmapped:", ""));
+          if (!Number.isInteger(jobcodeId) || jobcodeId <= 0) {
+            return NextResponse.json({ error: "Invalid project_key." }, { status: 400 });
+          }
+          jobcodeIds = [jobcodeId];
+        } else {
+          const { data: mappings, error: mappingsError } = await admin
+            .from("project_qb_time_mappings")
+            .select("qb_jobcode_id")
+            .eq("project_id", projectKey);
+
+          if (mappingsError) {
+            throw mappingsError;
+          }
+
+          jobcodeIds = [...new Set((mappings ?? []).map((row: { qb_jobcode_id: number }) => row.qb_jobcode_id))];
+        }
+
+        if (jobcodeIds.length === 0) {
+          return NextResponse.json({
+            startDate: range.startDate,
+            endDate: range.endDate,
+            qbUserId: parsedQbUserId,
+            projectKey,
+            rows: [] satisfies TimeDayHoursRow[],
+          });
+        }
+
+        const { data: timesheets, error: timesheetsError } = await admin
+          .from("qb_time_timesheets")
+          .select("timesheet_date, duration_seconds")
+          .eq("qb_user_id", parsedQbUserId)
+          .in("qb_jobcode_id", jobcodeIds)
+          .gte("timesheet_date", range.startDate)
+          .lt("timesheet_date", range.endExclusive)
+          .gt("duration_seconds", 0)
+          .order("timesheet_date", { ascending: true });
+
+        if (timesheetsError) {
+          throw timesheetsError;
+        }
+
+        const dayTotals = new Map<string, number>();
+        for (const row of (timesheets ?? []) as TimesheetRow[]) {
+          if (!row.timesheet_date) continue;
+          dayTotals.set(row.timesheet_date, (dayTotals.get(row.timesheet_date) ?? 0) + (row.duration_seconds ?? 0));
+        }
+
+        const rows: TimeDayHoursRow[] = [...dayTotals.entries()].map(([work_date, totalSeconds]) => ({
+          work_date,
+          total_hours: roundHours(totalSeconds),
+        }));
+
+        return NextResponse.json({
+          startDate: range.startDate,
+          endDate: range.endDate,
+          qbUserId: parsedQbUserId,
+          projectKey,
+          rows,
+        });
       }
 
       const { data: timesheets, error: timesheetsError } = await admin
@@ -142,6 +210,7 @@ export async function GET(request: Request) {
         const mappedProject = projectIdByJobcode.get(row.qb_jobcode_id);
         const key = mappedProject ? mappedProject.project_id : `unmapped:${row.qb_jobcode_id}`;
         const existing = totals.get(key) ?? {
+          project_key: key,
           project_id: mappedProject?.project_id ?? null,
           project_name: mappedProject?.project_name ?? jobcodeNameById.get(row.qb_jobcode_id) ?? "Unmapped jobcode",
           total_hours: 0,
