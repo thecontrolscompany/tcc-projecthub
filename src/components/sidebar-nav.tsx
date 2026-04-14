@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 
 export type NavRole = "admin" | "pm" | "lead" | "installer" | "ops_manager" | "customer";
@@ -12,6 +13,23 @@ type NavItem = {
   roles: NavRole[];
   icon: (props: IconProps) => React.ReactNode;
 };
+
+type FeedbackNotificationSummary = {
+  customer_unreviewed: number;
+  team_new: number;
+  total: number;
+};
+
+function isFeedbackNotificationSummary(value: unknown): value is FeedbackNotificationSummary {
+  if (!value || typeof value !== "object") return false;
+
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.customer_unreviewed === "number" &&
+    typeof record.team_new === "number" &&
+    typeof record.total === "number"
+  );
+}
 
 function GridIcon({ className = "h-5 w-5" }: IconProps) {
   return (
@@ -236,6 +254,54 @@ export function SidebarNav({
   const effectiveRole = role as NavRole;
   const links = NAV_LINKS.filter((link) => link.roles.includes(effectiveRole));
   const initials = getUserInitials(userEmail);
+  const [feedbackNotifications, setFeedbackNotifications] = useState<FeedbackNotificationSummary | null>(null);
+
+  useEffect(() => {
+    if (!["admin", "ops_manager"].includes(effectiveRole)) {
+      setFeedbackNotifications(null);
+      return;
+    }
+
+    let active = true;
+
+    async function loadNotifications() {
+      try {
+        const response = await fetch("/api/feedback/notifications", {
+          cache: "no-store",
+          credentials: "include",
+        });
+
+        const contentType = response.headers.get("content-type") ?? "";
+        const bodyText = await response.text();
+        const json =
+          contentType.includes("application/json") && bodyText
+            ? (JSON.parse(bodyText) as FeedbackNotificationSummary | { error?: string })
+            : null;
+
+        if (!active || !response.ok || !isFeedbackNotificationSummary(json)) {
+          setFeedbackNotifications(null);
+          return;
+        }
+
+        setFeedbackNotifications(json);
+      } catch {
+        if (active) {
+          setFeedbackNotifications(null);
+        }
+      }
+    }
+
+    void loadNotifications();
+    const interval = window.setInterval(() => void loadNotifications(), 60000);
+    const handleFocus = () => void loadNotifications();
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [effectiveRole]);
 
   return (
     <aside
@@ -273,6 +339,7 @@ export function SidebarNav({
           {links.map((link) => {
             const isActive = isActivePath(pathname, link.href);
             const Icon = link.icon;
+            const badgeCount = link.href === "/feedback" ? feedbackNotifications?.total ?? 0 : 0;
 
             return (
               <Link
@@ -287,8 +354,24 @@ export function SidebarNav({
                     : "text-text-secondary hover:bg-surface-overlay hover:text-text-primary",
                 ].join(" ")}
               >
-                <Icon className="h-5 w-5 shrink-0" />
-                {!collapsed && <span className="truncate">{link.label}</span>}
+                <span className="relative shrink-0">
+                  <Icon className="h-5 w-5" />
+                  {collapsed && badgeCount > 0 ? (
+                    <span className="absolute -right-1.5 -top-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-status-danger px-1 text-[10px] font-semibold text-white">
+                      {badgeCount > 9 ? "9+" : badgeCount}
+                    </span>
+                  ) : null}
+                </span>
+                {!collapsed && (
+                  <>
+                    <span className="truncate">{link.label}</span>
+                    {badgeCount > 0 ? (
+                      <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-status-danger px-1.5 py-0.5 text-[11px] font-semibold text-white">
+                        {badgeCount > 99 ? "99+" : badgeCount}
+                      </span>
+                    ) : null}
+                  </>
+                )}
               </Link>
             );
           })}

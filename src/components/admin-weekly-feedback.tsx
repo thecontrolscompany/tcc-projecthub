@@ -30,6 +30,8 @@ export function FeedbackTab() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [teamTypeFilter, setTeamTypeFilter] = useState("all");
   const [teamStatusFilter, setTeamStatusFilter] = useState("all");
+  const customerUnreviewedCount = feedback.filter((item) => !item.reviewed).length;
+  const teamNewCount = teamFeedback.filter((item) => item.status === "new").length;
 
   useEffect(() => {
     void loadFeedback();
@@ -41,27 +43,35 @@ export function FeedbackTab() {
 
   async function loadFeedback() {
     setLoading(true);
-    const res = await fetch(`/api/admin/data?section=feedback&unreviewedOnly=${showUnreviewedOnly ? "true" : "false"}`, {
-      credentials: "include",
-    });
-    const json = await res.json();
-    if (!res.ok) {
+    try {
+      const res = await fetch(`/api/admin/data?section=feedback&unreviewedOnly=${showUnreviewedOnly ? "true" : "false"}`, {
+        credentials: "include",
+      });
+      const json = await readJsonSafely(res);
+      if (!res.ok) {
+        setFeedback([]);
+      } else {
+        setFeedback((json?.feedback as typeof feedback) ?? []);
+      }
+    } catch {
       setFeedback([]);
-    } else {
-      setFeedback((json?.feedback as typeof feedback) ?? []);
     }
     setLoading(false);
   }
 
   async function loadTeamFeedback() {
-    const res = await fetch("/api/feedback", {
-      credentials: "include",
-    });
-    const json = await res.json();
-    if (!res.ok) {
+    try {
+      const res = await fetch("/api/feedback", {
+        credentials: "include",
+      });
+      const json = await readJsonSafely(res);
+      if (!res.ok) {
+        setTeamFeedback([]);
+      } else {
+        setTeamFeedback((json?.feedback as typeof teamFeedback) ?? []);
+      }
+    } catch {
       setTeamFeedback([]);
-    } else {
-      setTeamFeedback((json?.feedback as typeof teamFeedback) ?? []);
     }
   }
 
@@ -114,14 +124,26 @@ export function FeedbackTab() {
               key={id}
               type="button"
               onClick={() => setSection(id)}
-              className={[
+            className={[
                 "rounded-full px-4 py-2 text-sm font-medium transition",
                 section === id
                   ? "bg-brand-primary text-text-inverse"
                   : "border border-border-default bg-surface-raised text-text-secondary hover:bg-surface-overlay hover:text-text-primary",
               ].join(" ")}
             >
-              {label}
+              <span className="inline-flex items-center gap-2">
+                <span>{label}</span>
+                {id === "customer" && customerUnreviewedCount > 0 ? (
+                  <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-status-danger px-1.5 py-0.5 text-[11px] font-semibold text-white">
+                    {customerUnreviewedCount}
+                  </span>
+                ) : null}
+                {id === "team" && teamNewCount > 0 ? (
+                  <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-status-danger px-1.5 py-0.5 text-[11px] font-semibold text-white">
+                    {teamNewCount}
+                  </span>
+                ) : null}
+              </span>
             </button>
           ))}
         </div>
@@ -291,6 +313,18 @@ const TEAM_PRIORITY_LABELS: Record<PortalFeedback["priority"], string> = {
   medium: "Medium",
   high: "High",
 };
+
+async function readJsonSafely(response: Response) {
+  const contentType = response.headers.get("content-type") ?? "";
+  const bodyText = await response.text();
+  if (!contentType.includes("application/json") || !bodyText) return null;
+
+  try {
+    return JSON.parse(bodyText) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
 
 type WeeklyUpdatesAdminRow = {
   id: string;

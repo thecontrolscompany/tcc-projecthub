@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
+import { sendPortalFeedbackNotification } from "@/lib/email/notifications";
+import { listFeedbackNotificationRecipients } from "@/lib/feedback/notification-recipients";
 
 const ALLOWED_TYPES = new Set(["bug", "feature", "ux", "other"]);
 const ALLOWED_PRIORITIES = new Set(["low", "medium", "high"]);
@@ -93,6 +95,21 @@ export async function POST(request: Request) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  try {
+    const recipients = await listFeedbackNotificationRecipients({ excludeEmail: user.email ?? null });
+    await sendPortalFeedbackNotification({
+      type,
+      title,
+      priority,
+      description,
+      pageArea: pageArea || null,
+      submittedBy: user.email ?? null,
+      recipientEmails: recipients,
+    });
+  } catch (notificationError) {
+    console.warn("[feedback] unable to send portal feedback notification", notificationError);
   }
 
   return NextResponse.json({ feedback: data }, { status: 201 });
