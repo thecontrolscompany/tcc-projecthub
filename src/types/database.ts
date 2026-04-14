@@ -228,6 +228,66 @@ export interface PursuitSummary {
   updated_at: string;
 }
 
+export interface LegacyOpportunityImportBatch {
+  id: string;
+  source_name: string;
+  source_file_name: string | null;
+  source_file_size_bytes: number | null;
+  imported_by: string | null;
+  imported_at: string;
+  row_count: number;
+  status: "draft" | "reviewing" | "ready" | "promoted" | "archived";
+  notes: string | null;
+  source_metadata: Record<string, unknown> | null;
+}
+
+export interface LegacyOpportunityImportRow {
+  id: string;
+  batch_id: string;
+  source_row_number: number;
+  source_external_id: string | null;
+  legacy_opportunity_name: string | null;
+  company_name: string | null;
+  contact_name: string | null;
+  estimator_name: string | null;
+  project_location: string | null;
+  job_number: string | null;
+  bid_date: string | null;
+  proposal_date: string | null;
+  amount: number | null;
+  status: string | null;
+  outcome: string | null;
+  notes: string | null;
+  raw_payload: Record<string, unknown>;
+  normalized_payload: Record<string, unknown>;
+  validation_issues: string[];
+  review_status: "pending" | "matched" | "promoted" | "rejected";
+  promoted_quote_request_id: string | null;
+  created_at: string;
+}
+
+export interface LegacyOpportunityMatchCandidate {
+  id?: string;
+  import_row_id: string;
+  candidate_type: "project" | "pursuit";
+  candidate_id: string;
+  confidence_score: number;
+  reason_codes: string[];
+  detail: Record<string, unknown>;
+  created_at?: string;
+}
+
+export interface LegacyOpportunityLinkReview {
+  id: string;
+  import_row_id: string;
+  selected_project_id: string | null;
+  selected_pursuit_id: string | null;
+  selected_action: "link_project" | "link_pursuit" | "create_pursuit" | "standalone" | "reject";
+  reviewed_by: string | null;
+  reviewed_at: string;
+  notes: string | null;
+}
+
 export type QuoteRequest = {
   id: string;
   created_at: string;
