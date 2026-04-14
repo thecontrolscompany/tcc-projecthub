@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { EmployeeHoursSection } from "@/components/time/employee-hours-section";
 import { ProjectHoursSection } from "@/components/time/project-hours-section";
 import type {
   TimeModuleProject,
@@ -275,6 +276,8 @@ export function TimeEmployeesPage({
           ))}
         </div>
       </section>
+
+      <EmployeeHoursSection />
     </div>
   );
 }

@@ -313,6 +313,19 @@ export interface ProjectWorkerHoursRow {
   total_hours: number;
 }
 
+export interface EmployeeHoursRow {
+  qb_user_id: number;
+  display_name: string;
+  total_hours: number;
+  jobcode_count: number;
+}
+
+export interface EmployeeProjectHoursRow {
+  project_id: string | null;
+  project_name: string;
+  total_hours: number;
+}
+
 // Billing table row (joined view used in admin table)
 export interface BillingRow {
   billing_period_id: string;
