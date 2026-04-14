@@ -12,6 +12,7 @@ export type ProposalExtractionResult = {
   proposalDate: string | null;
   customerName: string | null;
   projectName: string | null;
+  baseBidAmount: number | null;
   pricingItems: Omit<OpportunityPricingItem, "id">[];
   scopeItems: Omit<OpportunityScopeItem, "id">[];
   equipmentGroups: Omit<OpportunityEquipmentGroup, "id">[];
@@ -83,11 +84,15 @@ export function extractProposalFromText(rawText: string): ProposalExtractionResu
     .map((line) => line.trim())
     .filter(Boolean);
 
+  const { items: pricingItems, baseBidAmount } = extractPricingItems(lines);
+
   return {
     proposalDate: extractDateValue(text),
     customerName: extractNamedField(text, ["customer", "recipient", "to"]),
-    projectName: extractNamedField(text, ["project", "job", "re"]),
-    pricingItems: extractPricingItems(lines),
+    // "re" removed — too broad, matches "References:" before "Project:" in many docs
+    projectName: extractNamedField(text, ["project", "job"]),
+    baseBidAmount,
+    pricingItems,
     scopeItems: extractScopeItems(lines),
     equipmentGroups: extractEquipmentGroups(lines),
     extractedText: text,
@@ -135,87 +140,139 @@ function collectWorksheetLabels(worksheet: ExcelJS.Worksheet | undefined) {
   return labels;
 }
 
-function extractPricingItems(lines: string[]): Omit<OpportunityPricingItem, "id">[] {
+// Parses the PRICING SUMMARY table from a TCC proposal.
+// Mammoth extracts Word tables as separate lines, so the format is:
+//   Base Bid          ← label line
+//   US $ 31,369       ← value line
+// Both same-line ("Base Bid  US $ 31,369") and two-line formats are handled.
+function extractPricingItems(lines: string[]): { items: Omit<OpportunityPricingItem, "id">[]; baseBidAmount: number | null } {
   const items: Omit<OpportunityPricingItem, "id">[] = [];
+  let baseBidAmount: number | null = null;
 
-  lines.forEach((line, index) => {
-    const match = line.match(/^(.*?)(\$[\d,]+(?:\.\d{2})?|\d[\d,]*(?:\.\d{2})?)$/);
-    if (!match) return;
+  // Narrow to the PRICING SUMMARY section so we don't match dollar amounts in scope/clarifications.
+  const pricingStart = lines.findIndex((l) => /pricing\s*summary/i.test(l));
+  const scopeStart = lines.findIndex((l) => /^for the following scope/i.test(l));
+  const pricingLines =
+    pricingStart >= 0
+      ? lines.slice(pricingStart + 1, scopeStart > pricingStart ? scopeStart : undefined)
+      : lines;
 
-    const label = match[1].trim().replace(/[:.-]+$/, "");
-    const amount = coerceNumber(match[2]);
-    if (!label || amount === null) return;
+  // Regex that matches a US dollar value, with or without "US $" prefix.
+  const dollarValue = /^(?:US\s*)?\$\s*([\d,\s]+(?:\.\d{2})?)\s*$/i;
+  // Skip column-header rows that mammoth emits from the table header.
+  const isHeader = (l: string) => /^description$/i.test(l) || /^total\s+price$/i.test(l);
 
-    const lower = label.toLowerCase();
-    const item_type =
-      lower.includes("base bid")
-        ? "base_bid"
-        : lower.includes("bond")
-          ? "bond"
-          : lower.includes("alternate")
-            ? "alternate"
-            : lower.includes("deduct")
-              ? "deduct"
-              : lower.includes("allowance")
-                ? "allowance"
-                : lower.includes("vendor fee")
-                  ? "vendor_fee"
-                  : "other";
+  for (let i = 0; i < pricingLines.length; i++) {
+    const line = pricingLines[i];
+    if (isHeader(line)) continue;
 
-    items.push({
-      legacy_import_row_id: null,
-      source_document_id: null,
-      label,
-      amount,
-      item_type,
-      is_conditional: lower.includes("alternate") || lower.includes("deduct"),
-      included_in_base: item_type === "base_bid",
-      notes: null,
-      sort_order: index,
-    });
-  });
+    // Same-line: "Base Bid  US $ 31,369"
+    const sameLine = line.match(/^(.+?)\s{2,}(?:US\s*)?\$\s*([\d,\s]+(?:\.\d{2})?)\s*$/i);
+    if (sameLine) {
+      const label = sameLine[1].trim();
+      const amount = coerceNumber(sameLine[2].replace(/\s/g, ""));
+      if (label && amount !== null) {
+        const entry = buildPricingEntry(label, amount, i);
+        if (entry.item_type === "base_bid") baseBidAmount = amount;
+        items.push(entry);
+        continue;
+      }
+    }
 
-  return dedupeByLabel(items);
+    // Two-line: label on this line, "US $ X" on the next.
+    const nextLine = (pricingLines[i + 1] ?? "").trim();
+    const nextMatch = nextLine.match(dollarValue);
+    if (nextMatch && line.length > 0 && !isHeader(line)) {
+      const label = line.trim();
+      const amount = coerceNumber(nextMatch[1].replace(/\s/g, ""));
+      if (label && amount !== null) {
+        const entry = buildPricingEntry(label, amount, i);
+        if (entry.item_type === "base_bid") baseBidAmount = amount;
+        items.push(entry);
+        i++; // consume the value line
+        continue;
+      }
+    }
+  }
+
+  return { items: dedupeByLabel(items), baseBidAmount };
 }
 
+function buildPricingEntry(label: string, amount: number, sortOrder: number): Omit<OpportunityPricingItem, "id"> {
+  const lower = label.toLowerCase();
+  const item_type =
+    lower.includes("base bid") ? "base_bid" :
+    lower.includes("bond")     ? "bond" :
+    lower.includes("alternate")? "alternate" :
+    lower.includes("deduct")   ? "deduct" :
+    lower.includes("allowance")? "allowance" :
+    lower.includes("vendor fee")? "vendor_fee" : "other";
+
+  return {
+    legacy_import_row_id: null,
+    source_document_id: null,
+    label,
+    amount,
+    item_type,
+    is_conditional: lower.includes("alternate") || lower.includes("deduct") || lower.includes("if required"),
+    included_in_base: item_type === "base_bid",
+    notes: null,
+    sort_order: sortOrder,
+  };
+}
+
+// Extracts scope, clarification, exclusion, and warranty sections using
+// section-boundary detection rather than keyword scatter.  Each section
+// header marks the start; the next header (or end of document) marks the end.
 function extractScopeItems(lines: string[]): Omit<OpportunityScopeItem, "id">[] {
-  const sections = [
-    { section_type: "scope", heading: "scope" },
-    { section_type: "clarification", heading: "clarification" },
-    { section_type: "exclusion", heading: "exclusion" },
-    { section_type: "warranty", heading: "warranty" },
-    { section_type: "reference", heading: "reference" },
-  ] as const;
+  type SectionType = "scope" | "clarification" | "exclusion" | "warranty" | "reference";
+
+  const SECTION_HEADERS: { pattern: RegExp; type: SectionType; heading: string }[] = [
+    { pattern: /^for the following scope/i,  type: "scope",         heading: "SCOPE" },
+    { pattern: /^clarification/i,            type: "clarification", heading: "CLARIFICATIONS" },
+    { pattern: /^exclusion/i,                type: "exclusion",     heading: "EXCLUSIONS" },
+    { pattern: /^warranty/i,                 type: "warranty",      heading: "WARRANTY" },
+    { pattern: /^reference/i,                type: "reference",     heading: "REFERENCES" },
+  ];
+
+  // Build a list of section start indices.
+  const sections: { start: number; type: SectionType; heading: string }[] = [];
+  lines.forEach((line, i) => {
+    for (const def of SECTION_HEADERS) {
+      if (def.pattern.test(line)) {
+        sections.push({ start: i, type: def.type, heading: def.heading });
+        break;
+      }
+    }
+  });
+
+  if (sections.length === 0) {
+    return lines.length
+      ? [{ legacy_import_row_id: null, source_document_id: null, section_type: "scope", heading: "SUMMARY", body: lines.slice(0, 5).join(" "), sort_order: 0 }]
+      : [];
+  }
 
   const items: Omit<OpportunityScopeItem, "id">[] = [];
 
   sections.forEach((section, sectionIndex) => {
-    const matchingLines = lines
-      .filter((line) => line.toLowerCase().includes(section.heading))
-      .slice(0, 6);
+    const end = sections[sectionIndex + 1]?.start ?? lines.length;
+    // Skip the header line itself (start + 1), take up to 20 body lines.
+    const bodyLines = lines
+      .slice(section.start + 1, end)
+      .filter((l) => l.length > 4) // skip trivial lines
+      .slice(0, 20);
 
-    matchingLines.forEach((line, index) => {
+    bodyLines.forEach((body, lineIndex) => {
       items.push({
         legacy_import_row_id: null,
         source_document_id: null,
-        section_type: section.section_type,
-        heading: section.heading.toUpperCase(),
-        body: line,
-        sort_order: sectionIndex * 10 + index,
+        section_type: section.type,
+        heading: section.heading,
+        body,
+        sort_order: sectionIndex * 100 + lineIndex,
       });
     });
   });
-
-  if (items.length === 0 && lines.length) {
-    items.push({
-      legacy_import_row_id: null,
-      source_document_id: null,
-      section_type: "scope",
-      heading: "SUMMARY",
-      body: lines.slice(0, 5).join(" "),
-      sort_order: 0,
-    });
-  }
 
   return items;
 }
