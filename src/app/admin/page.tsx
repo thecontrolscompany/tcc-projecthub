@@ -9,6 +9,7 @@ import { FeedbackTab, WeeklyUpdatesTab } from "@/components/admin-weekly-feedbac
 import { BillingTable } from "@/components/billing-table";
 import { calcToBill, generatePmEmailDrafts, rollForwardRows } from "@/lib/billing/calculations";
 import type { BillingRow, BillingPeriod } from "@/types/database";
+import { safeJson } from "@/lib/utils/safe-json";
 
 type Tab = "billing" | "projects" | "backfill" | "weekly-updates" | "feedback";
 type ProjectOption = { id: string; name: string };
@@ -95,7 +96,7 @@ export default function AdminPage() {
       const response = await fetch("/api/admin/data?section=projects", {
         credentials: "include",
       });
-      const json = await response.json();
+      const json = await safeJson(response);
       if (!response.ok) {
         setProjectOptions([]);
         return;
@@ -218,7 +219,7 @@ export default function AdminPage() {
       const res = await fetch(`/api/admin/data?section=billing&month=${encodeURIComponent(monthStr)}`, {
         credentials: "include",
       });
-      const json = await res.json();
+      const json = await safeJson(res);
       const data = json?.periods;
       const error = !res.ok ? { message: json?.error ?? "Failed to load billing data." } : null;
 
@@ -360,7 +361,7 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ periodMonth: format(periodMonth, "yyyy-MM-dd") }),
       });
-      const json = await res.json();
+      const json = await safeJson(res);
       setActionStatus(json.message ?? "Sync complete.");
       await loadBillingData();
     } catch {
@@ -383,7 +384,7 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ drafts }),
       });
-      const json = await res.json();
+      const json = await safeJson(res);
       setActionStatus(json.message ?? `${drafts.length} drafts created in Outlook.`);
     } catch {
       setActionStatus("Email draft generation is unavailable in the local placeholder preview.");
@@ -566,7 +567,7 @@ function BillingBackfillTab({ projects }: { projects: ProjectOption[] }) {
       const response = await fetch(`/api/admin/billing-backfill?projectId=${encodeURIComponent(projectId)}`, {
         credentials: "include",
       });
-      const json = await response.json();
+      const json = await safeJson(response);
       if (!response.ok) {
         throw new Error(json?.error ?? "Failed to load billing history.");
       }
@@ -609,7 +610,7 @@ function BillingBackfillTab({ projects }: { projects: ProjectOption[] }) {
         credentials: "include",
         body: JSON.stringify({ projectId: selectedProjectId, periodMonth }),
       });
-      const json = await response.json();
+      const json = await safeJson(response);
       if (!response.ok) {
         throw new Error(json?.error ?? "Failed to add billing period.");
       }
@@ -652,7 +653,7 @@ function BillingBackfillTab({ projects }: { projects: ProjectOption[] }) {
         credentials: "include",
         body: JSON.stringify({ updates }),
       });
-      const json = await response.json();
+      const json = await safeJson(response);
 
       if (!response.ok) {
         throw new Error(json?.error ?? "Failed to save billing history.");

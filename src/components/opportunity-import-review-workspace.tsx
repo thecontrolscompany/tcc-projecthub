@@ -12,6 +12,7 @@ import type {
   OpportunityPricingItem,
   OpportunityScopeItem,
 } from "@/types/database";
+import { safeJson } from "@/lib/utils/safe-json";
 
 type ProjectMatchSuggestion = {
   candidateId: string;
@@ -51,7 +52,7 @@ export function OpportunityImportReviewWorkspace() {
     try {
       const query = batchId ? `?batch_id=${batchId}` : "";
       const response = await fetch(`/api/opportunities/import/review${query}`, { cache: "no-store" });
-      const json = await response.json();
+      const json = await safeJson(response);
 
       if (!response.ok) {
         throw new Error(json?.error ?? "Unable to load review queue.");
@@ -88,7 +89,7 @@ export function OpportunityImportReviewWorkspace() {
           selected_project_id: selected_project_id ?? null,
         }),
       });
-      const json = await response.json();
+      const json = await safeJson(response);
 
       if (!response.ok) {
         throw new Error(json?.error ?? "Unable to save review decision.");
@@ -306,7 +307,7 @@ function LegacyDocumentPackageCard({ row, onUploaded }: { row: ReviewRow; onUplo
         method: "POST",
         body: formData,
       });
-      const json = await response.json();
+      const json = await safeJson(response);
 
       if (!response.ok) {
         throw new Error(json?.error ?? "Unable to upload legacy document package.");

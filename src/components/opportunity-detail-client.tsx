@@ -14,6 +14,7 @@ import {
 } from "@/lib/opportunities";
 import type { QuoteRequest, QuoteRequestStatus } from "@/types/database";
 import { QuoteRequestConvertModal } from "@/components/quote-request-convert-modal";
+import { safeJson } from "@/lib/utils/safe-json";
 
 const inputClassName =
   "w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none";
@@ -48,7 +49,7 @@ export function OpportunityDetailClient({ initialQuote }: { initialQuote: QuoteR
           project_id: quote.project_id,
         }),
       });
-      const json = await response.json();
+      const json = await safeJson(response);
 
       if (!response.ok) {
         throw new Error(json?.error ?? "Unable to update opportunity.");

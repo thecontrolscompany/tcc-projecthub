@@ -6,6 +6,7 @@ import type { ProjectAssignmentRole } from "@/types/database";
 import { normalizeSingle } from "@/lib/utils/normalize";
 import { createClient } from "@/lib/supabase/client";
 import { fmtCurrency } from "@/lib/utils/format";
+import { safeJson } from "@/lib/utils/safe-json";
 import {
   EMPTY_PROJECT_FORM,
   ProjectModal,
@@ -183,7 +184,7 @@ export function AdminProjectsTab() {
       const res = await fetch("/api/admin/data?section=projects", {
         credentials: "include",
       });
-      const json = await res.json();
+      const json = await safeJson(res);
       if (!res.ok) {
         throw new Error(json?.error ?? "Failed to load projects.");
       }
@@ -199,7 +200,7 @@ export function AdminProjectsTab() {
     const res = await fetch("/api/admin/data?section=project-lookups", {
       credentials: "include",
     });
-    const json = await res.json();
+    const json = await safeJson(res);
 
     if (!res.ok) {
       setCustomers([]);
@@ -217,7 +218,7 @@ export function AdminProjectsTab() {
     const res = await fetch(`/api/admin/data?section=project&id=${encodeURIComponent(projectId)}`, {
       credentials: "include",
     });
-    const json = await res.json();
+    const json = await safeJson(res);
     if (!res.ok || !json?.project) return null;
     return normalizeProject(json.project as Record<string, unknown>);
   }
@@ -419,7 +420,7 @@ export function AdminProjectsTab() {
         }),
       });
 
-      const json = await res.json();
+      const json = await safeJson(res);
       if (!res.ok) throw new Error(json?.error ?? "Save failed.");
 
       if (editingProject) {

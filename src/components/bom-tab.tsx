@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import type { BomItem, BomStatus, MaterialReceipt } from "@/types/database";
+import { safeJson } from "@/lib/utils/safe-json";
 
 interface BomTabProps {
   projectId: string;
@@ -196,7 +197,7 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
       const response = await fetch(`/api/admin/bom?projectId=${encodeURIComponent(projectId)}`, {
         credentials: "include",
       });
-      const json = await response.json();
+      const json = await safeJson(response);
       if (!response.ok) throw new Error(json?.error ?? "Failed to load BOM.");
 
       setItems((json?.items as BomItem[]) ?? []);
@@ -291,7 +292,7 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
           sort_order: nextSortOrder,
         }),
       });
-      const json = await response.json();
+      const json = await safeJson(response);
       if (!response.ok) throw new Error(json?.error ?? "Failed to add BOM item.");
 
       setItems((current) => [...current, json.item as BomItem]);
@@ -330,7 +331,7 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
           notes: editForm.notes,
         }),
       });
-      const json = await response.json();
+      const json = await safeJson(response);
       if (!response.ok) throw new Error(json?.error ?? "Failed to save BOM item.");
 
       setItems((current) => current.map((item) => (item.id === itemId ? (json.item as BomItem) : item)));
@@ -395,7 +396,7 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
           notes: form.notes,
         }),
       });
-      const json = await response.json();
+      const json = await safeJson(response);
       if (!response.ok) throw new Error(json?.error ?? "Failed to add receipt.");
 
       setReceipts((current) => [json.receipt as ReceiptWithProfile, ...current]);
@@ -479,7 +480,7 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
         credentials: "include",
         body: formData,
       });
-      const json = await response.json();
+      const json = await safeJson(response);
       if (!response.ok) throw new Error(json?.error ?? "Failed to import BOM.");
 
       await loadBom();

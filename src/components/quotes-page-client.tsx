@@ -15,6 +15,7 @@ import {
   OPPORTUNITY_STAGE_LABELS,
 } from "@/lib/opportunities";
 import type { OpportunityStage, QuoteRequest } from "@/types/database";
+import { safeJson } from "@/lib/utils/safe-json";
 
 type QuotesPageClientProps =
   | { mode: "public" }
@@ -84,7 +85,7 @@ function PublicQuoteForm() {
           estimated_value: form.estimated_value.trim() ? Number(form.estimated_value) : undefined,
         }),
       });
-      const json = await res.json();
+      const json = await safeJson(res);
       if (!res.ok) {
         throw new Error(typeof json?.error === "string" ? json.error : "Unable to submit quote request.");
       }

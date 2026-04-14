@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { AdminUsersPage } from "@/components/admin-users-page";
+import { safeJson } from "@/lib/utils/safe-json";
 import type { InternalContactRole, UserRole } from "@/types/database";
 
 const INTERNAL_CONTACT_ROLES: InternalContactRole[] = ["pm", "lead", "installer", "ops_manager"];
@@ -88,7 +89,7 @@ function ContactsPanel() {
       const res = await fetch("/api/admin/data?section=contacts", {
         credentials: "include",
       });
-      const json = await res.json();
+      const json = await safeJson(res);
       const contactData = res.ok ? json?.contacts : null;
 
       const normalized = (
@@ -259,7 +260,7 @@ function ContactsPanel() {
       const res = await fetch("/api/admin/import-pm-directory", {
         method: "POST",
       });
-      const json = await res.json();
+      const json = await safeJson(res);
 
       if (!res.ok) {
         const rawCount = typeof json?.rawCount === "number" ? json.rawCount : null;

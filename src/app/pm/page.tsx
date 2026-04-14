@@ -19,6 +19,7 @@ import type {
 } from "@/types/database";
 import { fmtCurrency } from "@/lib/utils/format";
 import { ROLE_LABELS, ROLE_BADGE_STYLES_WITH_BORDER } from "@/lib/project/roles";
+import { safeJson } from "@/lib/utils/safe-json";
 
 type ViewState = "list" | "update";
 type ProjectTab = "overview" | "contacts" | "update" | "poc" | "change-orders" | "rfis" | "photos" | "bom";
@@ -180,7 +181,7 @@ export default function PmPage() {
       const res = await fetch("/api/pm/projects", {
         credentials: "include",
       });
-      const json = await res.json();
+      const json = await safeJson(res);
 
       if (!res.ok) {
         setProjects([]);
@@ -475,7 +476,7 @@ function UpdateForm({
         fetch(`/api/pm/projects?section=project-data&projectId=${encodeURIComponent(project.id)}`, { credentials: "include" }),
         fetch(`/api/admin/change-orders?projectId=${encodeURIComponent(project.id)}`, { credentials: "include" }),
       ]);
-      const json = await response.json();
+      const json = await safeJson(response);
       if (coResponse.ok) {
         const coJson = await coResponse.json();
         setChangeOrders((coJson?.changeOrders as ChangeOrder[]) ?? []);
@@ -568,7 +569,7 @@ function UpdateForm({
       const res = await fetch(`/api/pm/rfis?projectId=${encodeURIComponent(projectId)}`, {
         credentials: "include",
       });
-      const json = await res.json();
+      const json = await safeJson(res);
       if (res.ok) setRfis(json.rfis ?? []);
     } catch {
       // silently ignore
@@ -589,7 +590,7 @@ function UpdateForm({
         `/api/pm/hours-pull?projectId=${encodeURIComponent(project.id)}&weekOf=${encodeURIComponent(weekOf)}`,
         { credentials: "include" }
       );
-      const json = await res.json();
+      const json = await safeJson(res);
       if (!res.ok) throw new Error(json.error ?? "Pull failed");
       setLaborHasMapping(json.hasMapping);
       if (!json.hasMapping) return;
@@ -2252,7 +2253,7 @@ function ContactsTab({
         credentials: "include",
         body: JSON.stringify({ project_id: projectId, contacts: draft }),
       });
-      const json = await response.json();
+      const json = await safeJson(response);
       if (!response.ok) throw new Error(json?.error ?? "Failed to save.");
       const saved = draft.filter(
         (c) => c.company || c.contact_name || c.phone || c.email || c.notes
@@ -2509,7 +2510,7 @@ function RfiTab({
         credentials: "include",
         body: JSON.stringify({ projectId, subject, question, directedTo, dateSubmitted }),
       });
-      const json = await res.json();
+      const json = await safeJson(res);
       if (!res.ok) throw new Error(json?.error ?? "Failed to save.");
       onCreated(json.rfi as ProjectRfi);
       resetForm();
@@ -2530,7 +2531,7 @@ function RfiTab({
         credentials: "include",
         body: JSON.stringify({ id, ...updates }),
       });
-      const json = await res.json();
+      const json = await safeJson(res);
       if (res.ok) {
         onUpdated(json.rfi as ProjectRfi);
         setClosingId(null);
@@ -2835,7 +2836,7 @@ function PhotosTab({ projectId }: { projectId: string }) {
       const res = await fetch(`/api/pm/photos?projectId=${encodeURIComponent(projectId)}`, {
         credentials: "include",
       });
-      const json = await res.json();
+      const json = await safeJson(res);
       if (res.ok) setPhotos(json.photos ?? []);
     } finally {
       setLoading(false);
@@ -2857,7 +2858,7 @@ function PhotosTab({ projectId }: { projectId: string }) {
         credentials: "include",
         body: fd,
       });
-      const json = await res.json();
+      const json = await safeJson(res);
       if (!res.ok) throw new Error(json?.error ?? "Upload failed.");
       setPhotos((prev) => [json.photo, ...prev]);
       setPendingCaption("");

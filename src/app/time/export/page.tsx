@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format, startOfMonth } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
+import { safeJson } from "@/lib/utils/safe-json";
 
 type ProjectOption = {
   id: string;
@@ -84,7 +85,7 @@ export default function TimeExportPage() {
       const contentType = response.headers.get("content-type") ?? "";
 
       if (contentType.includes("application/json")) {
-        const json = await response.json();
+        const json = await safeJson(response);
         if (!response.ok) {
           throw new Error(json?.error ?? "Export failed.");
         }

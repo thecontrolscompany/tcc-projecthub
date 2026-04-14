@@ -12,6 +12,7 @@ import {
   type ParsedImportPreview,
 } from "@/lib/opportunity-import";
 import type { LegacyOpportunityImportBatch } from "@/types/database";
+import { safeJson } from "@/lib/utils/safe-json";
 
 type SavedBatchMode = "package" | "csv";
 
@@ -53,7 +54,7 @@ export function LegacyOpportunityImportWorkspace() {
     setLoadingBatches(true);
     try {
       const response = await fetch("/api/opportunities/import/batches", { cache: "no-store" });
-      const json = await response.json();
+      const json = await safeJson(response);
 
       if (!response.ok) {
         setMigrationMessage(json?.migrationRequired ? json.error ?? "Run migrations 045 and 046 first." : null);
@@ -112,7 +113,7 @@ export function LegacyOpportunityImportWorkspace() {
         }),
       });
 
-      const json = await response.json();
+      const json = await safeJson(response);
       if (!response.ok) {
         if (json?.migrationRequired) {
           setMigrationMessage(json.error ?? "Run migrations 045 and 046 first.");
@@ -154,7 +155,7 @@ export function LegacyOpportunityImportWorkspace() {
         method: "POST",
         body: formData,
       });
-      const json = await response.json();
+      const json = await safeJson(response);
 
       if (!response.ok) {
         throw new Error(json?.error ?? "Unable to create legacy package.");

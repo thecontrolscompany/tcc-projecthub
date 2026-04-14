@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Profile, UserRole } from "@/types/database";
+import { safeJson } from "@/lib/utils/safe-json";
 
 export function AdminUsersPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -20,7 +21,7 @@ export function AdminUsersPage() {
     const response = await fetch("/api/admin/data?section=users", {
       credentials: "include",
     });
-    const json = await response.json();
+    const json = await safeJson(response);
     if (!response.ok) setLoadError(json?.error ?? "Failed to load users.");
     if (response.ok) setProfiles((json?.users as Profile[]) ?? []);
     setLoading(false);
@@ -260,7 +261,7 @@ function CreateCustomerForm({
       body: JSON.stringify({ email, fullName, password, role }),
     });
 
-    const json = await res.json();
+    const json = await safeJson(res);
     if (!res.ok) {
       setError(json.error ?? "Failed to create user.");
       setSaving(false);

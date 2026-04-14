@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
+import { safeJson } from "@/lib/utils/safe-json";
 
 type PreviewRow = {
   project_name_raw: string;
@@ -111,7 +112,7 @@ export default function BillingImportPage() {
         method: "POST",
         body: formData,
       });
-      const json = await response.json();
+      const json = await safeJson(response);
 
       if (!response.ok) {
         throw new Error(json?.error ?? "Preview failed.");
@@ -164,7 +165,7 @@ export default function BillingImportPage() {
         method: "POST",
         body: formData,
       });
-      const json = await response.json();
+      const json = await safeJson(response);
 
       if (!response.ok) {
         throw new Error(json?.error ?? "Import failed.");

@@ -17,6 +17,7 @@ import {
   YAxis,
 } from "recharts";
 import { format, startOfMonth, subMonths } from "date-fns";
+import { safeJson } from "@/lib/utils/safe-json";
 
 interface MonthlyData {
   month: string;
@@ -92,7 +93,7 @@ export default function AnalyticsPage() {
         `/api/admin/data?section=analytics&startMonth=${encodeURIComponent(startMonth)}&endMonth=${encodeURIComponent(endMonth)}`,
         { credentials: "include" }
       );
-      const json = await response.json();
+      const json = await safeJson(response);
 
       if (!response.ok) {
         throw new Error(json?.error ?? "Failed to load analytics.");
