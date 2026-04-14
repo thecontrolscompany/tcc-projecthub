@@ -1,4 +1,4 @@
-// mammoth, pdf-parse, and exceljs are loaded lazily inside their functions
+// mammoth, unpdf, and exceljs are loaded lazily inside their functions
 // so a missing/broken package produces a JSON error, not an HTML 500.
 import type ExcelJS from "exceljs";
 import type {
@@ -29,14 +29,9 @@ export async function extractProposalFromDocx(buffer: Buffer) {
 }
 
 export async function extractProposalFromPdf(buffer: Buffer) {
-  const { PDFParse } = await import("pdf-parse");
-  const parser = new PDFParse({ data: new Uint8Array(buffer) });
-  try {
-    const result = await parser.getText();
-    return extractProposalFromText(result.text);
-  } finally {
-    await parser.destroy();
-  }
+  const { extractText } = await import("unpdf");
+  const { text } = await extractText(new Uint8Array(buffer), { mergePages: true });
+  return extractProposalFromText(text);
 }
 
 export async function extractEstimateFromWorkbook(buffer: Buffer): Promise<EstimateExtractionResult> {

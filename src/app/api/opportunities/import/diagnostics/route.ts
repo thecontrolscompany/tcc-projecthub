@@ -12,7 +12,7 @@ export async function GET() {
 
   const tests: Array<[string, () => Promise<unknown>]> = [
     ["mammoth", () => import("mammoth")],
-    ["pdf-parse", () => import("pdf-parse")],
+    ["unpdf", () => import("unpdf")],
     ["exceljs", () => import("exceljs")],
     [
       "opportunity-document-ingestion",
