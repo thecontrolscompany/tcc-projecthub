@@ -1,91 +1,62 @@
 "use client";
 
-import { useMemo, useState } from "react";
-
-type ParsedImportPreview = {
-  delimiter: "comma" | "tab";
-  headers: string[];
-  rows: string[][];
-};
-
-type InferredField =
-  | "opportunity_name"
-  | "company_name"
-  | "contact_name"
-  | "job_number"
-  | "project_location"
-  | "bid_date"
-  | "proposal_date"
-  | "amount"
-  | "status"
-  | "estimator_name"
-  | "notes";
-
-const FIELD_LABELS: Record<InferredField, string> = {
-  opportunity_name: "Opportunity / project name",
-  company_name: "Company / customer",
-  contact_name: "Contact",
-  job_number: "Job number",
-  project_location: "Location",
-  bid_date: "Bid date",
-  proposal_date: "Proposal date",
-  amount: "Amount",
-  status: "Status",
-  estimator_name: "Estimator",
-  notes: "Notes",
-};
-
-const FIELD_PATTERNS: Record<InferredField, RegExp[]> = {
-  opportunity_name: [/opportunity/i, /project/i, /description/i, /job name/i],
-  company_name: [/company/i, /customer/i, /vendor/i, /contractor/i, /account/i],
-  contact_name: [/contact/i, /attention/i],
-  job_number: [/job/i, /project number/i, /job number/i],
-  project_location: [/location/i, /site/i, /address/i, /city/i],
-  bid_date: [/bid date/i, /^bid$/i],
-  proposal_date: [/proposal date/i, /quote date/i, /submitted/i],
-  amount: [/amount/i, /value/i, /price/i, /bid/i, /contract/i],
-  status: [/status/i, /outcome/i, /result/i],
-  estimator_name: [/estimator/i, /sales/i, /assigned/i],
-  notes: [/notes/i, /remarks/i, /comment/i],
-};
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { OpportunityHubSubnav } from "@/components/opportunity-hub-subnav";
+import {
+  buildNormalizedPreview,
+  inferImportMapping,
+  OPPORTUNITY_IMPORT_FIELD_LABELS,
+  parseDelimitedText,
+  type InferredOpportunityField,
+  type ParsedImportPreview,
+} from "@/lib/opportunity-import";
+import type { LegacyOpportunityImportBatch } from "@/types/database";
 
 export function LegacyOpportunityImportWorkspace() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [preview, setPreview] = useState<ParsedImportPreview | null>(null);
+  const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [migrationMessage, setMigrationMessage] = useState<string | null>(null);
+  const [batches, setBatches] = useState<LegacyOpportunityImportBatch[]>([]);
+  const [loadingBatches, setLoadingBatches] = useState(true);
+  const [savingBatch, setSavingBatch] = useState(false);
+  const [savedBatchId, setSavedBatchId] = useState<string | null>(null);
 
   const mapping = useMemo(() => {
     if (!preview) return null;
-
-    const inferred = new Map<InferredField, string>();
-
-    for (const header of preview.headers) {
-      for (const [field, patterns] of Object.entries(FIELD_PATTERNS) as Array<[InferredField, RegExp[]]>) {
-        if (inferred.has(field)) continue;
-        if (patterns.some((pattern) => pattern.test(header))) {
-          inferred.set(field, header);
-        }
-      }
-    }
-
-    return inferred;
+    return inferImportMapping(preview.headers);
   }, [preview]);
 
   const normalizedPreview = useMemo(() => {
-    if (!preview || !mapping) return [];
+    if (!preview) return [];
+    return buildNormalizedPreview(preview);
+  }, [preview]);
 
-    return preview.rows.slice(0, 8).map((row, index) => {
-      const record: Record<string, string> = { row_number: String(index + 2) };
+  useEffect(() => {
+    void loadBatches();
+  }, []);
 
-      for (const [field, header] of mapping.entries()) {
-        const columnIndex = preview.headers.indexOf(header);
-        record[field] = columnIndex >= 0 ? row[columnIndex] ?? "" : "";
+  async function loadBatches() {
+    setLoadingBatches(true);
+    try {
+      const response = await fetch("/api/opportunities/import/batches", { cache: "no-store" });
+      const json = await response.json();
+
+      if (!response.ok) {
+        setMigrationMessage(json?.migrationRequired ? json.error ?? "Run migrations 045 and 046 first." : null);
+        throw new Error(json?.error ?? "Unable to load import batches.");
       }
 
-      record.issues = buildRowIssues(record).join(", ") || "Looks good";
-      return record;
-    });
-  }, [mapping, preview]);
+      setMigrationMessage(null);
+      setBatches((json.batches ?? []) as LegacyOpportunityImportBatch[]);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "Unable to load import batches.");
+    } finally {
+      setLoadingBatches(false);
+    }
+  }
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -93,6 +64,7 @@ export function LegacyOpportunityImportWorkspace() {
 
     setFileName(file.name);
     setError(null);
+    setSavedBatchId(null);
 
     try {
       const text = await file.text();
@@ -108,15 +80,76 @@ export function LegacyOpportunityImportWorkspace() {
     }
   }
 
+  async function handleStageBatch() {
+    if (!preview || !fileName) return;
+
+    setSavingBatch(true);
+    setError(null);
+    setSavedBatchId(null);
+
+    try {
+      const response = await fetch("/api/opportunities/import/batches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source_name: fileName.replace(/\.[^.]+$/, ""),
+          source_file_name: fileName,
+          notes,
+          preview,
+        }),
+      });
+
+      const json = await response.json();
+      if (!response.ok) {
+        if (json?.migrationRequired) {
+          setMigrationMessage(json.error ?? "Run migrations 045 and 046 first.");
+        }
+        throw new Error(json?.error ?? "Unable to stage import batch.");
+      }
+
+      setSavedBatchId(json.batch.id);
+      setNotes("");
+      await loadBatches();
+    } catch (stageError) {
+      setError(stageError instanceof Error ? stageError.message : "Unable to stage import batch.");
+    } finally {
+      setSavingBatch(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
+      <OpportunityHubSubnav />
+
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
         <h1 className="mt-1 text-2xl font-bold text-text-primary">Legacy Import Workspace</h1>
         <p className="mt-2 max-w-3xl text-sm text-text-secondary">
-          This workspace safely previews old opportunity exports before anything gets staged. It’s designed for the next slice of the roadmap where legacy rows flow into review tables and get matched to active projects or existing pursuits.
+          Stage older bid history safely before it becomes live pipeline data. Parsed rows will flow into a review queue where we can match them to active projects or existing pursuits.
         </p>
       </div>
+
+      {migrationMessage ? (
+        <div className="rounded-2xl border border-status-warning/30 bg-status-warning/10 px-5 py-4 text-sm text-status-warning">
+          {migrationMessage}
+        </div>
+      ) : null}
+
+      {error ? (
+        <div className="rounded-2xl border border-status-danger/30 bg-status-danger/10 px-5 py-4 text-sm text-status-danger">
+          {error}
+        </div>
+      ) : null}
+
+      {savedBatchId ? (
+        <div className="rounded-2xl border border-status-success/30 bg-status-success/10 px-5 py-4 text-sm text-status-success">
+          Legacy batch staged successfully.{" "}
+          <Link href={`/quotes/import/review?batch=${savedBatchId}`} className="font-semibold underline">
+            Open the review queue
+          </Link>
+          .
+        </div>
+      ) : null}
 
       <div className="rounded-2xl border border-border-default bg-surface-raised p-6">
         <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-border-default bg-surface-base px-6 py-10 text-center transition hover:border-brand-primary/50">
@@ -126,14 +159,34 @@ export function LegacyOpportunityImportWorkspace() {
         </label>
 
         {fileName ? (
-          <p className="mt-4 text-sm text-text-secondary">
-            Loaded file: <span className="font-medium text-text-primary">{fileName}</span>
-          </p>
-        ) : null}
+          <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
+            <div>
+              <p className="text-sm text-text-secondary">
+                Loaded file: <span className="font-medium text-text-primary">{fileName}</span>
+              </p>
+              <p className="mt-1 text-xs text-text-tertiary">
+                {preview?.rows.length ?? 0} data rows ready for staging
+              </p>
+            </div>
 
-        {error ? (
-          <div className="mt-4 rounded-xl border border-status-danger/30 bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
-            {error}
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium text-text-secondary">Batch notes</span>
+              <input
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                placeholder="Optional context about this import..."
+                className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+              />
+            </label>
+
+            <button
+              type="button"
+              onClick={() => void handleStageBatch()}
+              disabled={!preview || savingBatch}
+              className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:opacity-60"
+            >
+              {savingBatch ? "Staging..." : "Stage Batch"}
+            </button>
           </div>
         ) : null}
       </div>
@@ -150,13 +203,13 @@ export function LegacyOpportunityImportWorkspace() {
             <section className="rounded-2xl border border-border-default bg-surface-raised p-6">
               <h2 className="text-lg font-semibold text-text-primary">Detected Mapping</h2>
               <p className="mt-1 text-sm text-text-secondary">
-                These are the best guesses based on your header names. The next implementation slice can turn this into explicit import mapping before staging.
+                These header matches become the normalized payload stored with each staged row.
               </p>
 
               <div className="mt-5 space-y-3">
-                {(Object.keys(FIELD_LABELS) as InferredField[]).map((field) => (
+                {(Object.keys(OPPORTUNITY_IMPORT_FIELD_LABELS) as InferredOpportunityField[]).map((field) => (
                   <div key={field} className="flex items-center justify-between rounded-xl border border-border-default bg-surface-base px-4 py-3">
-                    <span className="text-sm text-text-secondary">{FIELD_LABELS[field]}</span>
+                    <span className="text-sm text-text-secondary">{OPPORTUNITY_IMPORT_FIELD_LABELS[field]}</span>
                     <span className="text-sm font-medium text-text-primary">{mapping?.get(field) ?? "Not detected"}</span>
                   </div>
                 ))}
@@ -166,7 +219,7 @@ export function LegacyOpportunityImportWorkspace() {
             <section className="rounded-2xl border border-border-default bg-surface-raised p-6">
               <h2 className="text-lg font-semibold text-text-primary">Normalized Preview</h2>
               <p className="mt-1 text-sm text-text-secondary">
-                First few rows mapped into the fields we care about for matching and promotion.
+                This is the exact shape that will be staged into the review tables.
               </p>
 
               <div className="mt-5 overflow-x-auto">
@@ -189,7 +242,7 @@ export function LegacyOpportunityImportWorkspace() {
                         <td className="px-3 py-2 text-text-primary">{row.company_name || "-"}</td>
                         <td className="px-3 py-2 text-text-secondary">{row.job_number || "-"}</td>
                         <td className="px-3 py-2 text-text-secondary">{row.amount || "-"}</td>
-                        <td className="px-3 py-2 text-text-secondary">{row.issues}</td>
+                        <td className="px-3 py-2 text-text-secondary">{row.issues.join(", ") || "Looks good"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -197,92 +250,69 @@ export function LegacyOpportunityImportWorkspace() {
               </div>
             </section>
           </div>
-
-          <div className="rounded-2xl border border-border-default bg-surface-raised p-6">
-            <h2 className="text-lg font-semibold text-text-primary">What happens next</h2>
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <StepCard
-                title="1. Stage import rows"
-                body="Migration 046 creates the batch and row tables needed to store legacy opportunities safely before they become live records."
-              />
-              <StepCard
-                title="2. Score project matches"
-                body="The review queue will compare job number, company, location, and naming similarity against active projects and existing pursuits."
-              />
-              <StepCard
-                title="3. Promote approved rows"
-                body="Only reviewed rows get promoted into the live Opportunity Hub so we keep history traceable and avoid duplicate project links."
-              />
-            </div>
-          </div>
         </>
       ) : null}
+
+      <section className="rounded-2xl border border-border-default bg-surface-raised p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-text-primary">Recent Batches</h2>
+            <p className="mt-1 text-sm text-text-secondary">
+              Recently staged legacy imports ready for review and matching.
+            </p>
+          </div>
+          <Link href="/quotes/import/review" className="text-sm font-medium text-brand-primary hover:text-brand-hover">
+            Open review queue
+          </Link>
+        </div>
+
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead>
+              <tr className="border-b border-border-default text-left text-xs uppercase tracking-wide text-text-tertiary">
+                <th className="px-3 py-2">Source</th>
+                <th className="px-3 py-2">File</th>
+                <th className="px-3 py-2">Rows</th>
+                <th className="px-3 py-2">Status</th>
+                <th className="px-3 py-2">Imported</th>
+                <th className="px-3 py-2">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loadingBatches ? (
+                <tr>
+                  <td colSpan={6} className="px-3 py-6 text-center text-text-tertiary">
+                    Loading batches...
+                  </td>
+                </tr>
+              ) : batches.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-3 py-6 text-center text-text-tertiary">
+                    No legacy batches staged yet.
+                  </td>
+                </tr>
+              ) : (
+                batches.map((batch) => (
+                  <tr key={batch.id} className="border-b border-border-default last:border-b-0">
+                    <td className="px-3 py-2 text-text-primary">{batch.source_name}</td>
+                    <td className="px-3 py-2 text-text-secondary">{batch.source_file_name ?? "-"}</td>
+                    <td className="px-3 py-2 text-text-secondary">{batch.row_count}</td>
+                    <td className="px-3 py-2 text-text-secondary">{batch.status}</td>
+                    <td className="px-3 py-2 text-text-secondary">{new Date(batch.imported_at).toLocaleDateString()}</td>
+                    <td className="px-3 py-2">
+                      <Link href={`/quotes/import/review?batch=${batch.id}`} className="text-sm font-medium text-brand-primary hover:text-brand-hover">
+                        Review
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
-}
-
-function parseDelimitedText(text: string): ParsedImportPreview {
-  const lines = text
-    .replace(/^\uFEFF/, "")
-    .split(/\r?\n/)
-    .filter((line) => line.trim().length > 0);
-
-  if (!lines.length) {
-    return { delimiter: "comma", headers: [], rows: [] };
-  }
-
-  const tabCount = (lines[0].match(/\t/g) ?? []).length;
-  const commaCount = (lines[0].match(/,/g) ?? []).length;
-  const delimiter = tabCount > commaCount ? "tab" : "comma";
-  const separator = delimiter === "tab" ? "\t" : ",";
-
-  const parsed = lines.map((line) => parseCsvLine(line, separator));
-  const headers = parsed[0]?.map((value) => value.trim()) ?? [];
-  const rows = parsed.slice(1).filter((row) => row.some((value) => value.trim().length > 0));
-
-  return { delimiter, headers, rows };
-}
-
-function parseCsvLine(line: string, separator: string) {
-  const values: string[] = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (let index = 0; index < line.length; index += 1) {
-    const char = line[index];
-    const next = line[index + 1];
-
-    if (char === "\"") {
-      if (inQuotes && next === "\"") {
-        current += "\"";
-        index += 1;
-      } else {
-        inQuotes = !inQuotes;
-      }
-      continue;
-    }
-
-    if (!inQuotes && char === separator) {
-      values.push(current.trim());
-      current = "";
-      continue;
-    }
-
-    current += char;
-  }
-
-  values.push(current.trim());
-  return values;
-}
-
-function buildRowIssues(record: Record<string, string>) {
-  const issues: string[] = [];
-
-  if (!record.opportunity_name) issues.push("Missing opportunity name");
-  if (!record.company_name) issues.push("Missing company");
-  if (!record.amount) issues.push("No amount");
-
-  return issues;
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
@@ -290,15 +320,6 @@ function StatCard({ label, value }: { label: string; value: string }) {
     <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
       <p className="text-sm text-text-secondary">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-text-primary">{value}</p>
-    </div>
-  );
-}
-
-function StepCard({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="rounded-2xl border border-border-default bg-surface-base p-4">
-      <p className="text-sm font-semibold text-text-primary">{title}</p>
-      <p className="mt-2 text-sm text-text-secondary">{body}</p>
     </div>
   );
 }

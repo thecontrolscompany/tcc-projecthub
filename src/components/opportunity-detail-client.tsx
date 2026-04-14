@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { format } from "date-fns";
+import { OpportunityHubSubnav } from "@/components/opportunity-hub-subnav";
 import {
   deriveOpportunityStage,
   getOpportunityAmount,
@@ -65,15 +66,17 @@ export function OpportunityDetailClient({ initialQuote }: { initialQuote: QuoteR
 
   return (
     <div className="space-y-6">
+      <OpportunityHubSubnav />
+
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <Link href="/quotes" className="text-sm text-text-secondary hover:text-text-primary">
-            ← Back to Opportunity Hub
+            {"<-"} Back to Opportunity Hub
           </Link>
           <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
           <h1 className="mt-1 text-2xl font-bold text-text-primary">{getOpportunityLabel(quote)}</h1>
           <p className="mt-2 text-sm text-text-secondary">
-            {quote.company_name} • Ref {quote.opportunity_number ?? quote.id.slice(0, 8)}
+            {quote.company_name} | Ref {quote.opportunity_number ?? quote.id.slice(0, 8)}
           </p>
         </div>
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
+import { OpportunityHubSubnav } from "@/components/opportunity-hub-subnav";
 import {
   deriveOpportunityStage,
   getOpportunityAmount,
@@ -191,6 +192,8 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
 
   return (
     <div className="space-y-6">
+      <OpportunityHubSubnav />
+
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
