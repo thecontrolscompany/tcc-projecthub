@@ -5,10 +5,10 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 const ITEMS = [
   { href: "/time/clock", label: "Clock" },
-  { href: "/time/reconciliation?tab=overview", label: "Reconciliation" },
   { href: "/time/employees", label: "Employees" },
   { href: "/time/projects", label: "Projects" },
   { href: "/time/export", label: "Export" },
+  { href: "/time/reconciliation?tab=overview", label: "Reconciliation" },
 ];
 
 export function TimeSubnav() {

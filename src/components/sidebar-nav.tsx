@@ -157,7 +157,7 @@ export const NAV_LINKS: NavItem[] = [
   { label: "Estimating", href: "/estimating", roles: ["admin", "ops_manager"], icon: CalculatorIcon },
   { label: "Projects", href: "/projects", roles: ["pm", "lead"], icon: FolderIcon },
   { label: "PM Portal", href: "/pm", roles: ["pm", "lead", "ops_manager"], icon: ClipboardIcon },
-  { label: "TCC Time", href: "/time", roles: ["admin", "pm", "lead", "ops_manager"], icon: ClockIcon },
+  { label: "TCC Time", href: "/time/clock", roles: ["admin", "pm", "lead", "ops_manager"], icon: ClockIcon },
   { label: "Time Tracking", href: "/pm/time", roles: ["pm", "lead", "ops_manager"], icon: ClockIcon },
   { label: "Installer", href: "/installer", roles: ["installer"], icon: WrenchIcon },
   { label: "Analytics", href: "/admin/analytics", roles: ["admin", "ops_manager"], icon: ChartIcon },
