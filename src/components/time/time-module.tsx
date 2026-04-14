@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { ProjectHoursSection } from "@/components/time/project-hours-section";
 import type {
   TimeModuleProject,
   TimeModuleSnapshot,
@@ -323,6 +324,8 @@ export function TimeProjectsPage({
           ))}
         </div>
       </section>
+
+      <ProjectHoursSection />
     </div>
   );
 }
