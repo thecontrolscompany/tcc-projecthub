@@ -30,6 +30,23 @@ export async function POST(request: Request) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
+  // Every opportunity must have a pursuit. Create one now so the
+  // quote_request is never orphaned.
+  const { data: pursuit, error: pursuitError } = await supabase
+    .from("pursuits")
+    .insert({
+      project_name: parsed.data.project_description.slice(0, 120),
+      owner_name: parsed.data.company_name,
+      project_location: parsed.data.site_address ?? null,
+      status: "active",
+    })
+    .select("id")
+    .single();
+
+  if (pursuitError || !pursuit) {
+    return NextResponse.json({ error: pursuitError?.message ?? "Unable to create pursuit." }, { status: 400 });
+  }
+
   const { data, error } = await supabase
     .from("quote_requests")
     .insert({
@@ -37,11 +54,13 @@ export async function POST(request: Request) {
       contact_phone: parsed.data.contact_phone ?? null,
       site_address: parsed.data.site_address ?? null,
       estimated_value: parsed.data.estimated_value ?? null,
+      pursuit_id: pursuit.id,
     })
     .select("id")
     .single();
 
   if (error) {
+    await supabase.from("pursuits").delete().eq("id", pursuit.id);
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 

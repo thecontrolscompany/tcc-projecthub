@@ -112,9 +112,27 @@ export async function POST(request: Request) {
 
     const validationIssues = buildValidationIssues(updatedRow);
 
+    // Create the pursuit now that we have extracted names from the document.
+    const { data: pursuit, error: pursuitError } = await auth.supabase
+      .from("pursuits")
+      .insert({
+        project_name: updatedRow.legacy_opportunity_name ?? updatedRow.company_name ?? sourceName,
+        owner_name: updatedRow.company_name ?? null,
+        project_location: updatedRow.project_location ?? null,
+        status: "active",
+        created_by: auth.user.id,
+      })
+      .select("id")
+      .single();
+
+    if (pursuitError || !pursuit) {
+      throw new Error(pursuitError?.message ?? "Unable to create pursuit for import row.");
+    }
+
     const { error: finalizeError } = await auth.supabase
       .from("legacy_opportunity_import_rows")
       .update({
+        pursuit_id: pursuit.id,
         normalized_payload: {
           import_mode: "document_package",
           opportunity_name: updatedRow.legacy_opportunity_name,
