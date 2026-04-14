@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { findProjectMatchSuggestions } from "@/lib/opportunity-match";
-import type { LegacyOpportunityImportRow, Project } from "@/types/database";
+import type {
+  LegacyOpportunityImportRow,
+  OpportunityDocument,
+  OpportunityEstimateSummary,
+  OpportunityEquipmentGroup,
+  OpportunityPricingItem,
+  OpportunityScopeItem,
+  Project,
+} from "@/types/database";
 
 export async function GET(request: Request) {
   const auth = await requireAdmin();
@@ -60,17 +68,72 @@ export async function GET(request: Request) {
     project_matches: findProjectMatchSuggestions(row, (projects ?? []) as Project[]),
   }));
 
+  const rowIds = reviewRows.map((row) => row.id);
+
+  const [documentsResult, pricingResult, scopeResult, equipmentResult, estimateResult] = await Promise.all([
+    rowIds.length
+      ? supabase
+          .from("opportunity_documents")
+          .select("*")
+          .in("legacy_import_row_id", rowIds)
+          .order("uploaded_at", { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+    rowIds.length
+      ? supabase
+          .from("opportunity_pricing_items")
+          .select("*")
+          .in("legacy_import_row_id", rowIds)
+          .order("sort_order", { ascending: true })
+      : Promise.resolve({ data: [], error: null }),
+    rowIds.length
+      ? supabase
+          .from("opportunity_scope_items")
+          .select("*")
+          .in("legacy_import_row_id", rowIds)
+          .order("sort_order", { ascending: true })
+      : Promise.resolve({ data: [], error: null }),
+    rowIds.length
+      ? supabase
+          .from("opportunity_equipment_groups")
+          .select("*")
+          .in("legacy_import_row_id", rowIds)
+          .order("sort_order", { ascending: true })
+      : Promise.resolve({ data: [], error: null }),
+    rowIds.length
+      ? supabase
+          .from("opportunity_estimate_summaries")
+          .select("*")
+          .in("legacy_import_row_id", rowIds)
+          .order("extracted_at", { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  const documents = ((documentsResult.data ?? []) as OpportunityDocument[]);
+  const pricingItems = ((pricingResult.data ?? []) as OpportunityPricingItem[]);
+  const scopeItems = ((scopeResult.data ?? []) as OpportunityScopeItem[]);
+  const equipmentGroups = ((equipmentResult.data ?? []) as OpportunityEquipmentGroup[]);
+  const estimateSummaries = ((estimateResult.data ?? []) as OpportunityEstimateSummary[]);
+
+  const enrichedRows = reviewRows.map((row) => ({
+    ...row,
+    documents: documents.filter((document) => document.legacy_import_row_id === row.id),
+    pricing_items: pricingItems.filter((item) => item.legacy_import_row_id === row.id),
+    scope_items: scopeItems.filter((item) => item.legacy_import_row_id === row.id),
+    equipment_groups: equipmentGroups.filter((item) => item.legacy_import_row_id === row.id),
+    estimate_summary: estimateSummaries.find((item) => item.legacy_import_row_id === row.id) ?? null,
+  }));
+
   const summary = {
-    pending: reviewRows.filter((row) => row.review_status === "pending").length,
-    matched: reviewRows.filter((row) => row.review_status === "matched").length,
-    rejected: reviewRows.filter((row) => row.review_status === "rejected").length,
-    noSuggestions: reviewRows.filter((row) => row.project_matches.length === 0).length,
+    pending: enrichedRows.filter((row) => row.review_status === "pending").length,
+    matched: enrichedRows.filter((row) => row.review_status === "matched").length,
+    rejected: enrichedRows.filter((row) => row.review_status === "rejected").length,
+    noSuggestions: enrichedRows.filter((row) => row.project_matches.length === 0).length,
   };
 
   return NextResponse.json({
     batches: batches ?? [],
     selectedBatch,
-    rows: reviewRows,
+    rows: enrichedRows,
     summary,
   });
 }

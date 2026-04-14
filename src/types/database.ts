@@ -263,6 +263,11 @@ export interface LegacyOpportunityImportRow {
   validation_issues: string[];
   review_status: "pending" | "matched" | "promoted" | "rejected";
   promoted_quote_request_id: string | null;
+  sharepoint_folder?: string | null;
+  sharepoint_item_id?: string | null;
+  proposal_docx_document_id?: string | null;
+  proposal_pdf_document_id?: string | null;
+  estimate_workbook_document_id?: string | null;
   created_at: string;
 }
 
@@ -286,6 +291,92 @@ export interface LegacyOpportunityLinkReview {
   reviewed_by: string | null;
   reviewed_at: string;
   notes: string | null;
+}
+
+export interface OpportunityDocument {
+  id: string;
+  pursuit_id: string | null;
+  quote_request_id: string | null;
+  legacy_import_row_id: string | null;
+  estimate_id: string | null;
+  project_id: string | null;
+  document_role: "proposal_docx" | "proposal_pdf" | "estimate_xlsm" | "addendum" | "supporting_scope" | "customer_upload";
+  file_name: string;
+  file_ext: string | null;
+  content_type: string | null;
+  file_size_bytes: number | null;
+  storage_provider: string;
+  storage_path: string | null;
+  storage_item_id: string | null;
+  storage_web_url: string | null;
+  uploaded_by: string | null;
+  uploaded_at: string;
+  archived_for_customer: boolean;
+  is_primary_source: boolean;
+  extraction_status: "pending" | "completed" | "failed";
+  extraction_version: string | null;
+  extracted_at: string | null;
+  extracted_by: string | null;
+  extraction_notes: string | null;
+  extracted_json: Record<string, unknown> | null;
+}
+
+export interface OpportunityPricingItem {
+  id: string;
+  legacy_import_row_id: string | null;
+  source_document_id: string | null;
+  label: string;
+  amount: number | null;
+  item_type: "base_bid" | "bond" | "alternate" | "deduct" | "allowance" | "vendor_fee" | "other";
+  is_conditional: boolean;
+  included_in_base: boolean;
+  notes: string | null;
+  sort_order: number;
+}
+
+export interface OpportunityScopeItem {
+  id: string;
+  legacy_import_row_id: string | null;
+  source_document_id: string | null;
+  section_type: "scope" | "clarification" | "exclusion" | "warranty" | "reference";
+  heading: string | null;
+  body: string;
+  sort_order: number;
+}
+
+export interface OpportunityEquipmentGroup {
+  id: string;
+  legacy_import_row_id: string | null;
+  source_document_id: string | null;
+  system_label: string;
+  quantity: number | null;
+  control_type: string | null;
+  tag_text: string | null;
+  notes: string | null;
+  sort_order: number;
+}
+
+export interface OpportunityEstimateSummary {
+  id: string;
+  legacy_import_row_id: string | null;
+  source_document_id: string | null;
+  source_sheet_name: string;
+  labor_hours_total: number | null;
+  labor_cost_total: number | null;
+  material_cost_total: number | null;
+  direct_indirect_cost_total: number | null;
+  total_cost: number | null;
+  overhead_rate: number | null;
+  overhead_value: number | null;
+  profit_rate: number | null;
+  profit_value: number | null;
+  vendor_fee_rate: number | null;
+  vendor_fee_value: number | null;
+  base_bid_amount: number | null;
+  bond_amount: number | null;
+  final_total_amount: number | null;
+  extracted_at: string;
+  extracted_json: Record<string, unknown> | null;
 }
 
 export type QuoteRequest = {
