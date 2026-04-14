@@ -31,8 +31,19 @@ export async function extractProposalFromDocx(buffer: Buffer) {
 
 export async function extractProposalFromPdf(buffer: Buffer) {
   const { extractText } = await import("unpdf");
-  const { text } = await extractText(new Uint8Array(buffer), { mergePages: true });
-  return extractProposalFromText(text);
+  const result = await extractText(new Uint8Array(buffer));
+
+  const pages = Array.isArray(result.text) ? result.text : [result.text as unknown as string];
+
+  const headerPattern =
+    /^HVAC CONTROLS INSTALLATION PROPOSAL\s*\nPage \d+ of \d+\s*\nThe Controls Company\s*\n[^\n]*\nTel:[^\n]*\n/im;
+
+  const cleaned = pages
+    .map((page) => page.replace(headerPattern, "").trim())
+    .filter(Boolean)
+    .join("\n");
+
+  return extractProposalFromText(cleaned);
 }
 
 export async function extractEstimateFromWorkbook(buffer: Buffer): Promise<EstimateExtractionResult> {
@@ -47,10 +58,11 @@ export async function extractEstimateFromWorkbook(buffer: Buffer): Promise<Estim
     workbook.worksheets[0];
 
   const labels = collectWorksheetLabels(worksheet);
-  const valueOf = (...keys: string[]) => {
+  const valueOf = (col: "c" | "d", ...keys: string[]): number | null => {
     for (const key of keys) {
-      const value = labels.get(key);
-      if (value !== undefined) return value;
+      const entry = labels.get(key);
+      if (!entry) continue;
+      return entry[col] ?? entry[col === "c" ? "d" : "c"] ?? null;
     }
     return null;
   };
@@ -59,21 +71,30 @@ export async function extractEstimateFromWorkbook(buffer: Buffer): Promise<Estim
     legacy_import_row_id: null,
     source_document_id: null,
     source_sheet_name: worksheet?.name ?? "Summary",
-    labor_hours_total: valueOf("labor hours total", "labor hours"),
-    labor_cost_total: valueOf("labor cost total", "labor cost"),
-    material_cost_total: valueOf("material cost total", "material cost"),
-    direct_indirect_cost_total: valueOf("direct indirect cost total", "direct / indirect cost", "direct and indirect cost"),
-    total_cost: valueOf("total cost"),
-    overhead_rate: valueOf("overhead rate"),
-    overhead_value: valueOf("overhead value", "overhead"),
-    profit_rate: valueOf("profit rate"),
-    profit_value: valueOf("profit value", "profit"),
-    vendor_fee_rate: valueOf("vendor fee rate"),
-    vendor_fee_value: valueOf("vendor fee value", "vendor fee"),
-    base_bid_amount: valueOf("base bid amount", "base bid", "marked up value"),
-    bond_amount: valueOf("bond amount", "bond"),
-    final_total_amount: valueOf("final total amount", "final total"),
-    extracted_json: Object.fromEntries(labels.entries()),
+
+    labor_hours_total: valueOf("c", "total labor hrs", "total labor hours"),
+    labor_cost_total: valueOf("d", "total labor cost"),
+
+    material_cost_total: valueOf("d", "total material"),
+
+    direct_indirect_cost_total: valueOf("d", "total direct indirect costs", "total direct  indirect costs", "total direct / indirect costs"),
+
+    total_cost: valueOf("c", "total"),
+
+    overhead_rate: valueOf("c", "overhead"),
+    overhead_value: valueOf("d", "overhead"),
+    profit_rate: valueOf("c", "profit"),
+    profit_value: valueOf("d", "profit"),
+    vendor_fee_rate: valueOf("c", "vendor fee for quickpay", "vendor fee"),
+    vendor_fee_value: valueOf("d", "vendor fee for quickpay", "vendor fee"),
+
+    base_bid_amount: valueOf("d", "installation budget price", "base bid"),
+    bond_amount: valueOf("d", "p p bond", "bond"),
+    final_total_amount: valueOf("d", "total"),
+
+    extracted_json: Object.fromEntries(
+      Array.from(labels.entries()).map(([k, v]) => [k, v.d ?? v.c])
+    ),
   };
 }
 
@@ -120,21 +141,21 @@ export function getDocumentDestinationSubfolder(role: "proposal_docx" | "proposa
 }
 
 function collectWorksheetLabels(worksheet: ExcelJS.Worksheet | undefined) {
-  const labels = new Map<string, number>();
+  const labels = new Map<string, { c: number | null; d: number | null }>();
   if (!worksheet) return labels;
 
   worksheet.eachRow((row) => {
-    row.eachCell((cell, colNumber) => {
-      if (typeof cell.value !== "string") return;
-      const label = normalizeLabel(cell.value);
-      if (!label) return;
+    const labelCell = row.getCell(2);
+    if (typeof labelCell.value !== "string") return;
+    const label = normalizeLabel(labelCell.value);
+    if (!label) return;
 
-      const rightValue = row.getCell(colNumber + 1).value;
-      const parsed = coerceNumber(rightValue);
-      if (parsed !== null) {
-        labels.set(label, parsed);
-      }
-    });
+    const c = coerceNumber(row.getCell(3).value);
+    const d = coerceNumber(row.getCell(4).value);
+
+    if (c !== null || d !== null) {
+      labels.set(label, { c, d });
+    }
   });
 
   return labels;
@@ -166,8 +187,11 @@ function extractPricingItems(lines: string[]): { items: Omit<OpportunityPricingI
     const line = pricingLines[i];
     if (isHeader(line)) continue;
 
-    // Same-line: "Base Bid  US $ 31,369"
-    const sameLine = line.match(/^(.+?)\s{2,}(?:US\s*)?\$\s*([\d,\s]+(?:\.\d{2})?)\s*$/i);
+    // Matches both DOCX multi-space and PDF single-space formats.
+    // Anchors on "US $" or standalone "$" to avoid splitting label mid-word.
+    const sameLine =
+      line.match(/^(.+?)\s+US\s*\$\s*([\d,\s]+(?:\.\d{2})?)\s*$/i) ??
+      line.match(/^(.+?)\s{2,}\$\s*([\d,\s]+(?:\.\d{2})?)\s*$/i);
     if (sameLine) {
       const label = sameLine[1].trim();
       const amount = coerceNumber(sameLine[2].replace(/\s/g, ""));
