@@ -233,10 +233,10 @@ export function TimeEmployeesPage({
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-default bg-surface-overlay px-4 py-3">
             <div>
               <p className="text-sm font-medium text-text-primary">Need to match imported employees to portal logins?</p>
-              <p className="text-sm text-text-secondary">Open the admin reconciliation queue to map existing profiles, create users, or ignore people for now.</p>
+              <p className="text-sm text-text-secondary">Open the admin reconciliation workspace to map existing profiles, create users, or ignore people for now.</p>
             </div>
-            <Link href="/time/reconcile" className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-primary-hover">
-              Open reconcile queue
+            <Link href="/time/reconciliation?tab=employees" className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-primary-hover">
+              Open reconciliation
             </Link>
           </div>
         )}
@@ -310,10 +310,10 @@ export function TimeProjectsPage({
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-default bg-surface-overlay px-4 py-3">
             <div>
               <p className="text-sm font-medium text-text-primary">Need to match imported jobcodes to portal projects?</p>
-              <p className="text-sm text-text-secondary">Open the admin reconciliation queue to map existing projects or ignore jobcodes for now.</p>
+              <p className="text-sm text-text-secondary">Open the admin reconciliation workspace to map existing projects or ignore jobcodes for now.</p>
             </div>
-            <Link href="/time/reconcile/projects" className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-primary-hover">
-              Open project reconcile
+            <Link href="/time/reconciliation?tab=projects" className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-primary-hover">
+              Open reconciliation
             </Link>
           </div>
         )}

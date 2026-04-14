@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentWeekBounds } from "@/lib/time/data";
+import { resolveTimeRange } from "@/lib/time/date-range";
 import type { ProjectHoursRow, ProjectWorkerHoursRow } from "@/types/database";
 
 type MappingWithProjectRow = {
@@ -32,32 +32,6 @@ function adminClient() {
   return createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 }
 
-function parseWeekStart(value: string | null) {
-  if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    const parsed = new Date(`${value}T00:00:00`);
-    if (!Number.isNaN(parsed.getTime())) {
-      parsed.setHours(0, 0, 0, 0);
-      const weekEnd = new Date(parsed);
-      weekEnd.setDate(weekEnd.getDate() + 7);
-
-      return {
-        weekStart: parsed,
-        weekEnd,
-        weekStartIso: value,
-        weekEndIso: weekEnd.toISOString().slice(0, 10)
-      };
-    }
-  }
-
-  const { weekStart, weekEnd } = getCurrentWeekBounds();
-  return {
-    weekStart,
-    weekEnd,
-    weekStartIso: weekStart.toISOString().slice(0, 10),
-    weekEndIso: weekEnd.toISOString().slice(0, 10)
-  };
-}
-
 function roundHours(seconds: number) {
   return Math.round((seconds / 3600) * 10) / 10;
 }
@@ -86,7 +60,11 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get("project_id")?.trim() ?? "";
-  const { weekStartIso, weekEndIso } = parseWeekStart(searchParams.get("week_start"));
+  const range = resolveTimeRange({
+    startDate: searchParams.get("start_date"),
+    endDate: searchParams.get("end_date"),
+    weekStart: searchParams.get("week_start"),
+  });
   const admin = adminClient();
 
   try {
@@ -105,8 +83,8 @@ export async function GET(request: Request) {
 
       if (jobcodeIds.length === 0) {
         return NextResponse.json({
-          weekStart: weekStartIso,
-          weekEnd: weekEndIso,
+          startDate: range.startDate,
+          endDate: range.endDate,
           projectId,
           rows: [] satisfies ProjectWorkerHoursRow[]
         });
@@ -116,8 +94,8 @@ export async function GET(request: Request) {
         .from("qb_time_timesheets")
         .select("qb_user_id, duration_seconds, qb_jobcode_id")
         .in("qb_jobcode_id", jobcodeIds)
-        .gte("timesheet_date", weekStartIso)
-        .lt("timesheet_date", weekEndIso)
+        .gte("timesheet_date", range.startDate)
+        .lt("timesheet_date", range.endExclusive)
         .gt("duration_seconds", 0);
 
       if (timesheetsError) {
@@ -160,8 +138,8 @@ export async function GET(request: Request) {
         .sort((a, b) => b.total_hours - a.total_hours || a.display_name.localeCompare(b.display_name));
 
       return NextResponse.json({
-        weekStart: weekStartIso,
-        weekEnd: weekEndIso,
+        startDate: range.startDate,
+        endDate: range.endDate,
         projectId,
         rows
       });
@@ -180,8 +158,8 @@ export async function GET(request: Request) {
 
     if (jobcodeIds.length === 0) {
       return NextResponse.json({
-        weekStart: weekStartIso,
-        weekEnd: weekEndIso,
+        startDate: range.startDate,
+        endDate: range.endDate,
         rows: [] satisfies ProjectHoursRow[]
       });
     }
@@ -190,8 +168,8 @@ export async function GET(request: Request) {
       .from("qb_time_timesheets")
       .select("qb_user_id, qb_jobcode_id, duration_seconds")
       .in("qb_jobcode_id", jobcodeIds)
-      .gte("timesheet_date", weekStartIso)
-      .lt("timesheet_date", weekEndIso)
+      .gte("timesheet_date", range.startDate)
+      .lt("timesheet_date", range.endExclusive)
       .gt("duration_seconds", 0);
 
     if (timesheetsError) {
@@ -251,8 +229,8 @@ export async function GET(request: Request) {
       .sort((a, b) => b.total_hours - a.total_hours || a.project_name.localeCompare(b.project_name));
 
     return NextResponse.json({
-      weekStart: weekStartIso,
-      weekEnd: weekEndIso,
+      startDate: range.startDate,
+      endDate: range.endDate,
       rows
     });
   } catch (error) {

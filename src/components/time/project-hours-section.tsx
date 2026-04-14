@@ -1,17 +1,19 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useState } from "react";
+import { TimeRangePicker } from "@/components/time/time-range-picker";
+import { getPresetRange, type TimeRange, type TimeRangePreset } from "@/lib/time/date-range";
 import type { ProjectHoursRow, ProjectWorkerHoursRow } from "@/types/database";
 
 type ProjectHoursResponse = {
-  weekStart: string;
-  weekEnd: string;
+  startDate: string;
+  endDate: string;
   rows: ProjectHoursRow[];
 };
 
 type ProjectWorkerHoursResponse = {
-  weekStart: string;
-  weekEnd: string;
+  startDate: string;
+  endDate: string;
   projectId: string;
   rows: ProjectWorkerHoursRow[];
 };
@@ -20,24 +22,26 @@ function formatHours(hours: number) {
   return hours.toFixed(1);
 }
 
-function formatWeekRangeLabel(weekStart: string, weekEnd: string) {
-  const start = new Date(`${weekStart}T12:00:00`);
-  const endExclusive = new Date(`${weekEnd}T12:00:00`);
-  endExclusive.setDate(endExclusive.getDate() - 1);
+function formatRangeLabel(startDate: string, endDate: string) {
+  const start = new Date(`${startDate}T12:00:00`);
+  const end = new Date(`${endDate}T12:00:00`);
 
   const startFormatter = new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric"
   });
   const endFormatter = new Intl.DateTimeFormat("en-US", {
-    month: start.getMonth() === endExclusive.getMonth() ? undefined : "short",
+    month: start.getMonth() === end.getMonth() ? undefined : "short",
     day: "numeric"
   });
 
-  return `${startFormatter.format(start)} – ${endFormatter.format(endExclusive)}`;
+  return `${startFormatter.format(start)} – ${endFormatter.format(end)}`;
 }
 
 export function ProjectHoursSection() {
+  const defaultRange = useMemo(() => getPresetRange("current_week"), []);
+  const [selectedRange, setSelectedRange] = useState<TimeRange>(defaultRange);
+  const [selectedPreset, setSelectedPreset] = useState<TimeRangePreset>("current_week");
   const [data, setData] = useState<ProjectHoursResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,8 +56,13 @@ export function ProjectHoursSection() {
     async function loadProjectHours() {
       setLoading(true);
       setError(null);
+      setExpandedProjectId(null);
       try {
-        const response = await fetch("/api/time/project-hours", { credentials: "include" });
+        const params = new URLSearchParams({
+          start_date: selectedRange.startDate,
+          end_date: selectedRange.endDate,
+        });
+        const response = await fetch(`/api/time/project-hours?${params.toString()}`, { credentials: "include" });
         const json = (await response.json()) as ProjectHoursResponse & { error?: string };
         if (!response.ok) {
           throw new Error(json.error ?? "Unable to load weekly project hours.");
@@ -78,15 +87,15 @@ export function ProjectHoursSection() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedRange.endDate, selectedRange.startDate]);
 
   const weekLabel = useMemo(() => {
     if (!data) {
-      return "Current week";
+      return formatRangeLabel(selectedRange.startDate, selectedRange.endDate);
     }
 
-    return formatWeekRangeLabel(data.weekStart, data.weekEnd);
-  }, [data]);
+    return formatRangeLabel(data.startDate, data.endDate);
+  }, [data, selectedRange.endDate, selectedRange.startDate]);
 
   async function toggleProject(projectId: string) {
     if (expandedProjectId === projectId) {
@@ -107,7 +116,12 @@ export function ProjectHoursSection() {
     });
 
     try {
-      const response = await fetch(`/api/time/project-hours?project_id=${projectId}`, {
+      const params = new URLSearchParams({
+        project_id: projectId,
+        start_date: selectedRange.startDate,
+        end_date: selectedRange.endDate,
+      });
+      const response = await fetch(`/api/time/project-hours?${params.toString()}`, {
         credentials: "include"
       });
       const json = (await response.json()) as ProjectWorkerHoursResponse & { error?: string };
@@ -133,11 +147,23 @@ export function ProjectHoursSection() {
     <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">This Week&apos;s Hours</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Project Hours</p>
           <h2 className="mt-2 text-xl font-semibold text-text-primary">Portal-mapped project hours</h2>
           <p className="mt-2 text-sm text-text-secondary">{weekLabel}</p>
         </div>
       </div>
+
+      <TimeRangePicker
+        value={selectedRange}
+        preset={selectedPreset}
+        onChange={({ range, preset }) => {
+          setSelectedRange(range);
+          setSelectedPreset(preset);
+          setWorkerRowsByProjectId({});
+          setDetailErrorByProjectId({});
+          setDetailLoadingProjectId(null);
+        }}
+      />
 
       {loading ? (
         <div className="mt-5 space-y-3">
@@ -151,7 +177,7 @@ export function ProjectHoursSection() {
       ) : error ? (
         <p className="mt-5 text-sm text-rose-300">{error}</p>
       ) : !data || data.rows.length === 0 ? (
-        <p className="mt-5 text-sm text-text-tertiary">No hours logged this week.</p>
+        <p className="mt-5 text-sm text-text-tertiary">No hours logged in this date range.</p>
       ) : (
         <div className="mt-5 overflow-hidden rounded-2xl border border-border-default">
           <table className="min-w-full divide-y divide-border-default text-sm">

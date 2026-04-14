@@ -8,6 +8,23 @@ type PendingState = Record<number, "map" | "ignore" | undefined>;
 type ManualPickState = Record<number, string | undefined>;
 
 export function TimeReconcilePage({ snapshot }: { snapshot: TimeReconcileSnapshot }) {
+  return (
+    <div className="space-y-6">
+      <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Time Reconcile</p>
+        <h1 className="mt-2 font-heading text-3xl font-bold text-text-primary">Map imported employees to portal users</h1>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-text-secondary">
+          This admin queue shows QuickBooks Time users that are still unmatched in ProjectHub. Use the
+          suggested people records when possible, or pick any contact manually from the directory.
+        </p>
+      </section>
+
+      <TimeReconcileUsersPanel snapshot={snapshot} />
+    </div>
+  );
+}
+
+export function TimeReconcileUsersPanel({ snapshot }: { snapshot: TimeReconcileSnapshot }) {
   const router = useRouter();
   const [pending, setPending] = useState<PendingState>({});
   const [messages, setMessages] = useState<Record<number, string>>({});
@@ -56,16 +73,7 @@ export function TimeReconcilePage({ snapshot }: { snapshot: TimeReconcileSnapsho
   }
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Time Reconcile</p>
-        <h1 className="mt-2 font-heading text-3xl font-bold text-text-primary">Map imported employees to portal users</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-text-secondary">
-          This admin queue shows QuickBooks Time users that are still unmatched in ProjectHub. Use the
-          suggested people records when possible, or pick any contact manually from the directory.
-        </p>
-      </section>
-
+    <>
       <div className="grid gap-4 md:grid-cols-3">
         <MetricCard label="Unmatched users" value={String(snapshot.users.length)} />
         <MetricCard label="Mapped already" value={String(snapshot.mappedCount)} />
@@ -229,7 +237,7 @@ export function TimeReconcilePage({ snapshot }: { snapshot: TimeReconcileSnapsho
           )}
         </div>
       </section>
-    </div>
+    </>
   );
 }
 

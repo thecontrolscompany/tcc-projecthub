@@ -1,17 +1,19 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useState } from "react";
+import { TimeRangePicker } from "@/components/time/time-range-picker";
+import { getPresetRange, type TimeRange, type TimeRangePreset } from "@/lib/time/date-range";
 import type { EmployeeHoursRow, EmployeeProjectHoursRow } from "@/types/database";
 
 type EmployeeHoursResponse = {
-  weekStart: string;
-  weekEnd: string;
+  startDate: string;
+  endDate: string;
   rows: EmployeeHoursRow[];
 };
 
 type EmployeeProjectHoursResponse = {
-  weekStart: string;
-  weekEnd: string;
+  startDate: string;
+  endDate: string;
   qbUserId: number;
   rows: EmployeeProjectHoursRow[];
 };
@@ -20,24 +22,26 @@ function formatHours(hours: number) {
   return hours.toFixed(1);
 }
 
-function formatWeekRangeLabel(weekStart: string, weekEnd: string) {
-  const start = new Date(`${weekStart}T12:00:00`);
-  const endExclusive = new Date(`${weekEnd}T12:00:00`);
-  endExclusive.setDate(endExclusive.getDate() - 1);
+function formatRangeLabel(startDate: string, endDate: string) {
+  const start = new Date(`${startDate}T12:00:00`);
+  const end = new Date(`${endDate}T12:00:00`);
 
   const startFormatter = new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric"
   });
   const endFormatter = new Intl.DateTimeFormat("en-US", {
-    month: start.getMonth() === endExclusive.getMonth() ? undefined : "short",
+    month: start.getMonth() === end.getMonth() ? undefined : "short",
     day: "numeric"
   });
 
-  return `${startFormatter.format(start)} – ${endFormatter.format(endExclusive)}`;
+  return `${startFormatter.format(start)} – ${endFormatter.format(end)}`;
 }
 
 export function EmployeeHoursSection() {
+  const defaultRange = useMemo(() => getPresetRange("current_week"), []);
+  const [selectedRange, setSelectedRange] = useState<TimeRange>(defaultRange);
+  const [selectedPreset, setSelectedPreset] = useState<TimeRangePreset>("current_week");
   const [data, setData] = useState<EmployeeHoursResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,9 +56,14 @@ export function EmployeeHoursSection() {
     async function loadEmployeeHours() {
       setLoading(true);
       setError(null);
+      setExpandedUserId(null);
 
       try {
-        const response = await fetch("/api/time/employee-hours", { credentials: "include" });
+        const params = new URLSearchParams({
+          start_date: selectedRange.startDate,
+          end_date: selectedRange.endDate,
+        });
+        const response = await fetch(`/api/time/employee-hours?${params.toString()}`, { credentials: "include" });
         const json = (await response.json()) as EmployeeHoursResponse & { error?: string };
         if (!response.ok) {
           throw new Error(json.error ?? "Unable to load weekly employee hours.");
@@ -79,15 +88,15 @@ export function EmployeeHoursSection() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedRange.endDate, selectedRange.startDate]);
 
   const weekLabel = useMemo(() => {
     if (!data) {
-      return "Current week";
+      return formatRangeLabel(selectedRange.startDate, selectedRange.endDate);
     }
 
-    return formatWeekRangeLabel(data.weekStart, data.weekEnd);
-  }, [data]);
+    return formatRangeLabel(data.startDate, data.endDate);
+  }, [data, selectedRange.endDate, selectedRange.startDate]);
 
   async function toggleEmployee(qbUserId: number) {
     if (expandedUserId === qbUserId) {
@@ -108,7 +117,12 @@ export function EmployeeHoursSection() {
     });
 
     try {
-      const response = await fetch(`/api/time/employee-hours?qb_user_id=${qbUserId}`, {
+      const params = new URLSearchParams({
+        qb_user_id: String(qbUserId),
+        start_date: selectedRange.startDate,
+        end_date: selectedRange.endDate,
+      });
+      const response = await fetch(`/api/time/employee-hours?${params.toString()}`, {
         credentials: "include"
       });
       const json = (await response.json()) as EmployeeProjectHoursResponse & { error?: string };
@@ -133,10 +147,22 @@ export function EmployeeHoursSection() {
   return (
     <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">This Week&apos;s Hours</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Employee Hours</p>
         <h2 className="mt-2 text-xl font-semibold text-text-primary">Employee hours breakdown</h2>
         <p className="mt-2 text-sm text-text-secondary">{weekLabel}</p>
       </div>
+
+      <TimeRangePicker
+        value={selectedRange}
+        preset={selectedPreset}
+        onChange={({ range, preset }) => {
+          setSelectedRange(range);
+          setSelectedPreset(preset);
+          setProjectRowsByUserId({});
+          setDetailErrorByUserId({});
+          setDetailLoadingUserId(null);
+        }}
+      />
 
       {loading ? (
         <div className="mt-5 space-y-3">
@@ -150,7 +176,7 @@ export function EmployeeHoursSection() {
       ) : error ? (
         <p className="mt-5 text-sm text-rose-300">{error}</p>
       ) : !data || data.rows.length === 0 ? (
-        <p className="mt-5 text-sm text-text-tertiary">No hours data this week.</p>
+        <p className="mt-5 text-sm text-text-tertiary">No hours data in this date range.</p>
       ) : (
         <div className="mt-5 overflow-hidden rounded-2xl border border-border-default">
           <table className="min-w-full divide-y divide-border-default text-sm">

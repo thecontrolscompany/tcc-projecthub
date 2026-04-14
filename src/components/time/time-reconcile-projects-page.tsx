@@ -7,6 +7,23 @@ import type { ProjectReconcileSnapshot } from "@/lib/time/data";
 type PendingState = Record<number, "map" | "ignore" | undefined>;
 
 export function TimeReconcileProjectsPage({ snapshot }: { snapshot: ProjectReconcileSnapshot }) {
+  return (
+    <div className="space-y-6">
+      <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Project Reconcile</p>
+        <h1 className="mt-2 font-heading text-3xl font-bold text-text-primary">Map imported jobcodes to portal projects</h1>
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-text-secondary">
+          This admin queue shows QuickBooks Time jobcodes that have no matching ProjectHub project yet.
+          Map them to an existing project or ignore them to remove them from the queue.
+        </p>
+      </section>
+
+      <TimeReconcileProjectsPanel snapshot={snapshot} />
+    </div>
+  );
+}
+
+export function TimeReconcileProjectsPanel({ snapshot }: { snapshot: ProjectReconcileSnapshot }) {
   const router = useRouter();
   const [pending, setPending] = useState<PendingState>({});
   const [messages, setMessages] = useState<Record<number, string>>({});
@@ -54,16 +71,7 @@ export function TimeReconcileProjectsPage({ snapshot }: { snapshot: ProjectRecon
   }
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Project Reconcile</p>
-        <h1 className="mt-2 font-heading text-3xl font-bold text-text-primary">Map imported jobcodes to portal projects</h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-text-secondary">
-          This admin queue shows QuickBooks Time jobcodes that have no matching ProjectHub project yet.
-          Map them to an existing project or ignore them to remove them from the queue.
-        </p>
-      </section>
-
+    <>
       <div className="grid gap-4 md:grid-cols-3">
         <MetricCard label="Unmatched jobcodes" value={String(snapshot.jobcodes.length)} />
         <MetricCard label="Mapped already" value={String(snapshot.mappedCount)} />
@@ -169,7 +177,7 @@ export function TimeReconcileProjectsPage({ snapshot }: { snapshot: ProjectRecon
           )}
         </div>
       </section>
-    </div>
+    </>
   );
 }
 
