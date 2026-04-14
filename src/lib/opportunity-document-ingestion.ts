@@ -1,6 +1,6 @@
-import mammoth from "mammoth";
-import { PDFParse } from "pdf-parse";
-import ExcelJS from "exceljs";
+// mammoth, pdf-parse, and exceljs are loaded lazily inside their functions
+// so a missing/broken package produces a JSON error, not an HTML 500.
+import type ExcelJS from "exceljs";
 import type {
   OpportunityEquipmentGroup,
   OpportunityEstimateSummary,
@@ -23,11 +23,13 @@ export type EstimateExtractionResult = Omit<OpportunityEstimateSummary, "id" | "
 };
 
 export async function extractProposalFromDocx(buffer: Buffer) {
+  const mammoth = await import("mammoth").then((m) => m.default ?? m);
   const result = await mammoth.extractRawText({ buffer });
   return extractProposalFromText(result.value);
 }
 
 export async function extractProposalFromPdf(buffer: Buffer) {
+  const { PDFParse } = await import("pdf-parse");
   const parser = new PDFParse({ data: new Uint8Array(buffer) });
   try {
     const result = await parser.getText();
@@ -38,6 +40,7 @@ export async function extractProposalFromPdf(buffer: Buffer) {
 }
 
 export async function extractEstimateFromWorkbook(buffer: Buffer): Promise<EstimateExtractionResult> {
+  const ExcelJS = await import("exceljs").then((m) => m.default ?? m);
   const workbook = new ExcelJS.Workbook();
   const workbookBytes = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
   const workbookInput: any = Buffer.from(workbookBytes as ArrayBuffer);
