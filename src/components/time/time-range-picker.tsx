@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  formatRangeLabel,
   getPresetRange,
+  listPayPeriodOptions,
   type TimeRange,
   type TimeRangePreset,
 } from "@/lib/time/date-range";
@@ -13,6 +15,7 @@ const PRESET_OPTIONS: Array<{ id: TimeRangePreset; label: string }> = [
   { id: "previous_week", label: "Previous week" },
   { id: "current_month", label: "Current month" },
   { id: "last_30_days", label: "Last 30 days" },
+  { id: "custom", label: "Custom range" },
 ];
 
 export function TimeRangePicker({
@@ -26,16 +29,27 @@ export function TimeRangePicker({
 }) {
   const [draftRange, setDraftRange] = useState<TimeRange>(value);
   const [draftPreset, setDraftPreset] = useState<TimeRangePreset>(preset);
+  const payPeriodOptions = useMemo(() => listPayPeriodOptions(), []);
+  const [selectedPayPeriodId, setSelectedPayPeriodId] = useState(() => `${value.startDate}:${value.endDate}`);
 
   useEffect(() => {
     setDraftRange(value);
     setDraftPreset(preset);
+    setSelectedPayPeriodId(`${value.startDate}:${value.endDate}`);
   }, [preset, value.endDate, value.startDate]);
 
   function applyPreset(nextPreset: TimeRangePreset) {
     const range = getPresetRange(nextPreset);
     setDraftPreset(nextPreset);
     setDraftRange(range);
+    if (nextPreset === "custom") {
+      return;
+    }
+
+    if (nextPreset === "current_pay_period") {
+      setSelectedPayPeriodId(`${range.startDate}:${range.endDate}`);
+    }
+
     onChange({ range, preset: nextPreset });
   }
 
@@ -49,60 +63,87 @@ export function TimeRangePicker({
 
   return (
     <div className="mt-4 rounded-2xl border border-border-default bg-surface-overlay p-4">
-      <div className="flex flex-wrap gap-2">
-        {PRESET_OPTIONS.map((option) => (
-          <button
-            key={option.id}
-            type="button"
-            onClick={() => applyPreset(option.id)}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] transition ${
-              preset === option.id
-                ? "bg-brand-primary text-text-inverse"
-                : "border border-border-default bg-surface-raised text-text-secondary hover:text-text-primary"
-            }`}
+      <div className="grid gap-3 md:grid-cols-[220px_minmax(0,1fr)]">
+        <label className="space-y-1 text-sm text-text-secondary">
+          <span className="block text-xs font-semibold uppercase tracking-[0.16em] text-text-tertiary">Range type</span>
+          <select
+            value={draftPreset}
+            onChange={(event) => applyPreset(event.target.value as TimeRangePreset)}
+            className="w-full rounded-xl border border-border-default bg-surface-raised px-3 py-2 text-text-primary"
           >
-            {option.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-4 grid gap-3 md:grid-cols-[1fr_1fr_auto]">
-        <label className="space-y-1 text-sm text-text-secondary">
-          <span className="block text-xs font-semibold uppercase tracking-[0.16em] text-text-tertiary">Start date</span>
-          <input
-            type="date"
-            value={draftRange.startDate}
-            onChange={(event) => {
-              const nextRange = { ...draftRange, startDate: event.target.value };
-              setDraftPreset("custom");
-              setDraftRange(nextRange);
-            }}
-            className="w-full rounded-xl border border-border-default bg-surface-raised px-3 py-2 text-text-primary"
-          />
+            {PRESET_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </label>
 
-        <label className="space-y-1 text-sm text-text-secondary">
-          <span className="block text-xs font-semibold uppercase tracking-[0.16em] text-text-tertiary">End date</span>
-          <input
-            type="date"
-            value={draftRange.endDate}
-            onChange={(event) => {
-              const nextRange = { ...draftRange, endDate: event.target.value };
-              setDraftPreset("custom");
-              setDraftRange(nextRange);
-            }}
-            className="w-full rounded-xl border border-border-default bg-surface-raised px-3 py-2 text-text-primary"
-          />
-        </label>
+        {draftPreset === "current_pay_period" ? (
+          <label className="space-y-1 text-sm text-text-secondary">
+            <span className="block text-xs font-semibold uppercase tracking-[0.16em] text-text-tertiary">Pay period</span>
+            <select
+              value={selectedPayPeriodId}
+              onChange={(event) => {
+                const nextId = event.target.value;
+                const [startDate, endDate] = nextId.split(":");
+                const range = { startDate, endDate };
+                setSelectedPayPeriodId(nextId);
+                setDraftRange(range);
+                onChange({ range, preset: "current_pay_period" });
+              }}
+              className="w-full rounded-xl border border-border-default bg-surface-raised px-3 py-2 text-text-primary"
+            >
+              {payPeriodOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : draftPreset === "custom" ? (
+          <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+            <label className="space-y-1 text-sm text-text-secondary">
+              <span className="block text-xs font-semibold uppercase tracking-[0.16em] text-text-tertiary">Start date</span>
+              <input
+                type="date"
+                value={draftRange.startDate}
+                onChange={(event) => {
+                  const nextRange = { ...draftRange, startDate: event.target.value };
+                  setDraftRange(nextRange);
+                }}
+                className="w-full rounded-xl border border-border-default bg-surface-raised px-3 py-2 text-text-primary"
+              />
+            </label>
 
-        <button
-          type="button"
-          onClick={applyCustomRange}
-          disabled={!draftRange.startDate || !draftRange.endDate || draftRange.startDate > draftRange.endDate}
-          className="self-end rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Apply range
-        </button>
+            <label className="space-y-1 text-sm text-text-secondary">
+              <span className="block text-xs font-semibold uppercase tracking-[0.16em] text-text-tertiary">End date</span>
+              <input
+                type="date"
+                value={draftRange.endDate}
+                onChange={(event) => {
+                  const nextRange = { ...draftRange, endDate: event.target.value };
+                  setDraftRange(nextRange);
+                }}
+                className="w-full rounded-xl border border-border-default bg-surface-raised px-3 py-2 text-text-primary"
+              />
+            </label>
+
+            <button
+              type="button"
+              onClick={applyCustomRange}
+              disabled={!draftRange.startDate || !draftRange.endDate || draftRange.startDate > draftRange.endDate}
+              className="self-end rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Apply range
+            </button>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-border-default bg-surface-raised px-4 py-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-text-tertiary">Selected range</p>
+            <p className="mt-1 text-sm text-text-primary">{formatRangeLabel(draftRange)}</p>
+          </div>
+        )}
       </div>
 
       <p className="mt-3 text-xs text-text-tertiary">

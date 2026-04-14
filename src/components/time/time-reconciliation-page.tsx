@@ -1,16 +1,26 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import type { ProjectReconcileSnapshot, TimeReconcileSnapshot } from "@/lib/time/data";
+import {
+  TimeEmployeesDirectorySection,
+  TimeProjectsDirectorySection,
+} from "@/components/time/time-module";
+import type {
+  ProjectReconcileSnapshot,
+  TimeModuleSnapshot,
+  TimeReconcileSnapshot,
+} from "@/lib/time/data";
 import { TimeReconcileUsersPanel } from "@/components/time/time-reconcile-page";
 import { TimeReconcileProjectsPanel } from "@/components/time/time-reconcile-projects-page";
 
 type ReconciliationTab = "employees" | "projects";
 
 export function TimeReconciliationPage({
+  moduleSnapshot,
   employeeSnapshot,
   projectSnapshot,
   activeTab,
 }: {
+  moduleSnapshot: TimeModuleSnapshot;
   employeeSnapshot: TimeReconcileSnapshot;
   projectSnapshot: ProjectReconcileSnapshot;
   activeTab: ReconciliationTab;
@@ -36,9 +46,15 @@ export function TimeReconciliationPage({
       </section>
 
       {activeTab === "projects" ? (
-        <TimeReconcileProjectsPanel snapshot={projectSnapshot} />
+        <>
+          <TimeProjectsDirectorySection projects={moduleSnapshot.projects} />
+          <TimeReconcileProjectsPanel snapshot={projectSnapshot} />
+        </>
       ) : (
-        <TimeReconcileUsersPanel snapshot={employeeSnapshot} />
+        <>
+          <TimeEmployeesDirectorySection users={moduleSnapshot.users} />
+          <TimeReconcileUsersPanel snapshot={employeeSnapshot} />
+        </>
       )}
     </div>
   );

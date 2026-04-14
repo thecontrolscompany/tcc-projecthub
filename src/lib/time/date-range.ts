@@ -11,6 +11,8 @@ export type TimeRange = {
   endDate: string;
 };
 
+const PAY_PERIOD_ANCHOR = startOfDay(new Date("2026-04-05T00:00:00"));
+
 function startOfDay(date: Date) {
   const next = new Date(date);
   next.setHours(0, 0, 0, 0);
@@ -88,16 +90,54 @@ export function getLast30DaysRange(now = new Date()): TimeRange {
 
 export function getCurrentPayPeriodRange(now = new Date()): TimeRange {
   const today = startOfDay(now);
-  const anchor = startOfDay(new Date("2026-04-05T00:00:00"));
-  const diffDays = Math.floor((today.getTime() - anchor.getTime()) / 86400000);
+  const diffDays = Math.floor((today.getTime() - PAY_PERIOD_ANCHOR.getTime()) / 86400000);
   const completedPeriods = Math.floor(diffDays / 14);
-  const periodStart = addDays(anchor, completedPeriods * 14);
+  const periodStart = addDays(PAY_PERIOD_ANCHOR, completedPeriods * 14);
   const periodEnd = addDays(periodStart, 13);
 
   return {
     startDate: formatIsoDate(periodStart),
     endDate: formatIsoDate(periodEnd),
   };
+}
+
+export function getPayPeriodRangeByOffset(offset: number, now = new Date()): TimeRange {
+  const current = getCurrentPayPeriodRange(now);
+  const currentStart = parseIsoDate(current.startDate) ?? PAY_PERIOD_ANCHOR;
+  const periodStart = addDays(currentStart, offset * 14);
+  const periodEnd = addDays(periodStart, 13);
+
+  return {
+    startDate: formatIsoDate(periodStart),
+    endDate: formatIsoDate(periodEnd),
+  };
+}
+
+export function formatShortDate(value: string) {
+  const parsed = parseIsoDate(value);
+  if (!parsed) return value;
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "numeric",
+    day: "numeric",
+    year: "2-digit",
+  }).format(parsed);
+}
+
+export function formatRangeLabel(range: TimeRange) {
+  return `${formatShortDate(range.startDate)}-${formatShortDate(range.endDate)}`;
+}
+
+export function listPayPeriodOptions(now = new Date(), before = 8, after = 8) {
+  return Array.from({ length: before + after + 1 }, (_, index) => {
+    const offset = index - before;
+    const range = getPayPeriodRangeByOffset(offset, now);
+    return {
+      id: `${range.startDate}:${range.endDate}`,
+      range,
+      label: formatRangeLabel(range),
+    };
+  });
 }
 
 export function getPresetRange(preset: TimeRangePreset, now = new Date()): TimeRange {

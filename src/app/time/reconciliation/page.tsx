@@ -5,7 +5,7 @@ import { TimeReconciliationPage } from "@/components/time/time-reconciliation-pa
 import { TimeModuleError } from "@/components/time/time-module";
 import { getShellIdentity } from "@/lib/auth/get-shell-identity";
 import { roleHome } from "@/lib/auth/role-routes";
-import { getProjectReconcileSnapshot, getTimeReconcileSnapshot } from "@/lib/time/data";
+import { getProjectReconcileSnapshot, getTimeModuleSnapshot, getTimeReconcileSnapshot } from "@/lib/time/data";
 
 export default async function TimeReconciliationRoute({
   searchParams,
@@ -22,13 +22,15 @@ export default async function TimeReconciliationRoute({
   const activeTab = resolvedSearchParams.tab === "projects" ? "projects" : "employees";
 
   try {
-    const [employeeSnapshot, projectSnapshot] = await Promise.all([
+    const [moduleSnapshot, employeeSnapshot, projectSnapshot] = await Promise.all([
+      getTimeModuleSnapshot(),
       getTimeReconcileSnapshot(),
       getProjectReconcileSnapshot(),
     ]);
 
     return (
       <TimeReconciliationPage
+        moduleSnapshot={moduleSnapshot}
         employeeSnapshot={employeeSnapshot}
         projectSnapshot={projectSnapshot}
         activeTab={activeTab}

@@ -218,8 +218,8 @@ export function TimeEmployeesPage({
     <div className="space-y-6">
       <HeaderBlock
         eyebrow="Employees"
-        title="Imported QuickBooks Time users"
-        description="This list shows the real QuickBooks Time user directory and whether each person already lines up with a ProjectHub profile."
+        title="Employee hours"
+        description="Use this page for weekly and pay-period labor views. Imported QuickBooks user reconciliation now lives in the dedicated reconciliation workspace."
       />
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -228,54 +228,19 @@ export function TimeEmployeesPage({
         <MetricCard label="Mapped to TCC" value={String(users.filter((user) => user.matchedEmployee).length)} />
       </div>
 
-      <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
-        {canManage && (
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-default bg-surface-overlay px-4 py-3">
+      {canManage && (
+        <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-default bg-surface-overlay px-4 py-3">
             <div>
               <p className="text-sm font-medium text-text-primary">Need to match imported employees to portal logins?</p>
-              <p className="text-sm text-text-secondary">Open the admin reconciliation workspace to map existing profiles, create users, or ignore people for now.</p>
+              <p className="text-sm text-text-secondary">Open the reconciliation workspace for imported user review, mapping, and cleanup.</p>
             </div>
             <Link href="/time/reconciliation?tab=employees" className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-primary-hover">
               Open reconciliation
             </Link>
           </div>
-        )}
-        <div className="space-y-3">
-          {users.map((user) => (
-            <article key={user.qbUserId} className="rounded-2xl border border-border-default bg-surface-overlay p-4">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-lg font-semibold text-text-primary">{user.displayName}</h2>
-                    <StateChip label={user.active ? "active" : "inactive"} tone={user.active ? "success" : "warn"} />
-                    <StateChip label={user.matchedEmployee ? "mapped" : "unmapped"} tone={user.matchedEmployee ? "info" : "warn"} />
-                  </div>
-                  <p className="text-sm text-text-secondary">{user.email || "No email on QuickBooks record"}</p>
-                  <div className="flex flex-wrap gap-4 text-sm text-text-secondary">
-                    <span>QB user ID: {user.qbUserId}</span>
-                    <span>Username: {user.username || "Not set"}</span>
-                    <span>Payroll ID: {user.payrollId || "Not set"}</span>
-                    <span>Group: {user.groupId ?? "None"}</span>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-border-default bg-surface-raised px-4 py-3 lg:min-w-[280px]">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-tertiary">Import status</p>
-                  <div className="mt-2 space-y-1 text-sm text-text-secondary">
-                    <p>
-                      {user.matchedEmployee
-                        ? `Mapped to ${user.matchedEmployee.fullName}`
-                        : "No TCC employee mapping yet"}
-                    </p>
-                    <p>Last active: {formatDateTime(user.lastActiveAt)}</p>
-                    <p>Last synced: {formatDateTime(user.lastSyncedAt)}</p>
-                  </div>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+        </section>
+      )}
 
       <EmployeeHoursSection />
     </div>
@@ -295,8 +260,8 @@ export function TimeProjectsPage({
     <div className="space-y-6">
       <HeaderBlock
         eyebrow="Projects"
-        title="Imported QuickBooks Time jobcodes"
-        description="This list shows the real QuickBooks Time jobcodes and whether they already line up with a ProjectHub project."
+        title="Project hours"
+        description="Use this page for project labor breakdowns. Imported QuickBooks jobcode review and mapping now live in the reconciliation workspace."
       />
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -306,30 +271,93 @@ export function TimeProjectsPage({
       </div>
 
       <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
+        <div className="rounded-2xl border border-border-default bg-surface-overlay px-4 py-3 text-sm text-text-secondary">
+          {childJobcodes} imported jobcode{childJobcodes === 1 ? "" : "s"} have a parent jobcode and likely represent project-level entries.
+        </div>
+
         {canManage && (
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-default bg-surface-overlay px-4 py-3">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-default bg-surface-overlay px-4 py-3">
             <div>
               <p className="text-sm font-medium text-text-primary">Need to match imported jobcodes to portal projects?</p>
-              <p className="text-sm text-text-secondary">Open the admin reconciliation workspace to map existing projects or ignore jobcodes for now.</p>
+              <p className="text-sm text-text-secondary">Open the reconciliation workspace for imported jobcode review, mapping, and cleanup.</p>
             </div>
             <Link href="/time/reconciliation?tab=projects" className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-primary-hover">
               Open reconciliation
             </Link>
           </div>
         )}
-        <div className="rounded-2xl border border-border-default bg-surface-overlay px-4 py-3 text-sm text-text-secondary">
-          {childJobcodes} imported jobcode{childJobcodes === 1 ? "" : "s"} have a parent jobcode and likely represent project-level entries.
-        </div>
-
-        <div className="mt-4 space-y-3">
-          {projects.map((project) => (
-            <ProjectRow key={project.qbJobcodeId} project={project} />
-          ))}
-        </div>
       </section>
 
       <ProjectHoursSection />
     </div>
+  );
+}
+
+export function TimeEmployeesDirectorySection({
+  users,
+}: {
+  users: TimeModuleUser[];
+}) {
+  return (
+    <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Imported users</p>
+      <h2 className="mt-2 text-xl font-semibold text-text-primary">QuickBooks Time user directory</h2>
+      <p className="mt-2 text-sm text-text-secondary">Imported employee records and current portal mapping status.</p>
+      <div className="mt-5 space-y-3">
+        {users.map((user) => (
+          <article key={user.qbUserId} className="rounded-2xl border border-border-default bg-surface-overlay p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-lg font-semibold text-text-primary">{user.displayName}</h2>
+                  <StateChip label={user.active ? "active" : "inactive"} tone={user.active ? "success" : "warn"} />
+                  <StateChip label={user.matchedEmployee ? "mapped" : "unmapped"} tone={user.matchedEmployee ? "info" : "warn"} />
+                </div>
+                <p className="text-sm text-text-secondary">{user.email || "No email on QuickBooks record"}</p>
+                <div className="flex flex-wrap gap-4 text-sm text-text-secondary">
+                  <span>QB user ID: {user.qbUserId}</span>
+                  <span>Username: {user.username || "Not set"}</span>
+                  <span>Payroll ID: {user.payrollId || "Not set"}</span>
+                  <span>Group: {user.groupId ?? "None"}</span>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-border-default bg-surface-raised px-4 py-3 lg:min-w-[280px]">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-tertiary">Import status</p>
+                <div className="mt-2 space-y-1 text-sm text-text-secondary">
+                  <p>
+                    {user.matchedEmployee
+                      ? `Mapped to ${user.matchedEmployee.fullName}`
+                      : "No TCC employee mapping yet"}
+                  </p>
+                  <p>Last active: {formatDateTime(user.lastActiveAt)}</p>
+                  <p>Last synced: {formatDateTime(user.lastSyncedAt)}</p>
+                </div>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function TimeProjectsDirectorySection({
+  projects,
+}: {
+  projects: TimeModuleProject[];
+}) {
+  return (
+    <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Imported jobcodes</p>
+      <h2 className="mt-2 text-xl font-semibold text-text-primary">QuickBooks Time jobcode directory</h2>
+      <p className="mt-2 text-sm text-text-secondary">Imported jobcodes and current portal project mapping status.</p>
+      <div className="mt-5 space-y-3">
+        {projects.map((project) => (
+          <ProjectRow key={project.qbJobcodeId} project={project} />
+        ))}
+      </div>
+    </section>
   );
 }
 
