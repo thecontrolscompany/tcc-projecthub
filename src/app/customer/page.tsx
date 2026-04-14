@@ -137,7 +137,7 @@ export default function CustomerPage() {
       const response = await fetch(url, {
         credentials: "include",
       });
-      const json = await response.json();
+      const json = await readJsonSafely(response);
 
       if (!response.ok) {
         setProjects([]);
@@ -1151,10 +1151,10 @@ function ProjectDetail({
                         message: feedbackMessage.trim(),
                       }),
                     });
-                    const json = await response.json();
+                    const json = await readJsonSafely(response);
 
                     if (!response.ok) {
-                      throw new Error(json?.error ?? "Unable to submit feedback.");
+                      throw new Error(getErrorMessage(json, "Unable to submit feedback."));
                     }
 
                     setFeedbackMessage("");
@@ -1190,6 +1190,22 @@ function ProjectDetail({
       </div>
     </div>
   );
+}
+
+async function readJsonSafely(response: Response) {
+  const contentType = response.headers.get("content-type") ?? "";
+  const bodyText = await response.text();
+  if (!contentType.includes("application/json") || !bodyText) return null;
+
+  try {
+    return JSON.parse(bodyText) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function getErrorMessage(payload: Record<string, unknown> | null, fallback: string) {
+  return typeof payload?.error === "string" ? payload.error : fallback;
 }
 
 function CustomerHelpDialog({ onClose }: { onClose: () => void }) {

@@ -47,7 +47,7 @@ export default function FeedbackPage() {
           page_area: pageArea,
         }),
       });
-      const json = await response.json();
+      const json = await readJsonSafely(response);
 
       if (!response.ok) {
         throw new Error(json?.error ?? "Unable to submit feedback.");
@@ -167,6 +167,18 @@ export default function FeedbackPage() {
       </form>
     </div>
   );
+}
+
+async function readJsonSafely(response: Response) {
+  const contentType = response.headers.get("content-type") ?? "";
+  const bodyText = await response.text();
+  if (!contentType.includes("application/json") || !bodyText) return null;
+
+  try {
+    return JSON.parse(bodyText) as { error?: string };
+  } catch {
+    return null;
+  }
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

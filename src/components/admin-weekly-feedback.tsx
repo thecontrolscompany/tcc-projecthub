@@ -377,7 +377,7 @@ export function WeeklyUpdatesTab() {
     const res = await fetch("/api/admin/data?section=weekly-updates", {
       credentials: "include",
     });
-    const json = await res.json();
+    const json = await readJsonSafely(res);
 
     if (!res.ok) {
       setUpdates([]);
