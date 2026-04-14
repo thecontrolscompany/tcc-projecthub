@@ -191,12 +191,21 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
-        <h1 className="mt-1 text-2xl font-bold text-text-primary">Pipeline Workspace</h1>
-        <p className="mt-2 max-w-3xl text-sm text-text-secondary">
-          This is the internal bid pipeline foundation. It keeps the current quote intake live while giving us a more deliberate opportunity view ahead of pursuit matching, legacy import, and estimate handoff work.
-        </p>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
+          <h1 className="mt-1 text-2xl font-bold text-text-primary">Pipeline Workspace</h1>
+          <p className="mt-2 max-w-3xl text-sm text-text-secondary">
+            This is the internal bid pipeline foundation. It keeps the current quote intake live while giving us a more deliberate opportunity view ahead of pursuit matching, legacy import, and estimate handoff work.
+          </p>
+        </div>
+
+        <Link
+          href="/quotes/import"
+          className="inline-flex rounded-xl border border-border-default bg-surface-raised px-4 py-2 text-sm font-medium text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
+        >
+          Legacy Import
+        </Link>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
