@@ -4,11 +4,10 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
 const ITEMS = [
-  { href: "/time", label: "Overview" },
   { href: "/time/clock", label: "Clock" },
   { href: "/time/employees", label: "Employees" },
   { href: "/time/projects", label: "Projects" },
-  { href: "/time/reconciliation?tab=employees", label: "Reconciliation" },
+  { href: "/time/reconciliation?tab=overview", label: "Reconciliation" },
   { href: "/time/export", label: "Export" },
 ];
 
