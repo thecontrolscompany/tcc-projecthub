@@ -23,6 +23,7 @@ export function OpportunityImportReviewWorkspace() {
   const [selectedBatchId, setSelectedBatchId] = useState(searchParams.get("batch") ?? "");
   const [selectedBatch, setSelectedBatch] = useState<LegacyOpportunityImportBatch | null>(null);
   const [rows, setRows] = useState<ReviewRow[]>([]);
+  const [summary, setSummary] = useState({ pending: 0, matched: 0, rejected: 0, noSuggestions: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,6 +47,9 @@ export function OpportunityImportReviewWorkspace() {
       setBatches((json.batches ?? []) as LegacyOpportunityImportBatch[]);
       setSelectedBatch((json.selectedBatch ?? null) as LegacyOpportunityImportBatch | null);
       setRows((json.rows ?? []) as ReviewRow[]);
+      setSummary(
+        json.summary ?? { pending: 0, matched: 0, rejected: 0, noSuggestions: 0 }
+      );
       if (!batchId && json.selectedBatch?.id) {
         setSelectedBatchId(json.selectedBatch.id);
       }
@@ -122,10 +126,13 @@ export function OpportunityImportReviewWorkspace() {
       ) : null}
 
       {selectedBatch ? (
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
           <StatCard label="Rows in batch" value={String(selectedBatch.row_count)} />
           <StatCard label="Batch status" value={selectedBatch.status} />
           <StatCard label="Imported" value={new Date(selectedBatch.imported_at).toLocaleDateString()} />
+          <StatCard label="Pending" value={String(summary.pending)} />
+          <StatCard label="Matched" value={String(summary.matched)} />
+          <StatCard label="No suggestions" value={String(summary.noSuggestions)} />
         </div>
       ) : null}
 

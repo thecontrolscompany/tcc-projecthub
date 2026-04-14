@@ -60,10 +60,18 @@ export async function GET(request: Request) {
     project_matches: findProjectMatchSuggestions(row, (projects ?? []) as Project[]),
   }));
 
+  const summary = {
+    pending: reviewRows.filter((row) => row.review_status === "pending").length,
+    matched: reviewRows.filter((row) => row.review_status === "matched").length,
+    rejected: reviewRows.filter((row) => row.review_status === "rejected").length,
+    noSuggestions: reviewRows.filter((row) => row.project_matches.length === 0).length,
+  };
+
   return NextResponse.json({
     batches: batches ?? [],
     selectedBatch,
     rows: reviewRows,
+    summary,
   });
 }
 
