@@ -8,12 +8,13 @@ import {
 } from "@/lib/opportunity-import-server";
 
 export async function POST(request: Request) {
-  const auth = await requireAdminWithMicrosoft();
-  if ("error" in auth) return auth.error;
-
   let batchId: string | null = null;
+  let resolvedAuth: Awaited<ReturnType<typeof requireAdminWithMicrosoft>> | null = null;
 
   try {
+    const auth = await requireAdminWithMicrosoft();
+    resolvedAuth = auth;
+    if ("error" in auth) return auth.error;
     const formData = await request.formData();
     const files = parseUploadFiles(formData);
 
@@ -138,8 +139,8 @@ export async function POST(request: Request) {
       documents: upload.documents,
     });
   } catch (error) {
-    if (batchId) {
-      await auth.supabase.from("legacy_opportunity_import_batches").delete().eq("id", batchId);
+    if (batchId && resolvedAuth && !("error" in resolvedAuth)) {
+      await resolvedAuth.supabase.from("legacy_opportunity_import_batches").delete().eq("id", batchId);
     }
 
     return NextResponse.json(
