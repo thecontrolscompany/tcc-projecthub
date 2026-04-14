@@ -2,13 +2,20 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import type { TimeModuleProject, TimeModuleSnapshot, TimeModuleUser } from "@/lib/time/data";
+import type {
+  TimeModuleProject,
+  TimeModuleSnapshot,
+  TimeModuleUser,
+  WeeklyTimeSummary,
+} from "@/lib/time/data";
 
 export function TimeModuleHome({
   snapshot,
+  weeklySummary = null,
   isAdmin = false,
 }: {
   snapshot: TimeModuleSnapshot;
+  weeklySummary?: WeeklyTimeSummary | null;
   isAdmin?: boolean;
 }) {
   const activeUsers = snapshot.users.filter((user) => user.active).length;
@@ -59,6 +66,21 @@ export function TimeModuleHome({
         <MetricCard label="Active users" value={String(activeUsers)} />
         <MetricCard label="QB jobcodes" value={String(snapshot.projects.length)} />
         <MetricCard label="Active jobcodes" value={String(activeProjects)} />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <MetricCard
+          label="Hours this week"
+          value={weeklySummary ? weeklySummary.totalHours.toFixed(1) : "—"}
+        />
+        <MetricCard
+          label="Workers active"
+          value={weeklySummary ? String(weeklySummary.activeWorkers) : "—"}
+        />
+        <MetricCard
+          label="Projects active"
+          value={weeklySummary ? String(weeklySummary.activeProjects) : "—"}
+        />
       </div>
 
       {isAdmin && (

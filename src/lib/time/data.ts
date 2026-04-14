@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { UserRole } from "@/types/database";
 
 export interface TimeModuleRunSummary {
@@ -46,6 +47,12 @@ export interface TimeModuleSnapshot {
   users: TimeModuleUser[];
   projects: TimeModuleProject[];
   latestRun: TimeModuleRunSummary | null;
+}
+
+export interface WeeklyTimeSummary {
+  totalHours: number;
+  activeWorkers: number;
+  activeProjects: number;
 }
 
 export interface TimeReconcileCandidate {
@@ -701,4 +708,88 @@ export async function getTimeReconcileSnapshot(): Promise<TimeReconcileSnapshot>
 
 export async function getProjectReconcileSnapshot(): Promise<ProjectReconcileSnapshot> {
   return loadPortalProjectReconcileSnapshot();
+}
+
+export function getCurrentWeekBounds(now = new Date()) {
+  const weekStart = new Date(now);
+  const day = weekStart.getDay();
+  const daysFromMonday = (day + 6) % 7;
+  weekStart.setHours(0, 0, 0, 0);
+  weekStart.setDate(weekStart.getDate() - daysFromMonday);
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 7);
+
+  return { weekStart, weekEnd };
+}
+
+export async function getWeeklyTimeSummary(
+  supabase: SupabaseClient,
+  weekStart: Date
+): Promise<WeeklyTimeSummary | null> {
+  const normalizedWeekStart = new Date(weekStart);
+  normalizedWeekStart.setHours(0, 0, 0, 0);
+  const weekEnd = new Date(normalizedWeekStart);
+  weekEnd.setDate(weekEnd.getDate() + 7);
+
+  const weekStartIso = normalizedWeekStart.toISOString().slice(0, 10);
+  const weekEndIso = weekEnd.toISOString().slice(0, 10);
+
+  const [timesheetsResult, mappingsResult] = await Promise.all([
+    supabase
+      .from("qb_time_timesheets")
+      .select("qb_user_id, qb_jobcode_id, duration_seconds")
+      .gte("timesheet_date", weekStartIso)
+      .lt("timesheet_date", weekEndIso)
+      .gt("duration_seconds", 0),
+    supabase.from("project_qb_time_mappings").select("qb_jobcode_id, project_id")
+  ]);
+
+  if (timesheetsResult.error) {
+    throw timesheetsResult.error;
+  }
+
+  if (mappingsResult.error) {
+    throw mappingsResult.error;
+  }
+
+  const totalSeconds = (timesheetsResult.data ?? []).reduce(
+    (sum, row) => sum + (row.duration_seconds ?? 0),
+    0
+  );
+  const activeWorkers = new Set(
+    (timesheetsResult.data ?? []).map((row) => row.qb_user_id).filter((value): value is number => typeof value === "number")
+  ).size;
+  const mappedProjectIdsByJobcode = new Map<number, string[]>();
+
+  for (const mapping of mappingsResult.data ?? []) {
+    const qbJobcodeId = mapping.qb_jobcode_id;
+    const projectId = mapping.project_id;
+    if (typeof qbJobcodeId !== "number" || typeof projectId !== "string") {
+      continue;
+    }
+
+    const existing = mappedProjectIdsByJobcode.get(qbJobcodeId) ?? [];
+    existing.push(projectId);
+    mappedProjectIdsByJobcode.set(qbJobcodeId, existing);
+  }
+
+  const activeProjectIds = new Set<string>();
+
+  for (const row of timesheetsResult.data ?? []) {
+    if (typeof row.qb_jobcode_id !== "number") {
+      continue;
+    }
+
+    const projectIds = mappedProjectIdsByJobcode.get(row.qb_jobcode_id) ?? [];
+    for (const projectId of projectIds) {
+      activeProjectIds.add(projectId);
+    }
+  }
+
+  return {
+    totalHours: Math.round((totalSeconds / 3600) * 10) / 10,
+    activeWorkers,
+    activeProjects: activeProjectIds.size
+  };
 }
