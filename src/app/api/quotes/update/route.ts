@@ -40,7 +40,7 @@ export async function PATCH(request: Request) {
     .from("quote_requests")
     .update(payload)
     .eq("id", parsed.data.id)
-    .select("*")
+    .select("*, project:projects(name, job_number)")
     .single();
 
   if (error) {

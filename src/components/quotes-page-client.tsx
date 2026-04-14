@@ -1,8 +1,19 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
-import type { QuoteRequest, QuoteRequestStatus } from "@/types/database";
+import {
+  deriveOpportunityStage,
+  getOpportunityAmount,
+  getOpportunityLabel,
+  getOpportunityLocation,
+  getOpportunityProjectName,
+  isOpportunityLinked,
+  OPPORTUNITY_STAGE_BADGES,
+  OPPORTUNITY_STAGE_LABELS,
+} from "@/lib/opportunities";
+import type { OpportunityStage, QuoteRequest } from "@/types/database";
 
 type QuotesPageClientProps =
   | { mode: "public" }
@@ -28,19 +39,20 @@ const EMPTY_FORM: QuoteFormState = {
   estimated_value: "",
 };
 
-const STATUS_BADGES: Record<QuoteRequestStatus, string> = {
-  new: "bg-status-warning/10 text-status-warning",
-  reviewing: "bg-status-info/10 text-status-info",
-  quoted: "bg-brand-primary/10 text-brand-primary",
-  won: "bg-status-success/10 text-status-success",
-  lost: "bg-surface-overlay text-text-secondary",
-};
-
 const inputClassName =
   "w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none";
 
 const textareaClassName =
   "w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none";
+
+const STAGE_FILTERS: Array<{ value: "all" | OpportunityStage; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "new", label: "New" },
+  { value: "under_review", label: "Under review" },
+  { value: "submitted", label: "Submitted" },
+  { value: "won", label: "Won" },
+  { value: "lost", label: "Lost" },
+];
 
 export function QuotesPageClient(props: QuotesPageClientProps) {
   if (props.mode === "admin") {
@@ -88,7 +100,7 @@ function PublicQuoteForm() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Quote Requests</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
         <h1 className="mt-1 text-2xl font-bold text-text-primary">Request a Quote</h1>
         <p className="mt-2 text-sm text-text-secondary">
           Tell us about your upcoming project and our team will review it and follow up.
@@ -142,330 +154,173 @@ function PublicQuoteForm() {
 }
 
 function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
-  const [quotes, setQuotes] = useState(initialQuotes);
-  const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
-  const [draftStatus, setDraftStatus] = useState<QuoteRequestStatus>("new");
-  const [draftNotes, setDraftNotes] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showConvertModal, setShowConvertModal] = useState(false);
+  const [search, setSearch] = useState("");
+  const [stageFilter, setStageFilter] = useState<"all" | OpportunityStage>("all");
 
-  const selectedQuote = useMemo(() => quotes.find((quote) => quote.id === selectedQuoteId) ?? null, [quotes, selectedQuoteId]);
+  const metrics = useMemo(() => {
+    const total = initialQuotes.length;
+    const active = initialQuotes.filter((quote) => !["won", "lost"].includes(deriveOpportunityStage(quote))).length;
+    const won = initialQuotes.filter((quote) => deriveOpportunityStage(quote) === "won").length;
+    const linked = initialQuotes.filter((quote) => isOpportunityLinked(quote)).length;
+    return { total, active, won, linked };
+  }, [initialQuotes]);
 
-  function openQuote(quote: QuoteRequest) {
-    setSelectedQuoteId(quote.id);
-    setDraftStatus(quote.status);
-    setDraftNotes(quote.notes ?? "");
-    setShowConvertModal(false);
-    setError(null);
-  }
+  const filteredQuotes = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
 
-  async function handleSave() {
-    if (!selectedQuote) return;
-    setSaving(true);
-    setError(null);
+    return initialQuotes.filter((quote) => {
+      const stage = deriveOpportunityStage(quote);
+      const matchesStage = stageFilter === "all" || stage === stageFilter;
+      const haystack = [
+        quote.company_name,
+        quote.contact_name,
+        quote.contact_email,
+        quote.project_description,
+        quote.project_name,
+        getOpportunityLocation(quote),
+        getOpportunityProjectName(quote),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
 
-    try {
-      const res = await fetch("/api/quotes/update", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: selectedQuote.id,
-          status: draftStatus,
-          notes: draftNotes,
-          project_id: selectedQuote.project_id,
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(typeof json?.error === "string" ? json.error : "Unable to update quote request.");
-      }
-
-      setQuotes((current) => current.map((quote) => (quote.id === json.id ? json as QuoteRequest : quote)));
-      setSelectedQuote((current) => current ? (json as QuoteRequest) : current);
-      setSelectedQuoteId(json.id);
-    } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Unable to update quote request.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  function setSelectedQuote(updater: (current: QuoteRequest | null) => QuoteRequest | null) {
-    setQuotes((currentQuotes) => {
-      const current = currentQuotes.find((quote) => quote.id === selectedQuoteId) ?? null;
-      const next = updater(current);
-      if (!next) return currentQuotes;
-      return currentQuotes.map((quote) => (quote.id === next.id ? next : quote));
+      const matchesSearch = !normalizedSearch || haystack.includes(normalizedSearch);
+      return matchesStage && matchesSearch;
     });
-  }
+  }, [initialQuotes, search, stageFilter]);
 
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Quote Requests</p>
-        <h1 className="mt-1 text-2xl font-bold text-text-primary">Quote Management</h1>
-        <p className="mt-2 text-sm text-text-secondary">
-          Review incoming quote requests, update workflow status, and track wins and losses.
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
+        <h1 className="mt-1 text-2xl font-bold text-text-primary">Pipeline Workspace</h1>
+        <p className="mt-2 max-w-3xl text-sm text-text-secondary">
+          This is the internal bid pipeline foundation. It keeps the current quote intake live while giving us a more deliberate opportunity view ahead of pursuit matching, legacy import, and estimate handoff work.
         </p>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-border-default">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border-default bg-surface-raised/80">
-              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Date</th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Company</th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Contact</th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Email</th>
-              <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Estimated Value</th>
-              <th className="px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
-              <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {quotes.map((quote) => (
-              <tr key={quote.id} className="border-b border-border-default hover:bg-surface-raised">
-                <td className="px-4 py-2.5 text-text-secondary">{format(new Date(quote.created_at), "MMM d, yyyy")}</td>
-                <td className="px-4 py-2.5 font-medium text-text-primary">{quote.company_name}</td>
-                <td className="px-4 py-2.5 text-text-secondary">{quote.contact_name}</td>
-                <td className="px-4 py-2.5 text-text-secondary">{quote.contact_email}</td>
-                <td className="px-4 py-2.5 text-right text-text-secondary">{formatCurrency(quote.estimated_value)}</td>
-                <td className="px-4 py-2.5 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGES[quote.status]}`}>
-                      {quote.status}
-                    </span>
-                    {quote.project_id && (
-                      <span className="rounded-full bg-status-success/10 px-2 py-0.5 text-xs font-medium text-status-success">
-                        Linked
-                      </span>
-                    )}
-                  </div>
-                </td>
-                <td className="px-4 py-2.5 text-right">
-                  <button onClick={() => openQuote(quote)} className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-surface-raised hover:text-text-primary">
-                    Open
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {quotes.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-text-tertiary">
-                  No quote requests submitted yet.
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="Total opportunities" value={String(metrics.total)} accent="text-brand-primary" />
+        <MetricCard label="Active pipeline" value={String(metrics.active)} accent="text-status-info" />
+        <MetricCard label="Won" value={String(metrics.won)} accent="text-status-success" />
+        <MetricCard label="Linked to project" value={String(metrics.linked)} accent="text-status-warning" />
       </div>
 
-      {selectedQuote ? (
-        <>
-          <div className="fixed inset-0 z-40 flex justify-end bg-black/40">
-            <div className="flex h-full w-full max-w-2xl flex-col border-l border-border-default bg-surface-base shadow-2xl">
-              <div className="flex items-start justify-between border-b border-border-default px-6 py-5">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Quote Request</p>
-                  <h2 className="mt-1 text-xl font-bold text-text-primary">{selectedQuote.company_name}</h2>
-                  <p className="mt-1 text-sm text-text-secondary">{selectedQuote.contact_name} • {selectedQuote.contact_email}</p>
-                </div>
-                <button onClick={() => setSelectedQuoteId(null)} className="text-text-secondary hover:text-text-primary">x</button>
-              </div>
-
-              <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
-                {error ? (
-                  <div className="rounded-xl border border-status-danger/30 bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
-                    {error}
-                  </div>
-                ) : null}
-
-                <section className="space-y-3">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">Submitted Details</h3>
-                  <ReadonlyField label="Company" value={selectedQuote.company_name} />
-                  <ReadonlyField label="Contact" value={selectedQuote.contact_name} />
-                  <ReadonlyField label="Email" value={selectedQuote.contact_email} />
-                  <ReadonlyField label="Phone" value={selectedQuote.contact_phone ?? "-"} />
-                  <ReadonlyField label="Site Address" value={selectedQuote.site_address ?? "-"} />
-                  <ReadonlyField label="Estimated Value" value={formatCurrency(selectedQuote.estimated_value)} />
-                  <ReadonlyField label="Project Description" value={selectedQuote.project_description} multiline />
-                </section>
-
-                {selectedQuote.project_id && (
-                  <div className="rounded-xl border border-status-success/20 bg-status-success/5 px-4 py-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-status-success">Linked Project</p>
-                    <p className="mt-1 text-sm text-text-primary">
-                      {selectedQuote.project?.name ?? selectedQuote.project_id}
-                    </p>
-                  </div>
-                )}
-
-                <section className="space-y-4">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">Workflow</h3>
-                  <Field label="Status">
-                    <select value={draftStatus} onChange={(e) => setDraftStatus(e.target.value as QuoteRequestStatus)} className={inputClassName}>
-                      <option value="new">new</option>
-                      <option value="reviewing">reviewing</option>
-                      <option value="quoted">quoted</option>
-                      <option value="won">won</option>
-                      <option value="lost">lost</option>
-                    </select>
-                  </Field>
-                  <Field label="Notes">
-                    <textarea rows={6} value={draftNotes} onChange={(e) => setDraftNotes(e.target.value)} className={textareaClassName} />
-                  </Field>
-                  {selectedQuote.status === "won" && !selectedQuote.project_id && (
-                    <button
-                      type="button"
-                      onClick={() => setShowConvertModal(true)}
-                      className="w-full rounded-xl bg-status-success px-4 py-3 text-sm font-semibold text-text-inverse transition hover:opacity-90"
-                    >
-                      Convert to Project →
-                    </button>
-                  )}
-                  {selectedQuote.project_id && (
-                    <p className="text-sm font-medium text-status-success">
-                      ✓ Converted to project
-                    </p>
-                  )}
-                </section>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 border-t border-border-default px-6 py-4">
-                <button onClick={() => setSelectedQuoteId(null)} className="rounded-xl bg-surface-overlay px-4 py-2 text-sm text-text-secondary hover:bg-surface-overlay">
-                  Cancel
-                </button>
-                <button onClick={() => void handleSave()} disabled={saving} className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-brand-hover disabled:opacity-60">
-                  {saving ? "Saving..." : "Save Changes"}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {showConvertModal && (
-            <ConvertToProjectModal
-              quote={selectedQuote}
-              onClose={() => setShowConvertModal(false)}
-              onConverted={(projectId, projectName, jobNumber) => {
-                setShowConvertModal(false);
-                setQuotes((current) =>
-                  current.map((quote) =>
-                    quote.id === selectedQuote.id
-                      ? { ...quote, project_id: projectId, project: { name: projectName, job_number: jobNumber } }
-                      : quote
-                  )
-                );
-              }}
-            />
-          )}
-        </>
-      ) : null}
-    </div>
-  );
-}
-
-function ConvertToProjectModal({
-  quote,
-  onClose,
-  onConverted,
-}: {
-  quote: QuoteRequest;
-  onClose: () => void;
-  onConverted: (projectId: string, projectName: string, jobNumber: string) => void;
-}) {
-  const [name, setName] = useState(quote.project_description);
-  const [siteAddress, setSiteAddress] = useState(quote.site_address ?? "");
-  const [estimatedIncome, setEstimatedIncome] = useState(String(quote.estimated_value ?? 0));
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const previewJobNumber = `Auto-generated on save`;
-
-  async function handleConvert(event: React.FormEvent) {
-    event.preventDefault();
-    setSaving(true);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/admin/convert-quote-to-project", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          quote_id: quote.id,
-          name,
-          site_address: siteAddress,
-          estimated_income: Number(estimatedIncome || 0),
-        }),
-      });
-      const json = await response.json();
-
-      if (!response.ok) {
-        throw new Error(json?.error ?? "Unable to convert quote.");
-      }
-
-      onConverted(json.project_id, `${json.job_number} - ${name.trim()}`, json.job_number);
-    } catch (convertError) {
-      setError(convertError instanceof Error ? convertError.message : "Unable to convert quote.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8">
-      <div className="w-full max-w-2xl rounded-2xl border border-border-default bg-surface-base shadow-2xl">
-        <div className="flex items-start justify-between border-b border-border-default px-6 py-5">
+      <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Quote Conversion</p>
-            <h3 className="mt-1 text-xl font-bold text-text-primary">Convert to Project</h3>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Search opportunities</label>
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Company, contact, project, location..."
+              className={inputClassName}
+            />
           </div>
-          <button onClick={onClose} className="text-text-secondary hover:text-text-primary">x</button>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Stage</label>
+            <select value={stageFilter} onChange={(event) => setStageFilter(event.target.value as "all" | OpportunityStage)} className={inputClassName}>
+              {STAGE_FILTERS.map((filter) => (
+                <option key={filter.value} value={filter.value}>
+                  {filter.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
+      </div>
 
-        <form onSubmit={handleConvert} className="space-y-5 px-6 py-6">
-          {error && (
-            <div className="rounded-xl border border-status-danger/30 bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
-              {error}
-            </div>
-          )}
+      <div className="overflow-hidden rounded-2xl border border-border-default bg-surface-raised">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[980px] text-sm">
+            <thead>
+              <tr className="border-b border-border-default bg-surface-overlay/70">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Opportunity</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Customer</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Stage</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Value</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Project Link</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Updated</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredQuotes.map((quote) => {
+                const stage = deriveOpportunityStage(quote);
+                const linkedProjectName = getOpportunityProjectName(quote);
 
-          <Field label="Project Name">
-            <input value={name} onChange={(e) => setName(e.target.value)} required className={inputClassName} />
-          </Field>
+                return (
+                  <tr key={quote.id} className="border-b border-border-default last:border-b-0 hover:bg-surface-overlay/40">
+                    <td className="px-4 py-3 align-top">
+                      <div className="space-y-1">
+                        <p className="font-medium text-text-primary">{getOpportunityLabel(quote)}</p>
+                        <p className="text-xs text-text-tertiary">Ref {quote.opportunity_number ?? quote.id.slice(0, 8)}</p>
+                        {getOpportunityLocation(quote) ? (
+                          <p className="text-xs text-text-secondary">{getOpportunityLocation(quote)}</p>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 align-top">
+                      <div className="space-y-1">
+                        <p className="text-text-primary">{quote.company_name}</p>
+                        <p className="text-xs text-text-secondary">{quote.contact_name}</p>
+                        <p className="text-xs text-text-tertiary">{quote.contact_email}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 align-top">
+                      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${OPPORTUNITY_STAGE_BADGES[stage]}`}>
+                        {OPPORTUNITY_STAGE_LABELS[stage]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right align-top text-text-primary">
+                      {formatCurrency(getOpportunityAmount(quote))}
+                    </td>
+                    <td className="px-4 py-3 align-top">
+                      {linkedProjectName ? (
+                        <div className="space-y-1">
+                          <p className="text-text-primary">{linkedProjectName}</p>
+                          <p className="text-xs text-status-success">Linked</p>
+                        </div>
+                      ) : (
+                        <span className="text-text-tertiary">Not linked yet</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 align-top text-text-secondary">
+                      {format(new Date(quote.updated_at), "MMM d, yyyy")}
+                    </td>
+                    <td className="px-4 py-3 text-right align-top">
+                      <Link
+                        href={`/quotes/${quote.id}`}
+                        className="inline-flex rounded-lg border border-border-default bg-surface-base px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
+                      >
+                        Open
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
 
-          <Field label="Site Address">
-            <input value={siteAddress} onChange={(e) => setSiteAddress(e.target.value)} className={inputClassName} />
-          </Field>
-
-          <Field label="Estimated Income">
-            <input type="number" min="0" step="0.01" value={estimatedIncome} onChange={(e) => setEstimatedIncome(e.target.value)} className={inputClassName} />
-          </Field>
-
-          <ReadonlyField label="Customer" value={`${quote.company_name} (customer will be created if new)`} />
-          <ReadonlyField label="Job Number" value={previewJobNumber} />
-
-          <div className="flex justify-end gap-3 border-t border-border-default pt-4">
-            <button type="button" onClick={onClose} className="rounded-xl bg-surface-overlay px-4 py-2 text-sm text-text-secondary hover:bg-surface-overlay">
-              Cancel
-            </button>
-            <button type="submit" disabled={saving} className="rounded-xl bg-status-success px-4 py-2 text-sm font-semibold text-text-inverse hover:opacity-90 disabled:opacity-60">
-              {saving ? "Converting..." : "Create Project"}
-            </button>
-          </div>
-        </form>
+              {filteredQuotes.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-text-tertiary">
+                    No opportunities match the current filters.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 }
 
-function ReadonlyField({ label, value, multiline = false }: { label: string; value: string; multiline?: boolean }) {
+function MetricCard({ label, value, accent }: { label: string; value: string; accent: string }) {
   return (
-    <div>
-      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-text-tertiary">{label}</p>
-      <div className={`rounded-xl border border-border-default bg-surface-raised px-4 py-3 text-sm text-text-primary ${multiline ? "whitespace-pre-wrap" : ""}`}>
-        {value}
-      </div>
+    <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
+      <p className="text-sm text-text-secondary">{label}</p>
+      <p className={`mt-2 text-3xl font-semibold ${accent}`}>{value}</p>
     </div>
   );
 }

@@ -4,6 +4,17 @@ export type UserRole = "admin" | "pm" | "lead" | "installer" | "ops_manager" | "
 export type InternalContactRole = "pm" | "lead" | "installer" | "ops_manager";
 export type ProjectAssignmentRole = "pm" | "lead" | "installer" | "ops_manager";
 export type QuoteRequestStatus = "new" | "reviewing" | "quoted" | "won" | "lost";
+export type OpportunityStage =
+  | "new"
+  | "under_review"
+  | "waiting_on_info"
+  | "assigned"
+  | "estimating"
+  | "proposal_ready"
+  | "submitted"
+  | "won"
+  | "lost"
+  | "archived";
 export type WeeklyUpdateStatus = "draft" | "submitted";
 export type ChangeOrderStatus = "pending" | "approved" | "rejected" | "void";
 export type WipStatus = "not_started" | "in_progress" | "blocked" | "in_review" | "complete";
@@ -199,6 +210,24 @@ export interface EstimatePayload {
   }>;
 }
 
+export interface PursuitSummary {
+  id: string;
+  pursuit_number: string | null;
+  project_name: string;
+  project_location: string | null;
+  owner_name: string | null;
+  gc_name: string | null;
+  engineer_name: string | null;
+  shared_scope_notes: string | null;
+  status: "active" | "awarded" | "lost" | "archived";
+  linked_project_id: string | null;
+  sharepoint_folder: string | null;
+  sharepoint_item_id: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export type QuoteRequest = {
   id: string;
   created_at: string;
@@ -213,7 +242,33 @@ export type QuoteRequest = {
   status: QuoteRequestStatus;
   notes: string | null;
   project_id: string | null;
+  pursuit_id?: string | null;
+  opportunity_number?: string | null;
+  customer_id?: string | null;
+  project_name?: string | null;
+  project_location?: string | null;
+  proposal_date?: string | null;
+  bid_date?: string | null;
+  due_date?: string | null;
+  stage?: OpportunityStage | null;
+  assigned_estimator_id?: string | null;
+  assigned_at?: string | null;
+  internal_notes?: string | null;
+  outcome_reason?: string | null;
+  opportunity_value?: number | null;
+  base_bid_amount?: number | null;
+  bond_amount?: number | null;
+  final_price_amount?: number | null;
+  proposal_docx_document_id?: string | null;
+  proposal_pdf_document_id?: string | null;
+  estimate_workbook_document_id?: string | null;
+  sharepoint_folder?: string | null;
+  sharepoint_item_id?: string | null;
+  submitted_at?: string | null;
+  linked_project_id?: string | null;
   project?: { name: string; job_number: string | null } | null;
+  linked_project?: { name: string; job_number: string | null } | null;
+  pursuit?: PursuitSummary | null;
 };
 
 export interface CustomerFeedback {
