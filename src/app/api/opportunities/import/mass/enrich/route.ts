@@ -276,23 +276,21 @@ export async function POST(request: Request) {
         }
       }
 
-      // Fallback: if archive was absent or had no extractable files, look in the
-      // standard subfolders (files may have been moved there by the Organize step,
-      // or the folder was never a legacy import and files live there directly).
-      if (!hasExtractable(archiveFiles)) {
-        const STANDARD_SUBFOLDERS = ["03 Estimate Working", "04 Submitted Quote"];
-        for (const subName of STANDARD_SUBFOLDERS) {
-          const subFolder = folderChildren.find(
-            (item) => item.isFolder && item.name.toLowerCase() === subName.toLowerCase()
+      // Always include the standard subfolders in the candidate pool. The best
+      // extractable file may live in 03/04 even when the archive still contains
+      // other extractable documents.
+      const STANDARD_SUBFOLDERS = ["03 Estimate Working", "04 Submitted Quote"];
+      for (const subName of STANDARD_SUBFOLDERS) {
+        const subFolder = folderChildren.find(
+          (item) => item.isFolder && item.name.toLowerCase() === subName.toLowerCase()
+        );
+        if (subFolder) {
+          const subChildren = await listSharePointChildren(providerToken, driveId, subFolder.id);
+          archiveFiles = archiveFiles.concat(
+            subChildren
+              .filter((item) => !item.isFolder)
+              .map((item) => ({ id: item.id, name: item.name, sourceFolder: subName }))
           );
-          if (subFolder) {
-            const subChildren = await listSharePointChildren(providerToken, driveId, subFolder.id);
-            archiveFiles = archiveFiles.concat(
-              subChildren
-                .filter((item) => !item.isFolder)
-                .map((item) => ({ id: item.id, name: item.name, sourceFolder: subName }))
-            );
-          }
         }
       }
 

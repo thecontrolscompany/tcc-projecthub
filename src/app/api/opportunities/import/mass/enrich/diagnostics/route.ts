@@ -250,20 +250,18 @@ export async function GET(request: Request): Promise<Response> {
     }
   }
 
-  if (!hasExtractable(archiveFiles)) {
-    const STANDARD_SUBFOLDERS = ["03 Estimate Working", "04 Submitted Quote"];
-    for (const subName of STANDARD_SUBFOLDERS) {
-      const subFolder = folderChildren.find(
-        (item) => item.isFolder && item.name.toLowerCase() === subName.toLowerCase()
+  const STANDARD_SUBFOLDERS = ["03 Estimate Working", "04 Submitted Quote"];
+  for (const subName of STANDARD_SUBFOLDERS) {
+    const subFolder = folderChildren.find(
+      (item) => item.isFolder && item.name.toLowerCase() === subName.toLowerCase()
+    );
+    if (subFolder) {
+      const subChildren = await listSharePointChildren(providerToken, driveId, subFolder.id);
+      archiveFiles = archiveFiles.concat(
+        subChildren
+          .filter((item) => !item.isFolder)
+          .map((item) => ({ id: item.id, name: item.name, sourceFolder: subName }))
       );
-      if (subFolder) {
-        const subChildren = await listSharePointChildren(providerToken, driveId, subFolder.id);
-        archiveFiles = archiveFiles.concat(
-          subChildren
-            .filter((item) => !item.isFolder)
-            .map((item) => ({ id: item.id, name: item.name, sourceFolder: subName }))
-        );
-      }
     }
   }
 
