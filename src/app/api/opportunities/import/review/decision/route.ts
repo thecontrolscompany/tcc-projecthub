@@ -4,8 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 
 const reviewDecisionSchema = z.object({
   import_row_id: z.string().uuid("Import row id is required."),
-  selected_action: z.enum(["link_project", "standalone", "reject"]),
+  selected_action: z.enum(["link_project", "standalone", "reject", "merge_pursuit"]),
   selected_project_id: z.string().uuid().nullable().optional(),
+  selected_pursuit_id: z.string().uuid().nullable().optional(),
   notes: z.string().trim().optional(),
 });
 
@@ -39,6 +40,67 @@ export async function POST(request: Request) {
 
     if (error) return handleTableError(error, "Unable to reject import row.");
     return NextResponse.json({ ok: true });
+  }
+
+  if (parsed.data.selected_action === "merge_pursuit") {
+    const targetPursuitId = parsed.data.selected_pursuit_id;
+    if (!targetPursuitId) {
+      return NextResponse.json({ error: "selected_pursuit_id is required for merge_pursuit." }, { status: 400 });
+    }
+
+    const { data: quoteRequest, error: quoteError } = await supabase
+      .from("quote_requests")
+      .insert({
+        pursuit_id: targetPursuitId,
+        company_name: importRow.company_name ?? "Unknown",
+        contact_name: importRow.contact_name ?? null,
+        project_description: importRow.legacy_opportunity_name ?? importRow.company_name ?? "Legacy opportunity",
+        site_address: importRow.project_location ?? null,
+        estimated_value: importRow.amount ?? null,
+        bid_date: importRow.bid_date ?? null,
+        proposal_date: importRow.proposal_date ?? null,
+        opportunity_number: importRow.job_number ?? null,
+        project_id: null,
+        notes: importRow.notes ?? null,
+        status: "new",
+      })
+      .select("id")
+      .single();
+
+    if (quoteError || !quoteRequest) {
+      return handleTableError(quoteError, "Unable to promote import row to opportunity.");
+    }
+
+    await supabase
+      .from("legacy_opportunity_import_rows")
+      .update({
+        review_status: "promoted",
+        promoted_quote_request_id: quoteRequest.id,
+        pursuit_id: targetPursuitId,
+      })
+      .eq("id", importRow.id);
+
+    if (importRow.pursuit_id && importRow.pursuit_id !== targetPursuitId) {
+      const { count } = await supabase
+        .from("quote_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("pursuit_id", importRow.pursuit_id);
+
+      if ((count ?? 0) === 0) {
+        await supabase.from("pursuits").delete().eq("id", importRow.pursuit_id);
+      }
+    }
+
+    await supabase.from("legacy_opportunity_link_reviews").insert({
+      import_row_id: importRow.id,
+      selected_project_id: null,
+      selected_pursuit_id: targetPursuitId,
+      selected_action: "merge_pursuit",
+      reviewed_by: user.id,
+      notes: parsed.data.notes || null,
+    });
+
+    return NextResponse.json({ ok: true, quote_request_id: quoteRequest.id, pursuit_id: targetPursuitId });
   }
 
   // Non-reject: promote to quote_request.

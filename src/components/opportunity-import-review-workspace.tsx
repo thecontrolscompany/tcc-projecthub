@@ -22,6 +22,13 @@ type ProjectMatchSuggestion = {
   reasons: string[];
 };
 
+type PursuitSearchResult = {
+  id: string;
+  project_name: string;
+  owner_name: string | null;
+  status: string;
+};
+
 type ReviewRow = LegacyOpportunityImportRow & {
   project_matches: ProjectMatchSuggestion[];
   documents: OpportunityDocument[];
@@ -76,7 +83,7 @@ export function OpportunityImportReviewWorkspace() {
 
   async function handleDecision(
     row: ReviewRow,
-    selected_action: "link_project" | "standalone" | "reject",
+    selected_action: "link_project" | "standalone" | "reject" | "merge_pursuit",
     selected_id?: string
   ) {
     setError(null);
@@ -89,6 +96,7 @@ export function OpportunityImportReviewWorkspace() {
           import_row_id: row.id,
           selected_action,
           selected_project_id: selected_action === "link_project" ? (selected_id ?? null) : null,
+          selected_pursuit_id: selected_action === "merge_pursuit" ? (selected_id ?? null) : null,
         }),
       });
       const json = await safeJson(response);
@@ -182,13 +190,17 @@ function ReviewRowCard({
   onRefresh,
 }: {
   row: ReviewRow;
-  onDecision: (row: ReviewRow, action: "link_project" | "standalone" | "reject", projectId?: string) => Promise<void>;
+  onDecision: (row: ReviewRow, action: "link_project" | "standalone" | "reject" | "merge_pursuit", projectId?: string) => Promise<void>;
   onRefresh: () => void;
 }) {
   const [editingCompany, setEditingCompany] = useState(false);
   const [companyDraft, setCompanyDraft] = useState(row.company_name ?? "");
   const [savingCompany, setSavingCompany] = useState(false);
   const [companyError, setCompanyError] = useState<string | null>(null);
+  const [mergingPursuit, setMergingPursuit] = useState(false);
+  const [pursuitQuery, setPursuitQuery] = useState("");
+  const [pursuitResults, setPursuitResults] = useState<PursuitSearchResult[]>([]);
+  const [pursuitSearching, setPursuitSearching] = useState(false);
 
   async function handleSaveCompany() {
     if (!companyDraft.trim()) return;
@@ -210,6 +222,32 @@ function ReviewRowCard({
     } finally {
       setSavingCompany(false);
     }
+  }
+
+  async function handlePursuitSearch(q: string) {
+    setPursuitQuery(q);
+    if (q.length < 2) {
+      setPursuitResults([]);
+      return;
+    }
+
+    setPursuitSearching(true);
+    try {
+      const response = await fetch(`/api/opportunities/pursuits/search?q=${encodeURIComponent(q)}`);
+      const json = await safeJson(response);
+      setPursuitResults((json?.pursuits ?? []) as PursuitSearchResult[]);
+    } catch {
+      setPursuitResults([]);
+    } finally {
+      setPursuitSearching(false);
+    }
+  }
+
+  async function handleMergePursuit(pursuitId: string) {
+    setMergingPursuit(false);
+    setPursuitResults([]);
+    setPursuitQuery("");
+    await onDecision(row, "merge_pursuit", pursuitId);
   }
 
   return (
@@ -354,6 +392,56 @@ function ReviewRowCard({
             >
               Reject Row
             </button>
+            {mergingPursuit ? (
+              <div className="w-full space-y-2">
+                <input
+                  autoFocus
+                  value={pursuitQuery}
+                  onChange={(e) => void handlePursuitSearch(e.target.value)}
+                  placeholder="Search pursuit by project name..."
+                  className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+                />
+                {pursuitSearching ? (
+                  <p className="text-xs text-text-tertiary">Searching...</p>
+                ) : pursuitResults.length > 0 ? (
+                  <div className="space-y-1">
+                    {pursuitResults.map((pursuit) => (
+                      <button
+                        key={pursuit.id}
+                        type="button"
+                        onClick={() => void handleMergePursuit(pursuit.id)}
+                        className="w-full rounded-xl border border-border-default bg-surface-base px-3 py-2 text-left text-sm hover:bg-surface-overlay"
+                      >
+                        <span className="font-medium text-text-primary">{pursuit.project_name}</span>
+                        {pursuit.owner_name ? <span className="ml-2 text-text-tertiary">| {pursuit.owner_name}</span> : null}
+                        <span className="ml-2 text-xs text-text-tertiary">{pursuit.status}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : pursuitQuery.length >= 2 ? (
+                  <p className="text-xs text-text-tertiary">No matching pursuits.</p>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMergingPursuit(false);
+                    setPursuitQuery("");
+                    setPursuitResults([]);
+                  }}
+                  className="text-xs text-text-tertiary hover:text-text-secondary"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setMergingPursuit(true)}
+                className="rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm font-medium text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
+              >
+                Add to existing pursuit
+              </button>
+            )}
           </div>
         </div>
       </div>

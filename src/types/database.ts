@@ -287,7 +287,7 @@ export interface LegacyOpportunityLinkReview {
   import_row_id: string;
   selected_project_id: string | null;
   selected_pursuit_id: string | null;
-  selected_action: "link_project" | "link_pursuit" | "create_pursuit" | "standalone" | "reject";
+  selected_action: "link_project" | "link_pursuit" | "create_pursuit" | "standalone" | "reject" | "merge_pursuit";
   reviewed_by: string | null;
   reviewed_at: string;
   notes: string | null;
