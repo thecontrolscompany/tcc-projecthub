@@ -49,6 +49,8 @@ export function PursuitListWorkspace() {
   const [enrichMessage, setEnrichMessage] = useState<string | null>(null);
   const [organizing, setOrganizing] = useState(false);
   const [organizeMessage, setOrganizeMessage] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [csvMessage, setCsvMessage] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
@@ -246,6 +248,36 @@ export function PursuitListWorkspace() {
     }
   }
 
+  function handleExportCsv() {
+    window.location.href = "/api/opportunities/pursuits/export";
+  }
+
+  async function handleImportCsv(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    setCsvMessage(null);
+
+    try {
+      const text = await file.text();
+      const response = await fetch("/api/opportunities/pursuits/import-csv", {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: text,
+      });
+      const json = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(json?.error ?? "Import failed.");
+      setCsvMessage(`${json.updated as number} updated · ${json.skipped as number} skipped`);
+      await load();
+    } catch (importError) {
+      setCsvMessage(importError instanceof Error ? importError.message : "Import failed.");
+    } finally {
+      setImporting(false);
+      event.target.value = "";
+    }
+  }
+
   function SortTh({ label, field }: { label: string; field: SortKey }) {
     const active = sortKey === field;
     return (
@@ -304,6 +336,24 @@ export function PursuitListWorkspace() {
           {organizing ? "Organizing..." : "Organize files"}
         </button>
         {organizeMessage ? <p className="text-xs text-text-secondary">{organizeMessage}</p> : null}
+        <button
+          type="button"
+          onClick={handleExportCsv}
+          className="rounded-xl border border-border-default bg-surface-base px-4 py-2 text-sm font-medium text-text-secondary hover:bg-surface-overlay"
+        >
+          Export CSV
+        </button>
+        <label className={`cursor-pointer rounded-xl border border-border-default bg-surface-base px-4 py-2 text-sm font-medium text-text-secondary hover:bg-surface-overlay ${importing ? "pointer-events-none opacity-60" : ""}`}>
+          {importing ? "Importing..." : "Import CSV"}
+          <input
+            type="file"
+            accept=".csv"
+            className="sr-only"
+            onChange={(event) => void handleImportCsv(event)}
+            disabled={importing}
+          />
+        </label>
+        {csvMessage ? <p className="text-xs text-text-secondary">{csvMessage}</p> : null}
         <div className="flex flex-wrap gap-2">
           {(["all", "active", "awarded", "lost", "archived"] as const).map((status) => (
             <button
