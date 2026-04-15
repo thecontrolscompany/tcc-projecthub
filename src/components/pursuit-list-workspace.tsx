@@ -57,6 +57,8 @@ export function PursuitListWorkspace() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
+  const [enrichingSelected, setEnrichingSelected] = useState(false);
+  const [enrichSelectedMessage, setEnrichSelectedMessage] = useState<string | null>(null);
 
   useEffect(() => {
     void load();
@@ -215,6 +217,41 @@ export function PursuitListWorkspace() {
       setEnrichMessage(err instanceof Error ? err.message : "Enrichment failed.");
     } finally {
       setEnriching(false);
+    }
+  }
+
+  async function handleEnrichSelected() {
+    if (selected.size === 0) return;
+    setEnrichingSelected(true);
+    setEnrichSelectedMessage(null);
+    try {
+      const ids = Array.from(selected);
+      const BATCH = 10;
+      let enriched = 0;
+      let noFolder = 0;
+      let noFile = 0;
+      let errors = 0;
+      for (let i = 0; i < ids.length; i += BATCH) {
+        const res = await fetch("/api/opportunities/import/mass/enrich", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pursuit_ids: ids.slice(i, i + BATCH) }),
+        });
+        const json = await res.json().catch(() => null);
+        if (!res.ok) throw new Error(json?.error ?? "Enrichment failed.");
+        enriched += json.enriched ?? 0;
+        noFolder += json.no_folder ?? 0;
+        noFile += json.no_file ?? 0;
+        errors += json.errors ?? 0;
+        setEnrichSelectedMessage(
+          `${enriched} enriched Â· ${noFolder} unmatched Â· ${noFile} no docs Â· ${errors} errors`
+        );
+      }
+      await load();
+    } catch (err) {
+      setEnrichSelectedMessage(err instanceof Error ? err.message : "Enrichment failed.");
+    } finally {
+      setEnrichingSelected(false);
     }
   }
 
@@ -383,6 +420,15 @@ export function PursuitListWorkspace() {
           >
             {deleting ? "Deleting..." : `Delete ${selected.size} pursuit${selected.size !== 1 ? "s" : ""}`}
           </button>
+          <button
+            type="button"
+            onClick={() => void handleEnrichSelected()}
+            disabled={enrichingSelected}
+            className="rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm font-medium text-text-secondary transition hover:bg-surface-overlay disabled:opacity-60"
+          >
+            {enrichingSelected ? "Enriching..." : `Enrich ${selected.size} pursuit${selected.size !== 1 ? "s" : ""}`}
+          </button>
+          {enrichSelectedMessage ? <p className="text-xs text-text-secondary">{enrichSelectedMessage}</p> : null}
           <button
             type="button"
             onClick={() => setSelected(new Set())}

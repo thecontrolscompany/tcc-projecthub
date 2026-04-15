@@ -17,6 +17,20 @@ export const maxDuration = 60;
 
 const SKIP_NAMES = ["template", "scope", "bom", "admin", "schedule", "budget tool"];
 const ARCHIVE_SUBFOLDER = "99 Archive - Legacy Files";
+const GARBAGE_PATTERNS = [
+  /contractor/i,
+  /submit/i,
+  /stripping/i,
+  /checkout/i,
+  /proceed/i,
+  /bidders/i,
+  /determination/i,
+  /conduit/i,
+  /cabling/i,
+  /hancars/i,
+  /loan.*number/i,
+  /wage/i,
+];
 
 type EnrichResult = {
   pursuit_id: string;
@@ -35,6 +49,17 @@ type PursuitStub = {
   sharepoint_folder: string | null;
   sharepoint_item_id: string | null;
 };
+
+function isValidCustomerName(name: string | null | undefined): boolean {
+  if (!name) return false;
+  const trimmed = name.trim();
+  if (trimmed.length < 2 || trimmed.length > 80) return false;
+  if (/[;@]/.test(trimmed)) return false;
+  if (/^_+$/.test(trimmed)) return false;
+  if (/^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i.test(trimmed)) return false;
+  if (GARBAGE_PATTERNS.some((re) => re.test(trimmed))) return false;
+  return true;
+}
 
 function normalizePursuitName(value: string) {
   return value
@@ -178,7 +203,22 @@ export async function POST(request: Request) {
         }
       }
 
-      if (archiveFiles.length === 0) {
+      // Fallback: if archive had no extractable files, look in the standard
+      // subfolders (files may have been moved there by the Organize step).
+      if (!hasExtractable(archiveFiles)) {
+        const STANDARD_SUBFOLDERS = ["03 Estimate Working", "04 Submitted Quote"];
+        for (const subName of STANDARD_SUBFOLDERS) {
+          const subFolder = folderChildren.find(
+            (item) => item.isFolder && item.name.toLowerCase() === subName.toLowerCase()
+          );
+          if (subFolder) {
+            const subChildren = await listSharePointChildren(providerToken, driveId, subFolder.id);
+            archiveFiles = archiveFiles.concat(subChildren.filter((item) => !item.isFolder));
+          }
+        }
+      }
+
+      if (!hasExtractable(archiveFiles)) {
         results.push({
           pursuit_id: pursuit.id,
           pursuit_name: pursuit.project_name,
@@ -249,14 +289,14 @@ export async function POST(request: Request) {
       const pursuitPatch: Record<string, unknown> = {};
       if (folderPath && !pursuit.sharepoint_folder) pursuitPatch.sharepoint_folder = folderPath;
       if (folderItemId && !pursuit.sharepoint_item_id) pursuitPatch.sharepoint_item_id = folderItemId;
-      if (customerName) pursuitPatch.owner_name = customerName;
+      if (isValidCustomerName(customerName)) pursuitPatch.owner_name = customerName;
 
       if (Object.keys(pursuitPatch).length > 0) {
         await supabase.from("pursuits").update(pursuitPatch).eq("id", pursuit.id);
       }
 
       const quotePatch: Record<string, unknown> = {};
-      if (customerName) quotePatch.company_name = customerName;
+      if (isValidCustomerName(customerName)) quotePatch.company_name = customerName;
       if (projectName) {
         quotePatch.project_description = projectName;
       }
