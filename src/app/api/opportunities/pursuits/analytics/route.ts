@@ -15,6 +15,7 @@ export async function GET() {
       project_location,
       status,
       created_at,
+      bid_year,
       quote_requests (estimated_value)
     `);
 
@@ -29,6 +30,7 @@ export async function GET() {
     project_location: pursuit.project_location,
     status: pursuit.status,
     created_at: pursuit.created_at,
+    bid_year: pursuit.bid_year ?? null,
     estimated_value:
       (pursuit.quote_requests as Array<{ estimated_value: number | null }>)
         .reduce((max, quote) => Math.max(max, quote.estimated_value ?? 0), 0) || null,

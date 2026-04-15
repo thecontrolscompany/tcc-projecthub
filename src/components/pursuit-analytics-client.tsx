@@ -27,6 +27,7 @@ type AnalyticsPursuit = {
   project_location: string | null;
   status: "active" | "awarded" | "lost" | "archived";
   created_at: string;
+  bid_year: number | null;
   estimated_value: number | null;
 };
 
@@ -77,19 +78,17 @@ export function PursuitAnalyticsClient() {
   }
 
   const availableYears = useMemo(() => {
-    const years = new Set(
-      pursuits
-        .map((pursuit) => new Date(pursuit.created_at).getFullYear())
-        .filter((year) => Number.isFinite(year))
-        .map(String)
-    );
-    return Array.from(years).sort();
+    const years = new Set(pursuits.map((pursuit) => pursuitYear(pursuit)));
+    const known = Array.from(years)
+      .filter((year) => year !== "Unknown")
+      .sort();
+    return years.has("Unknown") ? [...known, "Unknown"] : known;
   }, [pursuits]);
 
   const filtered = useMemo(() => {
     return pursuits.filter((pursuit) => {
       if (statusFilter !== "all" && pursuit.status !== statusFilter) return false;
-      if (yearFilter !== "all" && String(new Date(pursuit.created_at).getFullYear()) !== yearFilter) return false;
+      if (yearFilter !== "all" && pursuitYear(pursuit) !== yearFilter) return false;
       return true;
     });
   }, [pursuits, statusFilter, yearFilter]);
@@ -125,13 +124,13 @@ export function PursuitAnalyticsClient() {
   const byYear = useMemo(() => {
     const rows = new Map<string, { year: string; count: number; value: number }>();
     for (const pursuit of filtered) {
-      const year = String(new Date(pursuit.created_at).getFullYear());
+      const year = pursuitYear(pursuit);
       const current = rows.get(year) ?? { year, count: 0, value: 0 };
       current.count += 1;
       current.value += pursuit.estimated_value ?? 0;
       rows.set(year, current);
     }
-    return Array.from(rows.values()).sort((a, b) => a.year.localeCompare(b.year));
+    return Array.from(rows.values()).sort((a, b) => sortYearLabel(a.year, b.year));
   }, [filtered]);
 
   const winLossByCustomer = useMemo(() => {
@@ -352,7 +351,7 @@ export function PursuitAnalyticsClient() {
                         <td className="px-3 py-3 text-text-secondary">{pursuit.project_location ?? "-"}</td>
                         <td className="px-3 py-3 text-text-secondary">{STATUS_LABELS[pursuit.status]}</td>
                         <td className="px-3 py-3 text-text-secondary">{formatCurrency(pursuit.estimated_value ?? 0)}</td>
-                        <td className="px-3 py-3 text-text-secondary">{new Date(pursuit.created_at).getFullYear()}</td>
+                        <td className="px-3 py-3 text-text-secondary">{pursuitYear(pursuit)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -382,6 +381,17 @@ function topCustomers(pursuits: AnalyticsPursuit[], mode: "value" | "count") {
   return Array.from(grouped.values())
     .sort((a, b) => (mode === "value" ? b.value - a.value : b.count - a.count))
     .slice(0, 10);
+}
+
+function pursuitYear(pursuit: AnalyticsPursuit): string {
+  if (pursuit.bid_year) return String(pursuit.bid_year);
+  return "Unknown";
+}
+
+function sortYearLabel(a: string, b: string) {
+  if (a === "Unknown") return 1;
+  if (b === "Unknown") return -1;
+  return a.localeCompare(b);
 }
 
 function formatCurrency(value: number) {

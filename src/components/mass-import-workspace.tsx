@@ -22,6 +22,11 @@ const STATUS_COLORS: Record<string, string> = {
   won: "bg-status-success/10 text-status-success",
 };
 
+function extractYearFromFolderName(folderName: string): number | null {
+  const match = /\b(20\d{2})\b/.exec(folderName);
+  return match ? parseInt(match[1], 10) : null;
+}
+
 export function MassImportWorkspace() {
   const [yearFilter, setYearFilter] = useState("_2022 Bids");
   const [scanning, setScanning] = useState(false);
@@ -92,7 +97,10 @@ export function MassImportWorkspace() {
       const response = await fetch("/api/opportunities/import/mass/commit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entries: toImport }),
+        body: JSON.stringify({
+          entries: toImport,
+          bid_year: extractYearFromFolderName(yearFilter) ?? null,
+        }),
       });
       const json = await safeJson(response);
       if (!response.ok) throw new Error(json?.error ?? "Import failed.");

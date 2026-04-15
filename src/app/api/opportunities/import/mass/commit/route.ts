@@ -4,6 +4,11 @@ import type { ManifestEntry } from "@/lib/onedrive-archive-scanner";
 
 export const maxDuration = 60;
 
+type MassCommitBody = {
+  entries?: ManifestEntry[];
+  bid_year?: number | null;
+};
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {
@@ -19,8 +24,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Admin access required." }, { status: 403 });
   }
 
-  const body = await request.json().catch(() => null);
-  const entries = (body?.entries ?? []) as ManifestEntry[];
+  const body = (await request.json().catch(() => null)) as MassCommitBody | null;
+  const entries = body?.entries ?? [];
 
   if (!Array.isArray(entries) || entries.length === 0) {
     return NextResponse.json({ error: "No entries provided." }, { status: 400 });
@@ -56,6 +61,7 @@ export async function POST(request: Request) {
         status: pursuitStatus,
         created_by: user.id,
         onedrive_item_id: entry.pursuit_item_id,
+        bid_year: body?.bid_year ?? null,
       })
       .select("id")
       .single();
