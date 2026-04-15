@@ -167,44 +167,39 @@ export async function POST(request: Request) {
         folderChildren.find((item) => item.isFolder && item.name.toLowerCase() === ARCHIVE_SUBFOLDER.toLowerCase()) ??
         folderChildren.find((item) => item.isFolder && item.name.toLowerCase().includes("archive"));
 
-      if (!archiveFolder) {
-        results.push({
-          pursuit_id: pursuit.id,
-          pursuit_name: pursuit.project_name,
-          status: "no_file",
-          sharepoint_folder: folderPath,
-        });
-        continue;
-      }
-
-      const archiveChildren = await listSharePointChildren(providerToken, driveId, archiveFolder.id);
-      let archiveFiles = archiveChildren.filter((item) => !item.isFolder);
-
       const EXTRACTABLE_EXTS = ["docx", "doc", "pdf", "xlsm", "xlsx"];
       const hasExtractable = (files: typeof archiveFiles) =>
         files.some((f) => EXTRACTABLE_EXTS.includes(f.name.toLowerCase().split(".").pop() ?? ""));
 
-      // Files may be nested inside subfolders (e.g. "99 Archive - Legacy Files/Adams
-      // Homes/proposal.docx" or two levels deep for multi-project folders like USA).
-      // Recurse up to 2 levels until extractable files are found.
-      if (!hasExtractable(archiveFiles)) {
-        const level1Folders = archiveChildren.filter((item) => item.isFolder);
-        for (const sub of level1Folders) {
-          const subChildren = await listSharePointChildren(providerToken, driveId, sub.id);
-          archiveFiles = archiveFiles.concat(subChildren.filter((item) => !item.isFolder));
+      let archiveFiles: typeof folderChildren = [];
 
-          if (!hasExtractable(archiveFiles)) {
-            const level2Folders = subChildren.filter((item) => item.isFolder);
-            for (const sub2 of level2Folders) {
-              const sub2Children = await listSharePointChildren(providerToken, driveId, sub2.id);
-              archiveFiles = archiveFiles.concat(sub2Children.filter((item) => !item.isFolder));
+      if (archiveFolder) {
+        const archiveChildren = await listSharePointChildren(providerToken, driveId, archiveFolder.id);
+        archiveFiles = archiveChildren.filter((item) => !item.isFolder);
+
+        // Files may be nested inside subfolders (e.g. "99 Archive - Legacy Files/Adams
+        // Homes/proposal.docx" or two levels deep for multi-project folders like USA).
+        // Recurse up to 2 levels until extractable files are found.
+        if (!hasExtractable(archiveFiles)) {
+          const level1Folders = archiveChildren.filter((item) => item.isFolder);
+          for (const sub of level1Folders) {
+            const subChildren = await listSharePointChildren(providerToken, driveId, sub.id);
+            archiveFiles = archiveFiles.concat(subChildren.filter((item) => !item.isFolder));
+
+            if (!hasExtractable(archiveFiles)) {
+              const level2Folders = subChildren.filter((item) => item.isFolder);
+              for (const sub2 of level2Folders) {
+                const sub2Children = await listSharePointChildren(providerToken, driveId, sub2.id);
+                archiveFiles = archiveFiles.concat(sub2Children.filter((item) => !item.isFolder));
+              }
             }
           }
         }
       }
 
-      // Fallback: if archive had no extractable files, look in the standard
-      // subfolders (files may have been moved there by the Organize step).
+      // Fallback: if archive was absent or had no extractable files, look in the
+      // standard subfolders (files may have been moved there by the Organize step,
+      // or the folder was never a legacy import and files live there directly).
       if (!hasExtractable(archiveFiles)) {
         const STANDARD_SUBFOLDERS = ["03 Estimate Working", "04 Submitted Quote"];
         for (const subName of STANDARD_SUBFOLDERS) {
