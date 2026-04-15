@@ -111,8 +111,14 @@ export async function POST(request: Request) {
       let folderPath = pursuit.sharepoint_folder;
       let folderItemId = pursuit.sharepoint_item_id;
 
-      if (!folderPath || !folderItemId) {
-        const match = folderMap.get(normalizePursuitName(pursuit.project_name ?? ""));
+      if (!folderItemId) {
+        // If folderPath is already set (e.g. manually linked), derive lookup name
+        // from the path; otherwise match by pursuit name.
+        const lookupName = folderPath
+          ? normalizePursuitName(folderPath.replace(/^Bids\//, ""))
+          : normalizePursuitName(pursuit.project_name ?? "");
+
+        const match = folderMap.get(lookupName);
         if (!match) {
           results.push({
             pursuit_id: pursuit.id,
@@ -122,7 +128,7 @@ export async function POST(request: Request) {
           continue;
         }
 
-        folderPath = `Bids/${match.name}`;
+        if (!folderPath) folderPath = `Bids/${match.name}`;
         folderItemId = match.id;
 
         await supabase
