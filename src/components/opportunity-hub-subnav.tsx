@@ -7,6 +7,7 @@ const ITEMS = [
   { href: "/quotes", label: "Pipeline" },
   { href: "/quotes/pursuits", label: "Pursuits" },
   { href: "/quotes/analytics", label: "Analytics" },
+  { href: "/quotes/reconcile", label: "Reconcile" },
   { href: "/quotes/import", label: "Import" },
   { href: "/quotes/import/mass", label: "Mass Import" },
   { href: "/quotes/import/review", label: "Review Queue" },
