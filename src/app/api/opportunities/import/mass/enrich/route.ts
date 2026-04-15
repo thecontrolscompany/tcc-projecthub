@@ -54,6 +54,7 @@ function chooseArchiveFile(
 
   return (
     filtered.find((file) => file.name.toLowerCase().endsWith(".docx")) ??
+    filtered.find((file) => file.name.toLowerCase().endsWith(".doc")) ??
     filtered.find((file) => file.name.toLowerCase().endsWith(".pdf")) ??
     filtered.find((file) => {
       const lower = file.name.toLowerCase();
@@ -146,10 +147,22 @@ export async function POST(request: Request) {
       }
 
       const archiveChildren = await listSharePointChildren(providerToken, driveId, archiveFolder.id);
+      let archiveFiles = archiveChildren.filter((item) => !item.isFolder);
+
+      // Files may be nested one level deeper inside a subfolder named after the
+      // pursuit (e.g. "99 Archive - Legacy Files/Adams Homes/proposal.docx").
+      // If the archive folder contains only subfolders and no direct files, recurse
+      // into each subfolder to collect files.
+      if (archiveFiles.length === 0) {
+        const subfolders = archiveChildren.filter((item) => item.isFolder);
+        for (const sub of subfolders) {
+          const subChildren = await listSharePointChildren(providerToken, driveId, sub.id);
+          archiveFiles = archiveFiles.concat(subChildren.filter((item) => !item.isFolder));
+        }
+      }
+
       const target = chooseArchiveFile(
-        archiveChildren
-          .filter((item) => !item.isFolder)
-          .map((item) => ({ id: item.id, name: item.name }))
+        archiveFiles.map((item) => ({ id: item.id, name: item.name }))
       );
 
       if (!target) {
@@ -182,7 +195,7 @@ export async function POST(request: Request) {
       let estimatedValue: number | null = null;
       let proposalDate: string | null = null;
 
-      if (lowerName.endsWith(".docx")) {
+      if (lowerName.endsWith(".docx") || lowerName.endsWith(".doc")) {
         const extracted = await extractProposalFromDocx(buffer);
         customerName = extracted.customerName ?? null;
         projectName = extracted.projectName ?? null;
