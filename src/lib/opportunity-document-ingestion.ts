@@ -33,7 +33,18 @@ export async function extractCompanyNameFromDocx(buffer: Buffer): Promise<string
   try {
     const mammoth = await import("mammoth").then((m) => m.default ?? m);
     const result = await mammoth.extractRawText({ buffer });
-    return extractNamedField(result.value, ["to", "bid to", "submitted to", "owner", "customer", "recipient"]);
+    return extractNamedField(result.value, [
+      "prepared for",
+      "attention",
+      "attn",
+      "submitted to",
+      "proposal to",
+      "bid to",
+      "owner",
+      "customer",
+      "recipient",
+      "to",
+    ]);
   } catch {
     return null;
   }
@@ -121,7 +132,18 @@ export function extractProposalFromText(rawText: string): ProposalExtractionResu
 
   return {
     proposalDate: extractDateValue(text),
-    customerName: extractNamedField(text, ["customer", "recipient", "to"]),
+    customerName: extractNamedField(text, [
+      "prepared for",
+      "attention",
+      "attn",
+      "submitted to",
+      "proposal to",
+      "bid to",
+      "owner",
+      "customer",
+      "recipient",
+      "to",
+    ]),
     // "re" removed — too broad, matches "References:" before "Project:" in many docs
     projectName: extractNamedField(text, ["project", "job"]),
     baseBidAmount,
@@ -183,7 +205,12 @@ function extractPricingItems(lines: string[]): { items: Omit<OpportunityPricingI
   let baseBidAmount: number | null = null;
 
   // Narrow to the PRICING SUMMARY section so we don't match dollar amounts in scope/clarifications.
-  const pricingStart = lines.findIndex((l) => /pricing\s*summary/i.test(l));
+  const pricingStart = lines.findIndex((l) =>
+    /pricing\s*summary/i.test(l) ||
+    /proposal\s*summary/i.test(l) ||
+    /bid\s*summary/i.test(l) ||
+    /price\s*summary/i.test(l)
+  );
   const scopeStart = lines.findIndex((l) => /^for the following scope/i.test(l));
   const pricingLines =
     pricingStart >= 0
@@ -191,7 +218,7 @@ function extractPricingItems(lines: string[]): { items: Omit<OpportunityPricingI
       : lines;
 
   // Regex that matches a US dollar value, with or without "US $" prefix.
-  const dollarValue = /^(?:US\s*)?\$\s*([\d,\s]+(?:\.\d{2})?)\s*$/i;
+  const dollarValue = /^(?:US\s*)?\$\s*([\d,\s]+(?:\.\d{2})?)\s*$|^([\d,]+\.\d{2})\s*$/i;
   // Skip column-header rows that mammoth emits from the table header.
   const isHeader = (l: string) => /^description$/i.test(l) || /^total\s+price$/i.test(l);
 
@@ -203,7 +230,8 @@ function extractPricingItems(lines: string[]): { items: Omit<OpportunityPricingI
     // Anchors on "US $" or standalone "$" to avoid splitting label mid-word.
     const sameLine =
       line.match(/^(.+?)\s+US\s*\$\s*([\d,\s]+(?:\.\d{2})?)\s*$/i) ??
-      line.match(/^(.+?)\s{2,}\$\s*([\d,\s]+(?:\.\d{2})?)\s*$/i);
+      line.match(/^(.+?)\s{2,}\$\s*([\d,\s]+(?:\.\d{2})?)\s*$/i) ??
+      line.match(/^(.+?)\s+\$([\d,]+(?:\.\d{2})?)\s*$/i);
     if (sameLine) {
       const label = sameLine[1].trim();
       const amount = coerceNumber(sameLine[2].replace(/\s/g, ""));
@@ -220,13 +248,38 @@ function extractPricingItems(lines: string[]): { items: Omit<OpportunityPricingI
     const nextMatch = nextLine.match(dollarValue);
     if (nextMatch && line.length > 0 && !isHeader(line)) {
       const label = line.trim();
-      const amount = coerceNumber(nextMatch[1].replace(/\s/g, ""));
+      const amount = coerceNumber((nextMatch[1] ?? nextMatch[2] ?? "").replace(/\s/g, ""));
       if (label && amount !== null) {
         const entry = buildPricingEntry(label, amount, i);
         if (entry.item_type === "base_bid") baseBidAmount = amount;
         items.push(entry);
         i++; // consume the value line
         continue;
+      }
+    }
+  }
+
+  // Last-resort: if no base bid found via section, scan all lines
+  if (baseBidAmount === null) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!/base\s*bid/i.test(line)) continue;
+
+      const sameLineMatch =
+        line.match(/base\s*bid.*?US\s*\$\s*([\d,\s]+(?:\.\d{2})?)/i) ??
+        line.match(/base\s*bid.*?\$\s*([\d,]+(?:\.\d{2})?)/i);
+      if (sameLineMatch) {
+        baseBidAmount = coerceNumber((sameLineMatch[1] ?? "").replace(/\s/g, ""));
+        if (baseBidAmount !== null) break;
+      }
+
+      const nextLine = (lines[i + 1] ?? "").trim();
+      const nextMatch =
+        nextLine.match(/^(?:US\s*)?\$\s*([\d,\s]+(?:\.\d{2})?)\s*$/) ??
+        nextLine.match(/^([\d,]+\.\d{2})$/);
+      if (nextMatch) {
+        baseBidAmount = coerceNumber((nextMatch[1] ?? nextMatch[2] ?? "").replace(/\s/g, ""));
+        if (baseBidAmount !== null) break;
       }
     }
   }
