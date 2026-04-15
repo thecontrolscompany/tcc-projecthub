@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { extractCompanyNameFromDocx } from "@/lib/opportunity-document-ingestion";
 import {
   buildValidationIssues,
   derivePackageSourceName,
@@ -31,6 +32,17 @@ export async function POST(request: Request) {
     const sourceName = derivePackageSourceName(files, typeof sourceNameEntry === "string" ? sourceNameEntry : null);
     const bidTo = typeof bidToEntry === "string" ? bidToEntry.trim() : null;
     const notes = typeof notesEntry === "string" ? notesEntry.trim() : "";
+
+    let extractedCompanyName: string | null = null;
+    const docxFile = files.proposal_docx;
+    if (docxFile && !bidTo) {
+      try {
+        const buffer = Buffer.from(await docxFile.arrayBuffer());
+        extractedCompanyName = await extractCompanyNameFromDocx(buffer);
+      } catch {
+        // Non-fatal - proceed without auto-extracted company name.
+      }
+    }
 
     const { data: batch, error: batchError } = await auth.supabase
       .from("legacy_opportunity_import_batches")
@@ -83,7 +95,7 @@ export async function POST(request: Request) {
         normalized_payload: {
           import_mode: "document_package",
         },
-        company_name: bidTo || null,
+        company_name: bidTo || extractedCompanyName || null,
         validation_issues: ["Awaiting document extraction"],
         notes: notes || null,
       })

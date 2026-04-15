@@ -29,6 +29,16 @@ export async function extractProposalFromDocx(buffer: Buffer) {
   return extractProposalFromText(result.value);
 }
 
+export async function extractCompanyNameFromDocx(buffer: Buffer): Promise<string | null> {
+  try {
+    const mammoth = await import("mammoth").then((m) => m.default ?? m);
+    const result = await mammoth.extractRawText({ buffer });
+    return extractNamedField(result.value, ["to", "bid to", "submitted to", "owner", "customer", "recipient"]);
+  } catch {
+    return null;
+  }
+}
+
 export async function extractProposalFromPdf(buffer: Buffer) {
   const { extractText } = await import("unpdf");
   const result = await extractText(new Uint8Array(buffer));
