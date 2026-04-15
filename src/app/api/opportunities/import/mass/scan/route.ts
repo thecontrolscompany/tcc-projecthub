@@ -16,17 +16,27 @@ export async function POST(request: Request) {
     const manifest = await scanOneDriveArchive(auth.providerToken, yearFilter);
 
     const supabase = await createClient();
-    const { data: existingPursuits } = await supabase
+    const { data: existingByItemId } = await supabase
+      .from("pursuits")
+      .select("onedrive_item_id")
+      .not("onedrive_item_id", "is", null);
+
+    const existingItemIds = new Set(
+      (existingByItemId ?? []).map((pursuit) => pursuit.onedrive_item_id).filter(Boolean)
+    );
+
+    const { data: existingByName } = await supabase
       .from("pursuits")
       .select("project_name");
-
     const existingNames = new Set(
-      (existingPursuits ?? []).map((pursuit) => pursuit.project_name.toLowerCase().trim())
+      (existingByName ?? []).map((pursuit) => pursuit.project_name.toLowerCase().trim())
     );
 
     const enriched = manifest.map((entry) => ({
       ...entry,
-      already_imported: existingNames.has(entry.pursuit_name.toLowerCase().trim()),
+      already_imported:
+        existingItemIds.has(entry.pursuit_item_id) ||
+        existingNames.has(entry.pursuit_name.toLowerCase().trim()),
     }));
 
     return NextResponse.json({
