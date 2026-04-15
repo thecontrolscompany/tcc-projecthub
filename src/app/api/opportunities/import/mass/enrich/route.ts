@@ -39,6 +39,7 @@ type EnrichResult = {
   sharepoint_folder?: string | null;
   customer_name?: string | null;
   estimated_value?: number | null;
+  candidate_file?: string | null;
   error?: string;
 };
 
@@ -59,6 +60,20 @@ function isValidCustomerName(name: string | null | undefined): boolean {
   if (/^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i.test(trimmed)) return false;
   if (GARBAGE_PATTERNS.some((re) => re.test(trimmed))) return false;
   return true;
+}
+
+function hasMeaningfulExtraction(fields: {
+  customerName: string | null;
+  projectName: string | null;
+  estimatedValue: number | null;
+  proposalDate: string | null;
+}) {
+  return (
+    isValidCustomerName(fields.customerName) ||
+    Boolean(fields.projectName?.trim()) ||
+    fields.estimatedValue !== null ||
+    Boolean(fields.proposalDate)
+  );
 }
 
 function normalizePursuitName(value: string) {
@@ -229,6 +244,7 @@ export async function POST(request: Request) {
       let estimatedValue: number | null = null;
       let proposalDate: string | null = null;
       let extracted = false;
+      let candidateFile: string | null = null;
 
       // Build ordered candidate list: docx > doc > pdf > xlsm/xlsx
       const candidates = [
@@ -263,7 +279,16 @@ export async function POST(request: Request) {
             estimatedValue = e.base_bid_amount ?? e.final_total_amount ?? null;
           }
 
+          if (!hasMeaningfulExtraction({ customerName, projectName, estimatedValue, proposalDate })) {
+            customerName = null;
+            projectName = null;
+            estimatedValue = null;
+            proposalDate = null;
+            continue;
+          }
+
           extracted = true;
+          candidateFile = candidate.name;
           break; // stop at first successful extraction
         } catch {
           // This candidate failed — try the next one.
@@ -309,6 +334,7 @@ export async function POST(request: Request) {
         sharepoint_folder: folderPath,
         customer_name: customerName,
         estimated_value: estimatedValue,
+        candidate_file: candidateFile,
       });
     } catch (error) {
       results.push({
