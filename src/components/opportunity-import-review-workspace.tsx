@@ -263,53 +263,57 @@ function ReviewRowCard({
                 {row.legacy_opportunity_name ?? "Untitled opportunity"}
               </h2>
 
-              <div className="mt-2">
-                {editingCompany ? (
-                  <div className="flex items-center gap-2">
-                    <input
-                      value={companyDraft}
-                      onChange={(e) => setCompanyDraft(e.target.value)}
-                      className="rounded-lg border border-brand-primary bg-surface-overlay px-2 py-1 text-sm text-text-primary focus:outline-none"
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") void handleSaveCompany();
-                        if (e.key === "Escape") setEditingCompany(false);
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => void handleSaveCompany()}
-                      disabled={savingCompany}
-                      className="rounded-lg bg-brand-primary px-2 py-1 text-xs font-semibold text-text-inverse disabled:opacity-60"
-                    >
-                      {savingCompany ? "Saving..." : "Save"}
-                    </button>
+              <div className="mt-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Customer</p>
+                <div className="mt-1">
+                  {editingCompany ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        value={companyDraft}
+                        onChange={(e) => setCompanyDraft(e.target.value)}
+                        className="rounded-lg border border-brand-primary bg-surface-overlay px-2 py-1 text-sm text-text-primary focus:outline-none"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") void handleSaveCompany();
+                          if (e.key === "Escape") setEditingCompany(false);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void handleSaveCompany()}
+                        disabled={savingCompany}
+                        className="rounded-lg bg-brand-primary px-2 py-1 text-xs font-semibold text-text-inverse disabled:opacity-60"
+                      >
+                        {savingCompany ? "Saving..." : "Save"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingCompany(false);
+                          setCompanyDraft(row.company_name ?? "");
+                        }}
+                        className="rounded-lg border border-border-default px-2 py-1 text-xs text-text-secondary"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
                     <button
                       type="button"
                       onClick={() => {
-                        setEditingCompany(false);
                         setCompanyDraft(row.company_name ?? "");
+                        setEditingCompany(true);
                       }}
-                      className="rounded-lg border border-border-default px-2 py-1 text-xs text-text-secondary"
+                      className="flex items-center gap-2 rounded-lg border border-border-default bg-surface-base px-3 py-1.5 text-sm text-text-primary hover:border-brand-primary hover:bg-surface-overlay"
                     >
-                      Cancel
+                      <span className={row.company_name ? "font-medium" : "italic text-text-tertiary"}>
+                        {row.company_name ?? "Click to set customer name"}
+                      </span>
+                      <span className="text-xs text-text-tertiary">Edit</span>
                     </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCompanyDraft(row.company_name ?? "");
-                      setEditingCompany(true);
-                    }}
-                    className="group flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary"
-                    title="Click to edit customer name"
-                  >
-                    <span className="font-medium">{row.company_name ?? "Unknown company"}</span>
-                    <span className="text-xs text-text-tertiary opacity-0 transition group-hover:opacity-100">Edit</span>
-                  </button>
-                )}
-                {companyError ? <p className="mt-1 text-xs text-status-danger">{companyError}</p> : null}
+                  )}
+                  {companyError ? <p className="mt-1 text-xs text-status-danger">{companyError}</p> : null}
+                </div>
               </div>
 
               <p className="mt-1 text-sm text-text-tertiary">{row.project_location ?? "No location"}</p>
