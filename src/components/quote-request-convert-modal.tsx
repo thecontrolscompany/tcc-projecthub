@@ -18,6 +18,8 @@ export function QuoteRequestConvertModal({
   const [name, setName] = useState(quote.project_name ?? quote.project_description);
   const [siteAddress, setSiteAddress] = useState(quote.project_location ?? quote.site_address ?? "");
   const [estimatedIncome, setEstimatedIncome] = useState(String(quote.final_price_amount ?? quote.opportunity_value ?? quote.estimated_value ?? 0));
+  const [bondRequired, setBondRequired] = useState(false);
+  const [bondAmount, setBondAmount] = useState(String(quote.bond_amount ?? ""));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,6 +29,8 @@ export function QuoteRequestConvertModal({
     setError(null);
 
     try {
+      const base = Number(estimatedIncome || 0);
+      const bond = bondRequired ? Number(bondAmount || 0) : 0;
       const response = await fetch("/api/admin/convert-quote-to-project", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -35,7 +39,7 @@ export function QuoteRequestConvertModal({
           quote_id: quote.id,
           name,
           site_address: siteAddress,
-          estimated_income: Number(estimatedIncome || 0),
+          estimated_income: base + bond,
         }),
       });
       const json = await response.json();
@@ -83,6 +87,32 @@ export function QuoteRequestConvertModal({
           <Field label="Estimated Income">
             <input type="number" min="0" step="0.01" value={estimatedIncome} onChange={(e) => setEstimatedIncome(e.target.value)} className={inputClassName} />
           </Field>
+
+          <Field label="Bond required">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-text-secondary">
+              <input
+                type="checkbox"
+                checked={bondRequired}
+                onChange={(e) => setBondRequired(e.target.checked)}
+                className="rounded border-border-default"
+              />
+              Include performance &amp; payment bond in project value
+            </label>
+          </Field>
+
+          {bondRequired && (
+            <Field label="Bond amount">
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={bondAmount}
+                onChange={(e) => setBondAmount(e.target.value)}
+                className={inputClassName}
+                placeholder="0.00"
+              />
+            </Field>
+          )}
 
           <div className="rounded-xl border border-border-default bg-surface-raised px-4 py-3 text-sm text-text-secondary">
             Job number will be auto-generated when the project is created.

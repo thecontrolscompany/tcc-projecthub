@@ -66,13 +66,15 @@ export async function extractEstimateFromWorkbook(buffer: Buffer): Promise<Estim
     }
     return null;
   };
+  // Row 19 col C (index 3) is "Total labor hrs." on the EBT Summary sheet.
+  const laborHoursC19 = worksheet ? coerceNumber(worksheet.getRow(19).getCell(3).value) : null;
 
   return {
     legacy_import_row_id: null,
     source_document_id: null,
     source_sheet_name: worksheet?.name ?? "Summary",
 
-    labor_hours_total: valueOf("c", "total labor hrs", "total labor hours"),
+    labor_hours_total: laborHoursC19,
     labor_cost_total: valueOf("d", "total labor cost"),
 
     material_cost_total: valueOf("d", "total material"),

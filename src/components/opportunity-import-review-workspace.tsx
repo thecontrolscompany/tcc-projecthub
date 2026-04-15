@@ -265,11 +265,6 @@ export function OpportunityImportReviewWorkspace() {
                   emptyText="No scope, clarification, exclusion, or warranty items extracted yet."
                   items={row.scope_items.map((item) => `${item.section_type}: ${item.body}`)}
                 />
-                <ExtractionList
-                  title="Equipment groups"
-                  emptyText="No equipment groups extracted yet."
-                  items={row.equipment_groups.map((item) => `${item.quantity ? `(${item.quantity}) ` : ""}${item.system_label}${item.tag_text ? ` | Tag ${item.tag_text}` : ""}`)}
-                />
                 <EstimateSummaryCard summary={row.estimate_summary} />
               </div>
             </div>
@@ -458,8 +453,16 @@ function EstimateSummaryCard({ summary }: { summary: OpportunityEstimateSummary 
         <InfoCard label="Labor hours" value={formatNumber(summary.labor_hours_total)} />
         <InfoCard label="Labor cost" value={formatCurrency(summary.labor_cost_total)} />
         <InfoCard label="Material cost" value={formatCurrency(summary.material_cost_total)} />
-        <InfoCard label="Total cost" value={formatCurrency(summary.total_cost)} />
         <InfoCard label="Base bid" value={formatCurrency(summary.base_bid_amount)} />
+        <InfoCard label="Bond" value={formatCurrency(summary.bond_amount)} />
+        <InfoCard
+          label="Total cost"
+          value={formatCurrency(
+            summary.base_bid_amount !== null
+              ? (summary.base_bid_amount ?? 0) + (summary.bond_amount ?? 0)
+              : null
+          )}
+        />
         <InfoCard label="Final total" value={formatCurrency(summary.final_total_amount)} />
       </div>
     </div>

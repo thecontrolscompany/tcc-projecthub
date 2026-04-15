@@ -7,6 +7,7 @@ const ITEMS = [
   { href: "/quotes", label: "Pipeline" },
   { href: "/quotes/import", label: "Import" },
   { href: "/quotes/import/review", label: "Review Queue" },
+  { href: "/estimating", label: "Estimating" },
 ];
 
 export function OpportunityHubSubnav() {
