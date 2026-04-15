@@ -47,6 +47,8 @@ export function PursuitListWorkspace() {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     void load();
@@ -60,6 +62,7 @@ export function PursuitListWorkspace() {
       const json = await safeJson(response);
       if (!response.ok) throw new Error(json?.error ?? "Unable to load pursuits.");
       setPursuits((json.pursuits ?? []) as PursuitRow[]);
+      setSelected(new Set());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to load pursuits.");
     } finally {
@@ -113,6 +116,44 @@ export function PursuitListWorkspace() {
     for (const pursuit of pursuits) counts[pursuit.status] = (counts[pursuit.status] ?? 0) + 1;
     return counts;
   }, [pursuits]);
+
+  function toggleAll() {
+    if (selected.size === filtered.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filtered.map((pursuit) => pursuit.id)));
+    }
+  }
+
+  function toggleOne(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function handleDeleteSelected() {
+    if (selected.size === 0) return;
+    if (!confirm(`Delete ${selected.size} pursuit${selected.size !== 1 ? "s" : ""} and all their quote requests? This cannot be undone.`)) return;
+
+    setDeleting(true);
+    try {
+      const response = await fetch("/api/opportunities/pursuits", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selected) }),
+      });
+      const json = await safeJson(response);
+      if (!response.ok) throw new Error(json?.error ?? "Unable to delete pursuits.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to delete pursuits.");
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   function SortTh({ label, field }: { label: string; field: SortKey }) {
     const active = sortKey === field;
@@ -172,6 +213,27 @@ export function PursuitListWorkspace() {
         </div>
       </div>
 
+      {selected.size > 0 ? (
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-text-secondary">{selected.size} selected</span>
+          <button
+            type="button"
+            onClick={() => void handleDeleteSelected()}
+            disabled={deleting}
+            className="rounded-lg border border-status-danger/30 bg-status-danger/10 px-3 py-2 text-sm font-medium text-status-danger transition hover:bg-status-danger/20 disabled:opacity-60"
+          >
+            {deleting ? "Deleting..." : `Delete ${selected.size} pursuit${selected.size !== 1 ? "s" : ""}`}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelected(new Set())}
+            className="text-sm text-text-tertiary hover:text-text-secondary"
+          >
+            Clear selection
+          </button>
+        </div>
+      ) : null}
+
       <div className="overflow-x-auto rounded-2xl border border-border-default bg-surface-raised">
         {loading ? (
           <div className="px-5 py-10 text-center text-sm text-text-tertiary">Loading pursuits...</div>
@@ -183,6 +245,17 @@ export function PursuitListWorkspace() {
           <table className="w-full text-sm">
             <thead className="border-b border-border-default bg-surface-base">
               <tr>
+                <th className="w-10 px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={filtered.length > 0 && selected.size === filtered.length}
+                    ref={(el) => {
+                      if (el) el.indeterminate = selected.size > 0 && selected.size < filtered.length;
+                    }}
+                    onChange={toggleAll}
+                    className="h-4 w-4 rounded border-border-default"
+                  />
+                </th>
                 <SortTh label="Pursuit" field="project_name" />
                 <SortTh label="Customer" field="owner_name" />
                 <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">Location</th>
@@ -195,6 +268,14 @@ export function PursuitListWorkspace() {
             <tbody className="divide-y divide-border-default">
               {filtered.map((pursuit) => (
                 <tr key={pursuit.id} className="hover:bg-surface-overlay">
+                  <td className="w-10 px-3 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(pursuit.id)}
+                      onChange={() => toggleOne(pursuit.id)}
+                      className="h-4 w-4 rounded border-border-default"
+                    />
+                  </td>
                   <td className="px-3 py-3 font-medium text-text-primary">{pursuit.project_name}</td>
                   <td className="px-3 py-3 text-text-secondary">
                     {pursuit.owner_name ?? <span className="italic text-text-tertiary">-</span>}
