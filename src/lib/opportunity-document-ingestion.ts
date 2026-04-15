@@ -255,10 +255,12 @@ function extractScopeItems(lines: string[]): Omit<OpportunityScopeItem, "id">[] 
 
   const SECTION_HEADERS: { pattern: RegExp; type: SectionType; heading: string }[] = [
     { pattern: /^for the following scope/i,  type: "scope",         heading: "SCOPE" },
+    { pattern: /^scope of work/i,            type: "scope",         heading: "SCOPE" },
+    { pattern: /^scope/i,                    type: "scope",         heading: "SCOPE" },
     { pattern: /^clarification/i,            type: "clarification", heading: "CLARIFICATIONS" },
     { pattern: /^exclusion/i,                type: "exclusion",     heading: "EXCLUSIONS" },
     { pattern: /^warranty/i,                 type: "warranty",      heading: "WARRANTY" },
-    { pattern: /^reference/i,                type: "reference",     heading: "REFERENCES" },
+    // "reference" section intentionally omitted - document citations are not useful.
   ];
 
   // Build a list of section start indices.

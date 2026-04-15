@@ -263,7 +263,9 @@ export function OpportunityImportReviewWorkspace() {
                 <ExtractionList
                   title="Scope and exclusions"
                   emptyText="No scope, clarification, exclusion, or warranty items extracted yet."
-                  items={row.scope_items.map((item) => `${item.section_type}: ${item.body}`)}
+                  items={row.scope_items
+                    .filter((item) => item.section_type !== "reference")
+                    .map((item) => `${item.section_type}: ${item.body}`)}
                 />
                 <EstimateSummaryCard summary={row.estimate_summary} />
               </div>
@@ -463,7 +465,6 @@ function EstimateSummaryCard({ summary }: { summary: OpportunityEstimateSummary 
               : null
           )}
         />
-        <InfoCard label="Final total" value={formatCurrency(summary.final_total_amount)} />
       </div>
     </div>
   );

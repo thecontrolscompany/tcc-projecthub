@@ -47,6 +47,7 @@ export async function GET(request: Request) {
     .from("legacy_opportunity_import_rows")
     .select("*")
     .eq("batch_id", selectedBatch.id)
+    .not("review_status", "in", '("rejected","promoted")')
     .order("source_row_number", { ascending: true });
 
   if (rowError) {
@@ -114,10 +115,20 @@ export async function GET(request: Request) {
   const equipmentGroups = ((equipmentResult.data ?? []) as OpportunityEquipmentGroup[]);
   const estimateSummaries = ((estimateResult.data ?? []) as OpportunityEstimateSummary[]);
 
+  function dedupePricingItems(items: OpportunityPricingItem[]): OpportunityPricingItem[] {
+    const seen = new Set<string>();
+    return items.filter((item) => {
+      const key = `${item.legacy_import_row_id}|${item.label.toLowerCase()}|${item.amount ?? ""}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
   const enrichedRows = reviewRows.map((row) => ({
     ...row,
     documents: documents.filter((document) => document.legacy_import_row_id === row.id),
-    pricing_items: pricingItems.filter((item) => item.legacy_import_row_id === row.id),
+    pricing_items: dedupePricingItems(pricingItems.filter((item) => item.legacy_import_row_id === row.id)),
     scope_items: scopeItems.filter((item) => item.legacy_import_row_id === row.id),
     equipment_groups: equipmentGroups.filter((item) => item.legacy_import_row_id === row.id),
     estimate_summary: estimateSummaries.find((item) => item.legacy_import_row_id === row.id) ?? null,
