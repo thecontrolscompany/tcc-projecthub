@@ -26,8 +26,10 @@ export async function POST(request: Request) {
     }
 
     const sourceNameEntry = formData.get("sourceName");
+    const bidToEntry = formData.get("bidTo");
     const notesEntry = formData.get("notes");
     const sourceName = derivePackageSourceName(files, typeof sourceNameEntry === "string" ? sourceNameEntry : null);
+    const bidTo = typeof bidToEntry === "string" ? bidToEntry.trim() : null;
     const notes = typeof notesEntry === "string" ? notesEntry.trim() : "";
 
     const { data: batch, error: batchError } = await auth.supabase
@@ -81,6 +83,7 @@ export async function POST(request: Request) {
         normalized_payload: {
           import_mode: "document_package",
         },
+        company_name: bidTo || null,
         validation_issues: ["Awaiting document extraction"],
         notes: notes || null,
       })

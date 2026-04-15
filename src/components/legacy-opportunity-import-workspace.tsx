@@ -21,6 +21,7 @@ export function LegacyOpportunityImportWorkspace() {
   const [preview, setPreview] = useState<ParsedImportPreview | null>(null);
   const [csvNotes, setCsvNotes] = useState("");
   const [packageSourceName, setPackageSourceName] = useState("");
+  const [bidTo, setBidTo] = useState("");
   const [packageNotes, setPackageNotes] = useState("");
   const [proposalDocx, setProposalDocx] = useState<File | null>(null);
   const [proposalPdf, setProposalPdf] = useState<File | null>(null);
@@ -163,6 +164,7 @@ export function LegacyOpportunityImportWorkspace() {
 
     try {
       const formData = new FormData();
+      if (bidTo.trim()) formData.set("bidTo", bidTo.trim());
       if (packageSourceName.trim()) formData.set("sourceName", packageSourceName.trim());
       if (packageNotes.trim()) formData.set("notes", packageNotes.trim());
       if (proposalDocx) formData.set("proposalDocx", proposalDocx);
@@ -181,6 +183,7 @@ export function LegacyOpportunityImportWorkspace() {
 
       setSavedBatchId(json.batch.id);
       setSavedBatchMode("package");
+      setBidTo("");
       setPackageSourceName("");
       setPackageNotes("");
       setProposalDocx(null);
@@ -256,6 +259,16 @@ export function LegacyOpportunityImportWorkspace() {
           </div>
 
           <div className="space-y-4 rounded-2xl border border-border-default bg-surface-base p-5">
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium text-text-secondary">Bid To</span>
+              <input
+                value={bidTo}
+                onChange={(event) => setBidTo(event.target.value)}
+                placeholder="Customer or GC name (e.g. Trane)"
+                className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+              />
+            </label>
+
             <label className="block">
               <span className="mb-1 block text-sm font-medium text-text-secondary">Opportunity label</span>
               <input

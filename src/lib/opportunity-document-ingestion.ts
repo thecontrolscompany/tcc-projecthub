@@ -329,10 +329,19 @@ function extractEquipmentGroups(lines: string[]): Omit<OpportunityEquipmentGroup
 
 function extractNamedField(text: string, labels: string[]) {
   for (const label of labels) {
-    const pattern = new RegExp(`${label}\\s*[:\\-]\\s*(.+)`, "i");
-    const match = text.match(pattern);
-    if (match?.[1]) {
-      return match[1].split("\n")[0]?.trim() ?? null;
+    const inlinePattern = new RegExp(`${label}\\s*[:\\-]\\s*(.+)`, "i");
+    const inlineMatch = text.match(inlinePattern);
+    if (inlineMatch?.[1]?.trim()) {
+      return inlineMatch[1].split("\n")[0]?.trim() ?? null;
+    }
+
+    const nextLinePattern = new RegExp(
+      `^${label}\\s*[:\\-]?\\s*$\\n+^([^\\n]+)`,
+      "im"
+    );
+    const nextLineMatch = text.match(nextLinePattern);
+    if (nextLineMatch?.[1]?.trim()) {
+      return nextLineMatch[1].trim();
     }
   }
 
