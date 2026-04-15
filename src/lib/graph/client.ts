@@ -283,36 +283,47 @@ export async function listSharePointFolders(
     .map((part) => encodeURIComponent(part))
     .join("/");
 
-  const path = encodedPath
-    ? `/drives/${driveId}/root:/${encodedPath}:/children?$select=id,name,folder,createdDateTime&$filter=folder ne null`
-    : `/drives/${driveId}/root/children?$select=id,name,folder,createdDateTime&$filter=folder ne null`;
+  const basePath = encodedPath
+    ? `/drives/${driveId}/root:/${encodedPath}:/children?$select=id,name,folder,createdDateTime&$filter=folder ne null&$top=200`
+    : `/drives/${driveId}/root/children?$select=id,name,folder,createdDateTime&$filter=folder ne null&$top=200`;
 
-  const res = await graphFetch(path, providerToken);
+  const allItems: SharePointItem[] = [];
+  let url: string | null = basePath;
 
-  if (res.status === 404) {
-    return [];
+  while (url) {
+    const res = await graphFetch(
+      url.startsWith("https") ? url.replace(GRAPH_BASE, "") : url,
+      providerToken
+    );
+
+    if (res.status === 404) break;
+    if (!res.ok) {
+      throw new Error(`Failed to list SharePoint folders for ${parentPath || "/"}.`);
+    }
+
+    const data = await res.json();
+    const items: Array<{
+      id: string;
+      name: string;
+      createdDateTime: string;
+      folder?: { childCount: number };
+    }> = Array.isArray(data?.value) ? data.value : [];
+
+    allItems.push(
+      ...items
+        .filter((item): item is SharePointItem => Boolean(item.folder))
+        .map((item) => ({
+          id: item.id,
+          name: item.name,
+          createdDateTime: item.createdDateTime,
+          folder: item.folder as { childCount: number },
+        }))
+    );
+
+    url = typeof data?.["@odata.nextLink"] === "string" ? data["@odata.nextLink"] : null;
   }
 
-  if (!res.ok) {
-    throw new Error(`Failed to list SharePoint folders for ${parentPath || "/"}.`);
-  }
-
-  const data = await res.json();
-  const items: Array<{
-    id: string;
-    name: string;
-    createdDateTime: string;
-    folder?: { childCount: number };
-  }> = Array.isArray(data?.value) ? data.value : [];
-
-  return items
-    .filter((item): item is SharePointItem => Boolean(item.folder))
-    .map((item) => ({
-      id: item.id,
-      name: item.name,
-      createdDateTime: item.createdDateTime,
-      folder: item.folder,
-    }));
+  return allItems;
 }
 
 export async function listSharePointChildren(
