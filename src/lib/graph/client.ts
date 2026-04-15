@@ -438,6 +438,28 @@ export async function deleteSharePointItem(
   }
 }
 
+export async function moveSharePointItem(
+  providerToken: string,
+  driveId: string,
+  itemId: string,
+  destinationFolderId: string
+): Promise<void> {
+  const res = await graphFetch(
+    `/drives/${driveId}/items/${encodeURIComponent(itemId)}`,
+    providerToken,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ parentReference: { id: destinationFolderId } }),
+    }
+  );
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Failed to move item ${itemId}: ${res.status} ${body}`);
+  }
+}
+
 export async function copyOneDriveItemToSharePoint(
   providerToken: string,
   itemId: string,

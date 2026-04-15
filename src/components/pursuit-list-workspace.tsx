@@ -47,6 +47,8 @@ export function PursuitListWorkspace() {
   const [error, setError] = useState<string | null>(null);
   const [enriching, setEnriching] = useState(false);
   const [enrichMessage, setEnrichMessage] = useState<string | null>(null);
+  const [organizing, setOrganizing] = useState(false);
+  const [organizeMessage, setOrganizeMessage] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
@@ -214,6 +216,36 @@ export function PursuitListWorkspace() {
     }
   }
 
+  async function handleOrganize() {
+    setOrganizing(true);
+    setOrganizeMessage(null);
+    let organized = 0;
+    let nothing = 0;
+    let errors = 0;
+
+    try {
+      const allIds = pursuits.map((pursuit) => pursuit.id);
+      const batchSize = 10;
+      for (let index = 0; index < allIds.length; index += batchSize) {
+        const response = await fetch("/api/opportunities/import/mass/organize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pursuit_ids: allIds.slice(index, index + batchSize) }),
+        });
+        const json = await response.json().catch(() => null);
+        if (!response.ok) throw new Error(json?.error ?? "Organize failed.");
+        organized += json?.organized ?? 0;
+        nothing += json?.nothing_to_move ?? 0;
+        errors += json?.errors ?? 0;
+        setOrganizeMessage(`${organized} organized · ${nothing} already tidy · ${errors} errors`);
+      }
+    } catch (organizeError) {
+      setOrganizeMessage(organizeError instanceof Error ? organizeError.message : "Organize failed.");
+    } finally {
+      setOrganizing(false);
+    }
+  }
+
   function SortTh({ label, field }: { label: string; field: SortKey }) {
     const active = sortKey === field;
     return (
@@ -263,6 +295,15 @@ export function PursuitListWorkspace() {
           {enriching ? "Enriching..." : "Enrich stubs"}
         </button>
         {enrichMessage ? <p className="text-xs text-text-secondary">{enrichMessage}</p> : null}
+        <button
+          type="button"
+          onClick={() => void handleOrganize()}
+          disabled={organizing}
+          className="rounded-xl border border-border-default bg-surface-base px-4 py-2 text-sm font-medium text-text-secondary hover:bg-surface-overlay disabled:opacity-60"
+        >
+          {organizing ? "Organizing..." : "Organize files"}
+        </button>
+        {organizeMessage ? <p className="text-xs text-text-secondary">{organizeMessage}</p> : null}
         <div className="flex flex-wrap gap-2">
           {(["all", "active", "awarded", "lost", "archived"] as const).map((status) => (
             <button
