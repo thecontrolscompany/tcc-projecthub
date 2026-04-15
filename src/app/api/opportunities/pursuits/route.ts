@@ -20,6 +20,7 @@ export async function GET() {
       project_location,
       status,
       created_at,
+      sharepoint_folder,
       linked_project_id,
       quote_requests (
         id,

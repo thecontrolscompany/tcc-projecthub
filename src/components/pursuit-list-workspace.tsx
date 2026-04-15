@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { OpportunityHubSubnav } from "@/components/opportunity-hub-subnav";
 import { safeJson } from "@/lib/utils/safe-json";
@@ -18,6 +19,7 @@ type PursuitRow = {
   project_location: string | null;
   status: "active" | "awarded" | "lost" | "archived";
   created_at: string;
+  sharepoint_folder: string | null;
   linked_project_id: string | null;
   quote_requests: QuoteRequestSummary[];
 };
@@ -82,7 +84,16 @@ export function PursuitListWorkspace() {
   }
 
   function pursuitValue(pursuit: PursuitRow) {
-    return pursuit.quote_requests.reduce((sum, quote) => sum + (quote.estimated_value ?? 0), 0);
+    return pursuit.quote_requests.reduce((max, quote) => Math.max(max, quote.estimated_value ?? 0), 0);
+  }
+
+  function pursuitBidDate(pursuit: PursuitRow) {
+    const dates = pursuit.quote_requests
+      .map((quote) => quote.bid_date)
+      .filter((value): value is string => Boolean(value))
+      .sort();
+
+    return dates[0] ?? null;
   }
 
   const filtered = useMemo(() => {
@@ -317,8 +328,10 @@ export function PursuitListWorkspace() {
                 <SortTh label="Customer" field="owner_name" />
                 <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">Location</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">Status</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">Est. value</th>
                 <SortTh label="Quotes" field="quote_count" />
-                <SortTh label="Value" field="value" />
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">Bid date</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">SharePoint</th>
                 <SortTh label="Created" field="created_at" />
               </tr>
             </thead>
@@ -333,7 +346,11 @@ export function PursuitListWorkspace() {
                       className="h-4 w-4 rounded border-border-default"
                     />
                   </td>
-                  <td className="px-3 py-3 font-medium text-text-primary">{pursuit.project_name}</td>
+                  <td className="px-3 py-3 font-medium text-text-primary">
+                    <Link href={`/quotes/pursuits/${pursuit.id}`} className="hover:text-brand-primary hover:underline">
+                      {pursuit.project_name}
+                    </Link>
+                  </td>
                   <td className="px-3 py-3 text-text-secondary">
                     {pursuit.owner_name ?? <span className="italic text-text-tertiary">-</span>}
                   </td>
@@ -345,8 +362,23 @@ export function PursuitListWorkspace() {
                       {STATUS_LABELS[pursuit.status] ?? pursuit.status}
                     </span>
                   </td>
-                  <td className="px-3 py-3 text-text-secondary">{pursuit.quote_requests.length}</td>
                   <td className="px-3 py-3 text-text-secondary">{formatCurrency(pursuitValue(pursuit))}</td>
+                  <td className="px-3 py-3 text-text-secondary">{pursuit.quote_requests.length}</td>
+                  <td className="px-3 py-3 text-text-secondary">{formatDate(pursuitBidDate(pursuit))}</td>
+                  <td className="px-3 py-3 text-text-secondary">
+                    {pursuit.sharepoint_folder ? (
+                      <a
+                        href={sharePointUrl(pursuit.sharepoint_folder)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="hover:text-brand-primary hover:underline"
+                      >
+                        Open
+                      </a>
+                    ) : (
+                      <span className="italic text-text-tertiary">-</span>
+                    )}
+                  </td>
                   <td className="px-3 py-3 text-text-tertiary">{new Date(pursuit.created_at).toLocaleDateString()}</td>
                 </tr>
               ))}
@@ -369,4 +401,17 @@ function formatCurrency(value: number) {
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+function formatDate(value: string | null) {
+  if (!value) return "-";
+  return new Date(value).toLocaleDateString();
+}
+
+function sharePointUrl(folderPath: string) {
+  return `https://controlsco.sharepoint.com/sites/TCCProjects/Shared%20Documents/${folderPath
+    .split("/")
+    .filter(Boolean)
+    .map(encodeURIComponent)
+    .join("/")}`;
 }
