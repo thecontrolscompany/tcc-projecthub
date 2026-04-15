@@ -54,6 +54,13 @@ export async function GET(request: Request) {
     return handleTableError(rowError, "Unable to load staged import rows.");
   }
 
+  // Count processed rows so the UI can offer a reset option when the queue is empty.
+  const { count: processedCount } = await supabase
+    .from("legacy_opportunity_import_rows")
+    .select("id", { count: "exact", head: true })
+    .eq("batch_id", selectedBatch.id)
+    .in("review_status", ["rejected", "promoted"]);
+
   const { data: projects, error: projectError } = await supabase
     .from("projects")
     .select("id, name, job_number, site_address, contract_price")
@@ -146,6 +153,7 @@ export async function GET(request: Request) {
     selectedBatch,
     rows: enrichedRows,
     summary,
+    processedCount: processedCount ?? 0,
   });
 }
 
