@@ -265,11 +265,11 @@ export function OpportunityImportReviewWorkspace() {
                   items={row.pricing_items.map((item) => `${item.label} — ${formatCurrency(item.amount)}`)}
                 />
                 <ExtractionList
-                  title="Scope and exclusions"
-                  emptyText="No scope, clarification, exclusion, or warranty items extracted yet."
-                  items={row.scope_items
-                    .filter((item) => item.section_type !== "reference")
-                    .map((item) => `${item.section_type}: ${item.body}`)}
+                  title="Scope"
+                  emptyText="No equipment groups extracted yet."
+                  items={row.equipment_groups.map((item) =>
+                    `${item.quantity ? `(${item.quantity}) ` : ""}${item.system_label}${item.tag_text ? ` | Tag: ${item.tag_text}` : ""}`
+                  )}
                 />
                 <EstimateSummaryCard summary={row.estimate_summary} />
               </div>
