@@ -36,6 +36,15 @@ export interface SharePointItem {
   folder: { childCount: number };
 }
 
+export interface SharePointChildItem {
+  id: string;
+  name: string;
+  size: number;
+  createdDateTime: string;
+  isFolder: boolean;
+  childCount: number | null;
+}
+
 export interface GraphUser {
   id: string;
   givenName: string | null;
@@ -304,6 +313,51 @@ export async function listSharePointFolders(
       createdDateTime: item.createdDateTime,
       folder: item.folder,
     }));
+}
+
+export async function listSharePointChildren(
+  providerToken: string,
+  driveId: string,
+  itemId: string
+): Promise<SharePointChildItem[]> {
+  const items: SharePointChildItem[] = [];
+  let url = `/drives/${driveId}/items/${encodeURIComponent(itemId)}/children?$select=id,name,size,file,folder,createdDateTime&$top=200`;
+
+  while (url) {
+    const res = await graphFetch(url.startsWith("https") ? url.replace(GRAPH_BASE, "") : url, providerToken);
+
+    if (res.status === 404) break;
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Failed to list SharePoint children for item ${itemId}: ${res.status} ${body}`);
+    }
+
+    const data = await res.json();
+    const page: Array<{
+      id?: string;
+      name?: string;
+      size?: number;
+      createdDateTime?: string;
+      file?: unknown;
+      folder?: { childCount?: number };
+    }> = Array.isArray(data?.value) ? data.value : [];
+
+    for (const item of page) {
+      if (!item.id || !item.name) continue;
+      items.push({
+        id: item.id,
+        name: item.name,
+        size: item.size ?? 0,
+        createdDateTime: item.createdDateTime ?? "",
+        isFolder: Boolean(item.folder),
+        childCount: item.folder?.childCount ?? null,
+      });
+    }
+
+    url = typeof data?.["@odata.nextLink"] === "string" ? data["@odata.nextLink"] : "";
+  }
+
+  return items;
 }
 
 export async function createSharePointFolder(

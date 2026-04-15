@@ -26,15 +26,23 @@ export function MassImportWorkspace() {
   const [yearFilter, setYearFilter] = useState("_2022 Bids");
   const [scanning, setScanning] = useState(false);
   const [committing, setCommitting] = useState(false);
+  const [enriching, setEnriching] = useState(false);
   const [manifest, setManifest] = useState<ManifestEntry[] | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
   const [commitResult, setCommitResult] = useState<{ created: number; skipped: number } | null>(null);
+  const [enrichResult, setEnrichResult] = useState<{
+    enriched: number;
+    no_folder: number;
+    no_file: number;
+    errors: number;
+  } | null>(null);
 
   async function handleScan() {
     setScanning(true);
     setScanError(null);
     setManifest(null);
     setCommitResult(null);
+    setEnrichResult(null);
 
     try {
       const response = await fetch("/api/opportunities/import/mass/scan", {
@@ -94,6 +102,31 @@ export function MassImportWorkspace() {
       setScanError(err instanceof Error ? err.message : "Import failed.");
     } finally {
       setCommitting(false);
+    }
+  }
+
+  async function handleEnrich() {
+    setEnriching(true);
+    setScanError(null);
+
+    try {
+      const response = await fetch("/api/opportunities/import/mass/enrich", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const json = await safeJson(response);
+      if (!response.ok) throw new Error(json?.error ?? "Enrichment failed.");
+      setEnrichResult({
+        enriched: json.enriched ?? 0,
+        no_folder: json.no_folder ?? 0,
+        no_file: json.no_file ?? 0,
+        errors: json.errors ?? 0,
+      });
+    } catch (err) {
+      setScanError(err instanceof Error ? err.message : "Enrichment failed.");
+    } finally {
+      setEnriching(false);
     }
   }
 
@@ -160,6 +193,32 @@ export function MassImportWorkspace() {
       {commitResult ? (
         <div className="rounded-2xl border border-status-success/30 bg-status-success/10 px-5 py-4 text-sm text-status-success">
           Import complete - {commitResult.created} pursuit{commitResult.created !== 1 ? "s" : ""} created, {commitResult.skipped} skipped (already existed).
+        </div>
+      ) : null}
+
+      {commitResult && !enrichResult ? (
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border-default bg-surface-raised p-5">
+          <div>
+            <p className="text-sm font-medium text-text-primary">Extract data from existing SharePoint documents?</p>
+            <p className="mt-0.5 text-xs text-text-secondary">
+              Reads proposal and estimate files from each pursuit's existing SharePoint folder (99 Archive - Legacy Files),
+              extracts customer name and value, and saves them to the pursuit records. No files are moved or uploaded.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void handleEnrich()}
+            disabled={enriching}
+            className="shrink-0 rounded-xl bg-brand-primary px-5 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:opacity-60"
+          >
+            {enriching ? "Enriching..." : "Enrich from documents"}
+          </button>
+        </div>
+      ) : null}
+
+      {enrichResult ? (
+        <div className="rounded-2xl border border-status-success/30 bg-status-success/10 px-5 py-4 text-sm text-status-success">
+          Enrichment complete - {enrichResult.enriched} enriched, {enrichResult.no_folder} unmatched folders, {enrichResult.no_file} had no docs, {enrichResult.errors} errors.
         </div>
       ) : null}
 

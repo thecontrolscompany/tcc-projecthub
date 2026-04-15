@@ -43,6 +43,8 @@ export function PursuitListWorkspace() {
   const [pursuits, setPursuits] = useState<PursuitRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [enriching, setEnriching] = useState(false);
+  const [enrichMessage, setEnrichMessage] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
@@ -155,6 +157,28 @@ export function PursuitListWorkspace() {
     }
   }
 
+  async function handleEnrichStubs() {
+    setEnriching(true);
+    setEnrichMessage(null);
+    try {
+      const response = await fetch("/api/opportunities/import/mass/enrich", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const json = await safeJson(response);
+      if (!response.ok) throw new Error(json?.error ?? "Enrichment failed.");
+      setEnrichMessage(
+        `${json.enriched ?? 0} enriched · ${json.no_folder ?? 0} unmatched · ${json.no_file ?? 0} no docs · ${json.errors ?? 0} errors`
+      );
+      await load();
+    } catch (err) {
+      setEnrichMessage(err instanceof Error ? err.message : "Enrichment failed.");
+    } finally {
+      setEnriching(false);
+    }
+  }
+
   function SortTh({ label, field }: { label: string; field: SortKey }) {
     const active = sortKey === field;
     return (
@@ -195,6 +219,15 @@ export function PursuitListWorkspace() {
           placeholder="Search by name, customer, location..."
           className="w-64 rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
         />
+        <button
+          type="button"
+          onClick={() => void handleEnrichStubs()}
+          disabled={enriching}
+          className="rounded-xl border border-border-default bg-surface-base px-4 py-2 text-sm font-medium text-text-secondary hover:bg-surface-overlay disabled:opacity-60"
+        >
+          {enriching ? "Enriching..." : "Enrich stubs"}
+        </button>
+        {enrichMessage ? <p className="text-xs text-text-secondary">{enrichMessage}</p> : null}
         <div className="flex flex-wrap gap-2">
           {(["all", "active", "awarded", "lost", "archived"] as const).map((status) => (
             <button
