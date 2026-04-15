@@ -36,7 +36,26 @@ export async function GET() {
     return handleTableError(error, "Legacy import tables are not available yet. Run migrations 045 and 046.");
   }
 
-  return NextResponse.json({ batches: data ?? [] });
+  const batches = data ?? [];
+
+  const batchIds = batches.map((b) => b.id);
+  const pendingCounts: Record<string, number> = {};
+
+  if (batchIds.length > 0) {
+    const { data: pendingRows } = await supabase
+      .from("legacy_opportunity_import_rows")
+      .select("batch_id")
+      .in("batch_id", batchIds)
+      .eq("review_status", "pending");
+
+    for (const row of pendingRows ?? []) {
+      pendingCounts[row.batch_id] = (pendingCounts[row.batch_id] ?? 0) + 1;
+    }
+  }
+
+  return NextResponse.json({
+    batches: batches.map((b) => ({ ...b, pending_row_count: pendingCounts[b.id] ?? 0 })),
+  });
 }
 
 export async function POST(request: Request) {

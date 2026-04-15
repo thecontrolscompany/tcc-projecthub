@@ -431,9 +431,13 @@ export function LegacyOpportunityImportWorkspace() {
                     <td className="px-3 py-2 text-text-secondary">{batch.row_count}</td>
                     <td className="px-3 py-2 text-text-secondary">{new Date(batch.imported_at).toLocaleDateString()}</td>
                     <td className="px-3 py-2">
-                      <Link href={`/quotes/import/review?batch=${batch.id}`} className="text-sm font-medium text-brand-primary hover:text-brand-hover">
-                        Review
-                      </Link>
+                      {(batch as any).pending_row_count > 0 ? (
+                        <Link href={`/quotes/import/review?batch=${batch.id}`} className="text-sm font-medium text-brand-primary hover:text-brand-hover">
+                          Review
+                        </Link>
+                      ) : (
+                        <span className="text-sm text-text-tertiary">Complete</span>
+                      )}
                     </td>
                   </tr>
                 ))

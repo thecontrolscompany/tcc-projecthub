@@ -40,7 +40,6 @@ export function OpportunityImportReviewWorkspace() {
   const [summary, setSummary] = useState({ pending: 0, matched: 0, rejected: 0, noSuggestions: 0 });
   const [processedCount, setProcessedCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [resetting, setResetting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -72,26 +71,6 @@ export function OpportunityImportReviewWorkspace() {
       setError(loadError instanceof Error ? loadError.message : "Unable to load review queue.");
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleReset() {
-    if (!selectedBatchId) return;
-    setResetting(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/opportunities/import/review/reset", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ batch_id: selectedBatchId }),
-      });
-      const json = await safeJson(response);
-      if (!response.ok) throw new Error(json?.error ?? "Unable to reset batch.");
-      await loadRows(selectedBatchId);
-    } catch (resetError) {
-      setError(resetError instanceof Error ? resetError.message : "Unable to reset batch.");
-    } finally {
-      setResetting(false);
     }
   }
 
@@ -178,21 +157,9 @@ export function OpportunityImportReviewWorkspace() {
           </div>
         ) : rows.length === 0 ? (
           <div className="rounded-2xl border border-border-default bg-surface-raised px-5 py-8 text-center text-sm text-text-tertiary">
-            {processedCount > 0 ? (
-              <div className="space-y-3">
-                <p>All {processedCount} row{processedCount !== 1 ? "s" : ""} in this batch have been processed (rejected or promoted).</p>
-                <button
-                  type="button"
-                  onClick={() => void handleReset()}
-                  disabled={resetting}
-                  className="mx-auto block rounded-lg border border-border-default bg-surface-overlay px-4 py-2 text-sm font-medium text-text-secondary transition hover:bg-surface-raised hover:text-text-primary disabled:opacity-60"
-                >
-                  {resetting ? "Resetting..." : "Reset all rows to pending"}
-                </button>
-              </div>
-            ) : (
-              "No staged rows found for this batch."
-            )}
+            {processedCount > 0
+              ? `All ${processedCount} row${processedCount !== 1 ? "s" : ""} in this batch have been processed.`
+              : "No staged rows found for this batch."}
           </div>
         ) : (
           rows.map((row) => (
