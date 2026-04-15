@@ -77,7 +77,7 @@ export function OpportunityImportReviewWorkspace() {
   async function handleDecision(
     row: ReviewRow,
     selected_action: "link_project" | "standalone" | "reject",
-    selected_project_id?: string
+    selected_id?: string
   ) {
     setError(null);
 
@@ -88,7 +88,7 @@ export function OpportunityImportReviewWorkspace() {
         body: JSON.stringify({
           import_row_id: row.id,
           selected_action,
-          selected_project_id: selected_project_id ?? null,
+          selected_project_id: selected_action === "link_project" ? (selected_id ?? null) : null,
         }),
       });
       const json = await safeJson(response);
@@ -163,120 +163,218 @@ export function OpportunityImportReviewWorkspace() {
           </div>
         ) : (
           rows.map((row) => (
-            <div key={row.id} className="space-y-4 rounded-2xl border border-border-default bg-surface-raised p-5">
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Row {row.source_row_number}</p>
-                      <h2 className="mt-1 text-lg font-semibold text-text-primary">{row.legacy_opportunity_name ?? "Untitled opportunity"}</h2>
-                      <p className="mt-1 text-sm text-text-secondary">
-                        {row.company_name ?? "Unknown company"} | {row.project_location ?? "No location"}
-                      </p>
-                    </div>
-                    <span className="rounded-full bg-surface-overlay px-3 py-1 text-xs font-medium text-text-secondary">
-                      {row.review_status}
-                    </span>
-                  </div>
-
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <InfoCard label="Job number" value={row.job_number ?? "-"} />
-                    <InfoCard label="Amount" value={formatCurrency(row.amount)} />
-                    <InfoCard label="Bid date" value={row.bid_date ?? "-"} />
-                    <InfoCard label="Proposal date" value={row.proposal_date ?? "-"} />
-                  </div>
-
-                  <div className="rounded-xl border border-border-default bg-surface-base p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Validation issues</p>
-                    <p className="mt-2 text-sm text-text-secondary">
-                      {row.validation_issues.length ? row.validation_issues.join(", ") : "No validation issues detected"}
-                    </p>
-                  </div>
-
-                  {row.sharepoint_folder ? (
-                    <div className="rounded-xl border border-border-default bg-surface-base p-4">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">SharePoint folder</p>
-                      <p className="mt-2 text-sm text-text-primary">{row.sharepoint_folder}</p>
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className="space-y-3">
-                  <div className="rounded-xl border border-border-default bg-surface-base p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Suggested active project matches</p>
-                    <div className="mt-3 space-y-3">
-                      {row.project_matches.length === 0 ? (
-                        <p className="text-sm text-text-secondary">No strong project suggestions yet.</p>
-                      ) : (
-                        row.project_matches.map((match) => (
-                          <div key={match.candidateId} className="rounded-xl border border-border-default bg-surface-raised p-4">
-                            <div className="flex items-start justify-between gap-4">
-                              <div>
-                                <p className="font-medium text-text-primary">{match.candidateName}</p>
-                                <p className="mt-1 text-sm text-text-secondary">
-                                  {match.jobNumber ? `Job ${match.jobNumber}` : "No job number"}
-                                </p>
-                              </div>
-                              <span className="rounded-full bg-brand-primary/10 px-3 py-1 text-xs font-semibold text-brand-primary">
-                                {match.confidenceScore.toFixed(0)}
-                              </span>
-                            </div>
-
-                            <p className="mt-2 text-xs text-text-tertiary">{match.reasons.join(" | ") || "General name similarity"}</p>
-
-                            <button
-                              type="button"
-                              onClick={() => void handleDecision(row, "link_project", match.candidateId)}
-                              className="mt-4 rounded-lg bg-brand-primary px-3 py-1.5 text-xs font-semibold text-text-inverse transition hover:bg-brand-hover"
-                            >
-                              Link to this project
-                            </button>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={() => void handleDecision(row, "standalone")}
-                      className="rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm font-medium text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
-                    >
-                      Keep Standalone
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void handleDecision(row, "reject")}
-                      className="rounded-lg border border-status-danger/30 bg-status-danger/10 px-3 py-2 text-sm font-medium text-status-danger transition hover:bg-status-danger/20"
-                    >
-                      Reject Row
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <LegacyDocumentPackageCard row={row} onUploaded={() => void loadRows(selectedBatchId)} />
-
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                <ExtractionList
-                  title="Pricing rows"
-                  emptyText="No pricing items extracted yet."
-                  items={row.pricing_items.map((item) => `${item.label} — ${formatCurrency(item.amount)}`)}
-                />
-                <ExtractionList
-                  title="Scope"
-                  emptyText="No equipment groups extracted yet."
-                  items={row.equipment_groups.map((item) =>
-                    `${item.quantity ? `(${item.quantity}) ` : ""}${item.system_label}${item.tag_text ? ` | Tag: ${item.tag_text}` : ""}`
-                  )}
-                />
-                <EstimateSummaryCard summary={row.estimate_summary} />
-              </div>
-            </div>
+            <ReviewRowCard
+              key={row.id}
+              row={row}
+              onDecision={handleDecision}
+              onRefresh={() => void loadRows(selectedBatchId)}
+            />
           ))
         )}
       </section>
+    </div>
+  );
+}
+
+function ReviewRowCard({
+  row,
+  onDecision,
+  onRefresh,
+}: {
+  row: ReviewRow;
+  onDecision: (row: ReviewRow, action: "link_project" | "standalone" | "reject", projectId?: string) => Promise<void>;
+  onRefresh: () => void;
+}) {
+  const [editingCompany, setEditingCompany] = useState(false);
+  const [companyDraft, setCompanyDraft] = useState(row.company_name ?? "");
+  const [savingCompany, setSavingCompany] = useState(false);
+  const [companyError, setCompanyError] = useState<string | null>(null);
+
+  async function handleSaveCompany() {
+    if (!companyDraft.trim()) return;
+    setSavingCompany(true);
+    setCompanyError(null);
+
+    try {
+      const response = await fetch(`/api/opportunities/import/rows/${row.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ company_name: companyDraft.trim() }),
+      });
+      const json = await safeJson(response);
+      if (!response.ok) throw new Error(json?.error ?? "Unable to save.");
+      setEditingCompany(false);
+      onRefresh();
+    } catch (err) {
+      setCompanyError(err instanceof Error ? err.message : "Unable to save.");
+    } finally {
+      setSavingCompany(false);
+    }
+  }
+
+  return (
+    <div className="space-y-4 rounded-2xl border border-border-default bg-surface-raised p-5">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                Row {row.source_row_number} - Pursuit
+              </p>
+              <h2 className="mt-1 text-lg font-semibold text-text-primary">
+                {row.legacy_opportunity_name ?? "Untitled opportunity"}
+              </h2>
+
+              <div className="mt-2">
+                {editingCompany ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={companyDraft}
+                      onChange={(e) => setCompanyDraft(e.target.value)}
+                      className="rounded-lg border border-brand-primary bg-surface-overlay px-2 py-1 text-sm text-text-primary focus:outline-none"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") void handleSaveCompany();
+                        if (e.key === "Escape") setEditingCompany(false);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void handleSaveCompany()}
+                      disabled={savingCompany}
+                      className="rounded-lg bg-brand-primary px-2 py-1 text-xs font-semibold text-text-inverse disabled:opacity-60"
+                    >
+                      {savingCompany ? "Saving..." : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingCompany(false);
+                        setCompanyDraft(row.company_name ?? "");
+                      }}
+                      className="rounded-lg border border-border-default px-2 py-1 text-xs text-text-secondary"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCompanyDraft(row.company_name ?? "");
+                      setEditingCompany(true);
+                    }}
+                    className="group flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary"
+                    title="Click to edit customer name"
+                  >
+                    <span className="font-medium">{row.company_name ?? "Unknown company"}</span>
+                    <span className="text-xs text-text-tertiary opacity-0 transition group-hover:opacity-100">Edit</span>
+                  </button>
+                )}
+                {companyError ? <p className="mt-1 text-xs text-status-danger">{companyError}</p> : null}
+              </div>
+
+              <p className="mt-1 text-sm text-text-tertiary">{row.project_location ?? "No location"}</p>
+            </div>
+            <span className="rounded-full bg-surface-overlay px-3 py-1 text-xs font-medium text-text-secondary">
+              {row.review_status}
+            </span>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <InfoCard label="Job number" value={row.job_number ?? "-"} />
+            <InfoCard label="Amount" value={formatCurrency(row.amount)} />
+            <InfoCard label="Bid date" value={row.bid_date ?? "-"} />
+            <InfoCard label="Proposal date" value={row.proposal_date ?? "-"} />
+          </div>
+
+          <div className="rounded-xl border border-border-default bg-surface-base p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Validation issues</p>
+            <p className="mt-2 text-sm text-text-secondary">
+              {row.validation_issues.length ? row.validation_issues.join(", ") : "No validation issues detected"}
+            </p>
+          </div>
+
+          {row.sharepoint_folder ? (
+            <div className="rounded-xl border border-border-default bg-surface-base p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">SharePoint folder</p>
+              <p className="mt-2 text-sm text-text-primary">{row.sharepoint_folder}</p>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="space-y-3">
+          <div className="rounded-xl border border-border-default bg-surface-base p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Suggested active project matches</p>
+            <div className="mt-3 space-y-3">
+              {row.project_matches.length === 0 ? (
+                <p className="text-sm text-text-secondary">No strong project suggestions yet.</p>
+              ) : (
+                row.project_matches.map((match) => (
+                  <div key={match.candidateId} className="rounded-xl border border-border-default bg-surface-raised p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="font-medium text-text-primary">{match.candidateName}</p>
+                        <p className="mt-1 text-sm text-text-secondary">
+                          {match.jobNumber ? `Job ${match.jobNumber}` : "No job number"}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-brand-primary/10 px-3 py-1 text-xs font-semibold text-brand-primary">
+                        {match.confidenceScore.toFixed(0)}
+                      </span>
+                    </div>
+
+                    <p className="mt-2 text-xs text-text-tertiary">{match.reasons.join(" | ") || "General name similarity"}</p>
+
+                    <button
+                      type="button"
+                      onClick={() => void onDecision(row, "link_project", match.candidateId)}
+                      className="mt-4 rounded-lg bg-brand-primary px-3 py-1.5 text-xs font-semibold text-text-inverse transition hover:bg-brand-hover"
+                    >
+                      Link to this project
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => void onDecision(row, "standalone")}
+              className="rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm font-medium text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
+            >
+              Keep Standalone
+            </button>
+            <button
+              type="button"
+              onClick={() => void onDecision(row, "reject")}
+              className="rounded-lg border border-status-danger/30 bg-status-danger/10 px-3 py-2 text-sm font-medium text-status-danger transition hover:bg-status-danger/20"
+            >
+              Reject Row
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <LegacyDocumentPackageCard row={row} onUploaded={onRefresh} />
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <ExtractionList
+          title="Pricing rows"
+          emptyText="No pricing items extracted yet."
+          items={row.pricing_items.map((item) => `${item.label} - ${formatCurrency(item.amount)}`)}
+        />
+        <ExtractionList
+          title="Scope"
+          emptyText="No equipment groups extracted yet."
+          items={row.equipment_groups.map((item) =>
+            `${item.quantity ? `(${item.quantity}) ` : ""}${item.system_label}${item.tag_text ? ` | Tag: ${item.tag_text}` : ""}`
+          )}
+        />
+        <EstimateSummaryCard summary={row.estimate_summary} />
+      </div>
     </div>
   );
 }
