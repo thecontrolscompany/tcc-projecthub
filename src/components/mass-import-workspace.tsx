@@ -108,21 +108,45 @@ export function MassImportWorkspace() {
   async function handleEnrich() {
     setEnriching(true);
     setScanError(null);
+    setEnrichResult(null);
 
     try {
-      const response = await fetch("/api/opportunities/import/mass/enrich", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      const json = await safeJson(response);
-      if (!response.ok) throw new Error(json?.error ?? "Enrichment failed.");
-      setEnrichResult({
-        enriched: json.enriched ?? 0,
-        no_folder: json.no_folder ?? 0,
-        no_file: json.no_file ?? 0,
-        errors: json.errors ?? 0,
-      });
+      const listResponse = await fetch("/api/opportunities/pursuits", { cache: "no-store" });
+      const listJson = await safeJson(listResponse);
+      if (!listResponse.ok) throw new Error(listJson?.error ?? "Failed to load pursuits.");
+
+      const stubs: string[] = (listJson?.pursuits ?? [])
+        .filter((pursuit: { owner_name: string | null }) => !pursuit.owner_name)
+        .map((pursuit: { id: string }) => pursuit.id);
+
+      if (stubs.length === 0) {
+        setEnrichResult({ enriched: 0, no_folder: 0, no_file: 0, errors: 0 });
+        return;
+      }
+
+      const batchSize = 10;
+      let enriched = 0;
+      let noFolder = 0;
+      let noFile = 0;
+      let errors = 0;
+
+      for (let index = 0; index < stubs.length; index += batchSize) {
+        const batch = stubs.slice(index, index + batchSize);
+        const response = await fetch("/api/opportunities/import/mass/enrich", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pursuit_ids: batch }),
+        });
+        const json = await safeJson(response);
+        if (!response.ok) throw new Error(json?.error ?? "Enrichment failed.");
+
+        enriched += json.enriched ?? 0;
+        noFolder += json.no_folder ?? 0;
+        noFile += json.no_file ?? 0;
+        errors += json.errors ?? 0;
+
+        setEnrichResult({ enriched, no_folder: noFolder, no_file: noFile, errors });
+      }
     } catch (err) {
       setScanError(err instanceof Error ? err.message : "Enrichment failed.");
     } finally {
@@ -218,7 +242,7 @@ export function MassImportWorkspace() {
 
       {enrichResult ? (
         <div className="rounded-2xl border border-status-success/30 bg-status-success/10 px-5 py-4 text-sm text-status-success">
-          Enrichment complete - {enrichResult.enriched} enriched, {enrichResult.no_folder} unmatched folders, {enrichResult.no_file} had no docs, {enrichResult.errors} errors.
+          {enriching ? "Enriching..." : "Enrichment complete"} - {enrichResult.enriched} enriched, {enrichResult.no_folder} unmatched, {enrichResult.no_file} no docs, {enrichResult.errors} errors.
         </div>
       ) : null}
 

@@ -160,17 +160,41 @@ export function PursuitListWorkspace() {
   async function handleEnrichStubs() {
     setEnriching(true);
     setEnrichMessage(null);
+
     try {
-      const response = await fetch("/api/opportunities/import/mass/enrich", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      const json = await safeJson(response);
-      if (!response.ok) throw new Error(json?.error ?? "Enrichment failed.");
-      setEnrichMessage(
-        `${json.enriched ?? 0} enriched · ${json.no_folder ?? 0} unmatched · ${json.no_file ?? 0} no docs · ${json.errors ?? 0} errors`
-      );
+      const stubs = pursuits
+        .filter((pursuit) => !pursuit.owner_name)
+        .map((pursuit) => pursuit.id);
+
+      if (stubs.length === 0) {
+        setEnrichMessage("No stub pursuits to enrich.");
+        return;
+      }
+
+      const batchSize = 10;
+      let enriched = 0;
+      let noFolder = 0;
+      let noFile = 0;
+      let errors = 0;
+
+      for (let index = 0; index < stubs.length; index += batchSize) {
+        const batch = stubs.slice(index, index + batchSize);
+        const response = await fetch("/api/opportunities/import/mass/enrich", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pursuit_ids: batch }),
+        });
+        const json = await safeJson(response);
+        if (!response.ok) throw new Error(json?.error ?? "Enrichment failed.");
+
+        enriched += json.enriched ?? 0;
+        noFolder += json.no_folder ?? 0;
+        noFile += json.no_file ?? 0;
+        errors += json.errors ?? 0;
+
+        setEnrichMessage(`${enriched} enriched · ${noFolder} unmatched · ${noFile} no docs · ${errors} errors`);
+      }
+
       await load();
     } catch (err) {
       setEnrichMessage(err instanceof Error ? err.message : "Enrichment failed.");
