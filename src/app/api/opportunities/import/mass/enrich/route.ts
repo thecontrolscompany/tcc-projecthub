@@ -155,15 +155,26 @@ export async function POST(request: Request) {
       const archiveChildren = await listSharePointChildren(providerToken, driveId, archiveFolder.id);
       let archiveFiles = archiveChildren.filter((item) => !item.isFolder);
 
-      // Files may be nested one level deeper inside a subfolder named after the
-      // pursuit (e.g. "99 Archive - Legacy Files/Adams Homes/proposal.docx").
-      // If the archive folder contains only subfolders and no direct files, recurse
-      // into each subfolder to collect files.
-      if (archiveFiles.length === 0) {
-        const subfolders = archiveChildren.filter((item) => item.isFolder);
-        for (const sub of subfolders) {
+      const EXTRACTABLE_EXTS = ["docx", "doc", "pdf", "xlsm", "xlsx"];
+      const hasExtractable = (files: typeof archiveFiles) =>
+        files.some((f) => EXTRACTABLE_EXTS.includes(f.name.toLowerCase().split(".").pop() ?? ""));
+
+      // Files may be nested inside subfolders (e.g. "99 Archive - Legacy Files/Adams
+      // Homes/proposal.docx" or two levels deep for multi-project folders like USA).
+      // Recurse up to 2 levels until extractable files are found.
+      if (!hasExtractable(archiveFiles)) {
+        const level1Folders = archiveChildren.filter((item) => item.isFolder);
+        for (const sub of level1Folders) {
           const subChildren = await listSharePointChildren(providerToken, driveId, sub.id);
           archiveFiles = archiveFiles.concat(subChildren.filter((item) => !item.isFolder));
+
+          if (!hasExtractable(archiveFiles)) {
+            const level2Folders = subChildren.filter((item) => item.isFolder);
+            for (const sub2 of level2Folders) {
+              const sub2Children = await listSharePointChildren(providerToken, driveId, sub2.id);
+              archiveFiles = archiveFiles.concat(sub2Children.filter((item) => !item.isFolder));
+            }
+          }
         }
       }
 
