@@ -31,6 +31,7 @@ export function LegacyOpportunityImportWorkspace() {
   const [loadingBatches, setLoadingBatches] = useState(true);
   const [savingBatch, setSavingBatch] = useState(false);
   const [savingPackage, setSavingPackage] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [savedBatchId, setSavedBatchId] = useState<string | null>(null);
   const [savedBatchMode, setSavedBatchMode] = useState<SavedBatchMode | null>(null);
 
@@ -67,6 +68,23 @@ export function LegacyOpportunityImportWorkspace() {
       setError(loadError instanceof Error ? loadError.message : "Unable to load import batches.");
     } finally {
       setLoadingBatches(false);
+    }
+  }
+
+  async function handleDelete(batchId: string) {
+    if (!confirm("Delete this batch and its SharePoint folder? This cannot be undone.")) return;
+    setDeleting(batchId);
+    try {
+      const response = await fetch(`/api/opportunities/import/batches/${batchId}`, {
+        method: "DELETE",
+      });
+      const json = await safeJson(response);
+      if (!response.ok) throw new Error(json?.error ?? "Unable to delete batch.");
+      await loadBatches();
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete batch.");
+    } finally {
+      setDeleting(null);
     }
   }
 
@@ -436,7 +454,17 @@ export function LegacyOpportunityImportWorkspace() {
                           Review
                         </Link>
                       ) : (
-                        <span className="text-sm text-text-tertiary">Complete</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm text-text-tertiary">Complete</span>
+                          <button
+                            type="button"
+                            onClick={() => void handleDelete(batch.id)}
+                            disabled={deleting === batch.id}
+                            className="text-sm font-medium text-status-danger hover:opacity-80 disabled:opacity-40"
+                          >
+                            {deleting === batch.id ? "Deleting..." : "Delete"}
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
