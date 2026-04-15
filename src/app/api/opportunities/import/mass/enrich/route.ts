@@ -161,11 +161,7 @@ export async function POST(request: Request) {
         }
       }
 
-      const target = chooseArchiveFile(
-        archiveFiles.map((item) => ({ id: item.id, name: item.name }))
-      );
-
-      if (!target) {
+      if (archiveFiles.length === 0) {
         results.push({
           pursuit_id: pursuit.id,
           pursuit_name: pursuit.project_name,
@@ -175,41 +171,62 @@ export async function POST(request: Request) {
         continue;
       }
 
-      const response = await fetchSharePointItemContent(providerToken, driveId, target.id);
-      if (!response.ok) {
-        results.push({
-          pursuit_id: pursuit.id,
-          pursuit_name: pursuit.project_name,
-          status: "error",
-          sharepoint_folder: folderPath,
-          error: `Download failed: ${response.status}`,
-        });
-        continue;
-      }
-
-      const buffer = Buffer.from(await response.arrayBuffer());
-      const lowerName = target.name.toLowerCase();
-
+      // Try candidates in priority order, falling back if download or extraction fails.
       let customerName: string | null = null;
       let projectName: string | null = null;
       let estimatedValue: number | null = null;
       let proposalDate: string | null = null;
+      let extracted = false;
 
-      if (lowerName.endsWith(".docx") || lowerName.endsWith(".doc")) {
-        const extracted = await extractProposalFromDocx(buffer);
-        customerName = extracted.customerName ?? null;
-        projectName = extracted.projectName ?? null;
-        estimatedValue = extracted.baseBidAmount ?? null;
-        proposalDate = extracted.proposalDate ?? null;
-      } else if (lowerName.endsWith(".pdf")) {
-        const extracted = await extractProposalFromPdf(buffer);
-        customerName = extracted.customerName ?? null;
-        projectName = extracted.projectName ?? null;
-        estimatedValue = extracted.baseBidAmount ?? null;
-        proposalDate = extracted.proposalDate ?? null;
-      } else {
-        const extracted = await extractEstimateFromWorkbook(buffer);
-        estimatedValue = extracted.base_bid_amount ?? extracted.final_total_amount ?? null;
+      // Build ordered candidate list: docx > doc > pdf > xlsm/xlsx
+      const candidates = [
+        ...archiveFiles.filter((f) => f.name.toLowerCase().endsWith(".docx")),
+        ...archiveFiles.filter((f) => f.name.toLowerCase().endsWith(".doc")),
+        ...archiveFiles.filter((f) => f.name.toLowerCase().endsWith(".pdf")),
+        ...archiveFiles.filter((f) => f.name.toLowerCase().endsWith(".xlsm") || f.name.toLowerCase().endsWith(".xlsx")),
+      ].filter((f) => !SKIP_NAMES.some((s) => f.name.toLowerCase().includes(s)));
+
+      for (const candidate of candidates) {
+        try {
+          const response = await fetchSharePointItemContent(providerToken, driveId, candidate.id);
+          if (!response.ok) continue;
+
+          const buffer = Buffer.from(await response.arrayBuffer());
+          const ext = candidate.name.toLowerCase().split(".").pop() ?? "";
+
+          if (ext === "docx" || ext === "doc") {
+            const e = await extractProposalFromDocx(buffer);
+            customerName   = e.customerName  ?? null;
+            projectName    = e.projectName   ?? null;
+            estimatedValue = e.baseBidAmount ?? null;
+            proposalDate   = e.proposalDate  ?? null;
+          } else if (ext === "pdf") {
+            const e = await extractProposalFromPdf(buffer);
+            customerName   = e.customerName  ?? null;
+            projectName    = e.projectName   ?? null;
+            estimatedValue = e.baseBidAmount ?? null;
+            proposalDate   = e.proposalDate  ?? null;
+          } else {
+            const e = await extractEstimateFromWorkbook(buffer);
+            estimatedValue = e.base_bid_amount ?? e.final_total_amount ?? null;
+          }
+
+          extracted = true;
+          break; // stop at first successful extraction
+        } catch {
+          // This candidate failed — try the next one.
+          continue;
+        }
+      }
+
+      if (!extracted) {
+        results.push({
+          pursuit_id: pursuit.id,
+          pursuit_name: pursuit.project_name,
+          status: "no_file",
+          sharepoint_folder: folderPath,
+        });
+        continue;
       }
 
       const pursuitPatch: Record<string, unknown> = {};
@@ -225,7 +242,6 @@ export async function POST(request: Request) {
       const quotePatch: Record<string, unknown> = {};
       if (customerName) quotePatch.company_name = customerName;
       if (projectName) {
-        quotePatch.project_name = projectName;
         quotePatch.project_description = projectName;
       }
       if (estimatedValue !== null) quotePatch.estimated_value = estimatedValue;
