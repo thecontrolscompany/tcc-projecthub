@@ -51,6 +51,12 @@ type PursuitStub = {
   sharepoint_item_id: string | null;
 };
 
+type CandidateFile = {
+  id: string;
+  name: string;
+  sourceFolder: string;
+};
+
 function isValidCustomerName(name: string | null | undefined): boolean {
   if (!name) return false;
   const trimmed = name.trim();
@@ -102,6 +108,50 @@ function chooseArchiveFile(
     }) ??
     null
   );
+}
+
+function normalizeMatchText(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/\.[^.]+$/, "")
+    .replace(/\b(hvac|controls|control|installation|proposal|submitted|quote|working|estimate)\b/g, " ")
+    .replace(/[^\w\s]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function scoreCandidateFile(candidate: CandidateFile, pursuitName: string, folderPath: string | null) {
+  const fileNorm = normalizeMatchText(candidate.name);
+  const pursuitNorm = normalizeMatchText(pursuitName);
+  const folderNorm = normalizeMatchText((folderPath ?? "").replace(/^Bids[\\/]/i, ""));
+
+  const fileTokens = new Set(fileNorm.split(" ").filter((token) => token.length > 2));
+  const pursuitTokens = new Set(pursuitNorm.split(" ").filter((token) => token.length > 2));
+  const overlap = Array.from(pursuitTokens).filter((token) => fileTokens.has(token)).length;
+  const extraTokens = Array.from(fileTokens).filter((token) => !pursuitTokens.has(token)).length;
+
+  let score = 0;
+  if (candidate.sourceFolder === "03 Estimate Working") score += 50;
+  else if (candidate.sourceFolder === "04 Submitted Quote") score += 30;
+  else if (candidate.sourceFolder === ARCHIVE_SUBFOLDER) score += 10;
+
+  const lowerName = candidate.name.toLowerCase();
+  if (lowerName.endsWith(".docx")) score += 25;
+  else if (lowerName.endsWith(".doc")) score += 20;
+  else if (lowerName.endsWith(".pdf")) score += 15;
+  else score += 5;
+
+  if (/\bproposal\b/i.test(candidate.name)) score += 25;
+  if (pursuitNorm && fileNorm === pursuitNorm) score += 120;
+  else if (pursuitNorm && fileNorm.includes(pursuitNorm)) score += 90;
+  else if (folderNorm && fileNorm.includes(folderNorm)) score += 80;
+
+  score += overlap * 20;
+  score -= extraTokens * 5;
+
+  if (/renovation/i.test(candidate.name) && !/renovation/i.test(pursuitName)) score -= 40;
+
+  return score;
 }
 
 export async function POST(request: Request) {
@@ -183,14 +233,16 @@ export async function POST(request: Request) {
         folderChildren.find((item) => item.isFolder && item.name.toLowerCase().includes("archive"));
 
       const EXTRACTABLE_EXTS = ["docx", "doc", "pdf", "xlsm", "xlsx"];
-      const hasExtractable = (files: typeof archiveFiles) =>
+      const hasExtractable = (files: CandidateFile[]) =>
         files.some((f) => EXTRACTABLE_EXTS.includes(f.name.toLowerCase().split(".").pop() ?? ""));
 
-      let archiveFiles: typeof folderChildren = [];
+      let archiveFiles: CandidateFile[] = [];
 
       if (archiveFolder) {
         const archiveChildren = await listSharePointChildren(providerToken, driveId, archiveFolder.id);
-        archiveFiles = archiveChildren.filter((item) => !item.isFolder);
+        archiveFiles = archiveChildren
+          .filter((item) => !item.isFolder)
+          .map((item) => ({ id: item.id, name: item.name, sourceFolder: ARCHIVE_SUBFOLDER }));
 
         // Files may be nested inside subfolders (e.g. "99 Archive - Legacy Files/Adams
         // Homes/proposal.docx" or two levels deep for multi-project folders like USA).
@@ -199,13 +251,25 @@ export async function POST(request: Request) {
           const level1Folders = archiveChildren.filter((item) => item.isFolder);
           for (const sub of level1Folders) {
             const subChildren = await listSharePointChildren(providerToken, driveId, sub.id);
-            archiveFiles = archiveFiles.concat(subChildren.filter((item) => !item.isFolder));
+            archiveFiles = archiveFiles.concat(
+              subChildren
+                .filter((item) => !item.isFolder)
+                .map((item) => ({ id: item.id, name: item.name, sourceFolder: `${ARCHIVE_SUBFOLDER}/${sub.name}` }))
+            );
 
             if (!hasExtractable(archiveFiles)) {
               const level2Folders = subChildren.filter((item) => item.isFolder);
               for (const sub2 of level2Folders) {
                 const sub2Children = await listSharePointChildren(providerToken, driveId, sub2.id);
-                archiveFiles = archiveFiles.concat(sub2Children.filter((item) => !item.isFolder));
+                archiveFiles = archiveFiles.concat(
+                  sub2Children
+                    .filter((item) => !item.isFolder)
+                    .map((item) => ({
+                      id: item.id,
+                      name: item.name,
+                      sourceFolder: `${ARCHIVE_SUBFOLDER}/${sub.name}/${sub2.name}`,
+                    }))
+                );
               }
             }
           }
@@ -223,7 +287,11 @@ export async function POST(request: Request) {
           );
           if (subFolder) {
             const subChildren = await listSharePointChildren(providerToken, driveId, subFolder.id);
-            archiveFiles = archiveFiles.concat(subChildren.filter((item) => !item.isFolder));
+            archiveFiles = archiveFiles.concat(
+              subChildren
+                .filter((item) => !item.isFolder)
+                .map((item) => ({ id: item.id, name: item.name, sourceFolder: subName }))
+            );
           }
         }
       }
@@ -252,7 +320,13 @@ export async function POST(request: Request) {
         ...archiveFiles.filter((f) => f.name.toLowerCase().endsWith(".doc")),
         ...archiveFiles.filter((f) => f.name.toLowerCase().endsWith(".pdf")),
         ...archiveFiles.filter((f) => f.name.toLowerCase().endsWith(".xlsm") || f.name.toLowerCase().endsWith(".xlsx")),
-      ].filter((f) => !SKIP_NAMES.some((s) => f.name.toLowerCase().includes(s)));
+      ]
+        .filter((f) => !SKIP_NAMES.some((s) => f.name.toLowerCase().includes(s)))
+        .sort(
+          (left, right) =>
+            scoreCandidateFile(right, pursuit.project_name ?? "", folderPath) -
+            scoreCandidateFile(left, pursuit.project_name ?? "", folderPath)
+        );
 
       for (const candidate of candidates) {
         try {
