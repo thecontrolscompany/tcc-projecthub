@@ -20,6 +20,15 @@ export interface OneDriveItem {
   folder: { childCount: number };
 }
 
+export interface OneDriveChildItem {
+  id: string;
+  name: string;
+  size: number;
+  createdDateTime: string;
+  isFolder: boolean;
+  childCount: number | null;
+}
+
 export interface SharePointItem {
   id: string;
   name: string;
@@ -47,6 +56,18 @@ interface RawGraphUser {
   userPrincipalName?: unknown;
   userType?: unknown;
   accountEnabled?: unknown;
+}
+
+interface BatchRequest {
+  id: string;
+  method: string;
+  url: string;
+}
+
+interface BatchResponse {
+  id: string;
+  status: number;
+  body: unknown;
 }
 
 /**
@@ -168,6 +189,77 @@ export async function listOneDriveFolders(providerToken: string, path: string): 
       createdDateTime: item.createdDateTime,
       folder: item.folder,
     }));
+}
+
+export async function listOneDriveChildren(
+  providerToken: string,
+  path: string
+): Promise<OneDriveChildItem[]> {
+  const encodedPath = path
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+
+  const items: OneDriveChildItem[] = [];
+  let url = `/me/drive/root:/${encodedPath}:/children?$select=id,name,size,file,folder,createdDateTime&$top=200`;
+
+  while (url) {
+    const res = await graphFetch(url.startsWith("https") ? url.replace(GRAPH_BASE, "") : url, providerToken);
+
+    if (res.status === 404) break;
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Failed to list OneDrive children for "${path}": ${res.status} ${body}`);
+    }
+
+    const data = await res.json();
+    const page: Array<{
+      id?: string;
+      name?: string;
+      size?: number;
+      createdDateTime?: string;
+      file?: unknown;
+      folder?: { childCount?: number };
+    }> = Array.isArray(data?.value) ? data.value : [];
+
+    for (const item of page) {
+      if (!item.id || !item.name) continue;
+      items.push({
+        id: item.id,
+        name: item.name,
+        size: item.size ?? 0,
+        createdDateTime: item.createdDateTime ?? "",
+        isFolder: Boolean(item.folder),
+        childCount: item.folder?.childCount ?? null,
+      });
+    }
+
+    url = typeof data?.["@odata.nextLink"] === "string" ? data["@odata.nextLink"] : "";
+  }
+
+  return items;
+}
+
+export async function graphBatch(
+  providerToken: string,
+  requests: BatchRequest[]
+): Promise<BatchResponse[]> {
+  const res = await fetch(`${GRAPH_BASE}/$batch`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${providerToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ requests }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Graph batch request failed: ${res.status} ${body}`);
+  }
+
+  const data = await res.json();
+  return (data?.responses ?? []) as BatchResponse[];
 }
 
 export async function listSharePointFolders(
