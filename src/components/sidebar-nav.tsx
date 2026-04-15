@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 
 export type NavRole = "admin" | "pm" | "lead" | "installer" | "ops_manager" | "customer";
@@ -13,23 +12,6 @@ type NavItem = {
   roles: NavRole[];
   icon: (props: IconProps) => React.ReactNode;
 };
-
-type FeedbackNotificationSummary = {
-  customer_unreviewed: number;
-  team_new: number;
-  total: number;
-};
-
-function isFeedbackNotificationSummary(value: unknown): value is FeedbackNotificationSummary {
-  if (!value || typeof value !== "object") return false;
-
-  const record = value as Record<string, unknown>;
-  return (
-    typeof record.customer_unreviewed === "number" &&
-    typeof record.team_new === "number" &&
-    typeof record.total === "number"
-  );
-}
 
 function GridIcon({ className = "h-5 w-5" }: IconProps) {
   return (
@@ -170,12 +152,12 @@ export const NAV_LINKS: NavItem[] = [
   { label: "Billing", href: "/admin", roles: ["ops_manager"], icon: DollarIcon },
   { label: "Ops View", href: "/admin/ops", roles: ["admin"], icon: GridIcon },
   { label: "Contacts", href: "/admin/contacts", roles: ["admin"], icon: UserIcon },
-  { label: "Operations Hub", href: "/quotes", roles: ["admin", "ops_manager", "customer"], icon: DocumentIcon },
+  { label: "Opportunity Hub", href: "/quotes", roles: ["admin", "ops_manager", "customer"], icon: DocumentIcon },
   { label: "Feedback", href: "/feedback", roles: ["admin", "pm", "lead", "ops_manager"], icon: MessageIcon },
   { label: "Estimating", href: "/estimating", roles: ["admin", "ops_manager"], icon: CalculatorIcon },
   { label: "Projects", href: "/projects", roles: ["pm", "lead"], icon: FolderIcon },
   { label: "PM Portal", href: "/pm", roles: ["pm", "lead", "ops_manager"], icon: ClipboardIcon },
-  { label: "TCC Time", href: "/time/clock", roles: ["admin", "pm", "lead", "ops_manager"], icon: ClockIcon },
+  { label: "TCC Time", href: "/time", roles: ["admin", "pm", "lead", "ops_manager"], icon: ClockIcon },
   { label: "Time Tracking", href: "/pm/time", roles: ["pm", "lead", "ops_manager"], icon: ClockIcon },
   { label: "Installer", href: "/installer", roles: ["installer"], icon: WrenchIcon },
   { label: "Analytics", href: "/admin/analytics", roles: ["admin", "ops_manager"], icon: ChartIcon },
@@ -200,7 +182,7 @@ const PAGE_TITLE_OVERRIDES: Record<string, string> = {
   "/pm": "PM Portal",
   "/pm/time": "Time Tracking",
   "/projects": "Projects",
-  "/quotes": "Operations Hub",
+  "/quotes": "Opportunity Hub",
   "/time": "TCC Time",
   "/time/clock": "Time Clock",
   "/time/employees": "Time Employees",
@@ -254,54 +236,6 @@ export function SidebarNav({
   const effectiveRole = role as NavRole;
   const links = NAV_LINKS.filter((link) => link.roles.includes(effectiveRole));
   const initials = getUserInitials(userEmail);
-  const [feedbackNotifications, setFeedbackNotifications] = useState<FeedbackNotificationSummary | null>(null);
-
-  useEffect(() => {
-    if (!["admin", "ops_manager"].includes(effectiveRole)) {
-      setFeedbackNotifications(null);
-      return;
-    }
-
-    let active = true;
-
-    async function loadNotifications() {
-      try {
-        const response = await fetch("/api/feedback/notifications", {
-          cache: "no-store",
-          credentials: "include",
-        });
-
-        const contentType = response.headers.get("content-type") ?? "";
-        const bodyText = await response.text();
-        const json =
-          contentType.includes("application/json") && bodyText
-            ? (JSON.parse(bodyText) as FeedbackNotificationSummary | { error?: string })
-            : null;
-
-        if (!active || !response.ok || !isFeedbackNotificationSummary(json)) {
-          setFeedbackNotifications(null);
-          return;
-        }
-
-        setFeedbackNotifications(json);
-      } catch {
-        if (active) {
-          setFeedbackNotifications(null);
-        }
-      }
-    }
-
-    void loadNotifications();
-    const interval = window.setInterval(() => void loadNotifications(), 60000);
-    const handleFocus = () => void loadNotifications();
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      active = false;
-      window.clearInterval(interval);
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [effectiveRole]);
 
   return (
     <aside
@@ -339,7 +273,6 @@ export function SidebarNav({
           {links.map((link) => {
             const isActive = isActivePath(pathname, link.href);
             const Icon = link.icon;
-            const badgeCount = link.href === "/feedback" ? feedbackNotifications?.total ?? 0 : 0;
 
             return (
               <Link
@@ -354,24 +287,8 @@ export function SidebarNav({
                     : "text-text-secondary hover:bg-surface-overlay hover:text-text-primary",
                 ].join(" ")}
               >
-                <span className="relative shrink-0">
-                  <Icon className="h-5 w-5" />
-                  {collapsed && badgeCount > 0 ? (
-                    <span className="absolute -right-1.5 -top-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-status-danger px-1 text-[10px] font-semibold text-white">
-                      {badgeCount > 9 ? "9+" : badgeCount}
-                    </span>
-                  ) : null}
-                </span>
-                {!collapsed && (
-                  <>
-                    <span className="truncate">{link.label}</span>
-                    {badgeCount > 0 ? (
-                      <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-status-danger px-1.5 py-0.5 text-[11px] font-semibold text-white">
-                        {badgeCount > 99 ? "99+" : badgeCount}
-                      </span>
-                    ) : null}
-                  </>
-                )}
+                <Icon className="h-5 w-5 shrink-0" />
+                {!collapsed && <span className="truncate">{link.label}</span>}
               </Link>
             );
           })}
