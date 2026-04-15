@@ -233,7 +233,6 @@ export async function POST(request: Request) {
       if (folderPath && !pursuit.sharepoint_folder) pursuitPatch.sharepoint_folder = folderPath;
       if (folderItemId && !pursuit.sharepoint_item_id) pursuitPatch.sharepoint_item_id = folderItemId;
       if (customerName) pursuitPatch.owner_name = customerName;
-      if (projectName) pursuitPatch.project_name = projectName;
 
       if (Object.keys(pursuitPatch).length > 0) {
         await supabase.from("pursuits").update(pursuitPatch).eq("id", pursuit.id);
