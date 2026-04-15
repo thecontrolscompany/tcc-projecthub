@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       .insert({
         pursuit_id: targetPursuitId,
         company_name: importRow.company_name ?? "Unknown",
-        contact_name: importRow.contact_name ?? null,
+        contact_name: importRow.contact_name ?? "",
         project_description: importRow.legacy_opportunity_name ?? importRow.company_name ?? "Legacy opportunity",
         site_address: importRow.project_location ?? null,
         estimated_value: importRow.amount ?? null,
@@ -146,7 +146,7 @@ export async function POST(request: Request) {
     .insert({
       pursuit_id: pursuitId,
       company_name: importRow.company_name ?? "Unknown",
-      contact_name: importRow.contact_name ?? null,
+      contact_name: importRow.contact_name ?? "",
       project_description: importRow.legacy_opportunity_name ?? importRow.company_name ?? "Legacy opportunity",
       site_address: importRow.project_location ?? null,
       estimated_value: importRow.amount ?? null,
