@@ -260,7 +260,7 @@ export default function CustomerPage() {
               userRole === "admin" ? "Admin"
               : userRole === "ops_manager" ? "Operations"
               : userRole === "installer" ? "Installer"
-              : "PM Portal"
+              : "ProjectHub"
             }
           </a>
         </div>

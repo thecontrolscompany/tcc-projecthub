@@ -10,9 +10,10 @@ import {
   getOpportunityLabel,
   getOpportunityLocation,
   getOpportunityProjectName,
+  getOpportunityStageBadge,
+  getOpportunityStageLabel,
   isOpportunityLinked,
-  OPPORTUNITY_STAGE_BADGES,
-  OPPORTUNITY_STAGE_LABELS,
+  isOpportunityClosed,
 } from "@/lib/opportunities";
 import type { OpportunityStage, QuoteRequest } from "@/types/database";
 import { safeJson } from "@/lib/utils/safe-json";
@@ -50,12 +51,15 @@ const inputClassName =
 const textareaClassName =
   "w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none";
 
-const STAGE_FILTERS: Array<{ value: "all" | OpportunityStage; label: string }> = [
+type StageFilterValue = "all" | OpportunityStage | "archived_won";
+
+const STAGE_FILTERS: Array<{ value: StageFilterValue; label: string }> = [
   { value: "all", label: "All" },
   { value: "new", label: "New" },
   { value: "under_review", label: "Under review" },
   { value: "submitted", label: "Submitted" },
   { value: "won", label: "Won" },
+  { value: "archived_won", label: "Archived Won" },
   { value: "lost", label: "Lost" },
 ];
 
@@ -160,14 +164,14 @@ function PublicQuoteForm() {
 
 function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
   const [search, setSearch] = useState("");
-  const [stageFilter, setStageFilter] = useState<"all" | OpportunityStage>("all");
+  const [stageFilter, setStageFilter] = useState<StageFilterValue>("all");
   const [sortKey, setSortKey] = useState<SortKey>("updated");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const metrics = useMemo(() => {
     const total = initialQuotes.length;
-    const active = initialQuotes.filter((quote) => !["won", "lost"].includes(deriveOpportunityStage(quote))).length;
-    const won = initialQuotes.filter((quote) => deriveOpportunityStage(quote) === "won").length;
+    const active = initialQuotes.filter((quote) => !isOpportunityClosed(quote)).length;
+    const won = initialQuotes.filter((quote) => quote.status === "won").length;
     const linked = initialQuotes.filter((quote) => isOpportunityLinked(quote)).length;
     return { total, active, won, linked };
   }, [initialQuotes]);
@@ -187,7 +191,10 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
     return initialQuotes
       .filter((quote) => {
         const stage = deriveOpportunityStage(quote);
-        const matchesStage = stageFilter === "all" || stage === stageFilter;
+        const stageLabel = getOpportunityStageLabel(quote);
+        const matchesStage =
+          stageFilter === "all" ||
+          (stageFilter === "archived_won" ? stageLabel === "Archived Won" : stage === stageFilter);
         const haystack = [
           quote.company_name,
           quote.contact_name,
@@ -207,6 +214,8 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
       .sort((left, right) => {
         const leftStage = deriveOpportunityStage(left);
         const rightStage = deriveOpportunityStage(right);
+        const leftStageLabel = getOpportunityStageLabel(left);
+        const rightStageLabel = getOpportunityStageLabel(right);
         const leftOpportunity = getOpportunityLabel(left);
         const rightOpportunity = getOpportunityLabel(right);
         const leftCustomer = left.company_name ?? "";
@@ -221,7 +230,7 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
         let comparison = 0;
         if (sortKey === "opportunity") comparison = leftOpportunity.localeCompare(rightOpportunity);
         else if (sortKey === "customer") comparison = leftCustomer.localeCompare(rightCustomer);
-        else if (sortKey === "stage") comparison = OPPORTUNITY_STAGE_LABELS[leftStage].localeCompare(OPPORTUNITY_STAGE_LABELS[rightStage]);
+        else if (sortKey === "stage") comparison = leftStageLabel.localeCompare(rightStageLabel);
         else if (sortKey === "value") comparison = leftValue - rightValue;
         else if (sortKey === "project_link") comparison = leftProjectLink.localeCompare(rightProjectLink);
         else if (sortKey === "updated") comparison = leftUpdated.localeCompare(rightUpdated);
@@ -297,7 +306,7 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
 
           <div>
             <label className="mb-1 block text-sm font-medium text-text-secondary">Stage</label>
-            <select value={stageFilter} onChange={(event) => setStageFilter(event.target.value as "all" | OpportunityStage)} className={inputClassName}>
+            <select value={stageFilter} onChange={(event) => setStageFilter(event.target.value as StageFilterValue)} className={inputClassName}>
               {STAGE_FILTERS.map((filter) => (
                 <option key={filter.value} value={filter.value}>
                   {filter.label}
@@ -324,7 +333,6 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
             </thead>
             <tbody>
               {filteredQuotes.map((quote) => {
-                const stage = deriveOpportunityStage(quote);
                 const linkedProjectName = getOpportunityProjectName(quote);
 
                 return (
@@ -346,8 +354,8 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
                       </div>
                     </td>
                     <td className="px-4 py-3 align-top">
-                      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${OPPORTUNITY_STAGE_BADGES[stage]}`}>
-                        {OPPORTUNITY_STAGE_LABELS[stage]}
+                      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getOpportunityStageBadge(quote)}`}>
+                        {getOpportunityStageLabel(quote)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right align-top text-text-primary">

@@ -614,7 +614,7 @@ export function Eglin1416ReportBuilder({
               href="/pm"
               className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-base hover:text-text-primary"
             >
-              Back to PM Portal
+              Back to ProjectHub
             </a>
             <button
               type="button"

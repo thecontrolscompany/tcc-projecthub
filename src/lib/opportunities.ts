@@ -38,6 +38,24 @@ export function deriveOpportunityStage(quote: Pick<QuoteRequest, "status" | "sta
   return quote.stage ?? STATUS_TO_STAGE[quote.status];
 }
 
+export function isArchivedWon(quote: Pick<QuoteRequest, "status" | "stage">) {
+  return quote.status === "won" && deriveOpportunityStage(quote) === "archived";
+}
+
+export function getOpportunityStageLabel(quote: Pick<QuoteRequest, "status" | "stage">) {
+  if (isArchivedWon(quote)) return "Archived Won";
+  return OPPORTUNITY_STAGE_LABELS[deriveOpportunityStage(quote)];
+}
+
+export function getOpportunityStageBadge(quote: Pick<QuoteRequest, "status" | "stage">) {
+  if (isArchivedWon(quote)) return "bg-status-success/10 text-text-secondary";
+  return OPPORTUNITY_STAGE_BADGES[deriveOpportunityStage(quote)];
+}
+
+export function isOpportunityClosed(quote: Pick<QuoteRequest, "status" | "stage">) {
+  return quote.status === "won" || quote.status === "lost";
+}
+
 export function getOpportunityLabel(quote: QuoteRequest) {
   return quote.project_name?.trim() || quote.project_description?.trim() || quote.company_name;
 }
