@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { TimeSubnav } from "@/components/time/time-subnav";
 import { format, startOfMonth } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { safeJson } from "@/lib/utils/safe-json";
@@ -130,6 +131,7 @@ export default function TimeExportPage() {
 
   return (
     <div className="space-y-6">
+      <TimeSubnav />
       <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Project Time Export</p>
         <h1 className="mt-2 font-heading text-3xl font-bold text-text-primary">Export QuickBooks Time entries</h1>
