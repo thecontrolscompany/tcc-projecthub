@@ -417,8 +417,8 @@ export type QuoteRequest = {
   sharepoint_item_id?: string | null;
   submitted_at?: string | null;
   linked_project_id?: string | null;
-  project?: { name: string; job_number: string | null } | null;
-  linked_project?: { name: string; job_number: string | null } | null;
+  project?: { name: string; job_number: string | null; customer?: { name: string | null } | null } | null;
+  linked_project?: { name: string; job_number: string | null; customer?: { name: string | null } | null } | null;
   pursuit?: PursuitSummary | null;
 };
 

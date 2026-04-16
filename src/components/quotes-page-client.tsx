@@ -7,6 +7,7 @@ import { OpportunityHubSubnav } from "@/components/opportunity-hub-subnav";
 import {
   deriveOpportunityStage,
   getOpportunityAmount,
+  getOpportunityCustomer,
   getOpportunityLabel,
   getOpportunityLocation,
   getOpportunityProjectName,
@@ -218,8 +219,8 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
         const rightStageLabel = getOpportunityStageLabel(right);
         const leftOpportunity = getOpportunityLabel(left);
         const rightOpportunity = getOpportunityLabel(right);
-        const leftCustomer = left.company_name ?? "";
-        const rightCustomer = right.company_name ?? "";
+        const leftCustomer = getOpportunityCustomer(left) ?? "";
+        const rightCustomer = getOpportunityCustomer(right) ?? "";
         const leftValue = getOpportunityAmount(left) ?? -1;
         const rightValue = getOpportunityAmount(right) ?? -1;
         const leftProjectLink = getOpportunityProjectName(left) ?? "";
@@ -348,7 +349,7 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
                     </td>
                     <td className="px-4 py-3 align-top">
                       <div className="space-y-1">
-                        <p className="text-text-primary">{quote.company_name}</p>
+                        <p className="text-text-primary">{getOpportunityCustomer(quote) ?? quote.company_name}</p>
                         <p className="text-xs text-text-secondary">{quote.contact_name}</p>
                         <p className="text-xs text-text-tertiary">{quote.contact_email}</p>
                       </div>

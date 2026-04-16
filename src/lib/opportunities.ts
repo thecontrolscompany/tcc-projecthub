@@ -64,6 +64,26 @@ export function getOpportunityLocation(quote: QuoteRequest) {
   return quote.project_location?.trim() || quote.site_address?.trim() || null;
 }
 
+export function canonicalizeOpportunityCustomer(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+  const normalized = trimmed.toLowerCase();
+  if (normalized.includes("johnson") || normalized === "jci") return "Johnson Controls";
+  if (normalized.includes("engineered cooling") || normalized === "ecs") return "Engineered Cooling Services";
+  if (normalized.includes("trane")) return "Trane";
+  if (normalized.includes("siemens")) return "Siemens";
+  return trimmed;
+}
+
+export function getOpportunityCustomer(quote: QuoteRequest) {
+  const projectCustomer = quote.linked_project?.customer?.name ?? quote.project?.customer?.name ?? null;
+  return (
+    canonicalizeOpportunityCustomer(projectCustomer) ??
+    canonicalizeOpportunityCustomer(quote.company_name) ??
+    quote.company_name
+  );
+}
+
 export function getOpportunityAmount(quote: QuoteRequest) {
   return quote.final_price_amount ?? quote.base_bid_amount ?? quote.opportunity_value ?? quote.estimated_value ?? null;
 }
