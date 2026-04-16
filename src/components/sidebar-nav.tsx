@@ -36,20 +36,6 @@ function DocumentIcon({ className = "h-5 w-5" }: IconProps) {
   );
 }
 
-function CalculatorIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
-      <rect x="5" y="2.5" width="14" height="19" rx="2" />
-      <path d="M8 7h8" />
-      <path d="M8 11h2" />
-      <path d="M14 11h2" />
-      <path d="M8 15h2" />
-      <path d="M14 15h2" />
-      <path d="M8 19h8" />
-    </svg>
-  );
-}
-
 function DollarIcon({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
@@ -86,21 +72,6 @@ function ClipboardIcon({ className = "h-5 w-5" }: IconProps) {
       <path d="M9 4.5h6" />
       <path d="M9 10h6" />
       <path d="M9 14h6" />
-    </svg>
-  );
-}
-
-function BuildingIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
-      <path d="M4 21V5.5A1.5 1.5 0 0 1 5.5 4h8A1.5 1.5 0 0 1 15 5.5V21" />
-      <path d="M15 21V9.5A1.5 1.5 0 0 1 16.5 8H20v13" />
-      <path d="M8 8h3" />
-      <path d="M8 12h3" />
-      <path d="M8 16h3" />
-      <path d="M18 12h.01" />
-      <path d="M18 16h.01" />
-      <path d="M3 21h18" />
     </svg>
   );
 }
@@ -209,6 +180,7 @@ const PAGE_TITLE_OVERRIDES: Record<string, string> = {
   "/quotes": "OpportunityHub",
   "/time/clock": "Time Clock",
   "/time/employees": "Time Employees",
+  "/time/export": "Reports",
   "/time/projects": "Time Projects",
 };
 

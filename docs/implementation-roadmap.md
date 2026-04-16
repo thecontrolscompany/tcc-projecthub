@@ -387,6 +387,17 @@ This is the largest phase. Approach it incrementally.
 - [ ] Add Power BI embed token generation API route (service principal auth)
 - [ ] Add `POWERBI_CLIENT_SECRET` to production env vars on Vercel
 
+### Time Reporting (needs significant investment)
+Current state: ops_manager has a basic export to Excel. This is not enough.
+- [ ] Labor hours by project, employee, and date range — in-app (no Excel required)
+- [ ] Weekly/monthly labor cost summary per project (hours × burden rate)
+- [ ] Overtime and after-hours breakdown per employee
+- [ ] Time approval audit trail — who approved what and when
+- [ ] Utilization report — billable vs non-billable hours by employee
+- [ ] Project labor burn vs budget (actual vs estimated hours)
+- [ ] Exportable PDF time reports for owner/GC billing submittals
+- [ ] Scheduled email delivery of weekly labor summaries to ops manager
+
 ---
 
 ## Phase 7 - Integrations (QuickBooks, QBO Time)
