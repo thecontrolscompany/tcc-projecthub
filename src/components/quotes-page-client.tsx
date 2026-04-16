@@ -31,6 +31,9 @@ type QuoteFormState = {
   estimated_value: string;
 };
 
+type SortKey = "opportunity" | "customer" | "stage" | "value" | "project_link" | "updated";
+type SortDir = "asc" | "desc";
+
 const EMPTY_FORM: QuoteFormState = {
   company_name: "",
   contact_name: "",
@@ -158,6 +161,8 @@ function PublicQuoteForm() {
 function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<"all" | OpportunityStage>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("updated");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const metrics = useMemo(() => {
     const total = initialQuotes.length;
@@ -167,29 +172,88 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
     return { total, active, won, linked };
   }, [initialQuotes]);
 
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir(key === "updated" ? "desc" : "asc");
+    }
+  }
+
   const filteredQuotes = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
 
-    return initialQuotes.filter((quote) => {
-      const stage = deriveOpportunityStage(quote);
-      const matchesStage = stageFilter === "all" || stage === stageFilter;
-      const haystack = [
-        quote.company_name,
-        quote.contact_name,
-        quote.contact_email,
-        quote.project_description,
-        quote.project_name,
-        getOpportunityLocation(quote),
-        getOpportunityProjectName(quote),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+    return initialQuotes
+      .filter((quote) => {
+        const stage = deriveOpportunityStage(quote);
+        const matchesStage = stageFilter === "all" || stage === stageFilter;
+        const haystack = [
+          quote.company_name,
+          quote.contact_name,
+          quote.contact_email,
+          quote.project_description,
+          quote.project_name,
+          getOpportunityLocation(quote),
+          getOpportunityProjectName(quote),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
 
-      const matchesSearch = !normalizedSearch || haystack.includes(normalizedSearch);
-      return matchesStage && matchesSearch;
-    });
-  }, [initialQuotes, search, stageFilter]);
+        const matchesSearch = !normalizedSearch || haystack.includes(normalizedSearch);
+        return matchesStage && matchesSearch;
+      })
+      .sort((left, right) => {
+        const leftStage = deriveOpportunityStage(left);
+        const rightStage = deriveOpportunityStage(right);
+        const leftOpportunity = getOpportunityLabel(left);
+        const rightOpportunity = getOpportunityLabel(right);
+        const leftCustomer = left.company_name ?? "";
+        const rightCustomer = right.company_name ?? "";
+        const leftValue = getOpportunityAmount(left) ?? -1;
+        const rightValue = getOpportunityAmount(right) ?? -1;
+        const leftProjectLink = getOpportunityProjectName(left) ?? "";
+        const rightProjectLink = getOpportunityProjectName(right) ?? "";
+        const leftUpdated = left.updated_at ?? "";
+        const rightUpdated = right.updated_at ?? "";
+
+        let comparison = 0;
+        if (sortKey === "opportunity") comparison = leftOpportunity.localeCompare(rightOpportunity);
+        else if (sortKey === "customer") comparison = leftCustomer.localeCompare(rightCustomer);
+        else if (sortKey === "stage") comparison = OPPORTUNITY_STAGE_LABELS[leftStage].localeCompare(OPPORTUNITY_STAGE_LABELS[rightStage]);
+        else if (sortKey === "value") comparison = leftValue - rightValue;
+        else if (sortKey === "project_link") comparison = leftProjectLink.localeCompare(rightProjectLink);
+        else if (sortKey === "updated") comparison = leftUpdated.localeCompare(rightUpdated);
+
+        return sortDir === "asc" ? comparison : -comparison;
+      });
+  }, [initialQuotes, search, sortDir, sortKey, stageFilter]);
+
+  function SortTh({
+    label,
+    field,
+    align = "left",
+  }: {
+    label: string;
+    field: SortKey;
+    align?: "left" | "right";
+  }) {
+    const active = sortKey === field;
+    const alignClass = align === "right" ? "text-right" : "text-left";
+    return (
+      <th className={`px-4 py-3 ${alignClass} text-xs font-semibold uppercase tracking-wide text-text-secondary`}>
+        <button
+          type="button"
+          onClick={() => toggleSort(field)}
+          className="inline-flex items-center gap-1 hover:text-text-primary"
+        >
+          {label}
+          <span>{active ? (sortDir === "asc" ? "↑" : "↓") : "↕"}</span>
+        </button>
+      </th>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -249,12 +313,12 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
           <table className="w-full min-w-[980px] text-sm">
             <thead>
               <tr className="border-b border-border-default bg-surface-overlay/70">
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Opportunity</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Customer</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Stage</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Value</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Project Link</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Updated</th>
+                <SortTh label="Opportunity" field="opportunity" />
+                <SortTh label="Customer" field="customer" />
+                <SortTh label="Stage" field="stage" />
+                <SortTh label="Value" field="value" align="right" />
+                <SortTh label="Project Link" field="project_link" />
+                <SortTh label="Updated" field="updated" />
                 <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actions</th>
               </tr>
             </thead>
