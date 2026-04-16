@@ -27,7 +27,7 @@ export default async function TimeReconciliationRoute({
   } = await supabase.auth.getUser();
   const resolvedProfile = user ? await resolveUserRole(user) : null;
 
-  if (identity.role !== "admin") {
+  if (identity.role !== "admin" && identity.role !== "ops_manager") {
     redirect(roleHome(identity.role));
   }
 
