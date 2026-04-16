@@ -93,7 +93,7 @@ export default async function TimeHubPage() {
   return (
     <div className="space-y-6">
       <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Time Hub</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">TimeHub</p>
         <h1 className="mt-2 font-heading text-3xl font-bold text-text-primary">Enter and review time</h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-text-secondary">
           Log hours against your assigned projects and review weekly approvals.

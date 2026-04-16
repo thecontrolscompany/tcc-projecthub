@@ -135,7 +135,7 @@ export function SharePointReconcileClient() {
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">OpportunityHub</p>
           <h1 className="mt-1 text-2xl font-bold text-text-primary">SharePoint Reconciliation</h1>
           <p className="mt-2 text-sm text-text-secondary">
             Link orphan pursuits to the right SharePoint folders and spot folders that still need a pursuit.

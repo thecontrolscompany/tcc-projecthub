@@ -202,10 +202,10 @@ export function LegacyOpportunityImportWorkspace() {
       <OpportunityHubSubnav />
 
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">OpportunityHub</p>
         <h1 className="mt-1 text-2xl font-bold text-text-primary">Legacy Import Workspace</h1>
         <p className="mt-2 max-w-3xl text-sm text-text-secondary">
-          Start with the real proposal package first. Upload the proposal `.docx`, proposal `.pdf`, and estimate `.xlsm`, let Opportunity Hub scrape the key bid data, and move straight into review. CSV import is still available below for bulk backfills.
+          Start with the real proposal package first. Upload the proposal `.docx`, proposal `.pdf`, and estimate `.xlsm`, let OpportunityHub scrape the key bid data, and move straight into review. CSV import is still available below for bulk backfills.
         </p>
       </div>
 

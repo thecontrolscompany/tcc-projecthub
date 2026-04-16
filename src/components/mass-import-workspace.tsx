@@ -177,7 +177,7 @@ export function MassImportWorkspace() {
       <OpportunityHubSubnav />
 
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">OpportunityHub</p>
         <h1 className="mt-1 text-2xl font-bold text-text-primary">Mass Import</h1>
         <p className="mt-2 max-w-3xl text-sm text-text-secondary">
           Scan the OneDrive archive to preview all historical bid opportunities, review and edit the manifest, then commit to create pursuit records in bulk.

@@ -117,7 +117,7 @@ export function OpportunityImportReviewWorkspace() {
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">OpportunityHub</p>
           <h1 className="mt-1 text-2xl font-bold text-text-primary">Import Review Queue</h1>
           <p className="mt-2 max-w-3xl text-sm text-text-secondary">
             Review staged legacy opportunities, upload the proposal and estimate package, inspect extracted data, and decide how each row should move forward.
@@ -521,7 +521,7 @@ function LegacyDocumentPackageCard({ row, onUploaded }: { row: ReviewRow; onUplo
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Legacy document package</p>
           <p className="mt-2 text-sm text-text-secondary">
-            Upload the proposal `.docx`, proposal `.pdf`, and estimate `.xlsm`. The files are stored in the bid folder structure from the roadmap, and the extracted pricing/scope/summary data is written back into Opportunity Hub.
+            Upload the proposal `.docx`, proposal `.pdf`, and estimate `.xlsm`. The files are stored in the bid folder structure from the roadmap, and the extracted pricing/scope/summary data is written back into OpportunityHub.
           </p>
         </div>
 

@@ -105,7 +105,7 @@ function PublicQuoteForm() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">OpportunityHub</p>
         <h1 className="mt-1 text-2xl font-bold text-text-primary">Request a Quote</h1>
         <p className="mt-2 text-sm text-text-secondary">
           Tell us about your upcoming project and our team will review it and follow up.
@@ -261,7 +261,7 @@ function AdminQuotesView({ initialQuotes }: { initialQuotes: QuoteRequest[] }) {
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">OpportunityHub</p>
           <h1 className="mt-1 text-2xl font-bold text-text-primary">Pipeline Workspace</h1>
           <p className="mt-2 max-w-3xl text-sm text-text-secondary">
             This is the internal bid pipeline foundation. It keeps the current quote intake live while giving us a more deliberate opportunity view ahead of pursuit matching, legacy import, and estimate handoff work.

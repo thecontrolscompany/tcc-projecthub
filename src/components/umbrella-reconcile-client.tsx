@@ -128,7 +128,7 @@ export function UmbrellaReconcileClient() {
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">OpportunityHub</p>
           <h1 className="mt-1 text-2xl font-bold text-text-primary">Umbrella Folder Reconciliation</h1>
           <p className="mt-2 text-sm text-text-secondary">
             Review shared parent folders, inspect likely child project folders, and relink each pursuit to the right

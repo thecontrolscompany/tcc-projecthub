@@ -161,7 +161,7 @@ export function PursuitAnalyticsClient() {
       <OpportunityHubSubnav />
 
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">OpportunityHub</p>
         <h1 className="mt-1 text-2xl font-bold text-text-primary">Analytics</h1>
         <p className="mt-2 text-sm text-text-secondary">
           Slice the pursuit pipeline by status and year to quantify bid volume, customer concentration, win rate, and trend.

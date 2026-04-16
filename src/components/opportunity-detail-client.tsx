@@ -72,9 +72,9 @@ export function OpportunityDetailClient({ initialQuote }: { initialQuote: QuoteR
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <Link href="/quotes" className="text-sm text-text-secondary hover:text-text-primary">
-            {"<-"} Back to Opportunity Hub
+            {"<-"} Back to OpportunityHub
           </Link>
-          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
+          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">OpportunityHub</p>
           <h1 className="mt-1 text-2xl font-bold text-text-primary">{getOpportunityLabel(quote)}</h1>
           <p className="mt-2 text-sm text-text-secondary">
             {quote.company_name} | Ref {quote.opportunity_number ?? quote.id.slice(0, 8)}
@@ -105,7 +105,7 @@ export function OpportunityDetailClient({ initialQuote }: { initialQuote: QuoteR
           <div>
             <h2 className="text-lg font-semibold text-text-primary">Opportunity Summary</h2>
             <p className="mt-1 text-sm text-text-secondary">
-              The workspace is live on the current quote record, with schema-ready slots for the richer Opportunity Hub model once migration `045` is run.
+              The workspace is live on the current quote record, with schema-ready slots for the richer OpportunityHub model once migration `045` is run.
             </p>
           </div>
 

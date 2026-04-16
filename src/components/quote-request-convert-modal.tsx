@@ -61,7 +61,7 @@ export function QuoteRequestConvertModal({
       <div className="w-full max-w-2xl rounded-2xl border border-border-default bg-surface-base shadow-2xl">
         <div className="flex items-start justify-between border-b border-border-default px-6 py-5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Opportunity Hub</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">OpportunityHub</p>
             <h3 className="mt-1 text-xl font-bold text-text-primary">Convert Opportunity to Project</h3>
           </div>
           <button onClick={onClose} className="text-text-secondary hover:text-text-primary">

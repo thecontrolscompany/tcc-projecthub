@@ -169,15 +169,14 @@ function ExternalLinkIcon({ className = "h-3.5 w-3.5" }: IconProps) {
   );
 }
 
-// Nav items in display order. Time Hub is first for field/PM roles.
+// Nav items in display order. TimeHub is first for field/PM roles.
 export const NAV_LINKS: NavItem[] = [
-  { label: "Time Hub",        href: "/time-hub",                 roles: ["pm", "lead", "installer", "ops_manager"],            icon: ClockIcon },
-  { label: "Admin",           href: "/admin",                    roles: ["admin"],                                 icon: GridIcon },
-  { label: "Operations",      href: "/ops",                      roles: ["ops_manager"],                           icon: GridIcon },
-  { label: "Ops View",        href: "/admin/ops",                roles: ["admin"],                                 icon: GridIcon },
-  { label: "Contacts",        href: "/admin/contacts",           roles: ["admin"],                                 icon: UserIcon },
-  { label: "Opportunity Hub", href: "/quotes",                   roles: ["admin", "ops_manager", "customer"],      icon: DocumentIcon },
-  { label: "Estimating",      href: "/estimating",               roles: ["admin", "ops_manager"],                  icon: CalculatorIcon },
+  { label: "TimeHub",          href: "/time-hub",                 roles: ["pm", "lead", "installer", "ops_manager"],            icon: ClockIcon },
+  { label: "Admin",            href: "/admin",                   roles: ["admin"],                                 icon: GridIcon },
+  { label: "OperationsHub",    href: "/ops",                     roles: ["ops_manager"],                           icon: GridIcon },
+  { label: "Ops View",         href: "/admin/ops",               roles: ["admin"],                                 icon: GridIcon },
+  { label: "Contacts",         href: "/admin/contacts",          roles: ["admin"],                                 icon: UserIcon },
+  { label: "OpportunityHub",   href: "/quotes",                  roles: ["admin", "ops_manager", "customer"],      icon: DocumentIcon },
   { label: "PM Portal",       href: "/pm",                       roles: ["pm", "lead", "ops_manager"],             icon: ClipboardIcon },
   { label: "Projects",        href: "/projects",                 roles: [],                                        icon: FolderIcon },
   { label: "Installer",       href: "/installer",                roles: ["installer"],                             icon: WrenchIcon },
@@ -203,10 +202,10 @@ const PAGE_TITLE_OVERRIDES: Record<string, string> = {
   "/installer": "Installer",
   "/ops": "Operations",
   "/pm": "PM Portal",
-  "/pm/time": "Time Hub",
-  "/time-hub": "Time Hub",
+  "/pm/time": "TimeHub",
+  "/time-hub": "TimeHub",
   "/projects": "Projects",
-  "/quotes": "Opportunity Hub",
+  "/quotes": "OpportunityHub",
   "/time/clock": "Time Clock",
   "/time/employees": "Time Employees",
   "/time/projects": "Time Projects",
