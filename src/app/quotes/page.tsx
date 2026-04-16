@@ -18,10 +18,17 @@ export default async function QuotesPage() {
   }
 
   if (role === "admin") {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("quote_requests")
-      .select("*, project:projects(name, job_number)")
+      .select(
+        "*, project:projects!quote_requests_project_id_fkey(name, job_number), linked_project:projects!quote_requests_linked_project_id_fkey(name, job_number)"
+      )
       .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Unable to load quote pipeline:", error.message);
+    }
+
     return <QuotesPageClient mode="admin" initialQuotes={(data as QuoteRequest[]) ?? []} />;
   }
 

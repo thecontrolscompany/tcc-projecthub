@@ -29,7 +29,9 @@ export default async function QuoteOpportunityDetailPage({
 
   const { data } = await supabase
     .from("quote_requests")
-    .select("*, project:projects(name, job_number)")
+    .select(
+      "*, project:projects!quote_requests_project_id_fkey(name, job_number), linked_project:projects!quote_requests_linked_project_id_fkey(name, job_number)"
+    )
     .eq("id", id)
     .maybeSingle();
 
