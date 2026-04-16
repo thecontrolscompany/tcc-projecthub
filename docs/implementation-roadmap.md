@@ -292,6 +292,53 @@ This is primarily operational setup so the current platform can be used against 
 
 ---
 
+## Phase 4f - Microsoft 365 Deep Integration
+**Target duration:** 3-4 weeks
+**Delivers:** ProjectHub acts as the command center for the TCC Microsoft 365 tenant — actions in the app trigger real Outlook, Teams, SharePoint, and Visio workflows rather than requiring staff to switch between apps
+
+### SharePoint
+- [ ] SharePoint is already the file backbone — deepen the integration beyond storage
+- [ ] Surface SharePoint document previews inline on pursuit/project detail pages (no download required)
+- [ ] Add "Open in SharePoint" and "Open in Word/Excel" deep links from document records
+- [ ] Sync SharePoint folder structure changes back to ProjectHub (webhook or scheduled reconcile) so folder renames and moves do not orphan records
+- [ ] Support SharePoint Shared Libraries for multi-person folder access without individual OneDrive dependencies
+- [ ] Add SharePoint version history view on document records so staff can see prior revisions without leaving ProjectHub
+
+### Outlook
+- [ ] Replace Outlook draft stubs with full send capability (Graph `sendMail`) for admin-confirmed actions
+- [ ] Build quote request acknowledgment email (auto-sent to customer on submission)
+- [ ] Build bid submission confirmation email (sent to GC/owner when proposal is marked submitted)
+- [ ] Build PM notification emails for project award, billing period open, and report due
+- [ ] Add Outlook calendar event creation for bid due dates, submission deadlines, and project milestones
+- [ ] Surface recent relevant emails on pursuit/project detail pages using Graph mail search (by project name or customer domain)
+- [ ] Add "Log email to pursuit" action so staff can attach an Outlook thread to a pursuit record without forwarding
+
+### Teams
+- [ ] Post a Teams channel message when a quote request is submitted (configurable channel per team)
+- [ ] Post a Teams notification when a bid is marked won or lost
+- [ ] Post a Teams notification when a project report is published or a billing period is closed
+- [ ] Add "Start Teams meeting" deep link from project/pursuit detail pages (pre-filled with project context)
+- [ ] Explore Teams tab embedding so ProjectHub pursuit or project views can be pinned inside a Teams channel
+- [ ] Add Teams Adaptive Card notifications for time-sensitive actions (bid deadline approaching, cert expiring)
+
+### Visio
+- [ ] Add Visio diagram support to the knowledge base wiring diagram library
+  - Store `.vsdx` files in SharePoint under `/Knowledge/Wiring Diagrams/`
+  - Render Visio previews inline using Microsoft 365 embed or export-to-SVG pipeline
+- [ ] Build a diagram tagging system so Visio files can be linked to equipment types, system categories, or project templates
+- [ ] Add "Open in Visio" deep link from diagram records for staff who need to edit
+- [ ] Support Visio diagram attachments on project and pursuit records (e.g. as-built control diagrams at project close)
+- [ ] Explore Visio Online embed via SharePoint viewer for read-only display without a Visio license
+
+### Power Automate / Graph webhooks
+- [ ] Evaluate Power Automate flows vs direct Graph API calls for each notification trigger
+- [ ] Add Graph change notification subscriptions for SharePoint folder events (file added/renamed/deleted) to keep ProjectHub in sync without polling
+- [ ] Document which flows require a Power Automate license vs what can be done with Graph API alone
+
+**Success criteria:** Staff can take a meaningful action in ProjectHub (submit a bid, award a project, publish a report) and the right people are notified in Teams or Outlook automatically, calendar events exist for key dates, SharePoint files are accessible inline, and Visio diagrams are browsable in the knowledge base — all without leaving the app or manually copying information between tools.
+
+---
+
 ## Phase 5 - Estimating Module (`hvac-estimator` Integration)
 **Target duration:** 6-10 weeks
 **Delivers:** One unified app. `hvac-estimator` can be retired.
@@ -368,9 +415,10 @@ This is the largest phase. Approach it incrementally.
 | 4c - AI-Assisted PM & Change Order Workflows | 2-3 weeks | Week 15 |
 | 4d - Employee Safety Certification Tracking | 1-2 weeks | Week 17 |
 | 4e - Internal Knowledge Base | 2-3 weeks | Week 20 |
-| 5 - Estimating Module Migration | 6-10 weeks | Week 30 |
-| 6 - Analytics | 2-3 weeks | Week 33 |
-| 7 - QBO Integrations | 4-6 weeks | Week 39 |
+| 4f - Microsoft 365 Deep Integration | 3-4 weeks | Week 24 |
+| 5 - Estimating Module Migration | 6-10 weeks | Week 34 |
+| 6 - Analytics | 2-3 weeks | Week 37 |
+| 7 - QBO Integrations | 4-6 weeks | Week 43 |
 
 **Platform is operationally useful from Phase 0. Full unification completes at Phase 5.**
 
