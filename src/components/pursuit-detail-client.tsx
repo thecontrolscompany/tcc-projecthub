@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { OpportunityHubSubnav } from "@/components/opportunity-hub-subnav";
+import { PURSUIT_STATUS_LABELS, PURSUIT_STATUS_OPTIONS, type PursuitStatus } from "@/lib/pursuit-status";
 import { safeJson } from "@/lib/utils/safe-json";
 
 const inputClassName =
@@ -32,7 +33,7 @@ type PursuitDetail = {
   project_name: string;
   owner_name: string | null;
   project_location: string | null;
-  status: "active" | "lost" | "awarded" | "archived";
+  status: PursuitStatus;
   created_at: string;
   onedrive_item_id: string | null;
   sharepoint_folder: string | null;
@@ -45,7 +46,7 @@ type DraftState = {
   project_name: string;
   owner_name: string;
   project_location: string;
-  status: "active" | "lost" | "awarded" | "archived";
+  status: PursuitStatus;
   estimated_value: string;
   bid_date: string;
   proposal_date: string;
@@ -246,10 +247,11 @@ export function PursuitDetailClient({ pursuitId }: { pursuitId: string }) {
                 }
                 className={inputClassName}
               >
-                <option value="active">active</option>
-                <option value="lost">lost</option>
-                <option value="awarded">awarded</option>
-                <option value="archived">archived</option>
+                {PURSUIT_STATUS_OPTIONS.map((status) => (
+                  <option key={status} value={status}>
+                    {PURSUIT_STATUS_LABELS[status]}
+                  </option>
+                ))}
               </select>
             </Field>
 

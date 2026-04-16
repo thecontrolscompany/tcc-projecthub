@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/opportunity-import-server";
-
-const VALID_STATUSES = new Set(["active", "awarded", "lost", "archived"]);
+import { normalizePursuitStatus } from "@/lib/pursuit-status";
 
 export async function POST(request: Request) {
   const auth = await requireAdmin();
@@ -49,8 +48,9 @@ export async function POST(request: Request) {
 
     if (statusIndex !== -1) {
       const value = columns[statusIndex]?.trim() ?? "";
-      if (value && VALID_STATUSES.has(value)) {
-        patch.status = value;
+      const normalized = normalizePursuitStatus(value);
+      if (normalized) {
+        patch.status = normalized;
       }
     }
 

@@ -18,6 +18,12 @@ import {
   YAxis,
 } from "recharts";
 import { OpportunityHubSubnav } from "@/components/opportunity-hub-subnav";
+import {
+  PURSUIT_STATUS_LABELS,
+  PURSUIT_STATUS_OPTIONS,
+  type PursuitStatus,
+  type PursuitStatusFilter,
+} from "@/lib/pursuit-status";
 import { safeJson } from "@/lib/utils/safe-json";
 
 type AnalyticsPursuit = {
@@ -25,13 +31,11 @@ type AnalyticsPursuit = {
   project_name: string;
   owner_name: string | null;
   project_location: string | null;
-  status: "active" | "awarded" | "lost" | "archived";
+  status: PursuitStatus;
   created_at: string;
   bid_year: number | null;
   estimated_value: number | null;
 };
-
-type StatusFilter = "all" | "active" | "awarded" | "lost" | "archived";
 
 const COLORS = [
   "var(--color-brand-primary)",
@@ -42,19 +46,11 @@ const COLORS = [
   "var(--color-brand-accent)",
 ];
 
-const STATUS_LABELS: Record<StatusFilter, string> = {
-  all: "All",
-  active: "Active",
-  awarded: "Won",
-  lost: "Lost",
-  archived: "Archived",
-};
-
 export function PursuitAnalyticsClient() {
   const [pursuits, setPursuits] = useState<AnalyticsPursuit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<PursuitStatusFilter>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
 
   useEffect(() => {
@@ -93,6 +89,8 @@ export function PursuitAnalyticsClient() {
     });
   }, [pursuits, statusFilter, yearFilter]);
 
+  const customerLabelMap = useMemo(() => buildCustomerLabelMap(pursuits), [pursuits]);
+
   const metrics = useMemo(() => {
     const totalBids = filtered.length;
     const totalValueBid = filtered.reduce((sum, pursuit) => sum + (pursuit.estimated_value ?? 0), 0);
@@ -112,14 +110,20 @@ export function PursuitAnalyticsClient() {
   const byStatus = useMemo(() => {
     const counts = new Map<string, number>();
     for (const pursuit of filtered) {
-      const label = STATUS_LABELS[pursuit.status];
+      const label = PURSUIT_STATUS_LABELS[pursuit.status];
       counts.set(label, (counts.get(label) ?? 0) + 1);
     }
     return Array.from(counts.entries()).map(([name, value]) => ({ name, value }));
   }, [filtered]);
 
-  const topCustomersByValue = useMemo(() => topCustomers(filtered, "value"), [filtered]);
-  const topCustomersByCount = useMemo(() => topCustomers(filtered, "count"), [filtered]);
+  const topCustomersByValue = useMemo(
+    () => topCustomers(filtered, customerLabelMap, "value"),
+    [customerLabelMap, filtered]
+  );
+  const topCustomersByCount = useMemo(
+    () => topCustomers(filtered, customerLabelMap, "count"),
+    [customerLabelMap, filtered]
+  );
 
   const byYear = useMemo(() => {
     const rows = new Map<string, { year: string; count: number; value: number }>();
@@ -138,18 +142,19 @@ export function PursuitAnalyticsClient() {
     const grouped = new Map<string, { name: string; won: number; lost: number; total: number }>();
 
     for (const pursuit of closed) {
-      const name = pursuit.owner_name?.trim() || "Unknown";
-      const current = grouped.get(name) ?? { name, won: 0, lost: 0, total: 0 };
+      const key = canonicalCustomerKey(pursuit.owner_name, customerLabelMap.acronymToBaseKey);
+      const name = customerLabelMap.labelByKey.get(key) ?? "Unknown";
+      const current = grouped.get(key) ?? { name, won: 0, lost: 0, total: 0 };
       if (pursuit.status === "awarded") current.won += 1;
       else current.lost += 1;
       current.total += 1;
-      grouped.set(name, current);
+      grouped.set(key, current);
     }
 
     return Array.from(grouped.values())
       .sort((a, b) => b.total - a.total)
       .slice(0, 10);
-  }, [filtered]);
+  }, [customerLabelMap, filtered]);
 
   return (
     <div className="mx-auto max-w-screen-xl space-y-8 px-6 py-6">
@@ -180,12 +185,12 @@ export function PursuitAnalyticsClient() {
               <span className="mb-1 block text-sm font-medium text-text-secondary">Status</span>
               <select
                 value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+                onChange={(event) => setStatusFilter(event.target.value as PursuitStatusFilter)}
                 className="rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
               >
-                {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                {(["all", ...PURSUIT_STATUS_OPTIONS] as const).map((value) => (
                   <option key={value} value={value}>
-                    {label}
+                    {PURSUIT_STATUS_LABELS[value]}
                   </option>
                 ))}
               </select>
@@ -349,7 +354,7 @@ export function PursuitAnalyticsClient() {
                         </td>
                         <td className="px-3 py-3 text-text-secondary">{pursuit.owner_name ?? "-"}</td>
                         <td className="px-3 py-3 text-text-secondary">{pursuit.project_location ?? "-"}</td>
-                        <td className="px-3 py-3 text-text-secondary">{STATUS_LABELS[pursuit.status]}</td>
+                        <td className="px-3 py-3 text-text-secondary">{PURSUIT_STATUS_LABELS[pursuit.status]}</td>
                         <td className="px-3 py-3 text-text-secondary">{formatCurrency(pursuit.estimated_value ?? 0)}</td>
                         <td className="px-3 py-3 text-text-secondary">{pursuitYear(pursuit)}</td>
                       </tr>
@@ -367,20 +372,115 @@ export function PursuitAnalyticsClient() {
   );
 }
 
-function topCustomers(pursuits: AnalyticsPursuit[], mode: "value" | "count") {
+function topCustomers(
+  pursuits: AnalyticsPursuit[],
+  customerLabelMap: ReturnType<typeof buildCustomerLabelMap>,
+  mode: "value" | "count"
+) {
   const grouped = new Map<string, { name: string; value: number; count: number }>();
 
   for (const pursuit of pursuits) {
-    const name = pursuit.owner_name?.trim() || "Unknown";
-    const current = grouped.get(name) ?? { name, value: 0, count: 0 };
+    const key = canonicalCustomerKey(pursuit.owner_name, customerLabelMap.acronymToBaseKey);
+    const name = customerLabelMap.labelByKey.get(key) ?? "Unknown";
+    const current = grouped.get(key) ?? { name, value: 0, count: 0 };
     current.value += pursuit.estimated_value ?? 0;
     current.count += 1;
-    grouped.set(name, current);
+    grouped.set(key, current);
   }
 
   return Array.from(grouped.values())
     .sort((a, b) => (mode === "value" ? b.value - a.value : b.count - a.count))
     .slice(0, 10);
+}
+
+function buildCustomerLabelMap(pursuits: AnalyticsPursuit[]) {
+  const baseKeyToLabels = new Map<string, Map<string, number>>();
+  const acronymCandidates = new Map<string, Map<string, number>>();
+
+  for (const pursuit of pursuits) {
+    const trimmed = pursuit.owner_name?.trim();
+    if (!trimmed) continue;
+
+    const baseKey = normalizedBaseKey(trimmed);
+    if (!baseKey) continue;
+
+    const labels = baseKeyToLabels.get(baseKey) ?? new Map<string, number>();
+    labels.set(trimmed, (labels.get(trimmed) ?? 0) + 1);
+    baseKeyToLabels.set(baseKey, labels);
+
+    const acronym = acronymForName(trimmed);
+    if (acronym && acronym !== baseKey) {
+      const candidates = acronymCandidates.get(acronym) ?? new Map<string, number>();
+      candidates.set(baseKey, (candidates.get(baseKey) ?? 0) + 1);
+      acronymCandidates.set(acronym, candidates);
+    }
+  }
+
+  const acronymToBaseKey = new Map<string, string>();
+  for (const [acronym, candidates] of acronymCandidates.entries()) {
+    const winner = Array.from(candidates.entries()).sort((a, b) => b[1] - a[1])[0];
+    if (winner) acronymToBaseKey.set(acronym, winner[0]);
+  }
+
+  const labelByKey = new Map<string, string>();
+  labelByKey.set("unknown", "Unknown");
+
+  for (const [baseKey, labels] of baseKeyToLabels.entries()) {
+    const label = Array.from(labels.entries())
+      .sort((a, b) => {
+        if (b[1] !== a[1]) return b[1] - a[1];
+        return b[0].length - a[0].length;
+      })[0]?.[0];
+    if (label) labelByKey.set(baseKey, label);
+  }
+
+  return { acronymToBaseKey, labelByKey };
+}
+
+function canonicalCustomerKey(value: string | null, acronymToBaseKey: Map<string, string>) {
+  const trimmed = value?.trim();
+  if (!trimmed) return "unknown";
+
+  const baseKey = normalizedBaseKey(trimmed);
+  if (!baseKey) return "unknown";
+
+  if (looksLikeAcronym(trimmed)) {
+    return acronymToBaseKey.get(baseKey) ?? baseKey;
+  }
+
+  return baseKey;
+}
+
+function normalizedBaseKey(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[&.,/()-]+/g, " ")
+    .replace(/\bcoolins\b/g, "cooling")
+    .replace(/\bthe\b/g, " ")
+    .replace(/\bincorporated\b/g, " ")
+    .replace(/\binc\b/g, " ")
+    .replace(/\bllc\b/g, " ")
+    .replace(/\bl l c\b/g, " ")
+    .replace(/\bcorp\b/g, " ")
+    .replace(/\bcorporation\b/g, " ")
+    .replace(/\bco\b/g, " ")
+    .replace(/\bcompany\b/g, " ")
+    .replace(/\bservices\b/g, " ")
+    .replace(/\bservice\b/g, " ")
+    .replace(/\bsystems\b/g, " ")
+    .replace(/\bsystem\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function acronymForName(value: string) {
+  const tokens = normalizedBaseKey(value).split(" ").filter((token) => token.length > 1);
+  if (tokens.length === 0) return "";
+  return tokens.map((token) => token[0]).join("");
+}
+
+function looksLikeAcronym(value: string) {
+  return /^[A-Z0-9]{2,5}$/.test(value.trim());
 }
 
 function pursuitYear(pursuit: AnalyticsPursuit): string {

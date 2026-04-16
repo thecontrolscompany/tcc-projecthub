@@ -416,13 +416,15 @@ function StatusBadge({ status }: { status: string }) {
       ? "border-status-success/30 bg-status-success/10 text-status-success"
       : normalized === "lost"
         ? "border-status-danger/30 bg-status-danger/10 text-status-danger"
+        : normalized === "passed"
+          ? "border-status-warning/30 bg-status-warning/10 text-status-warning"
         : normalized === "archived"
           ? "border-border-default bg-surface-base text-text-secondary"
           : "border-status-warning/30 bg-status-warning/10 text-status-warning";
 
   return (
     <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${tone}`}>
-      {status}
+      {normalized === "passed" ? "No Bid" : status}
     </span>
   );
 }

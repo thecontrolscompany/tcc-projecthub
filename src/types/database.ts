@@ -219,7 +219,7 @@ export interface PursuitSummary {
   gc_name: string | null;
   engineer_name: string | null;
   shared_scope_notes: string | null;
-  status: "active" | "awarded" | "lost" | "archived";
+  status: "active" | "awarded" | "lost" | "passed" | "archived";
   linked_project_id: string | null;
   sharepoint_folder: string | null;
   sharepoint_item_id: string | null;

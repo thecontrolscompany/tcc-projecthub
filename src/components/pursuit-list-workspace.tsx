@@ -3,6 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { OpportunityHubSubnav } from "@/components/opportunity-hub-subnav";
+import {
+  PURSUIT_STATUS_COLORS,
+  PURSUIT_STATUS_LABELS,
+  PURSUIT_STATUS_OPTIONS,
+  type PursuitStatus,
+} from "@/lib/pursuit-status";
 import { safeJson } from "@/lib/utils/safe-json";
 
 type QuoteRequestSummary = {
@@ -17,7 +23,7 @@ type PursuitRow = {
   project_name: string;
   owner_name: string | null;
   project_location: string | null;
-  status: "active" | "awarded" | "lost" | "archived";
+  status: PursuitStatus;
   created_at: string;
   sharepoint_folder: string | null;
   linked_project_id: string | null;
@@ -26,20 +32,6 @@ type PursuitRow = {
 
 type SortKey = "project_name" | "owner_name" | "created_at" | "value" | "quote_count";
 type SortDir = "asc" | "desc";
-
-const STATUS_LABELS: Record<string, string> = {
-  active: "Active",
-  awarded: "Won",
-  lost: "Lost",
-  archived: "Archived",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  active: "bg-brand-primary/10 text-brand-primary",
-  awarded: "bg-status-success/10 text-status-success",
-  lost: "bg-status-danger/10 text-status-danger",
-  archived: "bg-surface-overlay text-text-tertiary",
-};
 
 export function PursuitListWorkspace() {
   const [pursuits, setPursuits] = useState<PursuitRow[]>([]);
@@ -244,7 +236,7 @@ export function PursuitListWorkspace() {
         noFile += json.no_file ?? 0;
         errors += json.errors ?? 0;
         setEnrichSelectedMessage(
-          `${enriched} enriched Â· ${noFolder} unmatched Â· ${noFile} no docs Â· ${errors} errors`
+          `${enriched} enriched \u00b7 ${noFolder} unmatched \u00b7 ${noFile} no docs \u00b7 ${errors} errors`
         );
       }
       await load();
@@ -392,7 +384,7 @@ export function PursuitListWorkspace() {
         </label>
         {csvMessage ? <p className="text-xs text-text-secondary">{csvMessage}</p> : null}
         <div className="flex flex-wrap gap-2">
-          {(["all", "active", "awarded", "lost", "archived"] as const).map((status) => (
+          {(["all", ...PURSUIT_STATUS_OPTIONS] as const).map((status) => (
             <button
               key={status}
               type="button"
@@ -403,7 +395,7 @@ export function PursuitListWorkspace() {
                   : "bg-surface-overlay text-text-secondary hover:text-text-primary"
               }`}
             >
-              {status === "all" ? "All" : STATUS_LABELS[status]} ({statusCounts[status] ?? 0})
+              {PURSUIT_STATUS_LABELS[status]} ({statusCounts[status] ?? 0})
             </button>
           ))}
         </div>
@@ -495,8 +487,8 @@ export function PursuitListWorkspace() {
                     {pursuit.project_location ?? <span className="italic text-text-tertiary">-</span>}
                   </td>
                   <td className="px-3 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[pursuit.status] ?? ""}`}>
-                      {STATUS_LABELS[pursuit.status] ?? pursuit.status}
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${PURSUIT_STATUS_COLORS[pursuit.status] ?? ""}`}>
+                      {PURSUIT_STATUS_LABELS[pursuit.status] ?? pursuit.status}
                     </span>
                   </td>
                   <td className="px-3 py-3 text-text-secondary">{formatCurrency(pursuitValue(pursuit))}</td>
