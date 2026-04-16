@@ -75,7 +75,7 @@ export async function updateSession(request: NextRequest) {
       url.pathname = roleHome(role);
       return NextResponse.redirect(url);
     }
-    if (pathname.startsWith("/time/reconcile") && role !== "admin") {
+    if ((pathname === "/time/reconcile" || pathname.startsWith("/time/reconcile/")) && role !== "admin") {
       const url = request.nextUrl.clone();
       url.pathname = roleHome(role);
       return NextResponse.redirect(url);
