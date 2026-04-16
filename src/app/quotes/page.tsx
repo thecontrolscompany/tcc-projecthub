@@ -17,7 +17,7 @@ export default async function QuotesPage() {
     role = profile?.role ?? "customer";
   }
 
-  if (role === "admin") {
+  if (role === "admin" || role === "ops_manager") {
     const { data, error } = await supabase
       .from("quote_requests")
       .select(
