@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
-const ITEMS = [
+const ALL_ITEMS = [
   { href: "/quotes", label: "Pipeline" },
   { href: "/quotes/pursuits", label: "Pursuits" },
   { href: "/quotes/analytics", label: "Analytics" },
@@ -15,13 +17,36 @@ const ITEMS = [
   { href: "/estimating", label: "Estimating" },
 ];
 
+const OPS_MANAGER_ITEMS = [
+  { href: "/quotes", label: "Pipeline" },
+  { href: "/estimating", label: "Estimating" },
+];
+
 export function OpportunityHubSubnav() {
   const pathname = usePathname();
+  const [items, setItems] = useState(ALL_ITEMS);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.role === "ops_manager") {
+            setItems(OPS_MANAGER_ITEMS);
+          }
+        });
+    });
+  }, []);
 
   return (
     <nav className="rounded-2xl border border-border-default bg-surface-raised p-2">
       <div className="flex flex-wrap gap-2">
-        {ITEMS.map((item) => {
+        {items.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
           return (

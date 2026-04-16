@@ -40,39 +40,13 @@ export default async function TimeHubPage() {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const { data: pmDirRows } = await adminClient
-      .from('pm_directory')
-      .select('id')
-      .eq('profile_id', user.id);
+    // ops_manager and admin see all active projects; others see only assigned ones
+    const isGlobalViewer = profile?.role === 'ops_manager' || profile?.role === 'admin';
 
-    const pmDirIds = (pmDirRows ?? []).map((row: { id: string }) => row.id);
-
-    const { data: directAssignments } = await adminClient
-      .from('project_assignments')
-      .select('project_id')
-      .eq('profile_id', user.id);
-
-    const directIds = (directAssignments ?? []).map((assignment: { project_id: string }) => assignment.project_id);
-
-    let directoryLinkedIds: string[] = [];
-    if (pmDirIds.length > 0) {
-      const { data: directoryAssignments } = await adminClient
-        .from('project_assignments')
-        .select('project_id')
-        .in('pm_directory_id', pmDirIds);
-
-      directoryLinkedIds = (directoryAssignments ?? []).map(
-        (assignment: { project_id: string }) => assignment.project_id
-      );
-    }
-
-    const allProjectIds = [...new Set([...directIds, ...directoryLinkedIds])];
-
-    if (allProjectIds.length > 0) {
+    if (isGlobalViewer) {
       const { data } = await adminClient
         .from('projects')
         .select('id, name, customer_id, customers(name)')
-        .in('id', allProjectIds)
         .eq('is_active', true)
         .order('name');
 
@@ -87,6 +61,55 @@ export default async function TimeHubPage() {
         customer_id: project.customer_id,
         customers: Array.isArray(project.customers) ? project.customers[0] ?? null : project.customers,
       }));
+    } else {
+      const { data: pmDirRows } = await adminClient
+        .from('pm_directory')
+        .select('id')
+        .eq('profile_id', user.id);
+
+      const pmDirIds = (pmDirRows ?? []).map((row: { id: string }) => row.id);
+
+      const { data: directAssignments } = await adminClient
+        .from('project_assignments')
+        .select('project_id')
+        .eq('profile_id', user.id);
+
+      const directIds = (directAssignments ?? []).map((assignment: { project_id: string }) => assignment.project_id);
+
+      let directoryLinkedIds: string[] = [];
+      if (pmDirIds.length > 0) {
+        const { data: directoryAssignments } = await adminClient
+          .from('project_assignments')
+          .select('project_id')
+          .in('pm_directory_id', pmDirIds);
+
+        directoryLinkedIds = (directoryAssignments ?? []).map(
+          (assignment: { project_id: string }) => assignment.project_id
+        );
+      }
+
+      const allProjectIds = [...new Set([...directIds, ...directoryLinkedIds])];
+
+      if (allProjectIds.length > 0) {
+        const { data } = await adminClient
+          .from('projects')
+          .select('id, name, customer_id, customers(name)')
+          .in('id', allProjectIds)
+          .eq('is_active', true)
+          .order('name');
+
+        projects = (data ?? []).map((project: {
+          id: string;
+          name: string;
+          customer_id: string;
+          customers: { name: string } | { name: string }[] | null;
+        }) => ({
+          id: project.id,
+          name: project.name,
+          customer_id: project.customer_id,
+          customers: Array.isArray(project.customers) ? project.customers[0] ?? null : project.customers,
+        }));
+      }
     }
   }
 
