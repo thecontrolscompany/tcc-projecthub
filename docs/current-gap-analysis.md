@@ -1,4 +1,4 @@
-# TCC Unified Platform — Current Gap Analysis
+# TCC Unified Platform - Current Gap Analysis
 
 **Date:** 2026-03-30
 **Comparing:** current tcc-projecthub repo vs. target unified platform vision
@@ -9,120 +9,123 @@
 
 | Area | Current State | Target State | Gap Size |
 |------|--------------|--------------|----------|
-| Billing table | ✅ Built, tested, build passing | ✅ Matches target | None |
-| PM weekly updates | ✅ Built | ✅ Matches target | Minor (expand to `/pm/[id]`) |
-| Customer portal | ✅ Built | Needs route move to `/customer/*` | Small |
-| Auth: Microsoft SSO | ✅ Configured | Need Azure AD app registration | Ops only |
-| Auth: Email/password | ✅ Built | ✅ Matches target | None |
-| Database schema | ✅ Written | Need Supabase project + migration run | Ops only |
-| Quote requests | ❌ Not built | Full domain needed | **Large** |
-| Estimating module | ❌ Not in this repo | Full domain needed (migration from hvac-estimator) | **Very Large** |
-| Project lifecycle | ⚠️ Partial (projects table, no conversion flow) | Quote→Estimate→Project conversion | **Large** |
-| Job numbering | ❌ Not built | Auto-generated YYYY-NNN | Medium |
-| Expanded roles | ❌ Only admin/pm/customer | estimator, billing, accounting, executive | Medium |
-| SharePoint integration | ⚠️ OneDrive only (POC sync, export) | Full SharePoint folder management | Medium |
-| App shell / nav | ⚠️ Per-page headers, no sidebar | Persistent sidebar, role-filtered nav | Medium |
-| Light/dark theme | ❌ Dark only | Switchable, brand-token driven | Medium |
-| Branding assets | ❌ Generic placeholder | TCC logos, Raleway font, brand palette | Small-Medium |
-| Analytics | ✅ Recharts + Power BI embed built | Expand to quote/estimating analytics | Small |
-| Documents domain | ❌ Not built | SharePoint browser + file management | Medium |
-| Change orders | ❌ Not built | Future scope, stub only | Future |
-| QBO integration | ❌ Not built | Future, stubs only | Future |
-| QBO Time | ❌ Not built | Future | Future |
-| Price book (server) | ❌ Not built (hvac-estimator uses localStorage) | Supabase price_book_overrides table | Medium |
-| HVAC system editor | ❌ Not in this repo | Migrate from hvac-estimator | **Very Large** |
-| Mobile responsiveness | ⚠️ Not validated | PM update form must work on mobile | Small |
+| Billing table | Built, tested, build passing | Matches target | None |
+| PM weekly updates | Built | Strong foundation, expand into fuller `/pm` detail workflow | Minor |
+| Customer portal | Built | Consolidate under `/customer/*`, connect live data, polish UX | Small |
+| Auth: Microsoft SSO | Configured in code | Need Azure AD app registration and live validation | Ops only |
+| Auth: Email/password | Built | Matches target | None |
+| Database schema | Written | Need Supabase project + migration run | Ops only |
+| Quote requests / Opportunity Hub | Not built yet | Full domain needed | Large |
+| Estimating module | Not in this repo | Full domain needed (migration from hvac-estimator) | Very Large |
+| Project lifecycle conversion | Partial | Quote -> Estimate -> Project conversion | Large |
+| Job numbering | Not built | Auto-generated YYYY-NNN | Medium |
+| Expanded roles | Only admin/pm/customer | estimator, billing, accounting, executive | Medium |
+| SharePoint integration | Partial | Full SharePoint folder management | Medium |
+| App shell / nav | Multiple route surfaces, no unified sidebar shell | Persistent sidebar, role-filtered nav | Medium |
+| Light/dark theme | Dark only | Switchable, brand-token driven | Medium |
+| Branding assets | Placeholder branding | TCC logos, Raleway font, brand palette | Small-Medium |
+| Analytics | Recharts + Power BI embed built | Expand to quote/estimating analytics | Small |
+| Documents domain | Not built as a dedicated module | SharePoint browser + file management | Medium |
+| Change orders | Not built as a full domain | Future scope | Future |
+| QBO integration | Not built | Future scope | Future |
+| QBO Time | Not built | Future scope | Future |
+| Price book (server) | Not built in this repo | Supabase price_book_overrides table | Medium |
+| HVAC system editor | Not in this repo | Migrate from hvac-estimator | Very Large |
+| Mobile responsiveness | Partially validated | PM/customer workflows should be proven on actual phones | Small |
 
 ---
 
 ## 2. Critical Gaps (Block Production Use)
 
-These gaps must be resolved before any user can rely on the platform.
+These gaps must be resolved before users can rely on the platform daily.
 
 ### Gap 1: Supabase project not connected
-**Impact:** Nothing works without this. All database queries fail.
-**Fix:** Create Supabase project → run migration → fill `.env.local` → seed data.
-**Effort:** 2 hours (mostly Supabase dashboard work)
+**Impact:** Database-backed routes cannot operate against live data.
+**Fix:** Create Supabase project, run migration, fill `.env.local`, seed data.
+**Effort:** 2 hours of mostly dashboard setup.
 
 ### Gap 2: Azure AD app not registered
-**Impact:** Microsoft SSO fails. Admin and PM cannot log in.
-**Fix:** Register app in Azure Portal → configure Supabase OAuth provider → test login flow.
-**Effort:** 2-4 hours
+**Impact:** Microsoft SSO fails for admin and PM users.
+**Fix:** Register app in Azure Portal, configure Supabase OAuth provider, test login flow.
+**Effort:** 2-4 hours.
 
-### Gap 3: No projects exist in the database
-**Impact:** All portals show empty states.
-**Fix:** Run seed data after auth is configured. Import existing projects from legacy Excel tracker.
-**Effort:** 4-8 hours (manual data entry from Excel + seed script)
+### Gap 3: No real project data loaded
+**Impact:** PM, billing, and customer portals show empty or unrealistic states.
+**Fix:** Seed users, import first real projects from the legacy Excel tracker, validate routes with live records.
+**Effort:** 4-8 hours.
 
 ---
 
 ## 3. High-Priority Gaps (Needed for Full Value)
 
-### Gap 4: Quote Request domain missing
-The entire front-of-funnel workflow (`/quotes`) does not exist. This is the most strategically important missing piece — it is the "front door" to the lifecycle.
+### Gap 4: Opportunity Hub / quote intake domain missing
+The front-of-funnel workflow (`/quotes`) still needs to be built. This is the most strategically important missing piece because it becomes the front door to the lifecycle.
+
+Important framing: this is additive work on top of an already substantial PM, billing, projects, and customer foundation. ProjectHub is not waiting on this to become a real platform; this is the next major domain expansion.
 
 **What needs building:**
-- Quote request DB schema (migration 002)
-- `/quotes` dashboard page
+- Quote request DB schema and richer opportunity fields
+- `/quotes` dashboard
 - `/quotes/new` intake form
 - `/quotes/[id]` detail page with status actions
-- `/customer/quotes` intake form for customers
+- `/customer/quotes` and `/customer/quotes/new`
 - SharePoint folder creation on submission
 - Email notification on new submission
 
 **Effort:** Large (2-3 weeks of focused work)
 
 ### Gap 5: Estimating domain not in this repo
-The hvac-estimator is a mature tool but isolated. Until its estimating logic is in the Next.js platform:
-- No estimate → project conversion
-- No server-side estimate persistence (lost if user clears browser)
-- No shared estimate access across users
+The hvac-estimator is a mature tool but isolated. Until its estimating logic is in the Next.js platform or writing shared records to Supabase:
+- no full estimate -> project conversion flow
+- no server-side estimate persistence in this repo
+- no shared estimate access across users from ProjectHub
 
-**What needs building:** See [live-site-integration-strategy.md](./live-site-integration-strategy.md) for phased migration plan.
+**What needs building:** See [live-site-integration-strategy.md](./live-site-integration-strategy.md) for the phased migration plan.
 
 **Effort:** Very large (6-12 weeks, phased approach recommended)
 
 ### Gap 6: Project lifecycle conversion not implemented
-Currently projects are manually created. There is no "Award Project" button that:
-- Creates a job number
-- Locks the estimate as baseline
-- Creates a SharePoint project folder
-- Notifies the PM
+Projects are still manually created. There is no award/conversion flow that:
+- creates a job number
+- locks the estimate as a baseline
+- creates a SharePoint project folder
+- notifies the PM
 
 **Effort:** Medium (1-2 weeks)
 
 ### Gap 7: Expanded role model not implemented
-Current roles: `admin | pm | customer`. Missing: `estimator | billing | accounting | executive`.
-The middleware and RLS policies need to be updated to enforce these roles.
+Current roles are `admin | pm | customer`. Missing: `estimator | billing | accounting | executive`.
 
-**Effort:** Medium (1 week — schema change + middleware update + UI nav filter)
+**Effort:** Medium (about 1 week across schema, middleware, and UI filters)
 
 ---
 
 ## 4. Medium-Priority Gaps
 
 ### Gap 8: App shell lacks persistent sidebar navigation
-Each page currently has its own bespoke header. The target architecture uses a shared sidebar that:
-- Is role-filtered (estimators see estimating links, PMs see PM links)
-- Persists across all internal routes
-- Collapses on mobile
+The product already has meaningful PM, billing, projects, customer, time, and admin surfaces. What is missing is the shared shell that makes those modules feel like one coherent platform.
 
-**Effort:** Medium (1 week — layout refactor, create shared layout component)
+Needed capabilities:
+- role-filtered sidebar
+- shared layout across internal routes
+- mobile collapse behavior
+
+**Effort:** Medium (about 1 week)
 
 ### Gap 9: Dark-only theme
-All pages use `bg-slate-950` hardcoded. There are no CSS custom properties or theme tokens.
+Pages still rely heavily on dark-only styling and need the brand-token light/dark system.
 
-**Effort:** Medium (1-2 weeks — see [theme-brand-system.md](./theme-brand-system.md))
+**Effort:** Medium (1-2 weeks)
 
 ### Gap 10: Brand assets not integrated
-The TCC logos (`New Logo.png`, `Logo_Horizontal.png`) and Raleway fonts are not used anywhere in the app. The login page uses text-only branding.
+The app still needs real TCC logos, fonts, and branded header treatment.
 
-**Effort:** Small (2-3 days — copy assets to `public/`, update layout + login page)
+**Effort:** Small (2-3 days)
 
-### Gap 11: SharePoint folder management
-Current OneDrive integration only reads POC sheet cells and uploads billing exports. The target architecture creates and manages structured SharePoint folder hierarchies for every quote/estimate/project.
+### Gap 11: SharePoint folder management not complete
+Current integrations cover pieces of OneDrive/Graph workflows, but not the full folder lifecycle needed for opportunities and projects.
 
-**Effort:** Medium (1-2 weeks — expand Graph API client)
+**Effort:** Medium (1-2 weeks)
 
 ---
 
@@ -133,16 +136,18 @@ These are genuine strengths to build on, not throw away:
 | Strength | Details |
 |---------|---------|
 | Billing calculation | Legacy formula exactly replicated, tested via build |
-| TanStack billing table | Inline editing, sorting, filtering, color coding — production quality |
+| TanStack billing table | Inline editing, sorting, filtering, color coding at near-production quality |
 | Roll-forward | Mirrors legacy Module2, automated |
-| PM email drafts | Graph API Outlook draft creation — no accidental sends |
-| POC sheet sync | Graph API OneDrive cell read — replaces sync_poc.py |
-| Excel export | ExcelJS with proper formatting, column structure matches legacy |
-| Supabase RLS | All tables have RLS policies — security-first design |
-| Auth architecture | Both SSO paths designed correctly |
-| Power BI embed | Already wired, just needs workspace/report IDs |
-| Type system | TypeScript types for all DB entities |
-| Build quality | Clean production build, all routes dynamic where needed |
+| PM workflow base | PM dashboard and weekly update patterns already exist and need extension/hardening more than reinvention |
+| Customer portal base | Customer-facing portal surface already exists and needs route consolidation, live wiring, and UX cleanup more than greenfield buildout |
+| PM email drafts | Graph API Outlook draft creation with no accidental sends |
+| POC sheet sync | Graph API/OneDrive cell reads replacing sync scripts |
+| Excel export | ExcelJS formatting aligned with legacy structure |
+| Supabase RLS | Security-first schema design is already in place |
+| Auth architecture | Both SSO and customer-auth paths are already designed |
+| Power BI embed | Already wired and ready for workspace/report IDs |
+| Type system | TypeScript types cover DB entities and route data shapes |
+| Build quality | Clean production build and meaningful route structure already exist |
 
 ---
 
@@ -153,14 +158,14 @@ These strengths from the live tool must be preserved during migration:
 | Strength | Details |
 |---------|---------|
 | 445 assemblies | Comprehensive price book, manually curated, validated by tests |
-| Cost model | 4-bucket (labor/material/overhead/profit), 25+ adjustment fields — battle-tested |
-| Price snapshot | Prices locked at estimate creation — audit trail integrity |
-| Rule-driven config | VAV/AHU/RTU/FCU/UH/DX/VRF config rules — complex, working, tested |
-| Schematic diagrams | SVG flow + electrical diagrams per system type |
-| DOCX proposal export | Template-based Word document generation |
-| Tests | 13 test files covering assembly calc, cost model, FCU config, conduit fill |
-| MSAL auth | Already configured and working |
-| Architecture docs | ARCHITECTURE.md, DOMAIN_MODEL.md, PRODUCT_ROADMAP.md — detailed |
+| Cost model | Battle-tested labor/material/overhead/profit model with many adjustments |
+| Price snapshot | Prices locked at estimate creation for auditability |
+| Rule-driven config | Complex VAV/AHU/RTU/FCU/UH/DX/VRF rules already working |
+| Schematic diagrams | SVG flow and electrical diagrams by system type |
+| DOCX proposal export | Working proposal generation pipeline |
+| Tests | Multiple Vitest suites already covering critical estimating logic |
+| MSAL auth | Already configured and working in the live tool |
+| Architecture docs | Strong documentation baseline for migration |
 
 ---
 
@@ -168,13 +173,13 @@ These strengths from the live tool must be preserved during migration:
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|-----------|--------|-----------|
-| Estimating migration breaks price book data | High | High | Port assemblyData.js as-is first, migrate to DB later |
+| Estimating migration breaks price book data | High | High | Port assembly data as-is first, migrate deeper later |
 | localStorage estimates lost during migration | High | High | Export-to-server migration utility before cutover |
 | Azure AD app misconfigured | Medium | High | Test SSO in staging before production |
 | Supabase RLS misconfiguration | Medium | High | Test each role with seeded users before launch |
-| PM mobile experience is poor | Medium | Medium | Test weekly update form on actual phone before launch |
-| SharePoint Graph API permissions | Medium | Medium | Request `Sites.ReadWrite.All` scope, test with real site |
-| Power BI embed token refresh | Low | Medium | Use service principal for token generation |
+| PM mobile experience is poor | Medium | Medium | Test weekly update form on an actual phone before launch |
+| SharePoint Graph API permissions are incomplete | Medium | Medium | Validate scopes against the real tenant/site |
+| Power BI embed token refresh issues | Low | Medium | Use service principal / stable embed flow |
 
 ---
 
@@ -182,10 +187,10 @@ These strengths from the live tool must be preserved during migration:
 
 In order of priority:
 
-1. **Configure Supabase + Azure AD** (ops work — unblocks everything else)
-2. **Run migration + seed data** (enables real testing)
-3. **Integrate branding assets** (quick win — logos + font)
-4. **Add persistent sidebar nav** (improves UX across all existing pages)
-5. **Build quote request domain** (`/quotes` dashboard + intake form)
-6. **Expand role model** (schema + middleware + UI filters)
-7. **Begin estimating module migration** (phased, parallel to live site)
+1. **Configure Supabase + Azure AD** so the existing platform can run against live auth/data.
+2. **Run migration + seed data** so PM, billing, projects, and customer flows can be exercised with real records.
+3. **Integrate branding assets** for quick visible polish.
+4. **Add persistent sidebar nav** to unify the PM, billing, projects, customer, and admin surfaces already present.
+5. **Harden PM and customer flows with live data** by validating role access, `/customer/*` routing, and real project states.
+6. **Build Opportunity Hub** as the next major domain.
+7. **Expand the role model** and keep estimating migration phased behind the live PM/customer platform work.

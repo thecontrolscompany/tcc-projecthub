@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import type { ManifestEntry } from "@/lib/onedrive-archive-scanner";
+import { normalizeStoredCustomerName } from "@/lib/customer-name-normalization";
 
 export const maxDuration = 60;
 
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
     }
 
     const firstQuote = entry.quotes[0];
-    const ownerName = firstQuote?.gc_name ?? null;
+    const ownerName = normalizeStoredCustomerName(firstQuote?.gc_name ?? null);
     const pursuitStatus: "active" | "awarded" | "lost" =
       entry.pursuit_status === "won" ? "awarded" : entry.pursuit_status === "active" ? "active" : "lost";
 
@@ -79,7 +80,7 @@ export async function POST(request: Request) {
     }
 
     for (const quote of entry.quotes) {
-      const gcName = quote.gc_name;
+      const gcName = normalizeStoredCustomerName(quote.gc_name);
       const { error: quoteRequestError } = await supabase.from("quote_requests").insert({
         pursuit_id: pursuit.id,
         company_name: gcName ?? entry.pursuit_name,

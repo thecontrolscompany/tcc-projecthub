@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeStoredCustomerName } from "@/lib/customer-name-normalization";
 
 const reviewDecisionSchema = z.object({
   import_row_id: z.string().uuid("Import row id is required."),
@@ -48,11 +49,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "selected_pursuit_id is required for merge_pursuit." }, { status: 400 });
     }
 
+    const normalizedCompanyName = normalizeStoredCustomerName(importRow.company_name) ?? "Unknown";
+
     const { data: quoteRequest, error: quoteError } = await supabase
       .from("quote_requests")
       .insert({
         pursuit_id: targetPursuitId,
-        company_name: importRow.company_name ?? "Unknown",
+        company_name: normalizedCompanyName,
         contact_name: importRow.contact_name ?? "",
         contact_email: "",
         project_description: importRow.legacy_opportunity_name ?? importRow.company_name ?? "Legacy opportunity",
@@ -107,6 +110,7 @@ export async function POST(request: Request) {
   // Non-reject: promote to quote_request.
   // The pursuit was created when the package was staged; ensure it exists.
   let pursuitId: string = importRow.pursuit_id;
+  const normalizedCompanyName = normalizeStoredCustomerName(importRow.company_name);
 
   if (!pursuitId) {
     // Fallback: create pursuit now if staging somehow skipped it.
@@ -114,7 +118,7 @@ export async function POST(request: Request) {
       .from("pursuits")
       .insert({
         project_name: importRow.legacy_opportunity_name ?? importRow.company_name ?? "Unknown Project",
-        owner_name: importRow.company_name ?? null,
+        owner_name: normalizedCompanyName,
         project_location: importRow.project_location ?? null,
         status: "active",
         created_by: user.id,
@@ -146,7 +150,7 @@ export async function POST(request: Request) {
     .from("quote_requests")
     .insert({
       pursuit_id: pursuitId,
-      company_name: importRow.company_name ?? "Unknown",
+      company_name: normalizedCompanyName ?? "Unknown",
       contact_name: importRow.contact_name ?? "",
       contact_email: "",
       project_description: importRow.legacy_opportunity_name ?? importRow.company_name ?? "Legacy opportunity",

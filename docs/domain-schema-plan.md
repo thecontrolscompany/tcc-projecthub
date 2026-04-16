@@ -4,11 +4,17 @@
 
 ---
 
+> Note: The current live codebase already has lightweight `quote_requests` and `estimates` tables in production-facing migrations. For the non-breaking expansion path that introduces `Opportunity Hub`, proposal/estimate document ingestion, and additive schema changes, see [opportunity-hub-schema-plan.md](./opportunity-hub-schema-plan.md).
+
+---
+
 ## 1. Domain Overview
 
 The platform is organized around eight business domains. Each domain owns its primary tables. Cross-domain references use foreign keys to shared entity IDs.
 
 ```
+pursuits
+    ↓ (one-to-many)
 quote_requests
     ↓ (convert_to_estimate)
 estimates
@@ -66,12 +72,37 @@ created_at      TIMESTAMPTZ
 
 ## 3. Quote Requests Domain
 
+### `pursuits`
+```sql
+id                  UUID PK
+pursuit_number      TEXT UNIQUE
+project_name        TEXT NOT NULL
+project_location    TEXT
+owner_name          TEXT
+gc_name             TEXT
+engineer_name       TEXT
+shared_scope_notes  TEXT
+status              TEXT           -- active | awarded | lost | archived
+sharepoint_folder   TEXT
+sharepoint_item_id  TEXT
+created_by          UUID → profiles(id)
+created_at          TIMESTAMPTZ DEFAULT now()
+updated_at          TIMESTAMPTZ DEFAULT now()
+```
+
+**Notes:**
+- `pursuit` is the shared real-world project identity
+- one pursuit can have many customer/vendor-specific opportunities
+- use this when multiple competing customers request bids on the same project
+- the winning opportunity still converts into the project record
+
 ### `quote_requests`
 ```sql
 id                  UUID PK
 quote_number        TEXT UNIQUE    -- QR-2026-001 (auto-generated, sequential per year)
 year                INT            -- 2026
 sequence            INT            -- 001, 002, ...
+pursuit_id          UUID → pursuits(id) NULLABLE
 customer_id         UUID → customers(id)
 project_name        TEXT NOT NULL
 project_location    TEXT
@@ -96,7 +127,7 @@ assigned_at         TIMESTAMPTZ
 internal_notes      TEXT
 opportunity_value   NUMERIC(12,2)  -- internal only, never shown to customer
 target_margin_pct   NUMERIC(5,4)   -- internal only
-sharepoint_folder   TEXT           -- /Quote Requests/QR-2026-001 - CustomerName - ProjectName
+sharepoint_folder   TEXT           -- /Bids/QR-2026-001 - CustomerName - ProjectName
 submitted_at        TIMESTAMPTZ    -- when customer submitted
 created_at          TIMESTAMPTZ DEFAULT now()
 updated_at          TIMESTAMPTZ DEFAULT now()
@@ -150,7 +181,7 @@ $$ LANGUAGE plpgsql;
 
 ## 4. Estimating Domain
 
-This domain incorporates the logic from hvac-estimator. The estimate record links back to the originating quote request, and when awarded, creates a locked project baseline.
+This domain incorporates the logic from hvac-estimator. The estimate record links back to the originating quote request and pursuit, and when awarded, creates a locked project baseline.
 
 ### `estimates`
 ```sql
@@ -158,6 +189,7 @@ id                    UUID PK
 estimate_number       TEXT UNIQUE    -- EST-2026-014
 year                  INT
 sequence              INT
+pursuit_id            UUID → pursuits(id) NULLABLE
 quote_request_id      UUID → quote_requests(id) NULLABLE  -- null if not from quote request
 customer_id           UUID → customers(id)
 name                  TEXT NOT NULL
@@ -285,7 +317,7 @@ actual_labor_hrs      NUMERIC(10,2)  -- from QBO Time (future)
 actual_material_cost  NUMERIC(12,2)  -- from QBO (future)
 
 onedrive_path         TEXT           -- legacy POC sheet path
-sharepoint_folder     TEXT           -- /Projects/2026-041 - Mobile Arena Renovation
+sharepoint_folder     TEXT           -- /Active Projects/2026-041 - Mobile Arena Renovation
 award_date            DATE
 start_date            DATE
 target_completion_date DATE
@@ -360,8 +392,8 @@ Action:
      - Set: quote_request_id, status='draft', assigned_estimator
      - Generate: estimate_number (EST-YYYY-NNN)
   2. Set quote_request.status = 'estimating'
-  3. Create SharePoint folder: /Estimates/EST-2026-014 - CustomerName
-  4. Copy attachments from quote request's /01 Customer Uploads → estimate folder
+  3. Continue using the opportunity SharePoint folder under /Bids/QR-YYYY-NNN - CustomerName - ProjectName
+  4. Store estimating working files in /03 Estimate Working and final proposal files in /04 Submitted Quote
   5. Redirect to estimate detail page
 ```
 
@@ -382,13 +414,13 @@ Action:
   4. Set quote_request.status = 'won' (if linked)
   5. Create billing_period record for current month
   6. Create SharePoint project folder:
-     /Projects/2026-041 - CustomerName - ProjectName/
+     /Active Projects/2026-041 - CustomerName - ProjectName/
        01 Estimate Baseline/
        02 Drawings & Specs/
        03 Submittals/
        04 Billing/
        05 Closeout/
-  7. Copy awarded estimate .docx from estimate folder → 01 Estimate Baseline
+  7. Copy awarded proposal .pdf, proposal .docx, and estimate workbook from the bid folder → 01 Estimate Baseline
   8. Notify PM via Outlook draft
   9. Redirect to project detail page
 ```

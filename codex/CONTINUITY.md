@@ -1,5 +1,13 @@
 # TCC ProjectHub — Session Continuity
-**Last updated:** 2026-04-08
+**Last updated:** 2026-04-13
+
+---
+
+## Working model
+
+Read `codex/ROLES.md` before starting any task. It defines how Timothy, Claude, and Codex
+collaborate. Summary: Claude writes the task spec; Codex reads it and executes; Codex may
+make implementation-level design decisions only when the task file explicitly says so.
 
 ---
 
@@ -91,6 +99,40 @@
 
 ---
 
+## Recently Completed
+
+### Task 075 — Weekly Update: QB Time Labor Hours + Crew Log Fix
+- Migration `044_weekly_update_labor_hours.sql` — adds 5 columns to `weekly_updates`
+  (`labor_hours_pulled`, `labor_hours_override`, `labor_hours_source`,
+  `labor_hours_pulled_at`, `labor_hours_detail`)
+- New API route `GET /api/pm/hours-pull` — queries local `qb_time_timesheets` via
+  `project_qb_time_mappings`, returns per-person breakdown rounded to 0.5 hr
+- PM form: "Pull from QB Time" button, per-person detail table when accepted,
+  aggregate crew log (Mode 1) when not — "men" renamed to "workers" throughout
+- Customer portal: shows per-person detail when QB Time accepted, otherwise
+  aggregate crew log unchanged
+- ⚠️ **Migration 044 must be run manually in Supabase before the pull button works**
+
+### Task 076 — QB Time Live Sync (commit 2250825)
+- Ported QB Time sync library from TCC Time app → `src/lib/qb-time/sync.ts`
+- New admin endpoint `POST /api/admin/sync-qb-time` — pulls users, jobcodes,
+  timesheets from TSheets REST API; upserts into local `qb_time_*` tables
+- Admin-only Sync QB Time button added to `/time` module
+  (`src/components/time/time-module.tsx`)
+- `.env.local.example` updated with `QUICKBOOKS_TIME_ACCESS_TOKEN` and
+  `QUICKBOOKS_TIME_API_BASE_URL`
+- ⚠️ **`QUICKBOOKS_TIME_ACCESS_TOKEN` must be added to `.env.local` and Vercel
+  environment variables before sync works in production**
+
+### Task 077 — Editable Labor Hours Table (commit 61500cc)
+- Per-person labor hours table in PM form is now fully editable after a QB Time pull
+- PMs can edit worker names, individual day values (Mon–Sat), add rows, or remove rows
+- Grand total auto-recalculates; `laborPulled` state kept in sync via `useEffect`
+- `+ Add worker manually` button available even when no pull has happened
+- `*Hours rounded to nearest half hour` note added to PM form, PM read-only summary, and customer portal `WeeklyUpdateCard`
+
+---
+
 ## Next Tasks — READY TO RUN
 
 ### Time Module Follow-On
@@ -99,13 +141,14 @@
 - ProjectHub-hosted merged QuickBooks/import tables
 - profile and project crosswalk tables for the initial database merge
 - clock page positioned as the first-priority workflow home
+- live QB Time sync at `POST /api/admin/sync-qb-time` (task 076)
 
 **Next useful work:**
-- use `/time/reconcile` to work through the remaining unmatched QuickBooks users against `pm_directory`
-- continue consolidating identity reads toward `pm_directory` where appropriate
-- review and resolve the remaining unmatched projects and jobcodes before clocking becomes authoritative
+- add `QUICKBOOKS_TIME_ACCESS_TOKEN` to `.env.local` and Vercel, then run a live sync
+- run migration `044_weekly_update_labor_hours.sql` in Supabase
+- use `/time/reconcile` to work through remaining unmatched QuickBooks users
+- review and resolve unmatched projects/jobcodes before clocking becomes authoritative
 - port real clock in / clock out writes into the portal module
-- decide whether `/pm/time` should be retired or folded into `/time`
 
 ### Task 031 — Quote Requests Workflow (not yet written)
 **What it does:**

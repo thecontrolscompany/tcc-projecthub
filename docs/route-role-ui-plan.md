@@ -123,13 +123,13 @@ All routes under `/` are internal. Middleware redirects unauthenticated users to
 
 ## 3. Route Map — Customer Surface
 
-Customer users never see internal routes. After login they land at `/customer`.
+Customer users never see internal routes. After login they land at `/customer`, which should present as `Opportunity Hub` plus `ProjectHub`.
 
 ```
-/customer             → Customer home — my quote requests + my projects
-/customer/quotes      → My quote requests list
-/customer/quotes/new  → Submit a new quote request
-/customer/quotes/[id] → My quote request status + communication
+/customer             → Customer home — Opportunity Hub + ProjectHub overview
+/customer/quotes      → Opportunity Hub — my quote requests list
+/customer/quotes/new  → Opportunity Hub — submit a new quote request
+/customer/quotes/[id] → Opportunity Hub request status + communication
 /customer/projects    → My project status
 /customer/projects/[id] → Project updates + billing history (already built, extract and move)
 ```

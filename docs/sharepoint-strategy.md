@@ -35,54 +35,65 @@ The two systems are complementary. Every record in Supabase has a `sharepoint_fo
 ```
 /sites/TheControlsCompany/
   ├── Shared Documents/
-  │   ├── Quote Requests/
-  │   ├── Estimates/
-  │   ├── Projects/
+  │   ├── Bids/
+  │   ├── Active Projects/
+  │   ├── Completed Projects/
   │   └── _Templates/
   └── (other SharePoint libraries)
 ```
 
-### Quote Request Folders
+### Opportunity / Bid Folders
 
 ```
-Quote Requests/
+Bids/
   └── QR-2026-001 - Crestview K-8 - HVAC Controls/
       ├── 01 Customer Uploads/       ← customer files on submission
       ├── 02 Internal Review/        ← internal notes, marked-up drawings
-      ├── 03 Estimate Working/       ← estimating scratch files
-      └── 04 Submitted Quote/        ← final proposal PDF/DOCX
-```
-
-### Estimate Folders
-
-```
-Estimates/
-  └── EST-2026-014 - Crestview K-8 - HVAC Controls/
-      ├── 01 Source Documents/       ← copied from quote request uploads
-      ├── 02 Working/                ← scratch files
-      └── 03 Submitted Proposal/     ← generated proposal .docx
+      ├── 03 Estimate Working/       ← estimate .xlsm, working proposal .docx, scratch files
+      ├── 04 Submitted Quote/        ← final customer-issued proposal PDF/DOCX
+      └── 99 Archive - Legacy Files/
 ```
 
 ### Project Folders
 
 ```
-Projects/
+Active Projects/
   └── 2026-041 - Mobile Arena - Controls Upgrade/
       ├── 01 Estimate Baseline/      ← awarded proposal + locked estimate snapshot
       ├── 02 Drawings & Specs/       ← issued-for-construction documents
       ├── 03 Submittals/             ← equipment submittals, shop drawings
-      ├── 04 Billing/                ← monthly billing export .xlsx files
+      ├── 04 Drawings/               ← current project drawing set
       ├── 05 Change Orders/          ← CO documentation
-      └── 06 Closeout/               ← O&Ms, punch lists, final billing
+      ├── 06 Closeout/               ← O&Ms, punch lists, final billing
+      ├── 07 Billing/                ← monthly billing export .xlsx files
+      └── 99 Archive - Legacy Files/
+```
+
+### Completed Project Folders
+
+```
+Completed Projects/
+  └── 2025-118 - Example Closed Job/
+      ├── 01 Contract/
+      ├── 02 Estimate/
+      ├── 03 Submittals/
+      ├── 04 Drawings/
+      ├── 05 Change Orders/
+      ├── 06 Closeout/
+      ├── 07 Billing/
+      └── 99 Archive - Legacy Files/
 ```
 
 ### Templates
 
 ```
 _Templates/
-  ├── Project Folder Template/       ← used when creating new project folder
-  ├── Quote Request Folder Template/
-  └── Estimate Folder Template/
+  ├── Active Project Folder Template/  ← used when creating new project folder
+  ├── Bid Folder Template/
+  ├── Completed Project Folder Template/
+  └── Opportunity Master Templates/
+      ├── Electrical Budgeting Tool v15.xlsm
+      └── HVAC Control Installation Proposal-Template.docx
 ```
 
 ---
@@ -101,12 +112,11 @@ _Templates/
 
 | Operation | API call | Trigger |
 |-----------|---------|---------|
-| Create quote request folder | `POST /sites/{id}/drive/items/{parentId}/children` | On quote request submission |
+| Create bid / opportunity folder | `POST /sites/{id}/drive/items/{parentId}/children` | On quote request submission |
 | Upload customer files | `PUT /sites/{id}/drive/root:/{path}:/content` | During quote request file upload |
-| Create estimate folder | `POST /sites/{id}/drive/items/...` | On "Create Estimate" action |
-| Copy files to estimate folder | `POST /drives/{id}/items/{itemId}/copy` | On estimate creation from quote |
+| Upload proposal / estimate package | `PUT /sites/{id}/drive/root:/{path}:/content` | During Opportunity Hub document ingestion |
 | Create project folder tree | Multiple POST calls | On "Award Project" action |
-| Copy proposal to project baseline | `POST /drives/{id}/items/{itemId}/copy` | On project award |
+| Copy awarded opportunity files to project baseline | `POST /drives/{id}/items/{itemId}/copy` | On project award |
 | Browse SharePoint folder | `GET /sites/{id}/drive/items/{folderId}/children` | `/documents` page |
 | Get file download URL | `GET /drives/{id}/items/{fileId}` | File preview / download |
 
@@ -155,8 +165,8 @@ API route /api/quotes/submit receives form data + files
         ↓
 1. Insert quote_request record in Supabase → get QR-YYYY-NNN
 2. Create SharePoint folder:
-   /Quote Requests/QR-2026-001 - CustomerName - ProjectName/
-   /Quote Requests/QR-2026-001 .../01 Customer Uploads/
+   /Bids/QR-2026-001 - CustomerName - ProjectName/
+   /Bids/QR-2026-001 .../01 Customer Uploads/
 3. Upload each attachment to /01 Customer Uploads/ folder
 4. Insert quote_request_attachments rows (sharepoint_path, filename, size)
 5. Send notification email draft to admin (via Outlook Graph API)
@@ -170,6 +180,59 @@ API route /api/quotes/submit receives form data + files
 POST /me/drive/root:/{path}:/createUploadSession
 PUT {uploadUrl} with Content-Range header
 ```
+
+## 5b. Opportunity Hub Document Package Flow
+
+For internal Opportunity Hub work, uploaded proposal and estimate files should live in the bid folder instead of a separate estimate library.
+
+```
+Admin / estimator uploads:
+  - proposal .docx
+  - proposal .pdf
+  - estimate .xlsm
+        ↓
+1. Store source records in Supabase
+2. Upload files to:
+   /Bids/QR-2026-001 - CustomerName - ProjectName/03 Estimate Working/
+     - proposal .docx
+     - estimate .xlsm
+   /Bids/QR-2026-001 - CustomerName - ProjectName/04 Submitted Quote/
+     - proposal .pdf
+     - optionally the locked proposal .docx that matches the sent version
+3. Store file metadata and extracted values in Supabase
+4. On award, copy the final proposal/estimate package into:
+   /Active Projects/YYYY-NNN - ProjectName/01 Estimate Baseline/
+```
+
+### Opportunity creation template drop
+
+When a new internal opportunity is created, the system should also copy the current
+master estimating/proposal templates from the SharePoint root templates area into the
+new bid folder.
+
+Recommended master-template source:
+
+```
+/_Templates/Opportunity Master Templates/
+  Electrical Budgeting Tool v15.xlsm
+  HVAC Control Installation Proposal-Template.docx
+```
+
+Recommended destination on new opportunity creation:
+
+```
+/Bids/QR-2026-001 - CustomerName - ProjectName/03 Estimate Working/
+  Electrical Budgeting Tool v15.xlsm
+  HVAC Control Installation Proposal-Andalusia ES Addition.docx
+```
+
+Rules:
+
+- copy the current master estimate workbook exactly as named, including its current version number such as `v15`
+- copy the current master proposal template and rename `Template` to the project name
+- keep the master templates editable in `_Templates/Opportunity Master Templates/` so staff can update the source files without code changes
+- future opportunities should always use the latest master templates present in `_Templates/Opportunity Master Templates/`
+- existing opportunities should keep the version that was copied at creation time
 
 ---
 
@@ -185,6 +248,8 @@ The `/documents` page should be a lightweight SharePoint file browser that:
 
 **Implementation approach:**
 - Each project/quote/estimate detail page has a "Documents" tab that renders the folder for that record's `sharepoint_folder` value
+- Opportunity Hub records should point to the `Bids/...` folder until awarded
+- Project records should point to the `Active Projects/...` folder after conversion
 - The `/documents` route is a general-purpose browser for admin use
 - File list: `GET /sites/{siteId}/drive/root:/{folderPath}:/children`
 - Download URL: `@microsoft.graph.downloadUrl` property on each file item
@@ -204,7 +269,7 @@ If a folder is renamed or moved in SharePoint manually, the path in Supabase bec
 
 ## 8. Template Folder Provisioning
 
-When creating a new quote/estimate/project folder, copy from the `_Templates/` library rather than creating each subfolder individually. This ensures consistent structure and allows templates to be updated without code changes.
+When creating a new bid or project folder, copy from the `_Templates/` library rather than creating each subfolder individually. This ensures consistent structure and allows templates to be updated without code changes.
 
 ```
 POST /sites/{siteId}/drive/items/{templateFolderId}/copy
@@ -213,3 +278,9 @@ Body: { name: "2026-041 - Mobile Arena - Controls Upgrade",
 ```
 
 This single API call copies the entire template tree including all subfolders.
+
+For Opportunity Hub, use the same principle for the bid folder plus the working files:
+
+- copy the `Bid Folder Template` tree into `Bids/...`
+- then copy the current files from `_Templates/Opportunity Master Templates/` into `03 Estimate Working/`
+- rename the proposal template copy from `HVAC Control Installation Proposal-Template.docx` to `HVAC Control Installation Proposal-{Project Name}.docx`

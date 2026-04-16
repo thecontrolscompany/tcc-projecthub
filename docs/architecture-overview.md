@@ -1,7 +1,7 @@
 # TCC Unified Internal Platform — Architecture Overview
 
 **Date:** 2026-03-30
-**Status:** Architecture Planning (pre-integration)
+**Status:** Working platform foundation with active planning for lifecycle expansion
 
 ---
 
@@ -47,7 +47,7 @@ The platform serves two distinct user populations that should never share the sa
 - No billing, no PM workflow, no customer visibility
 - No SharePoint or document integration
 
-### Application B — PM/Billing Portal (THIS REPO, IN PROGRESS)
+### Application B — ProjectHub Operating Platform (THIS REPO, ACTIVE FOUNDATION)
 **Location:** `C:\Users\TimothyCollins\dev\tcc-projecthub`
 **Stack:** Next.js 16 + TypeScript + Supabase PostgreSQL
 **Auth:** Microsoft SSO (admin/PM) + email/password (customers)
@@ -57,16 +57,18 @@ The platform serves two distinct user populations that should never share the sa
 - Billing table with inline editing, TanStack Table, legacy formula replicated
 - Roll-forward, POC sheet sync, Outlook draft email generation
 - Analytics with Recharts + Power BI embed
-- Customer portal (read-only)
-- PM weekly update workflow
+- Customer portal routes and customer-safe data flows
+- PM workflow foundation including weekly updates
 - Admin user management
-- API routes for Graph API (OneDrive, Outlook), Excel export
+- Project, PM, customer, time, and admin route surfaces
+- API routes for Graph API (OneDrive, Outlook, SharePoint-adjacent workflows), Excel export, PM/customer data, and project operations
 
 **Current limitations:**
 - Not yet connected to a live Supabase project (env vars not configured)
 - No estimating capability
 - No quote request workflow
 - Projects are manually created; no lifecycle from estimate
+- PM and customer flows need live-data hardening, route cleanup, and shell/navigation unification rather than greenfield invention
 - Dark-mode only (no light/dark toggle)
 - No branding assets integrated
 

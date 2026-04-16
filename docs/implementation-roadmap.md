@@ -6,19 +6,20 @@
 
 ## Guiding Principles
 
-1. **Ship something real before building something big.** Get the existing billing/PM portal live with real data before adding quote requests or estimating.
+1. **Strengthen the working foundation before expanding the lifecycle.** ProjectHub already has meaningful PM, billing, projects, customer, and admin surfaces; get them live with real data and a unified shell before adding large new domains.
 2. **Never disrupt the live estimating tool.** `hvac-estimator` continues to run until the Next.js estimating module is fully validated.
 3. **Low-risk migrations only.** Prefer additive changes over replacements.
 4. **Each phase delivers usable value.** No phase is just "infrastructure" with no user-facing outcome.
 5. **Standardize external-facing project reports.** Use the Eglin HTML progress report as the baseline structure, adapt sections per project, and keep TCC branding on every generated report.
+6. **Support real offline field conditions.** Assume crews may work in buildings or job sites with poor/no internet; everyday document work should continue in synced SharePoint folders, and PM/admin reconciliation can happen later when back online.
 
 ---
 
-## Phase 0 - Connect the Platform (IMMEDIATE)
+## Phase 0 - Operationalize the Existing Platform (IMMEDIATE)
 **Target duration:** 1 week
-**Delivers:** A real, working app with live data
+**Delivers:** The existing PM, billing, projects, customer, and admin foundation running with live data
 
-This is purely operational setup. No new code.
+This is primarily operational setup so the current platform can be used against real data.
 
 ### Tasks
 - [ ] Create Supabase project at supabase.com
@@ -34,8 +35,12 @@ This is purely operational setup. No new code.
 - [ ] Import first 3-5 real projects from legacy Excel tracker
 - [ ] Verify billing table loads, roll-forward works, email drafts created
 - [ ] Deploy to Vercel staging URL
+- [ ] Document the offline operating model for the team
+  - everyday users continue working in synced SharePoint folders when offline
+  - PMs collect updates weekly and reconcile them when back online
+  - define which records are source-of-truth in SharePoint vs ProjectHub during offline periods
 
-**Success criteria:** Timothy can log in and see real project data.
+**Success criteria:** Timothy can log in, see real project data, and exercise the current PM/billing/customer foundation against live records.
 
 ---
 
@@ -83,25 +88,46 @@ This is purely operational setup. No new code.
 
 ## Phase 3 - Quote Requests Domain
 **Target duration:** 2-3 weeks
-**Delivers:** The front door to the lifecycle is open
+**Delivers:** The front door to the lifecycle is open, and `Opportunity Hub` becomes the internal bid pipeline
 
 ### Tasks
 - [ ] Run migration 003: `quote_requests`, `quote_request_attachments`, `quote_request_messages` tables plus numbering function
-- [ ] Build `/quotes` dashboard - table with status, due date, customer, assigned estimator
-- [ ] Build `/quotes/[id]` detail page - summary, attachments, status actions, internal notes
+- [ ] Build `/quotes` dashboard as the `Opportunity Hub` pipeline table with status, due date, customer, assigned estimator, bid date, bid price, last activity, and next action
+- [ ] Add `Pursuit -> Opportunity` hierarchy to Opportunity Hub so one real-world project can contain multiple customer/vendor-specific bids
+- [ ] Build pursuit matching/creation flow on quote intake so staff can attach a new opportunity to an existing project pursuit when multiple vendors are bidding the same job
+- [ ] Build customer-level bid history views so sales/estimating can see all quote requests, active bids, won/lost results, and hit rate by customer
+- [ ] Build `/quotes/[id]` detail page - summary, attachments, status actions, internal notes, bid pricing, due/submission dates, and won/lost outcome tracking
 - [ ] Build `/quotes/new` form - admin/estimator creates a quote request manually
+- [ ] Treat customer-facing `/customer/quotes` as `Opportunity Hub` for consistency with `ProjectHub`, with a prominent `Submit Quote Request` action
 - [ ] Build "Assign Estimator" action
-- [ ] Build "Create Estimate" conversion action (stub: creates estimate record, sets QR status)
-- [ ] Build "Mark Won / Lost / Archive" actions
+- [ ] Build "Convert to Opportunity" action so an intake request becomes the managed internal opportunity record without re-entry
+- [ ] Require quote-to-opportunity conversion to either create a new pursuit or attach to an existing pursuit
+- [ ] Build "Create Estimate" action for the `hvac-estimator` path
+- [ ] Build "Use Legacy Excel Estimate" action for opportunities that still follow the workbook workflow
+- [ ] Build "Mark Won / Lost / Archive" actions with loss reason / outcome notes for later reporting
+- [ ] Support proposal package upload on the opportunity record
+  - proposal `.docx` as primary extraction source
+  - proposal `.pdf` as archived customer-facing version
+  - estimate `.xlsm` as cost/markup extraction source
+- [ ] Extract normalized opportunity fields from uploaded proposal/estimate documents and store them in Supabase without overwriting the source files
 - [ ] Build `/customer/quotes` - customer views their submitted requests
-- [ ] Build `/customer/quotes/new` - customer intake form with file uploads (local storage first, SharePoint in 3b)
+- [ ] Build `/customer/quotes/new` - customer intake form with drag-and-drop file uploads, due dates, and quote-request metadata (local storage first, SharePoint in 3b)
+- [ ] Add Dropbox-style customer file request experience so customers can drop plans/specs/addenda/photos and later add more files without entering the internal app
+- [ ] Add customer-facing quote progress tracking so customers can see request received, under review, estimating, submitted, won/lost, and requests for missing information
 - [ ] Implement SharePoint folder creation on quote submission (using Graph API from `sharepoint-strategy.md`)
 - [ ] Implement file upload to SharePoint `/01 Customer Uploads/`
+- [ ] Create root SharePoint template area for Opportunity Hub working files
+  - `/_Templates/Opportunity Master Templates/`
+  - store current master `Electrical Budgeting Tool vXX.xlsm`
+  - store current master `HVAC Control Installation Proposal-Template.docx`
+- [ ] On internal opportunity creation, copy the current master estimate workbook and proposal template into `/03 Estimate Working/`
+  - keep the estimate workbook's current versioned filename such as `Electrical Budgeting Tool v15.xlsm`
+  - rename the copied proposal file from `...-Template.docx` to `...-{Project Name}.docx`
 - [ ] Store `sharepoint_folder` and `sharepoint_item_id` on quote request record
 - [ ] Implement Outlook draft notification to admin on new submission
-- [ ] Build analytics tab: quotes received, average turnaround, win rate
+- [ ] Build analytics tab: quotes received, average turnaround, win rate, bids by customer, and won/lost history
 
-**Success criteria:** A customer can submit a quote request with file attachments. Timothy sees it in the queue, assigns it, and can track its status.
+**Success criteria:** A customer can submit a quote request with drag-and-drop file attachments and track its progress. Timothy sees an `Opportunity Hub` queue, assigns it, enters bid dates/prices, uploads proposal/estimate files, and tracks won/lost performance by customer.
 
 ---
 
@@ -113,7 +139,25 @@ This is purely operational setup. No new code.
 - [ ] Run migration 004: `estimates`, `estimate_items`, `estimate_cost_settings` tables plus numbering and job numbering
 - [ ] Build `/estimating` list page - estimate cards
 - [ ] Build `/estimating/[id]` detail page - summary view (no editor yet; editor stays in `hvac-estimator`)
+- [ ] Add estimate shell fields needed by `Opportunity Hub` tracking: bid price, bid date, proposal date, customer, customer bid history link, and outcome state
+- [ ] Add launch/link flow from `Opportunity Hub` into `hvac-estimator` so an opportunity can create or reopen its linked estimate
+- [ ] Keep the legacy Excel estimate path available during transition so the opportunity record can link either to `hvac-estimator` or to uploaded `.xlsm` source files
+- [ ] Store imported estimate summary values from uploaded `.xlsm` files
+  - labor hours
+  - labor cost
+  - material cost
+  - direct / indirect cost
+  - overhead
+  - profit
+  - vendor fee
+  - total cost
+  - marked-up value
+- [ ] Store imported proposal pricing rows from uploaded proposal documents
+  - base bid
+  - bond
+  - any additional pricing line items
 - [ ] Add Supabase client to `hvac-estimator` (Phase 3 of integration strategy) so estimates write to Supabase instead of localStorage
+- [ ] Add "New Project from Estimate" shortcut so the New Project flow can pull customer, job/site info, pricing, and source estimate ID directly from an estimate page
 - [ ] Build "Award Project" action in `/estimating/[id]` or `/quotes/[id]`
   - Creates job number (`YYYY-NNN`)
   - Locks estimate
@@ -126,7 +170,7 @@ This is purely operational setup. No new code.
 - [ ] Update `/pm` to use job numbers in display (`2026-041 - Project Name`)
 - [ ] Add `display_name` to projects
 
-**Success criteria:** An awarded estimate becomes a project with a job number. The PM is notified. A SharePoint folder exists. Billing periods can be managed.
+**Success criteria:** An awarded estimate becomes a project with a job number, and the New Project flow can be started directly from the estimate context instead of rekeying the same data. The PM is notified. A SharePoint folder exists. Billing periods can be managed.
 
 ---
 
@@ -144,6 +188,33 @@ This is purely operational setup. No new code.
 - [ ] Update the current report implementation so it follows the Eglin standard while restoring stronger TCC branding that is missing from the current version
 
 **Success criteria:** A PM can generate a branded TCC project report that follows the Eglin standard, automatically fills from live project data, and gracefully omits sections that do not apply to a given project.
+
+---
+
+## Phase 4bb - Offline Workflow and Sync Process
+**Target duration:** 1-2 weeks
+**Delivers:** A practical offline operating process for field and PM teams, with a clear weekly sync workflow instead of assuming always-on connectivity
+
+### Tasks
+- [ ] Define the default offline workflow around synced SharePoint libraries rather than live app entry from the field
+- [ ] Document which project artifacts are expected to be edited offline
+  - weekly notes
+  - field photos
+  - redlines / marked-up PDFs
+  - proposal / estimate support documents
+  - customer or subcontractor attachments
+- [ ] Define PM weekly update cadence for reconciling offline work back into ProjectHub when off site
+- [ ] Create a "minimum viable sync" checklist for PMs
+  - what to review from SharePoint each week
+  - what to copy into ProjectHub
+  - how to handle conflicts or duplicate files
+  - how to note items that remain SharePoint-only
+- [ ] Identify which workflows truly need an app feature versus a documented process
+- [ ] Add conflict-handling guidance for cases where SharePoint files and ProjectHub fields disagree
+- [ ] Define naming and folder rules that make offline capture easier and later sync more reliable
+- [ ] Decide whether any later lightweight import/reconciliation helper is needed for PM weekly sync, or whether process alone is sufficient
+
+**Success criteria:** TCC can keep operating in low/no-internet environments without blocking the field team, and PMs have a repeatable weekly process for syncing meaningful updates back into ProjectHub.
 
 ---
 
@@ -225,6 +296,7 @@ This is the largest phase. Approach it incrementally.
 - [ ] Run all tests (including ported estimating tests)
 - [ ] Side-by-side test: create same estimate in both old and new tool, verify totals match
 - [ ] Timothy validates new estimating UI
+- [ ] Tie the finished estimating module back into `Opportunity Hub` so quote requests, opportunities, estimates, and project creation share one lifecycle record instead of duplicate entry
 - [ ] Update DNS: `internal.thecontrolscompany.com` to Vercel (`tcc-projecthub`)
 - [ ] Archive `hvac-estimator` repo (keep, do not delete)
 

@@ -12,6 +12,7 @@ import {
   extractProposalFromDocx,
   extractProposalFromPdf,
 } from "@/lib/opportunity-document-ingestion";
+import { normalizeStoredCustomerName } from "@/lib/customer-name-normalization";
 
 export const maxDuration = 60;
 
@@ -378,17 +379,19 @@ export async function POST(request: Request) {
         continue;
       }
 
+      const normalizedCustomerName = normalizeStoredCustomerName(customerName);
+
       const pursuitPatch: Record<string, unknown> = {};
       if (folderPath && !pursuit.sharepoint_folder) pursuitPatch.sharepoint_folder = folderPath;
       if (folderItemId && !pursuit.sharepoint_item_id) pursuitPatch.sharepoint_item_id = folderItemId;
-      if (isValidCustomerName(customerName)) pursuitPatch.owner_name = customerName;
+      if (isValidCustomerName(normalizedCustomerName)) pursuitPatch.owner_name = normalizedCustomerName;
 
       if (Object.keys(pursuitPatch).length > 0) {
         await supabase.from("pursuits").update(pursuitPatch).eq("id", pursuit.id);
       }
 
       const quotePatch: Record<string, unknown> = {};
-      if (isValidCustomerName(customerName)) quotePatch.company_name = customerName;
+      if (isValidCustomerName(normalizedCustomerName)) quotePatch.company_name = normalizedCustomerName;
       if (projectName) {
         quotePatch.project_description = projectName;
       }
@@ -404,7 +407,7 @@ export async function POST(request: Request) {
         pursuit_name: pursuit.project_name,
         status: "enriched",
         sharepoint_folder: folderPath,
-        customer_name: customerName,
+        customer_name: normalizedCustomerName,
         estimated_value: estimatedValue,
         candidate_file: candidateFile,
       });
