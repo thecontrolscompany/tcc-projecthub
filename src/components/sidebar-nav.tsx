@@ -171,7 +171,7 @@ function ExternalLinkIcon({ className = "h-3.5 w-3.5" }: IconProps) {
 
 // Nav items in display order. Time Hub is first for field/PM roles.
 export const NAV_LINKS: NavItem[] = [
-  { label: "Time Hub",        href: "/pm/time",                  roles: ["pm", "lead", "ops_manager"],            icon: ClockIcon },
+  { label: "Time Hub",        href: "/pm/time",                  roles: ["pm", "lead", "installer", "ops_manager"],            icon: ClockIcon },
   { label: "Admin",           href: "/admin",                    roles: ["admin"],                                 icon: GridIcon },
   { label: "Operations",      href: "/ops",                      roles: ["ops_manager"],                           icon: GridIcon },
   { label: "Ops View",        href: "/admin/ops",                roles: ["admin"],                                 icon: GridIcon },
@@ -179,12 +179,12 @@ export const NAV_LINKS: NavItem[] = [
   { label: "Opportunity Hub", href: "/quotes",                   roles: ["admin", "ops_manager", "customer"],      icon: DocumentIcon },
   { label: "Estimating",      href: "/estimating",               roles: ["admin", "ops_manager"],                  icon: CalculatorIcon },
   { label: "PM Portal",       href: "/pm",                       roles: ["pm", "lead", "ops_manager"],             icon: ClipboardIcon },
-  { label: "Projects",        href: "/projects",                 roles: ["pm", "lead"],                            icon: FolderIcon },
+  { label: "Projects",        href: "/projects",                 roles: [],                                        icon: FolderIcon },
   { label: "Installer",       href: "/installer",                roles: ["installer"],                             icon: WrenchIcon },
   { label: "Analytics",       href: "/admin/analytics",          roles: ["admin", "ops_manager"],                  icon: ChartIcon },
   { label: "Billing",         href: "/billing",                  roles: ["admin"],                                 icon: DollarIcon },
   { label: "Billing",         href: "/admin",                    roles: ["ops_manager"],                           icon: DollarIcon },
-  { label: "SharePoint",      href: "https://controlsco.sharepoint.com/sites/TCCProjects", roles: ["admin", "pm", "lead", "ops_manager"], icon: SharePointIcon, external: true },
+  { label: "SharePoint",      href: "https://controlsco.sharepoint.com/sites/TCCProjects", roles: ["admin", "pm", "lead", "installer", "ops_manager"], icon: SharePointIcon, external: true },
   { label: "SP Reconcile",    href: "/admin/migrate-sharepoint", roles: ["admin"],                                 icon: FolderIcon },
   { label: "My Portal",       href: "/customer",                 roles: ["customer"],                              icon: UserIcon },
 ];
