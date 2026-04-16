@@ -378,6 +378,15 @@ This is the largest phase. Approach it incrementally.
 **Target duration:** 2-3 weeks
 **Delivers:** Meaningful business insight across the full lifecycle
 
+### Supplier Spend Metrics
+- [ ] Track material purchases and subcontractor invoices per project
+- [ ] Supplier spend dashboard: total spend by vendor, ranked by volume
+- [ ] Spend by category (controls hardware, wire/conduit, subcontractors, misc)
+- [ ] Spend vs material budget per project (actual vs estimated material cost)
+- [ ] Repeat supplier analysis — identify preferred vs one-off vendors
+- [ ] Flag projects with unusually high supplier spend relative to contract value
+- [ ] Export supplier spend summary for accounting / job cost review
+
 ### Tasks
 - [ ] Expand analytics to include quote pipeline funnel
 - [ ] Add estimate accuracy reports (estimate vs actual on completed projects)
