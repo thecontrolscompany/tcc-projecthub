@@ -11,6 +11,7 @@ type NavItem = {
   href: string;
   roles: NavRole[];
   icon: (props: IconProps) => React.ReactNode;
+  external?: boolean;
 };
 
 function GridIcon({ className = "h-5 w-5" }: IconProps) {
@@ -146,31 +147,53 @@ function ChevronLeftIcon({ className = "h-4 w-4" }: IconProps) {
   );
 }
 
+function SharePointIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <circle cx="9" cy="12" r="5" />
+      <circle cx="17" cy="7" r="3" />
+      <circle cx="17" cy="17" r="3" />
+      <path d="M13.5 10.5 14.5 9" />
+      <path d="M13.5 13.5 14.5 15" />
+    </svg>
+  );
+}
+
+function ExternalLinkIcon({ className = "h-3.5 w-3.5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <path d="M15 3h6v6" />
+      <path d="m10 14 11-11" />
+    </svg>
+  );
+}
+
+// Nav items in display order. Time Hub is first for field/PM roles.
 export const NAV_LINKS: NavItem[] = [
-  { label: "Admin", href: "/admin", roles: ["admin"], icon: GridIcon },
-  { label: "Operations", href: "/ops", roles: ["ops_manager"], icon: GridIcon },
-  { label: "Billing", href: "/admin", roles: ["ops_manager"], icon: DollarIcon },
-  { label: "Ops View", href: "/admin/ops", roles: ["admin"], icon: GridIcon },
-  { label: "Contacts", href: "/admin/contacts", roles: ["admin"], icon: UserIcon },
-  { label: "Opportunity Hub", href: "/quotes", roles: ["admin", "ops_manager", "customer"], icon: DocumentIcon },
-  { label: "Feedback", href: "/feedback", roles: ["admin", "pm", "lead", "ops_manager"], icon: MessageIcon },
-  { label: "Estimating", href: "/estimating", roles: ["admin", "ops_manager"], icon: CalculatorIcon },
-  { label: "Projects", href: "/projects", roles: ["pm", "lead"], icon: FolderIcon },
-  { label: "PM Portal", href: "/pm", roles: ["pm", "lead", "ops_manager"], icon: ClipboardIcon },
-  { label: "TCC Time", href: "/time", roles: ["admin", "pm", "lead", "ops_manager"], icon: ClockIcon },
-  { label: "Time Tracking", href: "/pm/time", roles: ["pm", "lead", "ops_manager"], icon: ClockIcon },
-  { label: "Installer", href: "/installer", roles: ["installer"], icon: WrenchIcon },
-  { label: "Analytics", href: "/admin/analytics", roles: ["admin", "ops_manager"], icon: ChartIcon },
-  { label: "SharePoint", href: "/admin/migrate-sharepoint", roles: ["admin"], icon: FolderIcon },
-  { label: "Billing", href: "/billing", roles: ["admin"], icon: DollarIcon },
-  { label: "My Portal", href: "/customer", roles: ["customer"], icon: UserIcon },
+  { label: "Time Hub",        href: "/pm/time",                  roles: ["pm", "lead", "ops_manager"],            icon: ClockIcon },
+  { label: "Admin",           href: "/admin",                    roles: ["admin"],                                 icon: GridIcon },
+  { label: "Operations",      href: "/ops",                      roles: ["ops_manager"],                           icon: GridIcon },
+  { label: "Ops View",        href: "/admin/ops",                roles: ["admin"],                                 icon: GridIcon },
+  { label: "Contacts",        href: "/admin/contacts",           roles: ["admin"],                                 icon: UserIcon },
+  { label: "Opportunity Hub", href: "/quotes",                   roles: ["admin", "ops_manager", "customer"],      icon: DocumentIcon },
+  { label: "Estimating",      href: "/estimating",               roles: ["admin", "ops_manager"],                  icon: CalculatorIcon },
+  { label: "PM Portal",       href: "/pm",                       roles: ["pm", "lead", "ops_manager"],             icon: ClipboardIcon },
+  { label: "Projects",        href: "/projects",                 roles: ["pm", "lead"],                            icon: FolderIcon },
+  { label: "Installer",       href: "/installer",                roles: ["installer"],                             icon: WrenchIcon },
+  { label: "Analytics",       href: "/admin/analytics",          roles: ["admin", "ops_manager"],                  icon: ChartIcon },
+  { label: "Billing",         href: "/billing",                  roles: ["admin"],                                 icon: DollarIcon },
+  { label: "Billing",         href: "/admin",                    roles: ["ops_manager"],                           icon: DollarIcon },
+  { label: "SharePoint",      href: "https://controlsco.sharepoint.com/sites/TCCProjects", roles: ["admin", "pm", "lead", "ops_manager"], icon: SharePointIcon, external: true },
+  { label: "SP Reconcile",    href: "/admin/migrate-sharepoint", roles: ["admin"],                                 icon: FolderIcon },
+  { label: "My Portal",       href: "/customer",                 roles: ["customer"],                              icon: UserIcon },
 ];
 
 const PAGE_TITLE_OVERRIDES: Record<string, string> = {
   "/admin": "Admin",
   "/admin/analytics": "Analytics",
   "/admin/contacts": "Contacts & Users",
-  "/admin/migrate-sharepoint": "SharePoint",
+  "/admin/migrate-sharepoint": "SharePoint Reconcile",
   "/admin/ops": "Ops View",
   "/admin/users": "User Management",
   "/billing": "Billing",
@@ -180,10 +203,9 @@ const PAGE_TITLE_OVERRIDES: Record<string, string> = {
   "/installer": "Installer",
   "/ops": "Operations",
   "/pm": "PM Portal",
-  "/pm/time": "Time Tracking",
+  "/pm/time": "Time Hub",
   "/projects": "Projects",
   "/quotes": "Opportunity Hub",
-  "/time": "TCC Time",
   "/time/clock": "Time Clock",
   "/time/employees": "Time Employees",
   "/time/projects": "Time Projects",
@@ -207,7 +229,7 @@ export function resolvePageTitle(pathname: string) {
     return PAGE_TITLE_OVERRIDES[pathname];
   }
 
-  const matched = NAV_LINKS.find((item) => item.href !== "/" && pathname.startsWith(item.href));
+  const matched = NAV_LINKS.find((item) => !item.external && item.href !== "/" && pathname.startsWith(item.href));
   return matched?.label ?? "ProjectHub";
 }
 
@@ -245,6 +267,7 @@ export function SidebarNav({
         collapsed ? "w-16" : "w-56",
       ].join(" ")}
     >
+      {/* Logo header */}
       <div className="flex h-14 items-center border-b border-border-default px-3">
         <div className={["flex items-center gap-3 overflow-hidden", collapsed ? "justify-center w-full" : ""].join(" ")}>
           <img
@@ -268,11 +291,36 @@ export function SidebarNav({
         </div>
       </div>
 
+      {/* Nav links */}
       <nav className="flex-1 overflow-y-auto px-2 py-3">
         <div className="space-y-1">
           {links.map((link) => {
-            const isActive = isActivePath(pathname, link.href);
+            const isActive = !link.external && isActivePath(pathname, link.href);
             const Icon = link.icon;
+
+            if (link.external) {
+              return (
+                <a
+                  key={`${link.href}-${link.label}`}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={collapsed ? link.label : undefined}
+                  className={[
+                    "flex items-center rounded-xl px-3 py-2.5 text-sm transition-colors text-text-secondary hover:bg-surface-overlay hover:text-text-primary",
+                    collapsed ? "justify-center" : "gap-3",
+                  ].join(" ")}
+                >
+                  <Icon className="h-5 w-5 shrink-0" />
+                  {!collapsed && (
+                    <span className="flex flex-1 items-center justify-between truncate">
+                      {link.label}
+                      <ExternalLinkIcon className="h-3 w-3 shrink-0 opacity-50" />
+                    </span>
+                  )}
+                </a>
+              );
+            }
 
             return (
               <Link
@@ -295,6 +343,7 @@ export function SidebarNav({
         </div>
       </nav>
 
+      {/* Footer: user info + feedback + sign out */}
       <div className="border-t border-border-default p-2">
         <div className={["rounded-2xl bg-surface-overlay/70 p-2", collapsed ? "space-y-2" : "space-y-3"].join(" ")}>
           <div className={["flex items-center", collapsed ? "justify-center" : "gap-3"].join(" ")}>
@@ -309,7 +358,7 @@ export function SidebarNav({
             )}
           </div>
 
-          <div className={["flex items-center", collapsed ? "justify-center" : "justify-between"].join(" ")}>
+          <div className={["flex items-center gap-1", collapsed ? "flex-col" : "justify-between"].join(" ")}>
             {!collapsed && (
               <button
                 onClick={onToggle}
@@ -321,20 +370,31 @@ export function SidebarNav({
               </button>
             )}
 
-            <button
-              onClick={async () => {
-                await supabase.auth.signOut();
-                router.push("/login");
-              }}
-              title="Sign Out"
-              className={[
-                "inline-flex items-center rounded-lg text-sm text-text-secondary transition hover:bg-surface-raised hover:text-text-primary",
-                collapsed ? "justify-center px-2 py-2" : "px-3 py-2",
-              ].join(" ")}
-            >
-              <UserIcon className="h-4 w-4" />
-              {!collapsed && <span className="ml-2">Sign Out</span>}
-            </button>
+            <div className={["flex items-center gap-1", collapsed ? "flex-col" : ""].join(" ")}>
+              {/* Feedback tucked in footer */}
+              <Link
+                href="/feedback"
+                title="Feedback"
+                className="inline-flex items-center justify-center rounded-lg px-2 py-2 text-text-tertiary transition hover:bg-surface-raised hover:text-text-primary"
+              >
+                <MessageIcon className="h-4 w-4" />
+              </Link>
+
+              <button
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  router.push("/login");
+                }}
+                title="Sign Out"
+                className={[
+                  "inline-flex items-center rounded-lg text-sm text-text-secondary transition hover:bg-surface-raised hover:text-text-primary",
+                  collapsed ? "justify-center px-2 py-2" : "px-3 py-2",
+                ].join(" ")}
+              >
+                <UserIcon className="h-4 w-4" />
+                {!collapsed && <span className="ml-2">Sign Out</span>}
+              </button>
+            </div>
           </div>
         </div>
       </div>

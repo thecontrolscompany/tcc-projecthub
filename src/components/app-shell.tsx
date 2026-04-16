@@ -122,7 +122,7 @@ export function AppShell({
           collapsed ? "md:ml-16" : "md:ml-56",
         ].join(" ")}
       >
-        <main className="p-6">{children}</main>
+        <main className="p-4 md:p-6">{children}</main>
       </div>
     </>
   );
