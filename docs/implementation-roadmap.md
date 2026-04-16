@@ -267,6 +267,31 @@ This is primarily operational setup so the current platform can be used against 
 
 ---
 
+## Phase 4e - Internal Knowledge Base
+**Target duration:** 2-3 weeks
+**Delivers:** A searchable internal reference hub for SOPs, wiring diagrams, acronyms, and institutional knowledge
+
+### Tasks
+- [ ] Define schema for knowledge base articles
+  - Store title, category, body (markdown), tags, author, created/updated timestamps, SharePoint document link where applicable
+- [ ] Define categories: SOP, Wiring Diagram, Reference, Training, Acronym
+- [ ] Build `/knowledge` list page — searchable, filterable by category and tag
+- [ ] Build `/knowledge/[id]` detail page — renders markdown, displays linked diagrams or documents
+- [ ] Build acronym finder — fast lookup of TCC-specific and industry abbreviations with definitions and context
+  - Support fuzzy search so partial matches surface results
+  - Allow acronyms to link to a related SOP or reference article
+- [ ] Build SOP section — step-by-step procedures for recurring internal tasks (startup, commissioning, closeout, billing cycle, etc.)
+- [ ] Build wiring diagram library — upload and tag diagrams, link to equipment types or project templates
+- [ ] Build knowledge transfer module — structured Q&A or topic-based articles for onboarding new staff
+  - Cover estimating workflow, SharePoint folder conventions, billing cycle, project lifecycle, customer communication norms
+- [ ] Add "Suggest an Edit" or internal comment thread so staff can flag outdated content
+- [ ] Role-gate authoring (admin/estimator can create/edit; field/billing can read)
+- [ ] Link knowledge articles from related context — e.g. a change order form can surface the "Change Order SOP" inline
+
+**Success criteria:** Any team member can open `/knowledge`, search for an acronym, SOP, or wiring reference, and find current TCC-specific guidance without asking someone else.
+
+---
+
 ## Phase 5 - Estimating Module (`hvac-estimator` Integration)
 **Target duration:** 6-10 weeks
 **Delivers:** One unified app. `hvac-estimator` can be retired.
@@ -342,9 +367,10 @@ This is the largest phase. Approach it incrementally.
 | 4b - Standardized Project Reports | 1-2 weeks | Week 12 |
 | 4c - AI-Assisted PM & Change Order Workflows | 2-3 weeks | Week 15 |
 | 4d - Employee Safety Certification Tracking | 1-2 weeks | Week 17 |
-| 5 - Estimating Module Migration | 6-10 weeks | Week 27 |
-| 6 - Analytics | 2-3 weeks | Week 30 |
-| 7 - QBO Integrations | 4-6 weeks | Week 36 |
+| 4e - Internal Knowledge Base | 2-3 weeks | Week 20 |
+| 5 - Estimating Module Migration | 6-10 weeks | Week 30 |
+| 6 - Analytics | 2-3 weeks | Week 33 |
+| 7 - QBO Integrations | 4-6 weeks | Week 39 |
 
 **Platform is operationally useful from Phase 0. Full unification completes at Phase 5.**
 
