@@ -8,6 +8,10 @@ export const metadata: Metadata = {
     template: "%s | TCC ProjectHub",
   },
   description: "Project management and billing portal for The Controls Company, LLC.",
+  icons: {
+    apple: "/apple-touch-icon.png",
+    icon: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
