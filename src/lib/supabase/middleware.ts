@@ -65,6 +65,11 @@ export async function updateSession(request: NextRequest) {
       url.pathname = roleHome(role);
       return NextResponse.redirect(url);
     }
+    if (pathname.startsWith("/time-hub") && !["admin", "pm", "lead", "installer", "ops_manager"].includes(role ?? "")) {
+      const url = request.nextUrl.clone();
+      url.pathname = roleHome(role);
+      return NextResponse.redirect(url);
+    }
     if (pathname.startsWith("/pm") && !["admin", "pm", "lead", "ops_manager"].includes(role ?? "")) {
       const url = request.nextUrl.clone();
       url.pathname = roleHome(role);

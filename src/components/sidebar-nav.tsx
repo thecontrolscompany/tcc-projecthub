@@ -171,7 +171,7 @@ function ExternalLinkIcon({ className = "h-3.5 w-3.5" }: IconProps) {
 
 // Nav items in display order. Time Hub is first for field/PM roles.
 export const NAV_LINKS: NavItem[] = [
-  { label: "Time Hub",        href: "/pm/time",                  roles: ["pm", "lead", "installer", "ops_manager"],            icon: ClockIcon },
+  { label: "Time Hub",        href: "/time-hub",                 roles: ["pm", "lead", "installer", "ops_manager"],            icon: ClockIcon },
   { label: "Admin",           href: "/admin",                    roles: ["admin"],                                 icon: GridIcon },
   { label: "Operations",      href: "/ops",                      roles: ["ops_manager"],                           icon: GridIcon },
   { label: "Ops View",        href: "/admin/ops",                roles: ["admin"],                                 icon: GridIcon },
@@ -204,6 +204,7 @@ const PAGE_TITLE_OVERRIDES: Record<string, string> = {
   "/ops": "Operations",
   "/pm": "PM Portal",
   "/pm/time": "Time Hub",
+  "/time-hub": "Time Hub",
   "/projects": "Projects",
   "/quotes": "Opportunity Hub",
   "/time/clock": "Time Clock",
