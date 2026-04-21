@@ -693,7 +693,7 @@ export function BomTab({ projectId, readOnly = false, allowReceiptEditing = fals
                                   aria-expanded={isExpanded}
                                   aria-label={isExpanded ? "Hide receipt log" : "View receipt log"}
                                 >
-                                  <span>{isExpanded ? "Hide Receipts" : "View Receipts"}</span>
+                                  <span>{isExpanded ? "Hide Receipts" : "View/Add Receipts"}</span>
                                   <ChevronIcon expanded={isExpanded} />
                                 </button>
                               </td>
@@ -703,7 +703,7 @@ export function BomTab({ projectId, readOnly = false, allowReceiptEditing = fals
                                 <div className="break-words font-medium">{item.description}</div>
                                 {item.notes && <div className="mt-1 text-xs text-text-tertiary">{item.notes}</div>}
                                 <div className="mt-2 text-[11px] font-medium uppercase tracking-wide text-text-tertiary">
-                                  Use &quot;View Receipts&quot; to log or edit deliveries
+                                  Use &quot;View/Add Receipts&quot; to log or edit deliveries
                                 </div>
                               </td>
                               <td className="px-4 py-3 text-right text-text-secondary">{item.qty_required}</td>
