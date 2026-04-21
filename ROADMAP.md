@@ -47,8 +47,39 @@
 
 ## Planned
 
-- [ ] **Budget vs Actual** (Priority: High) - labor and material cost vs estimate by project; feeds job costing. Depends on timesheets and BOM. Spec: `codex/roadmap-budget-vs-actual.md`
-- [ ] **QBO Integration** (Priority: High) - 4-phase OAuth sync: read customers/estimates/invoices -> write invoices -> bills/payroll -> full 2-way. Spec: `codex/roadmap-qbo-integration.md`
-- [ ] **Estimator <-> ProjectHub Integration** (Priority: High) - Phase 1: cloud auth migration; Phase 2: link estimates to projects; Phase 3: push POC weights from estimate. Spec: `.claude/plans/goofy-sniffing-karp.md`
-- [ ] **Scheduling / Crew Calendar** (Priority: Medium) - visual week-view calendar for crew assignments by project; admin and PM views. Spec: `codex/roadmap-scheduling-crew-calendar.md`
-- [ ] **Barcode Scanner** (Priority: Low) - phone camera QR/barcode scanner for BOM receiving on mobile; offline caching for military sites. Depends on BOM. Spec: `codex/roadmap-barcode-scanner.md`
+### Near-Term
+- [ ] **Budget vs Actual** (Priority: High) — labor and material cost vs estimate by project; feeds job costing. Depends on timesheets and BOM. Spec: `codex/roadmap-budget-vs-actual.md`
+- [ ] **QBO Integration** (Priority: High) — 4-phase OAuth sync: read customers/estimates/invoices → write invoices → bills/payroll → full 2-way. Spec: `codex/roadmap-qbo-integration.md`
+- [ ] **Estimator ↔ ProjectHub Integration** (Priority: High) — Phase 1: cloud auth migration; Phase 2: link estimates to projects; Phase 3: push POC weights from estimate. Spec: `.claude/plans/goofy-sniffing-karp.md`
+- [ ] **Scheduling / Crew Calendar** (Priority: Medium) — visual week-view calendar for crew assignments by project; admin and PM views. Spec: `codex/roadmap-scheduling-crew-calendar.md`
+- [ ] **Barcode Scanner** (Priority: Low) — phone camera QR/barcode scanner for BOM receiving on mobile; offline caching for military sites. Spec: `codex/roadmap-barcode-scanner.md`
+
+### AI and Automation
+- [ ] **AI-assisted weekly report drafting** — suggest polished report language from crew logs, notes, blockers, and prior context; flag missing sections before submission; produce customer-facing summary alongside internal draft
+- [ ] **AI change order coverage review** — expand PM rough scope notes into a full checklist of direct/indirect cost drivers (labor, material, lost time, travel, escalation, schedule impact, overhead, profit); draft formal change order language
+- [ ] **Project knowledge agent** — PM and leadership can ask questions across report history and project documents; grounded in SharePoint files and weekly updates
+- [ ] **AI variance analysis** — automated variance explanations, trend summaries, and forecast commentary drafts in the analytics module
+
+### People and Compliance
+- [ ] **Employee safety certification tracking** — matrix view (employee × certification) with current/expiring/expired/missing states; SharePoint-backed document storage; expiration reminders. Spec: `docs/implementation-roadmap.md` Phase 4d
+- [ ] **Internal knowledge base** — searchable SOPs, wiring diagram library, acronym finder, and onboarding articles; role-gated authoring; linked from relevant app contexts. Spec: `docs/implementation-roadmap.md` Phase 4e
+
+### Microsoft 365 Deep Integration
+- [ ] **Teams notifications** — post to configured channel on quote submitted, bid won/lost, report published, billing period closed; Adaptive Card alerts for time-sensitive events
+- [ ] **Full Outlook send** — replace draft stubs with confirmed send for award notifications, PM billing alerts, bid submission confirmations, and quote acknowledgments
+- [ ] **Outlook calendar events** — create events for bid due dates, submission deadlines, and project milestones from within the app
+- [ ] **SharePoint inline previews** — surface document previews and version history on pursuit/project detail pages; sync folder changes back via Graph webhooks
+- [ ] **Visio diagram library** — store and preview `.vsdx` wiring diagrams in the knowledge base; tag by equipment type; "Open in Visio" deep link for editors
+- [ ] **Inbound photo intake** — field staff text or email photos to a project-specific address; photos land in the correct SharePoint folder and appear in the PM portal
+
+### Finance and Analytics
+- [ ] **Advanced analytics / FP&A layer** — variance analysis (actual vs budget, billed vs earned, labor burn vs baseline); scenario modeling (best/expected/worst revenue outlook); rolling forecasts; planning audit history; budget owner input workflow. Benchmarked against Cube.
+- [ ] **Supplier spend metrics** — material purchases and subcontractor invoices per project; spend by vendor and category; spend vs material budget; flag projects with unusually high supplier spend
+- [ ] **Executive reporting** — board-ready dashboard views; scheduled report delivery; spreadsheet-connected finance workflows for billing/accounting users
+- [ ] **Power BI full buildout** — publish `.pbix` connecting to Supabase; service principal embed token; workspace and report IDs wired to env vars
+
+### Platform Evolution
+- [ ] **Estimating module migration** (Priority: High, Long-term) — port hvac-estimator data layer and UI into ProjectHub as a first-class module; unified auth, shared project lifecycle, estimate-to-project conversion; retire standalone hvac-estimator. Spec: `docs/implementation-roadmap.md` Phase 5
+- [ ] **Public-facing quote intake** — customer-facing quote request form with drag-and-drop file uploads, progress tracking, and Dropbox-style file request experience; SharePoint folder provisioned on submission
+- [ ] **Award Project flow** — convert won estimate to project with one action: auto job number, locked estimate baseline, SharePoint folder tree from template, PM notification draft
+- [ ] **Expanded role model** — estimator, billing, accounting, executive roles with route-level access; multi-role support via junction table

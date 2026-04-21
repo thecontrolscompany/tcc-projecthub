@@ -137,3 +137,6 @@ npm run dev      # start dev server at localhost:3000
 npm run build    # production build (currently passes clean)
 npm run lint     # lint
 ```
+
+## Roadmap
+The authoritative feature status list is `ROADMAP.md` at the repo root. **All roadmap additions and updates go here and nowhere else.** When a feature is built and deployed, move it from Planned to Completed before closing the task. When adding a new idea to the roadmap, add it to the Planned section. The detailed spec for each planned item lives in `codex/roadmap-*.md` — link to it from the ROADMAP entry.

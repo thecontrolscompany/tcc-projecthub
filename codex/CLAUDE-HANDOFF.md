@@ -7,12 +7,15 @@ Paste this file into a new Claude session to restore full context.
 
 ## Standing Instructions for Codex
 
+**The roadmap lives at `ROADMAP.md` in the repo root. All roadmap additions and updates go here and nowhere else.**
+
 **After every task, Codex must:**
 1. Run `npm run build` and fix all errors
 2. `git add` all changed/new files
 3. `git commit` with a descriptive message
 4. `git push` to origin main
 5. Create a `codex/task-0XX-output.md` summarizing what was done
+6. If the task shipped a user-facing feature: update `ROADMAP.md` — move it from Planned to Completed, or add it to Completed if new. One line, no detail.
 
 Do not leave changes uncommitted. The live site deploys from main via Vercel.
 
