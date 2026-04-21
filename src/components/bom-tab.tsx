@@ -88,6 +88,21 @@ function formatReceiptUser(receipt: ReceiptWithProfile) {
   return receipt.profile?.full_name || receipt.profile?.email || receipt.received_by || "-";
 }
 
+function ChevronIcon({ expanded }: { expanded: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      className={["h-4 w-4 transition-transform", expanded ? "rotate-90" : ""].join(" ")}
+      aria-hidden="true"
+    >
+      <path d="m7 4 6 6-6 6" />
+    </svg>
+  );
+}
+
 function SummaryCard({
   label,
   value,
@@ -631,14 +646,15 @@ export function BomTab({ projectId, readOnly = false, allowReceiptEditing = fals
             <table className="w-full table-fixed text-sm">
               <thead>
                 <tr className="border-b border-border-default bg-surface-raised/80">
+                  <th className="w-[12%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Receipts</th>
                   <th className="w-[12%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Designation</th>
                   <th className="w-[16%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Code Number</th>
-                  <th className="w-[28%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Description</th>
+                  <th className="w-[22%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Description</th>
                   <th className="w-[10%] px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Total Qty</th>
                   <th className="w-[10%] px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Qty Rec&apos;d</th>
-                  <th className="w-[12%] px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Remain/Surplus</th>
-                  <th className="w-[12%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
-                  {canEditStructure && <th className="w-[16%] px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actions</th>}
+                  <th className="w-[10%] px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Remain/Surplus</th>
+                  <th className="w-[10%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
+                  {canEditStructure && <th className="w-[14%] px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -664,17 +680,31 @@ export function BomTab({ projectId, readOnly = false, allowReceiptEditing = fals
                             </tr>
                           ) : (
                             <tr
-                              className={["cursor-pointer border-b border-border-default align-top transition hover:bg-surface-overlay/40", ROW_CLASS[item.status ?? "not_received"]].join(" ")}
-                              onClick={() => {
-                                setExpandedItemId((current) => (current === item.id ? null : item.id));
-                                if (!receiptForms[item.id]) resetReceiptForm(item.id);
-                              }}
+                              className={["border-b border-border-default align-top transition hover:bg-surface-overlay/40", ROW_CLASS[item.status ?? "not_received"]].join(" ")}
                             >
+                              <td className="px-4 py-3">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setExpandedItemId((current) => (current === item.id ? null : item.id));
+                                    if (!receiptForms[item.id]) resetReceiptForm(item.id);
+                                  }}
+                                  className="inline-flex w-full items-center justify-between rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-left text-xs font-semibold text-text-secondary transition hover:bg-surface-base hover:text-text-primary"
+                                  aria-expanded={isExpanded}
+                                  aria-label={isExpanded ? "Hide receipt log" : "View receipt log"}
+                                >
+                                  <span>{isExpanded ? "Hide Receipts" : "View Receipts"}</span>
+                                  <ChevronIcon expanded={isExpanded} />
+                                </button>
+                              </td>
                               <td className="break-words px-4 py-3 text-text-primary">{item.designation || "-"}</td>
                               <td className="break-words px-4 py-3 text-text-secondary">{item.code_number || "-"}</td>
                               <td className="px-4 py-3 text-text-primary">
                                 <div className="break-words font-medium">{item.description}</div>
                                 {item.notes && <div className="mt-1 text-xs text-text-tertiary">{item.notes}</div>}
+                                <div className="mt-2 text-[11px] font-medium uppercase tracking-wide text-text-tertiary">
+                                  Use &quot;View Receipts&quot; to log or edit deliveries
+                                </div>
                               </td>
                               <td className="px-4 py-3 text-right text-text-secondary">{item.qty_required}</td>
                               <td className="px-4 py-3 text-right text-text-secondary">{item.qty_received ?? 0}</td>
@@ -905,7 +935,7 @@ export function BomTab({ projectId, readOnly = false, allowReceiptEditing = fals
                     })}
                     {canEditStructure && (
                       <tr className="border-b border-border-default bg-surface-base last:border-0">
-                        <td colSpan={8} className="px-4 py-3">
+                        <td colSpan={9} className="px-4 py-3">
                           {addingSection === section ? (
                             <BomItemForm
                               form={itemForm}
