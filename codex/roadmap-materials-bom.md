@@ -115,6 +115,59 @@ If customer provides structured data (e.g. via API or standard format), auto-imp
 
 ---
 
+## Product corrections / follow-up requirements
+
+The BOM must not require re-importing or uploading a new Excel file just to update received quantities.
+
+### Receipt-first updates
+
+- PMs must be able to update received quantities by adding or editing receipt entries directly in the portal
+- Receipt logging should be the primary workflow after the initial BOM import
+- BOM import should establish the expected material list, not remain the only practical way to change `Qty Rec'd`
+
+### Receipt date tracking
+
+- Every receipt event should be date-stamped so the team can track when material arrived
+- Distinguish between:
+  - `date_received` for the actual delivery date
+  - `created_at` for when the receipt was logged in the portal
+- The UI should show receipt history per BOM item as a visible log or timeline, not just a rolled-up quantity
+
+### Editability and auditability
+
+- Users should be able to correct a receipt entry without deleting BOM structure or re-uploading the source file
+- Receipt edits should preserve auditability:
+  - original quantity
+  - updated quantity
+  - who changed it
+  - when it was changed
+- If full edit history is not phase 1, the minimum acceptable receipt workflow is:
+  - add receipt
+  - edit receipt quantity/date/packing slip/notes
+  - delete mistaken receipt
+
+### PM portal requirement
+
+- PM portal BOM view should support receipt entry and correction for assigned PM roles
+- Customer portal remains read-only
+- Admin/Ops retain full BOM structure control
+
+### Recommended UX
+
+- `Log Receipt` action on each BOM row
+- `Edit Receipt` action inside the receipt history table
+- visible totals for:
+  - qty required
+  - qty received to date
+  - qty remaining / surplus
+- visible delivery dates so the team can answer:
+  - what arrived
+  - how much arrived
+  - when it arrived
+  - which packing slip it came from
+
+---
+
 ## Priority: Medium-High
 ## Depends on: Nothing (standalone tab)
 ## Suggested task number: 049

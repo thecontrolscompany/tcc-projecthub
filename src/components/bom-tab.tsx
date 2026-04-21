@@ -8,6 +8,7 @@ import { safeJson } from "@/lib/utils/safe-json";
 interface BomTabProps {
   projectId: string;
   readOnly?: boolean;
+  allowReceiptEditing?: boolean;
 }
 
 type ReceiptWithProfile = MaterialReceipt & {
@@ -167,7 +168,7 @@ function BomItemForm({
   );
 }
 
-export function BomTab({ projectId, readOnly = false }: BomTabProps) {
+export function BomTab({ projectId, readOnly = false, allowReceiptEditing = false }: BomTabProps) {
   const [items, setItems] = useState<BomItem[]>([]);
   const [receipts, setReceipts] = useState<ReceiptWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -183,6 +184,10 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
   const [itemForm, setItemForm] = useState(EMPTY_ITEM_FORM);
   const [editForm, setEditForm] = useState(EMPTY_ITEM_FORM);
   const [receiptForms, setReceiptForms] = useState<Record<string, typeof EMPTY_RECEIPT_FORM>>({});
+  const [editingReceiptId, setEditingReceiptId] = useState<string | null>(null);
+  const [editingReceiptForm, setEditingReceiptForm] = useState(EMPTY_RECEIPT_FORM);
+  const canEditStructure = !readOnly;
+  const canEditReceipts = !readOnly || allowReceiptEditing;
 
   useEffect(() => {
     void loadBom();
@@ -260,6 +265,21 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
       ...current,
       [itemId]: { ...EMPTY_RECEIPT_FORM, date_received: new Date().toISOString().slice(0, 10) },
     }));
+  }
+
+  function beginEditReceipt(receipt: ReceiptWithProfile) {
+    setEditingReceiptId(receipt.id);
+    setEditingReceiptForm({
+      date_received: receipt.date_received || new Date().toISOString().slice(0, 10),
+      qty_received: String(receipt.qty_received ?? 0),
+      packing_slip: receipt.packing_slip ?? "",
+      notes: receipt.notes ?? "",
+    });
+  }
+
+  function cancelEditReceipt() {
+    setEditingReceiptId(null);
+    setEditingReceiptForm(EMPTY_RECEIPT_FORM);
   }
 
   async function handleCreateItem() {
@@ -409,6 +429,42 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
     }
   }
 
+  async function handleSaveReceiptEdit(receiptId: string) {
+    if (Number(editingReceiptForm.qty_received || 0) <= 0) {
+      setError("Receipt quantity must be greater than 0.");
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    setStatusMessage(null);
+
+    try {
+      const response = await fetch("/api/admin/bom?action=receipt", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          id: receiptId,
+          qty_received: Number(editingReceiptForm.qty_received || 0),
+          date_received: editingReceiptForm.date_received || new Date().toISOString().slice(0, 10),
+          packing_slip: editingReceiptForm.packing_slip,
+          notes: editingReceiptForm.notes,
+        }),
+      });
+      const json = await safeJson(response);
+      if (!response.ok) throw new Error(json?.error ?? "Failed to update receipt.");
+
+      setReceipts((current) => current.map((receipt) => (receipt.id === receiptId ? (json.receipt as ReceiptWithProfile) : receipt)));
+      cancelEditReceipt();
+      setStatusMessage("Receipt updated.");
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Failed to update receipt.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function handleDeleteReceipt(receiptId: string) {
     if (!window.confirm("Delete this receipt entry?")) return;
 
@@ -521,7 +577,7 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
             </option>
           ))}
         </select>
-        {!readOnly && (
+        {canEditStructure && (
           <>
             <button type="button" onClick={() => resetAddForm("General")} className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-medium text-text-primary transition hover:bg-surface-base">
               + Add Section
@@ -571,25 +627,25 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-border-default">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] text-sm">
+          <div>
+            <table className="w-full table-fixed text-sm">
               <thead>
                 <tr className="border-b border-border-default bg-surface-raised/80">
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Designation</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Code Number</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Description</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Total Qty</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Qty Rec&apos;d</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Remain/Surplus</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
-                  {!readOnly && <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actions</th>}
+                  <th className="w-[12%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Designation</th>
+                  <th className="w-[16%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Code Number</th>
+                  <th className="w-[28%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Description</th>
+                  <th className="w-[10%] px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Total Qty</th>
+                  <th className="w-[10%] px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Qty Rec&apos;d</th>
+                  <th className="w-[12%] px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Remain/Surplus</th>
+                  <th className="w-[12%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Status</th>
+                  {canEditStructure && <th className="w-[16%] px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actions</th>}
                 </tr>
               </thead>
               <tbody>
                 {groupedItems.map(([section, sectionItems]) => (
                   <Fragment key={section}>
                     <tr className="bg-brand-primary/10">
-                      <td colSpan={readOnly ? 7 : 8} className="px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-brand-primary">
+                      <td colSpan={canEditStructure ? 8 : 7} className="px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-brand-primary">
                         {section}
                       </td>
                     </tr>
@@ -602,7 +658,7 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
                         <Fragment key={item.id}>
                           {editingItemId === item.id ? (
                             <tr className="border-b border-border-default bg-surface-base">
-                              <td colSpan={readOnly ? 7 : 8} className="px-4 py-4">
+                              <td colSpan={canEditStructure ? 8 : 7} className="px-4 py-4">
                                 <BomItemForm form={editForm} onChange={setEditForm} onCancel={() => setEditingItemId(null)} onSave={() => void handleSaveEdit(item.id)} saving={saving} />
                               </td>
                             </tr>
@@ -614,10 +670,10 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
                                 if (!receiptForms[item.id]) resetReceiptForm(item.id);
                               }}
                             >
-                              <td className="px-4 py-3 text-text-primary">{item.designation || "-"}</td>
-                              <td className="px-4 py-3 text-text-secondary">{item.code_number || "-"}</td>
+                              <td className="break-words px-4 py-3 text-text-primary">{item.designation || "-"}</td>
+                              <td className="break-words px-4 py-3 text-text-secondary">{item.code_number || "-"}</td>
                               <td className="px-4 py-3 text-text-primary">
-                                <div className="font-medium">{item.description}</div>
+                                <div className="break-words font-medium">{item.description}</div>
                                 {item.notes && <div className="mt-1 text-xs text-text-tertiary">{item.notes}</div>}
                               </td>
                               <td className="px-4 py-3 text-right text-text-secondary">{item.qty_required}</td>
@@ -628,7 +684,7 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
                                   {STATUS_LABEL[item.status ?? "not_received"]}
                                 </span>
                               </td>
-                              {!readOnly && (
+                              {canEditStructure && (
                                 <td className="px-4 py-3 text-right">
                                   <div className="flex justify-end gap-2">
                                     <button
@@ -667,7 +723,7 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
                           )}
                           {isExpanded && (
                             <tr className="border-b border-border-default bg-surface-base">
-                              <td colSpan={readOnly ? 7 : 8} className="px-4 py-4">
+                              <td colSpan={canEditStructure ? 8 : 7} className="px-4 py-4">
                                 <div className="space-y-3">
                                   <div className="flex items-center justify-between gap-3">
                                     <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Receipt Log</p>
@@ -681,35 +737,46 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
                                       No receipts logged for this item yet.
                                     </div>
                                   ) : (
-                                    <div className="overflow-x-auto rounded-xl border border-border-default">
-                                      <table className="w-full min-w-[760px] text-sm">
+                                    <div className="rounded-xl border border-border-default">
+                                      <table className="w-full table-fixed text-sm">
                                         <thead>
                                           <tr className="border-b border-border-default bg-surface-overlay/60">
-                                            <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Date</th>
-                                            <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Qty</th>
-                                            <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Packing Slip</th>
-                                            <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Received By</th>
-                                            <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Notes</th>
-                                            {!readOnly && <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Delete</th>}
+                                            <th className="w-[14%] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Received</th>
+                                            <th className="w-[14%] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Logged</th>
+                                            <th className="w-[10%] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Qty</th>
+                                            <th className="w-[18%] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Packing Slip</th>
+                                            <th className="w-[16%] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Received By</th>
+                                            <th className="w-[18%] px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Notes</th>
+                                            {canEditReceipts && <th className="w-[10%] px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actions</th>}
                                           </tr>
                                         </thead>
                                         <tbody>
                                           {itemReceipts.map((receipt) => (
                                             <tr key={receipt.id} className="border-b border-border-default last:border-0">
                                               <td className="px-3 py-2 text-text-secondary">{format(new Date(receipt.date_received), "MMM d, yyyy")}</td>
+                                              <td className="px-3 py-2 text-text-secondary">{format(new Date(receipt.created_at), "MMM d, yyyy")}</td>
                                               <td className="px-3 py-2 text-text-primary">{receipt.qty_received}</td>
-                                              <td className="px-3 py-2 text-text-secondary">{receipt.packing_slip || "-"}</td>
-                                              <td className="px-3 py-2 text-text-secondary">{formatReceiptUser(receipt)}</td>
-                                              <td className="px-3 py-2 text-text-secondary">{receipt.notes || "-"}</td>
-                                              {!readOnly && (
+                                              <td className="break-words px-3 py-2 text-text-secondary">{receipt.packing_slip || "-"}</td>
+                                              <td className="break-words px-3 py-2 text-text-secondary">{formatReceiptUser(receipt)}</td>
+                                              <td className="break-words px-3 py-2 text-text-secondary">{receipt.notes || "-"}</td>
+                                              {canEditReceipts && (
                                                 <td className="px-3 py-2 text-right">
-                                                  <button
-                                                    type="button"
-                                                    onClick={() => void handleDeleteReceipt(receipt.id)}
-                                                    className="rounded-lg border border-status-danger/30 bg-status-danger/10 px-3 py-1.5 text-xs font-medium text-status-danger transition hover:bg-status-danger/20"
-                                                  >
-                                                    Delete
-                                                  </button>
+                                                  <div className="flex justify-end gap-2">
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => beginEditReceipt(receipt)}
+                                                      className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-surface-base hover:text-text-primary"
+                                                    >
+                                                      Edit
+                                                    </button>
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => void handleDeleteReceipt(receipt.id)}
+                                                      className="rounded-lg border border-status-danger/30 bg-status-danger/10 px-3 py-1.5 text-xs font-medium text-status-danger transition hover:bg-status-danger/20"
+                                                    >
+                                                      Delete
+                                                    </button>
+                                                  </div>
                                                 </td>
                                               )}
                                             </tr>
@@ -719,7 +786,54 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
                                     </div>
                                   )}
 
-                                  {!readOnly && (
+                                  {canEditReceipts && editingReceiptId && itemReceipts.some((receipt) => receipt.id === editingReceiptId) && (
+                                    <div className="rounded-xl border border-border-default bg-surface-raised p-4">
+                                      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-secondary">Edit Receipt</p>
+                                      <div className="grid gap-3 md:grid-cols-[150px,120px,1fr,1fr,160px]">
+                                        <Field label="Date">
+                                          <input
+                                            type="date"
+                                            value={editingReceiptForm.date_received}
+                                            onChange={(event) => setEditingReceiptForm((current) => ({ ...current, date_received: event.target.value }))}
+                                            className={INPUT_CLASS}
+                                          />
+                                        </Field>
+                                        <Field label="Qty">
+                                          <input
+                                            type="number"
+                                            min="0"
+                                            value={editingReceiptForm.qty_received}
+                                            onChange={(event) => setEditingReceiptForm((current) => ({ ...current, qty_received: event.target.value }))}
+                                            className={INPUT_CLASS}
+                                          />
+                                        </Field>
+                                        <Field label="Packing Slip">
+                                          <input
+                                            value={editingReceiptForm.packing_slip}
+                                            onChange={(event) => setEditingReceiptForm((current) => ({ ...current, packing_slip: event.target.value }))}
+                                            className={INPUT_CLASS}
+                                          />
+                                        </Field>
+                                        <Field label="Notes">
+                                          <input
+                                            value={editingReceiptForm.notes}
+                                            onChange={(event) => setEditingReceiptForm((current) => ({ ...current, notes: event.target.value }))}
+                                            className={INPUT_CLASS}
+                                          />
+                                        </Field>
+                                        <div className="flex items-end gap-2">
+                                          <button type="button" onClick={() => void handleSaveReceiptEdit(editingReceiptId)} disabled={saving} className="flex-1 rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-semibold text-text-inverse disabled:opacity-60">
+                                            Save
+                                          </button>
+                                          <button type="button" onClick={cancelEditReceipt} className="rounded-lg border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-semibold text-text-secondary transition hover:bg-surface-base">
+                                            Cancel
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {canEditReceipts && (
                                     <div className="rounded-xl border border-border-default bg-surface-raised p-4">
                                       <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-secondary">Add Receipt</p>
                                       <div className="grid gap-3 md:grid-cols-[150px,120px,1fr,1fr,110px]">
@@ -789,7 +903,7 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
                         </Fragment>
                       );
                     })}
-                    {!readOnly && (
+                    {canEditStructure && (
                       <tr className="border-b border-border-default bg-surface-base last:border-0">
                         <td colSpan={8} className="px-4 py-3">
                           {addingSection === section ? (
@@ -819,7 +933,7 @@ export function BomTab({ projectId, readOnly = false }: BomTabProps) {
         </div>
       )}
 
-      {!readOnly && groupedItems.length === 0 && (
+      {canEditStructure && groupedItems.length === 0 && (
         <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
           <button type="button" onClick={() => resetAddForm("General")} className="text-sm font-medium text-brand-primary transition hover:text-brand-hover">
             + Add First Item

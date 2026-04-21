@@ -12,6 +12,7 @@
 4. **Each phase delivers usable value.** No phase is just "infrastructure" with no user-facing outcome.
 5. **Standardize external-facing project reports.** Use the Eglin HTML progress report as the baseline structure, adapt sections per project, and keep TCC branding on every generated report.
 6. **Support real offline field conditions.** Assume crews may work in buildings or job sites with poor/no internet; everyday document work should continue in synced SharePoint folders, and PM/admin reconciliation can happen later when back online.
+7. **Benchmark adjacent products without copying them blindly.** Use competitive references such as Cube to improve finance planning, integrations, and analytics UX while preserving TCC's differentiators in project execution, estimating, SharePoint workflows, and field operations.
 
 ---
 
@@ -212,6 +213,10 @@ This is primarily operational setup so the current platform can be used against 
 - [ ] Identify which workflows truly need an app feature versus a documented process
 - [ ] Add conflict-handling guidance for cases where SharePoint files and ProjectHub fields disagree
 - [ ] Define naming and folder rules that make offline capture easier and later sync more reliable
+- [ ] Define a low-friction field photo intake workflow that does not depend on the PM portal being open on site
+  - evaluate text-to-photo and email-to-photo intake
+  - require a reliable project identifier such as job number, alias, or dedicated intake address
+  - decide how unmatched uploads are routed into a review queue instead of failing silently
 - [ ] Decide whether any later lightweight import/reconciliation helper is needed for PM weekly sync, or whether process alone is sufficient
 
 **Success criteria:** TCC can keep operating in low/no-internet environments without blocking the field team, and PMs have a repeatable weekly process for syncing meaningful updates back into ProjectHub.
@@ -303,6 +308,10 @@ This is primarily operational setup so the current platform can be used against 
 - [ ] Sync SharePoint folder structure changes back to ProjectHub (webhook or scheduled reconcile) so folder renames and moves do not orphan records
 - [ ] Support SharePoint Shared Libraries for multi-person folder access without individual OneDrive dependencies
 - [ ] Add SharePoint version history view on document records so staff can see prior revisions without leaving ProjectHub
+- [ ] Add inbound project photo intake so field staff can text or email photos to a project-specific intake number/address and have them land in the correct SharePoint project folder
+  - use app/service authentication for SharePoint upload rather than relying on a logged-in PM session token
+  - insert photo metadata into `project_photos` so uploads appear in the PM portal
+  - support confirmation/error responses and a manual review queue for unmatched or ambiguous project routing
 
 ### Outlook
 - [ ] Replace Outlook draft stubs with full send capability (Graph `sendMail`) for admin-confirmed actions
@@ -378,6 +387,14 @@ This is the largest phase. Approach it incrementally.
 **Target duration:** 2-3 weeks
 **Delivers:** Meaningful business insight across the full lifecycle
 
+**Benchmark note:** Use Cube as a reference point for the finance-planning layer only:
+- spreadsheet-connected planning workflows
+- governed planning workflow and auditability
+- scenario modeling and variance analysis
+- executive-friendly reporting and AI assistance
+
+Do not let this shift ProjectHub away from its core differentiators in PM execution, customer visibility, SharePoint-backed project workflows, and estimating-to-project lifecycle continuity.
+
 ### Supplier Spend Metrics
 - [ ] Track material purchases and subcontractor invoices per project
 - [ ] Supplier spend dashboard: total spend by vendor, ranked by volume
@@ -391,6 +408,36 @@ This is the largest phase. Approach it incrementally.
 - [ ] Expand analytics to include quote pipeline funnel
 - [ ] Add estimate accuracy reports (estimate vs actual on completed projects)
 - [ ] Add PM performance views (projects on time, percent-complete trends)
+- [ ] Add materials receiving analytics from BOM receipt logs
+  - quantity received over time
+  - late / missing material trends
+  - receipt-date visibility by project and BOM item
+  - packing slip traceability
+- [ ] Add finance variance analysis views modeled after modern FP&A tooling benchmarks such as Cube
+  - actual vs budget
+  - billed vs earned
+  - labor burn vs baseline
+  - material spend vs estimate
+- [ ] Add scenario modeling for executive and ops planning
+  - best case / expected / worst case revenue outlook
+  - backlog sensitivity
+  - staffing and labor-capacity planning
+- [ ] Add rolling forecast workflows instead of month-at-a-time reporting only
+- [ ] Add planning audit history so forecast changes, assumptions, and ownership are traceable
+- [ ] Add budget owner input workflow for cross-functional planning rounds
+  - assign inputs
+  - track status
+  - record due dates and completion
+- [ ] Add executive reporting packs and board-ready dashboard views
+- [ ] Explore spreadsheet-connected finance workflows so billing/accounting/executive users can work in Excel while staying tied to governed app data
+- [ ] Define the integration roadmap for finance-planning source systems
+  - accounting / ERP
+  - CRM / pipeline
+  - HR / workforce planning
+- [ ] Add AI-assisted finance analysis
+  - variance explanations
+  - trend summaries
+  - forecast commentary drafts
 - [ ] Configure Power BI workspace: connect to Supabase PostgreSQL via connector
 - [ ] Publish first `.pbix` report
 - [ ] Add Power BI embed token generation API route (service principal auth)

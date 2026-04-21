@@ -2165,7 +2165,7 @@ function UpdateForm({
               Generate BOM Report
             </a>
           </div>
-          <BomTab projectId={project.id} readOnly />
+          <BomTab projectId={project.id} readOnly allowReceiptEditing />
         </div>
       )}
     </div>

@@ -209,7 +209,7 @@ export function ProjectModal({
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4 py-8">
-      <div className="flex max-h-[90vh] w-full max-w-4xl flex-col rounded-2xl border border-border-default bg-surface-base shadow-xl">
+      <div className="flex max-h-[92vh] w-full max-w-7xl flex-col rounded-2xl border border-border-default bg-surface-base shadow-xl">
         <div className="flex shrink-0 items-start justify-between border-b border-border-default px-6 py-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">

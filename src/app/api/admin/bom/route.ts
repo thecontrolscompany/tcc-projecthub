@@ -5,6 +5,7 @@ import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 
 const WRITE_ROLES = ["admin", "ops_manager"];
 const READ_ROLES = ["admin", "ops_manager", "pm", "lead", "installer", "customer"];
+const RECEIPT_WRITE_ROLES = ["admin", "ops_manager", "pm", "lead"];
 
 function adminClient() {
   return createAdminClient(
@@ -93,9 +94,6 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const { user, role } = await getRequester();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
-  if (!WRITE_ROLES.includes(role ?? "")) {
-    return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });
-  }
 
   const { searchParams } = new URL(request.url);
   const action = searchParams.get("action");
@@ -103,6 +101,10 @@ export async function POST(request: Request) {
   const client = adminClient();
 
   if (action === "receipt") {
+    if (!RECEIPT_WRITE_ROLES.includes(role ?? "")) {
+      return NextResponse.json({ error: "PM, lead, admin, or ops manager access required." }, { status: 403 });
+    }
+
     const { data, error } = await client
       .from("material_receipts")
       .insert({
@@ -120,7 +122,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ receipt: data }, { status: 201 });
+    const { data: receiptWithProfile } = await client
+      .from("material_receipts")
+      .select("*, profile:profiles(full_name, email)")
+      .eq("id", data.id)
+      .single();
+
+    return NextResponse.json({ receipt: receiptWithProfile ?? data }, { status: 201 });
+  }
+
+  if (!WRITE_ROLES.includes(role ?? "")) {
+    return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });
   }
 
   const { data, error } = await client
@@ -148,15 +160,48 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   const { user, role } = await getRequester();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
-  if (!WRITE_ROLES.includes(role ?? "")) {
-    return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });
-  }
 
+  const { searchParams } = new URL(request.url);
+  const action = searchParams.get("action");
   const body = await request.json().catch(() => null);
   const id = typeof body?.id === "string" ? body.id : "";
   if (!id) return NextResponse.json({ error: "Item id is required." }, { status: 400 });
 
   const client = adminClient();
+
+  if (action === "receipt") {
+    if (!RECEIPT_WRITE_ROLES.includes(role ?? "")) {
+      return NextResponse.json({ error: "PM, lead, admin, or ops manager access required." }, { status: 403 });
+    }
+
+    const payload: Record<string, unknown> = {};
+    if ("qty_received" in (body ?? {})) payload.qty_received = Number(body?.qty_received ?? 0);
+    if ("date_received" in (body ?? {})) payload.date_received = body?.date_received || new Date().toISOString().slice(0, 10);
+    if ("packing_slip" in (body ?? {})) {
+      payload.packing_slip = typeof body?.packing_slip === "string" ? body.packing_slip.trim() || null : null;
+    }
+    if ("notes" in (body ?? {})) {
+      payload.notes = typeof body?.notes === "string" ? body.notes.trim() || null : null;
+    }
+
+    const { data, error } = await client
+      .from("material_receipts")
+      .update(payload)
+      .eq("id", id)
+      .select("*, profile:profiles(full_name, email)")
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ receipt: data });
+  }
+
+  if (!WRITE_ROLES.includes(role ?? "")) {
+    return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });
+  }
+
   const payload: Record<string, unknown> = {};
   for (const key of ["section", "designation", "code_number", "description", "qty_required", "notes", "sort_order"]) {
     if (key in (body ?? {})) payload[key] = body[key];
@@ -179,9 +224,6 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
   const { user, role } = await getRequester();
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
-  if (!WRITE_ROLES.includes(role ?? "")) {
-    return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });
-  }
 
   const { searchParams } = new URL(request.url);
   const action = searchParams.get("action");
@@ -189,11 +231,19 @@ export async function DELETE(request: Request) {
   const client = adminClient();
 
   if (action === "receipt") {
+    if (!RECEIPT_WRITE_ROLES.includes(role ?? "")) {
+      return NextResponse.json({ error: "PM, lead, admin, or ops manager access required." }, { status: 403 });
+    }
+
     const { error } = await client.from("material_receipts").delete().eq("id", body?.id);
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     return NextResponse.json({ success: true });
+  }
+
+  if (!WRITE_ROLES.includes(role ?? "")) {
+    return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });
   }
 
   if (action === "clear-all") {
