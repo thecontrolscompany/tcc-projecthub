@@ -641,7 +641,167 @@ export function BomTab({ projectId, readOnly = false, allowReceiptEditing = fals
           No BOM items match the current filters.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-border-default">
+        <>
+        {/* ── Mobile card layout (< sm) ───────────────────────────── */}
+        <div className="sm:hidden divide-y divide-border-default overflow-hidden rounded-2xl border border-border-default">
+          {groupedItems.map(([section, sectionItems]) => (
+            <Fragment key={section}>
+              <div className="bg-brand-primary/10 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-brand-primary">
+                {section}
+              </div>
+              {sectionItems.map((item) => {
+                const mobileReceipts = receipts.filter((r) => r.bom_item_id === item.id).sort((a, b) => b.date_received.localeCompare(a.date_received));
+                const mobileExpanded = expandedItemId === item.id;
+                const mobileReceiptForm = receiptForms[item.id] ?? EMPTY_RECEIPT_FORM;
+                return (
+                  <Fragment key={item.id}>
+                    {editingItemId === item.id ? (
+                      <div className="bg-surface-base p-4">
+                        <BomItemForm form={editForm} onChange={setEditForm} onCancel={() => setEditingItemId(null)} onSave={() => void handleSaveEdit(item.id)} saving={saving} />
+                      </div>
+                    ) : (
+                      <div className={["p-4", ROW_CLASS[item.status ?? "not_received"]].join(" ")}>
+                        <p className="font-medium text-text-primary">{item.description}</p>
+                        {item.notes && <p className="mt-1 text-xs text-text-tertiary">{item.notes}</p>}
+                        <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                          {item.designation && (
+                            <>
+                              <dt className="text-text-tertiary">Designation</dt>
+                              <dd className="text-text-secondary">{item.designation}</dd>
+                            </>
+                          )}
+                          {item.code_number && (
+                            <>
+                              <dt className="text-text-tertiary">Code #</dt>
+                              <dd className="text-text-secondary">{item.code_number}</dd>
+                            </>
+                          )}
+                          <dt className="text-text-tertiary">Total Qty</dt>
+                          <dd className="text-text-secondary">{item.qty_required}</dd>
+                          <dt className="text-text-tertiary">Qty Rec&apos;d</dt>
+                          <dd className="text-text-secondary">{item.qty_received ?? 0}</dd>
+                          <dt className="text-text-tertiary">Remain</dt>
+                          <dd className={`font-medium ${remainClass(item.remain_surplus ?? 0)}`}>{formatRemain(item.remain_surplus ?? 0)}</dd>
+                        </dl>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <span className={["inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold", STATUS_CLASS[item.status ?? "not_received"]].join(" ")}>
+                            {STATUS_LABEL[item.status ?? "not_received"]}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setExpandedItemId((c) => (c === item.id ? null : item.id));
+                              if (!receiptForms[item.id]) resetReceiptForm(item.id);
+                            }}
+                            className="inline-flex items-center gap-1 rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-semibold text-text-secondary transition hover:bg-surface-base"
+                            aria-expanded={mobileExpanded}
+                          >
+                            {mobileExpanded ? "Hide Receipts" : "View/Add Receipts"}
+                            <ChevronIcon expanded={mobileExpanded} />
+                          </button>
+                          {canEditStructure && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingItemId(item.id);
+                                  setAddingSection(null);
+                                  setEditForm({ section: item.section, designation: item.designation ?? "", code_number: item.code_number ?? "", description: item.description, qty_required: String(item.qty_required), notes: item.notes ?? "" });
+                                }}
+                                className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-surface-base"
+                              >Edit</button>
+                              <button
+                                type="button"
+                                onClick={() => void handleDeleteItem(item.id)}
+                                className="rounded-lg border border-status-danger/30 bg-status-danger/10 px-3 py-1.5 text-xs font-medium text-status-danger transition hover:bg-status-danger/20"
+                              >Delete</button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {mobileExpanded && (
+                      <div className="border-t border-border-default bg-surface-base px-4 py-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Receipt Log</p>
+                            <button type="button" onClick={() => setExpandedItemId(null)} className="text-xs font-medium text-text-tertiary transition hover:text-text-primary">Close</button>
+                          </div>
+                          {mobileReceipts.length === 0 ? (
+                            <div className="rounded-xl border border-dashed border-border-default px-4 py-5 text-sm text-text-secondary">No receipts logged yet.</div>
+                          ) : (
+                            <div className="divide-y divide-border-default rounded-xl border border-border-default">
+                              {mobileReceipts.map((receipt) => (
+                                <div key={receipt.id} className="px-3 py-3">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="space-y-0.5 text-xs">
+                                      <p className="font-semibold text-text-primary">Qty: {receipt.qty_received}</p>
+                                      <p className="text-text-tertiary">Received: {format(new Date(receipt.date_received), "MMM d, yyyy")}</p>
+                                      {receipt.packing_slip && <p className="text-text-tertiary">Slip: {receipt.packing_slip}</p>}
+                                      <p className="text-text-tertiary">By: {formatReceiptUser(receipt)}</p>
+                                      {receipt.notes && <p className="text-text-tertiary">Notes: {receipt.notes}</p>}
+                                    </div>
+                                    {canEditReceipts && (
+                                      <div className="flex shrink-0 gap-2">
+                                        <button type="button" onClick={() => beginEditReceipt(receipt)} className="rounded-lg border border-border-default bg-surface-overlay px-2.5 py-1 text-xs font-medium text-text-secondary">Edit</button>
+                                        <button type="button" onClick={() => void handleDeleteReceipt(receipt.id)} className="rounded-lg border border-status-danger/30 bg-status-danger/10 px-2.5 py-1 text-xs font-medium text-status-danger">Delete</button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {canEditReceipts && editingReceiptId && mobileReceipts.some((r) => r.id === editingReceiptId) && (
+                            <div className="rounded-xl border border-border-default bg-surface-raised p-4">
+                              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-secondary">Edit Receipt</p>
+                              <div className="grid grid-cols-2 gap-3">
+                                <Field label="Date"><input type="date" value={editingReceiptForm.date_received} onChange={(e) => setEditingReceiptForm((c) => ({ ...c, date_received: e.target.value }))} className={INPUT_CLASS} /></Field>
+                                <Field label="Qty"><input type="number" min="0" value={editingReceiptForm.qty_received} onChange={(e) => setEditingReceiptForm((c) => ({ ...c, qty_received: e.target.value }))} className={INPUT_CLASS} /></Field>
+                                <Field label="Packing Slip"><input value={editingReceiptForm.packing_slip} onChange={(e) => setEditingReceiptForm((c) => ({ ...c, packing_slip: e.target.value }))} className={INPUT_CLASS} /></Field>
+                                <Field label="Notes"><input value={editingReceiptForm.notes} onChange={(e) => setEditingReceiptForm((c) => ({ ...c, notes: e.target.value }))} className={INPUT_CLASS} /></Field>
+                              </div>
+                              <div className="mt-3 flex gap-2">
+                                <button type="button" onClick={() => void handleSaveReceiptEdit(editingReceiptId)} disabled={saving} className="flex-1 rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-semibold text-text-inverse disabled:opacity-60">Save</button>
+                                <button type="button" onClick={cancelEditReceipt} className="rounded-lg border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-semibold text-text-secondary">Cancel</button>
+                              </div>
+                            </div>
+                          )}
+                          {canEditReceipts && (
+                            <div className="rounded-xl border border-border-default bg-surface-raised p-4">
+                              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-text-secondary">Add Receipt</p>
+                              <div className="grid grid-cols-2 gap-3">
+                                <Field label="Date"><input type="date" value={mobileReceiptForm.date_received} onChange={(e) => setReceiptForms((c) => ({ ...c, [item.id]: { ...(c[item.id] ?? EMPTY_RECEIPT_FORM), date_received: e.target.value } }))} className={INPUT_CLASS} /></Field>
+                                <Field label="Qty"><input type="number" min="0" value={mobileReceiptForm.qty_received} onChange={(e) => setReceiptForms((c) => ({ ...c, [item.id]: { ...(c[item.id] ?? EMPTY_RECEIPT_FORM), qty_received: e.target.value } }))} className={INPUT_CLASS} /></Field>
+                                <Field label="Packing Slip"><input value={mobileReceiptForm.packing_slip} onChange={(e) => setReceiptForms((c) => ({ ...c, [item.id]: { ...(c[item.id] ?? EMPTY_RECEIPT_FORM), packing_slip: e.target.value } }))} className={INPUT_CLASS} /></Field>
+                                <Field label="Notes"><input value={mobileReceiptForm.notes} onChange={(e) => setReceiptForms((c) => ({ ...c, [item.id]: { ...(c[item.id] ?? EMPTY_RECEIPT_FORM), notes: e.target.value } }))} className={INPUT_CLASS} /></Field>
+                              </div>
+                              <button type="button" onClick={() => void handleAddReceipt(item.id)} disabled={saving} className="mt-3 w-full rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-semibold text-text-inverse disabled:opacity-60">
+                                Add Receipt
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </Fragment>
+                );
+              })}
+              {canEditStructure && (
+                <div className="border-t border-border-default bg-surface-base px-4 py-3">
+                  {addingSection === section ? (
+                    <BomItemForm form={itemForm} onChange={setItemForm} onCancel={() => { setAddingSection(null); setItemForm(EMPTY_ITEM_FORM); }} onSave={() => void handleCreateItem()} saving={saving} />
+                  ) : (
+                    <button type="button" onClick={() => resetAddForm(section)} className="text-sm font-medium text-brand-primary transition hover:text-brand-hover">+ Add Item</button>
+                  )}
+                </div>
+              )}
+            </Fragment>
+          ))}
+        </div>
+
+        {/* ── Desktop table layout (sm+) ───────────────────────────── */}
+        <div className="hidden sm:block overflow-hidden rounded-2xl border border-border-default">
           <div>
             <table className="w-full table-fixed text-sm">
               <thead>
@@ -961,6 +1121,7 @@ export function BomTab({ projectId, readOnly = false, allowReceiptEditing = fals
             </table>
           </div>
         </div>
+        </>
       )}
 
       {canEditStructure && groupedItems.length === 0 && (
