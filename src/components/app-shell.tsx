@@ -38,12 +38,25 @@ export function AppShell({
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
   const title = useMemo(() => resolvePageTitle(pathname), [pathname]);
   const initials = useMemo(() => getUserInitials(userEmail), [userEmail]);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(SIDEBAR_STORAGE_KEY);
     setCollapsed(stored === "true");
+  }, []);
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   useEffect(() => {
@@ -122,6 +135,14 @@ export function AppShell({
           collapsed ? "md:ml-16" : "md:ml-56",
         ].join(" ")}
       >
+        {!isOnline && (
+          <div className="flex items-center gap-2 border-b border-amber-600/30 bg-amber-950/40 px-4 py-2 text-sm text-amber-300">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+              <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clipRule="evenodd" />
+            </svg>
+            Offline — showing cached data. Changes will sync when signal returns.
+          </div>
+        )}
         <main className="p-4 md:p-6">{children}</main>
       </div>
     </>

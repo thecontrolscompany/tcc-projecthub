@@ -79,6 +79,7 @@
 - [ ] **Power BI full buildout** — publish `.pbix` connecting to Supabase; service principal embed token; workspace and report IDs wired to env vars
 
 ### Platform Evolution
+- [ ] **Offline access and background sync** (Priority: Medium) — PWA shell with service worker caching for field staff on restricted military sites; offline write queue for weekly updates, material receipts, and time entries with auto-sync on reconnect. Spec: `codex/roadmap-offline-sync.md`
 - [ ] **Estimating module migration** (Priority: High, Long-term) — port hvac-estimator data layer and UI into ProjectHub as a first-class module; unified auth, shared project lifecycle, estimate-to-project conversion; retire standalone hvac-estimator. Spec: `docs/implementation-roadmap.md` Phase 5
 - [ ] **Public-facing quote intake** — customer-facing quote request form with drag-and-drop file uploads, progress tracking, and Dropbox-style file request experience; SharePoint folder provisioned on submission
 - [ ] **Award Project flow** — convert won estimate to project with one action: auto job number, locked estimate baseline, SharePoint folder tree from template, PM notification draft

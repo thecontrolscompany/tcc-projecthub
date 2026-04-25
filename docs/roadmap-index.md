@@ -60,6 +60,12 @@ Central index for roadmap, planning, and feature follow-up documents in `tcc-pro
 
 ---
 
+## Platform
+
+- [Offline Access and Background Sync Roadmap](C:/Users/TimothyCollins/dev/tcc-projecthub/codex/roadmap-offline-sync.md)
+
+---
+
 ## Working Planning Notes
 
 These are more implementation-oriented than the higher-level roadmap docs.
