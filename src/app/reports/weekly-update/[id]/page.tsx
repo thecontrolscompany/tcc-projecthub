@@ -242,11 +242,16 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
   const resolvedProfile = await resolveUserRole(user);
   const role = (resolvedProfile?.role ?? "customer") as UserRole;
 
-  const { data: updateLookup } = await admin
+  const { data: updateLookup, error: updateLookupError } = await admin
     .from("weekly_updates")
     .select("id, project_id")
     .eq("id", id)
     .maybeSingle();
+
+  if (updateLookupError) {
+    console.error("Failed to load weekly update report lookup:", updateLookupError);
+    throw new Error("Failed to load weekly update report.");
+  }
 
   if (!updateLookup?.project_id) {
     notFound();
@@ -257,7 +262,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
     redirect("/login");
   }
 
-  const { data } = await admin
+  const { data, error: updateError } = await admin
     .from("weekly_updates")
     .select(`
       id,
@@ -297,6 +302,11 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
     `)
     .eq("id", id)
     .maybeSingle();
+
+  if (updateError) {
+    console.error("Failed to load weekly update report:", updateError);
+    throw new Error("Failed to load weekly update report.");
+  }
 
   const update = data as UpdateRow | null;
   if (!update) {
