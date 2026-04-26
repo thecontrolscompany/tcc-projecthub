@@ -921,34 +921,38 @@ function ProjectDetail({
         </ChartCard>
 
         <ChartCard title="Billing Summary">
-          {billingChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={billingChartData} margin={{ top: 8, right: 32, left: -8, bottom: 0 }}>
-                <CartesianGrid vertical={false} stroke="#dbe7e5" />
-                <XAxis
-                  dataKey="label"
-                  tick={{ fill: "#475569", fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tickFormatter={(value) => compactCurrency(value)}
-                  tick={{ fill: "#475569", fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip content={<BillingTooltip />} />
-                <ReferenceLine
-                  y={getProjectContractValue(project)}
-                  stroke={HEADER_BG}
-                  strokeDasharray="5 3"
-                  label={{ value: "Contract", position: "insideTopRight", fontSize: 11, fill: HEADER_BG }}
-                />
-                <Bar dataKey="prior" stackId="billing" fill="#b2dfdb" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="thisMonth" stackId="billing" fill={HEADER_BG} radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
+          {billingChartData.length > 0 ? (() => {
+            const contractValue = getProjectContractValue(project);
+            return (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={billingChartData} margin={{ top: 8, right: 56, left: -8, bottom: 0 }}>
+                  <CartesianGrid vertical={false} stroke="#dbe7e5" />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fill: "#475569", fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tickFormatter={(value) => compactCurrency(value)}
+                    tick={{ fill: "#475569", fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                    domain={[0, (dataMax: number) => Math.max(dataMax, contractValue) * 1.1]}
+                  />
+                  <Tooltip content={<BillingTooltip />} />
+                  <Bar dataKey="prior" stackId="billing" fill="#b2dfdb" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="thisMonth" stackId="billing" fill={HEADER_BG} radius={[6, 6, 0, 0]} />
+                  <ReferenceLine
+                    y={contractValue}
+                    stroke={HEADER_BG}
+                    strokeDasharray="5 3"
+                    label={{ value: "Contract", position: "insideTopRight", fontSize: 11, fill: HEADER_BG }}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            );
+          })() : (
             <EmptyChartMessage message="Billing history will appear once billed periods are recorded." />
           )}
         </ChartCard>
