@@ -686,16 +686,19 @@ function ProjectDetail({
   );
 
   const billingChartData = useMemo(() => {
-    let running = 0;
+    let prior = 0;
     return [...project.billing_periods]
       .filter((period) => period.actual_billed !== null)
       .sort((a, b) => new Date(a.period_month).getTime() - new Date(b.period_month).getTime())
       .map((period) => {
-        running += period.actual_billed ?? 0;
-        return {
+        const thisMonth = period.actual_billed ?? 0;
+        const row = {
           label: format(new Date(period.period_month), "MMM ''yy"),
-          cumulative: running,
+          prior,
+          thisMonth,
         };
+        prior += thisMonth;
+        return row;
       });
   }, [project.billing_periods]);
 
@@ -941,7 +944,8 @@ function ProjectDetail({
                   strokeDasharray="5 3"
                   label={{ value: "Contract", position: "insideTopRight", fontSize: 11, fill: HEADER_BG }}
                 />
-                <Bar dataKey="cumulative" fill="#b2dfdb" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="prior" stackId="billing" fill="#b2dfdb" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="thisMonth" stackId="billing" fill={HEADER_BG} radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -1794,10 +1798,14 @@ function BillingTooltip({
 }) {
   if (!active || !payload?.length) return null;
 
+  const prior = payload.find((e) => e.name === "prior")?.value ?? 0;
+  const thisMonth = payload.find((e) => e.name === "thisMonth")?.value ?? 0;
+
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-lg">
       <p className="font-semibold text-slate-800">{label}</p>
-      <p className="text-slate-600">Total Billed: {currency(payload[0].value)}</p>
+      <p className="text-slate-600">This Period: {currency(thisMonth)}</p>
+      <p className="text-slate-500">Total Billed: {currency(prior + thisMonth)}</p>
     </div>
   );
 }
