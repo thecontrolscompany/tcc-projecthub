@@ -22,6 +22,7 @@ type UpdateRow = {
   pct_complete: number | null;
   notes: string | null;
   blockers: string | null;
+  activity_updates: string | null;
   poc_snapshot: PocSnapshotEntry[] | null;
   crew_log: CrewLogEntry[] | null;
   labor_hours_pulled: number | null;
@@ -91,6 +92,19 @@ function effectiveLaborHours(update: UpdateRow) {
   if (update.labor_hours_override != null) return update.labor_hours_override;
   if (update.labor_hours_pulled != null) return update.labor_hours_pulled;
   return null;
+}
+
+function activityBulletsFromText(value: string | null | undefined) {
+  return (value ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.trim().replace(/^(?:[-*]|\u2022)\s*/, ""))
+    .filter(Boolean);
+}
+
+function activityBulletsFromCrewLog(rows: CrewLogEntry[]) {
+  return rows
+    .filter((row) => row.activities?.trim())
+    .map((row) => `${row.day}: ${row.activities.trim()}`);
 }
 
 function formatPercent(value: number | null | undefined) {
@@ -253,6 +267,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
       pct_complete,
       notes,
       blockers,
+      activity_updates,
       poc_snapshot,
       crew_log,
       labor_hours_pulled,
@@ -303,6 +318,13 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
   const crewLog = update.crew_log && update.crew_log.length > 0 ? normalizeCrewLog(update.crew_log) : emptyCrewLog();
   const totalManHours = crewLog.reduce((sum, row) => sum + (Number(row.workers) || 0) * (Number(row.hours) || 0), 0);
   const totalLaborHours = effectiveLaborHours(update);
+  const enteredActivityBullets = activityBulletsFromText(update.activity_updates);
+  const reportActivityBullets =
+    enteredActivityBullets.length > 0
+      ? enteredActivityBullets
+      : update.labor_hours_detail?.length
+        ? activityBulletsFromCrewLog(crewLog)
+        : [];
   const pocSnapshot = Array.isArray(update.poc_snapshot) ? update.poc_snapshot : [];
   const totalWeight = pocSnapshot.reduce((sum, item) => sum + (Number(item.weight) || 0), 0);
 
@@ -581,6 +603,16 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
             white-space: pre-wrap;
           }
 
+          .activity-list {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 14px;
+          }
+
+          .activity-list li {
+            margin-bottom: 8px;
+          }
+
           .footer {
             margin-top: 24px;
             padding-top: 14px;
@@ -796,6 +828,20 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
                   </tbody>
                 </table>
                 <div className="summary-line">Total Man-Hours: {totalManHours.toFixed(1)}</div>
+              </>
+            )}
+
+            {reportActivityBullets.length > 0 && (
+              <>
+                <div className="section-divider">
+                  <h2>ACTIVITIES</h2>
+                </div>
+
+                <ul className="activity-list">
+                  {reportActivityBullets.map((activity, index) => (
+                    <li key={`${activity}-${index}`}>{activity}</li>
+                  ))}
+                </ul>
               </>
             )}
 

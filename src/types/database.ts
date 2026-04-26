@@ -134,6 +134,7 @@ export interface WeeklyUpdate {
   pct_complete: number | null;
   notes: string | null;
   blockers: string | null;
+  activity_updates: string | null;
   poc_snapshot: PocSnapshotEntry[] | null;
   crew_log: CrewLogEntry[] | null;
   labor_hours_pulled: number | null;

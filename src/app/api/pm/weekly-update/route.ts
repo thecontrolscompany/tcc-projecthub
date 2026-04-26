@@ -16,6 +16,7 @@ type UpdatePayload = {
   crewLog?: CrewLogEntry[];
   notes?: string | null;
   blockers?: string | null;
+  activityUpdates?: string | null;
   materialDelivered?: string | null;
   equipmentSet?: string | null;
   safetyIncidents?: string | null;
@@ -42,6 +43,7 @@ type NormalizedPayload = {
   crewLog: CrewLogEntry[];
   notes: string | null;
   blockers: string | null;
+  activityUpdates: string | null;
   materialDelivered: string | null;
   equipmentSet: string | null;
   safetyIncidents: string | null;
@@ -116,6 +118,7 @@ function normalizePayload(body: UpdatePayload): { value: NormalizedPayload } | {
       crewLog: Array.isArray(body.crewLog) ? body.crewLog : [],
       notes: typeof body.notes === "string" ? body.notes : null,
       blockers: typeof body.blockers === "string" ? body.blockers : null,
+      activityUpdates: typeof body.activityUpdates === "string" ? body.activityUpdates : null,
       materialDelivered: typeof body.materialDelivered === "string" ? body.materialDelivered : null,
       equipmentSet: typeof body.equipmentSet === "string" ? body.equipmentSet : null,
       safetyIncidents: typeof body.safetyIncidents === "string" ? body.safetyIncidents : null,
@@ -194,6 +197,7 @@ function toRow(payload: NormalizedPayload, profileId: string) {
     poc_snapshot: payload.pocSnapshot,
     notes: payload.notes,
     blockers: payload.blockers,
+    activity_updates: payload.activityUpdates,
     crew_log: payload.crewLog,
     material_delivered: payload.materialDelivered,
     equipment_set: payload.equipmentSet,

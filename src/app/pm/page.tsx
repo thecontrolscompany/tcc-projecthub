@@ -71,6 +71,7 @@ interface ProjectWithBilling {
 }
 
 type LastUpdatePlaceholders = {
+  activityUpdates: string;
   notes: string;
   materialDelivered: string;
   equipmentSet: string;
@@ -81,6 +82,7 @@ type LastUpdatePlaceholders = {
 };
 
 const EMPTY_PLACEHOLDERS: LastUpdatePlaceholders = {
+  activityUpdates: "",
   notes: "",
   materialDelivered: "",
   equipmentSet: "",
@@ -330,6 +332,7 @@ function UpdateForm({
   const [weekOf, setWeekOf] = useState(thisSaturday);
   const [notes, setNotes] = useState("");
   const [blockers, setBlockers] = useState("");
+  const [activityUpdates, setActivityUpdates] = useState("");
   const [crewLog, setCrewLog] = useState<CrewLogEntry[]>(emptyCrewLog());
   const [materialDelivered, setMaterialDelivered] = useState("");
   const [equipmentSet, setEquipmentSet] = useState("");
@@ -398,6 +401,7 @@ function UpdateForm({
     const previousCrewByDay = new Map(latestCrewLog.map((row) => [row.day, row]));
 
     setPlaceholders({
+      activityUpdates: latestUpdate?.activity_updates ?? "",
       notes: latestUpdate?.notes ?? "",
       materialDelivered: latestUpdate?.material_delivered ?? "",
       equipmentSet: latestUpdate?.equipment_set ?? "",
@@ -421,6 +425,7 @@ function UpdateForm({
     setWeekOf(update.week_of);
     setNotes(update.notes ?? "");
     setBlockers(update.blockers ?? "");
+    setActivityUpdates(update.activity_updates ?? "");
     setCrewLog(normalizeCrewLogRows(update.crew_log));
     setMaterialDelivered(update.material_delivered ?? "");
     setEquipmentSet(update.equipment_set ?? "");
@@ -445,6 +450,7 @@ function UpdateForm({
     setWeekOf(thisSaturday);
     setNotes("");
     setBlockers("");
+    setActivityUpdates("");
     setMaterialDelivered("");
     setEquipmentSet("");
     setSafetyIncidents("");
@@ -703,6 +709,7 @@ function UpdateForm({
           crewLog,
           notes: notes || null,
           blockers: blockers || null,
+          activityUpdates: activityUpdates || null,
           materialDelivered: materialDelivered || null,
           equipmentSet: equipmentSet || null,
           safetyIncidents: safetyIncidents || null,
@@ -1045,6 +1052,7 @@ function UpdateForm({
                 <SummaryField label="Inspections & Tests" value={latestSubmittedUpdate.inspections_tests ?? null} />
                 <SummaryField label="Delays / Impacts" value={latestSubmittedUpdate.delays_impacts ?? null} />
                 <SummaryField label="Other Remarks" value={latestSubmittedUpdate.other_remarks ?? null} />
+                <SummaryField label="Activity Updates" value={latestSubmittedUpdate.activity_updates ?? null} />
                 <SummaryField label="Additional Notes" value={latestSubmittedUpdate.notes ?? null} />
               </div>
             </div>
@@ -1057,7 +1065,7 @@ function UpdateForm({
                 onClick={() => setActiveTab("update")}
                 className="mt-4 rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm font-semibold text-text-primary transition hover:bg-surface-base"
               >
-                Submit This Week's Report -&gt;
+                Submit This Week&apos;s Report -&gt;
               </button>
             </div>
           )}
@@ -1294,6 +1302,7 @@ function UpdateForm({
                 <SummaryField label="Inspections & Tests" value={inspectionsTests} />
                 <SummaryField label="Delays / Impacts" value={delaysImpacts} />
                 <SummaryField label="Other Remarks" value={otherRemarks} />
+                <SummaryField label="Activity Updates" value={activityUpdates} />
                 <div className="flex items-center gap-2 rounded-xl border border-border-default bg-surface-overlay px-4 py-3">
                   <span
                     className={[
@@ -1692,6 +1701,22 @@ function UpdateForm({
                     </div>
                   </div>
                 )}
+              </div>
+
+              <div className="space-y-3 rounded-2xl border border-border-default bg-surface-raised p-5">
+                <div>
+                  <h3 className="text-sm font-semibold text-text-primary">Activity Updates</h3>
+                  <p className="mt-1 text-sm text-text-tertiary">
+                    Customer-facing work completed this week.
+                  </p>
+                </div>
+                <textarea
+                  value={activityUpdates}
+                  onChange={(e) => setActivityUpdates(e.target.value)}
+                  rows={4}
+                  placeholder={placeholders.activityUpdates || "- Installed field controllers\n- Completed checkout on AHU controls"}
+                  className={inputCls}
+                />
               </div>
 
               <div>

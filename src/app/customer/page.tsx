@@ -90,6 +90,19 @@ function effectiveHours(update: WeeklyUpdate): number | null {
   return null;
 }
 
+function activityBulletsFromText(value: string | null | undefined) {
+  return (value ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.trim().replace(/^(?:[-*]|\u2022)\s*/, ""))
+    .filter(Boolean);
+}
+
+function activityBulletsFromCrewLog(rows: CrewLogEntry[]) {
+  return rows
+    .filter((row) => row.activities?.trim())
+    .map((row) => `${row.day}: ${row.activities.trim()}`);
+}
+
 export default function CustomerPage() {
   const supabase = createClient();
   const router = useRouter();
@@ -1504,6 +1517,13 @@ function WeeklyUpdateCard({ update }: { update: WeeklyUpdate }) {
     (row) => row.workers > 0 || row.hours > 0 || row.activities
   );
   const totalLaborHours = effectiveHours(update);
+  const enteredActivityBullets = activityBulletsFromText(update.activity_updates);
+  const activityBullets =
+    enteredActivityBullets.length > 0
+      ? enteredActivityBullets
+      : update.labor_hours_detail?.length
+        ? activityBulletsFromCrewLog(visibleCrewRows)
+        : [];
   const reportRows = [
     { label: "Material Delivered", value: update.material_delivered, icon: <PackageIcon /> },
     { label: "Equipment Set", value: update.equipment_set, icon: <WrenchIcon /> },
@@ -1550,6 +1570,19 @@ function WeeklyUpdateCard({ update }: { update: WeeklyUpdate }) {
       </div>
 
       {update.notes && <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700">{update.notes}</p>}
+
+      {activityBullets.length > 0 && (
+        <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Activities</p>
+          <ul className="mt-2 space-y-1.5 pl-5 text-sm leading-6 text-slate-700">
+            {activityBullets.map((activity, index) => (
+              <li key={`${activity}-${index}`} className="list-disc">
+                {activity}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {update.labor_hours_detail && update.labor_hours_detail.length > 0 ? (
         <div className="mt-5 space-y-3">

@@ -85,6 +85,7 @@ export async function GET(request: Request) {
           pct_complete,
           notes,
           blockers,
+          activity_updates,
           submitted_at,
           crew_log,
           labor_hours_pulled,
