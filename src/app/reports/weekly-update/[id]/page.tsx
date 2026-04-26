@@ -47,6 +47,7 @@ type UpdateRow = {
         general_contractor: string | null;
         customer_poc: string | null;
         scheduled_completion: string | null;
+        estimated_income: number | null;
         customer?: { name: string | null } | Array<{ name: string | null }> | null;
       }
     | Array<{
@@ -57,6 +58,7 @@ type UpdateRow = {
         general_contractor: string | null;
         customer_poc: string | null;
         scheduled_completion: string | null;
+        estimated_income: number | null;
         customer?: { name: string | null } | Array<{ name: string | null }> | null;
       }>
     | null;
@@ -297,6 +299,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
         general_contractor,
         customer_poc,
         scheduled_completion,
+        estimated_income,
         customer:customers(name)
       )
     `)
@@ -376,6 +379,45 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
         return { ...item, qty_received: received, status };
       });
     }
+  }
+
+  // Billing data
+  const { data: rawBillingPeriods } = await admin
+    .from("billing_periods")
+    .select("id, period_month, actual_billed, invoice_number, pct_complete")
+    .eq("project_id", project.id)
+    .not("actual_billed", "is", null)
+    .order("period_month");
+
+  const { data: rawChangeOrders } = await admin
+    .from("change_orders")
+    .select("amount")
+    .eq("project_id", project.id)
+    .eq("status", "approved");
+
+  const billingPeriods = (rawBillingPeriods ?? []) as {
+    id: string;
+    period_month: string;
+    actual_billed: number;
+    invoice_number: string | null;
+    pct_complete: number;
+  }[];
+  const approvedCoTotal = (rawChangeOrders ?? []).reduce(
+    (sum, co: { amount: number }) => sum + (co.amount ?? 0),
+    0
+  );
+  const contractValue = (project.estimated_income ?? 0) + approvedCoTotal;
+
+  let runningTotal = 0;
+  const billingRows = billingPeriods.map((p) => {
+    runningTotal += p.actual_billed;
+    return { ...p, cumulative: runningTotal };
+  });
+  const totalBilled = runningTotal;
+  const remaining = Math.max(contractValue - totalBilled, 0);
+
+  function fmtUSD(value: number) {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
   }
 
   return (
@@ -695,6 +737,55 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
             }
           }
 
+          .billing-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+          }
+
+          .billing-summary-card {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 12px 14px;
+            text-align: center;
+          }
+
+          .billing-summary-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #6b7280;
+            margin-bottom: 4px;
+          }
+
+          .billing-summary-value {
+            font-size: 17px;
+            font-weight: 700;
+            color: #017a6f;
+          }
+
+          .billing-progress-bar {
+            height: 10px;
+            background: #e5e7eb;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-bottom: 4px;
+          }
+
+          .billing-progress-fill {
+            height: 100%;
+            background: #017a6f;
+            border-radius: 999px;
+          }
+
+          .billing-progress-label {
+            font-size: 11px;
+            color: #6b7280;
+            text-align: right;
+          }
+
           @media print {
             body {
               background: #ffffff;
@@ -985,6 +1076,66 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
                   </tbody>
                 </table>
               </div>
+            )}
+
+            {billingRows.length > 0 && (
+              <>
+                <div className="section-divider">
+                  <h2>BILLING</h2>
+                </div>
+
+                <div className="billing-summary">
+                  <div className="billing-summary-card">
+                    <div className="billing-summary-label">Contract Value</div>
+                    <div className="billing-summary-value">{fmtUSD(contractValue)}</div>
+                  </div>
+                  <div className="billing-summary-card">
+                    <div className="billing-summary-label">Total Billed</div>
+                    <div className="billing-summary-value">{fmtUSD(totalBilled)}</div>
+                  </div>
+                  <div className="billing-summary-card">
+                    <div className="billing-summary-label">Remaining Balance</div>
+                    <div className="billing-summary-value">{fmtUSD(remaining)}</div>
+                  </div>
+                </div>
+
+                {contractValue > 0 && (
+                  <>
+                    <div className="billing-progress-bar">
+                      <div
+                        className="billing-progress-fill"
+                        style={{ width: `${Math.min((totalBilled / contractValue) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <div className="billing-progress-label">
+                      {((totalBilled / contractValue) * 100).toFixed(1)}% billed
+                    </div>
+                  </>
+                )}
+
+                <div style={{ height: 14 }} />
+
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Period</th>
+                      <th>Invoice #</th>
+                      <th className="number-cell">Amount Billed</th>
+                      <th className="number-cell">Cumulative Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {billingRows.map((row) => (
+                      <tr key={row.id}>
+                        <td>{format(new Date(row.period_month), "MMMM yyyy")}</td>
+                        <td>{row.invoice_number || "—"}</td>
+                        <td className="number-cell">{fmtUSD(row.actual_billed)}</td>
+                        <td className="number-cell">{fmtUSD(row.cumulative)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
             )}
 
             <footer className="footer">
