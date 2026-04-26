@@ -10,6 +10,7 @@ type BillingBackfillUpdate = {
   pct_complete?: number;
   prev_billed?: number;
   actual_billed?: number | null;
+  invoice_number?: string | null;
   notes?: string | null;
 };
 
@@ -49,7 +50,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await adminClient
     .from("billing_periods")
-    .select("id, period_month, estimated_income_snapshot, prior_pct, pct_complete, prev_billed, actual_billed, notes")
+    .select("id, period_month, estimated_income_snapshot, prior_pct, pct_complete, prev_billed, actual_billed, invoice_number, notes")
     .eq("project_id", projectId)
     .order("period_month", { ascending: true });
 
@@ -82,10 +83,11 @@ export async function POST(request: Request) {
       pct_complete: 0,
       prev_billed: 0,
       actual_billed: null,
+      invoice_number: null,
       notes: null,
       synced_from_onedrive: false,
     })
-    .select("id, period_month, estimated_income_snapshot, prior_pct, pct_complete, prev_billed, actual_billed, notes")
+    .select("id, period_month, estimated_income_snapshot, prior_pct, pct_complete, prev_billed, actual_billed, invoice_number, notes")
     .single();
 
   if (error) {
@@ -115,6 +117,7 @@ export async function PATCH(request: Request) {
     if (typeof update.pct_complete === "number") payload.pct_complete = update.pct_complete;
     if (typeof update.prev_billed === "number") payload.prev_billed = update.prev_billed;
     if ("actual_billed" in update) payload.actual_billed = update.actual_billed ?? null;
+    if ("invoice_number" in update) payload.invoice_number = update.invoice_number?.trim() || null;
     if ("notes" in update) payload.notes = update.notes ?? null;
 
     const { error } = await adminClient

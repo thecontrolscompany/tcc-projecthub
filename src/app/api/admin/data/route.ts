@@ -44,6 +44,7 @@ export async function GET(request: Request) {
         prior_pct,
         prev_billed,
         actual_billed,
+        invoice_number,
         estimated_income_snapshot,
         notes,
         synced_from_onedrive,

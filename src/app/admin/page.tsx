@@ -21,6 +21,7 @@ type BillingPeriodRow = {
   pct_complete: number;
   prev_billed: number;
   actual_billed: number | null;
+  invoice_number: string | null;
   notes: string | null;
 };
 
@@ -120,6 +121,7 @@ export default function AdminPage() {
       prior_pct: number;
       prev_billed: number;
       actual_billed: number | null;
+      invoice_number?: string | null;
       estimated_income_snapshot: number;
       notes?: string | null;
       synced_from_onedrive?: boolean | null;
@@ -203,6 +205,7 @@ export default function AdminPage() {
         prev_billed_pct: estimatedIncome > 0 ? prevBilled / estimatedIncome : 0,
         to_bill: calcToBill(estimatedIncome, period.pct_complete ?? 0, prevBilled),
         actual_billed: period.actual_billed,
+        invoice_number: period.invoice_number ?? null,
         notes: period.notes ?? null,
         synced_from_onedrive: period.synced_from_onedrive ?? false,
         poc_driven: false,
@@ -232,6 +235,7 @@ export default function AdminPage() {
             prior_pct: number;
             prev_billed: number;
             actual_billed: number | null;
+            invoice_number?: string | null;
             estimated_income_snapshot: number;
             notes?: string | null;
             synced_from_onedrive?: boolean | null;
@@ -639,6 +643,7 @@ function BillingBackfillTab({ projects }: { projects: ProjectOption[] }) {
         pct_complete: period.pct_complete,
         prev_billed: period.prev_billed,
         actual_billed: period.actual_billed,
+        invoice_number: period.invoice_number,
         notes: period.notes,
       }));
 
@@ -759,6 +764,7 @@ function BillingBackfillTab({ projects }: { projects: ProjectOption[] }) {
                   <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">% Complete</th>
                   <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Prev Billed</th>
                   <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actual Billed</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Invoice #</th>
                   <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Notes</th>
                 </tr>
               </thead>
@@ -780,6 +786,14 @@ function BillingBackfillTab({ projects }: { projects: ProjectOption[] }) {
                     </td>
                     <td className="px-4 py-2.5">
                       <NumericCell value={period.actual_billed ?? null} onChange={(value) => updatePeriod(period.id, "actual_billed", value)} allowBlank />
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <input
+                        type="text"
+                        value={period.invoice_number ?? ""}
+                        onChange={(event) => updatePeriod(period.id, "invoice_number", event.target.value || null)}
+                        className="w-full min-w-[140px] rounded-lg border border-border-default bg-surface-base px-3 py-1.5 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+                      />
                     </td>
                     <td className="px-4 py-2.5">
                       <input

@@ -83,6 +83,7 @@ export interface BillingPeriod {
   prev_billed: number;
   to_bill: number; // generated column
   actual_billed: number | null;
+  invoice_number: string | null;
   estimated_income_snapshot: number;
   notes: string | null;
   synced_from_onedrive: boolean;
@@ -556,6 +557,7 @@ export interface BillingRow {
   prev_billed_pct: number; // prev_billed / estimated_income
   to_bill: number;
   actual_billed: number | null;
+  invoice_number: string | null;
   notes: string | null;
   synced_from_onedrive: boolean;
   poc_driven?: boolean;

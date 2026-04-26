@@ -81,6 +81,7 @@ create table if not exists billing_periods (
   pct_complete numeric(5,4) not null default 0,
   prev_billed numeric(12,2) not null default 0,
   actual_billed numeric(12,2),
+  invoice_number text,
   notes text,
   synced_from_onedrive boolean default false,
   updated_at timestamptz default now(),
@@ -129,6 +130,8 @@ select
   end                                             as prev_billed_pct,
   greatest(bp.estimated_income_snapshot * bp.pct_complete - bp.prev_billed, 0) as to_bill,
   bp.actual_billed,
+  bp.invoice_number,
+  bp.notes,
   bp.synced_from_onedrive
 from billing_periods bp
 join projects p on p.id = bp.project_id

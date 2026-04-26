@@ -31,7 +31,7 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
   const updateRow = useCallback(
     async (
       billingPeriodId: string,
-      field: "pct_complete" | "prior_pct" | "prev_billed" | "actual_billed" | "estimated_income_snapshot" | "notes",
+      field: "pct_complete" | "prior_pct" | "prev_billed" | "actual_billed" | "estimated_income_snapshot" | "invoice_number" | "notes",
       value: number | string | null
     ) => {
       const rowToUpdate = rows.find((row) => row.billing_period_id === billingPeriodId);
@@ -41,6 +41,8 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
 
         if (field === "estimated_income_snapshot") {
           next.estimated_income = Number(value ?? 0);
+        } else if (field === "invoice_number") {
+          next.invoice_number = typeof value === "string" ? value : null;
         } else if (field === "notes") {
           next.notes = typeof value === "string" ? value : null;
         } else {
@@ -183,6 +185,16 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
       ),
     },
     {
+      accessorKey: "invoice_number",
+      header: "Invoice #",
+      cell: ({ row }) => (
+        <EditableText
+          value={row.original.invoice_number}
+          onChange={(v) => updateRow(row.original.billing_period_id, "invoice_number", v)}
+        />
+      ),
+    },
+    {
       accessorKey: "notes",
       header: "Notes",
       cell: ({ row }) => (
@@ -232,7 +244,7 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
       />
 
       <div className="overflow-x-auto rounded-2xl border border-border-default">
-        <table className="w-full min-w-[1260px] text-sm">
+        <table className="w-full min-w-[1440px] text-sm">
           <thead>
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id} className="border-b border-border-default bg-surface-raised/80">
