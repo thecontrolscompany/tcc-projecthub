@@ -13,6 +13,7 @@ import {
   LineChart,
   Pie,
   PieChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -684,18 +685,19 @@ function ProjectDetail({
     [project.billing_periods]
   );
 
-  const billingChartData = useMemo(
-    () =>
-      [...project.billing_periods]
-        .filter((period) => period.actual_billed !== null)
-        .sort((a, b) => new Date(a.period_month).getTime() - new Date(b.period_month).getTime())
-        .map((period) => ({
+  const billingChartData = useMemo(() => {
+    let running = 0;
+    return [...project.billing_periods]
+      .filter((period) => period.actual_billed !== null)
+      .sort((a, b) => new Date(a.period_month).getTime() - new Date(b.period_month).getTime())
+      .map((period) => {
+        running += period.actual_billed ?? 0;
+        return {
           label: format(new Date(period.period_month), "MMM ''yy"),
-          billed: period.actual_billed ?? 0,
-          contractValue: getProjectContractValue(project),
-        })),
-    [project]
-  );
+          cumulative: running,
+        };
+      });
+  }, [project.billing_periods]);
 
   return (
     <div className="space-y-6">
@@ -918,7 +920,7 @@ function ProjectDetail({
         <ChartCard title="Billing Summary">
           {billingChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={billingChartData} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
+              <BarChart data={billingChartData} margin={{ top: 8, right: 32, left: -8, bottom: 0 }}>
                 <CartesianGrid vertical={false} stroke="#dbe7e5" />
                 <XAxis
                   dataKey="label"
@@ -933,8 +935,13 @@ function ProjectDetail({
                   tickLine={false}
                 />
                 <Tooltip content={<BillingTooltip />} />
-                <Bar dataKey="contractValue" fill="#b2dfdb" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="billed" fill={HEADER_BG} radius={[8, 8, 0, 0]} />
+                <ReferenceLine
+                  y={getProjectContractValue(project)}
+                  stroke={HEADER_BG}
+                  strokeDasharray="5 3"
+                  label={{ value: "Contract", position: "insideTopRight", fontSize: 11, fill: HEADER_BG }}
+                />
+                <Bar dataKey="cumulative" fill="#b2dfdb" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -1790,11 +1797,7 @@ function BillingTooltip({
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-lg">
       <p className="font-semibold text-slate-800">{label}</p>
-      {payload.map((entry) => (
-        <p key={entry.name} className="text-slate-600">
-          {entry.name === "contractValue" ? "Contract Value" : "Billed"}: {currency(entry.value)}
-        </p>
-      ))}
+      <p className="text-slate-600">Total Billed: {currency(payload[0].value)}</p>
     </div>
   );
 }
