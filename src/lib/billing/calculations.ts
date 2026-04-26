@@ -55,6 +55,7 @@ export function computeBillingRow(
     prev_billed_pct: calcPrevBilledPct(est, period.prev_billed),
     to_bill: calcToBill(est, period.pct_complete, period.prev_billed),
     actual_billed: period.actual_billed,
+    invoice_number: period.invoice_number ?? null,
     notes: period.notes ?? null,
     synced_from_onedrive: period.synced_from_onedrive,
   };
@@ -94,6 +95,7 @@ export function rollForwardRows(
       pct_complete: row.pct_complete, // PM will update
       prev_billed: row.prev_billed + billedThisPeriod,
       actual_billed: null,
+      invoice_number: null,
       notes: null,
       synced_from_onedrive: false,
       to_bill: 0, // recalculated after PM updates pct
