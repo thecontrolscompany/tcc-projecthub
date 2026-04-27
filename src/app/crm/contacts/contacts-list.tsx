@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { CrmContact, CrmContactRoleType, CrmConfidenceLevel } from "@/types/database";
 import { CrmSubnav } from "@/components/crm/crm-subnav";
 import { ContactBadge } from "@/components/crm/contact-badge";
+import { ContactEditModal } from "@/components/crm/contact-edit-modal";
 import { CRM_ROLE_TYPE_LABELS, CRM_CONFIDENCE_LABELS, CRM_CONFIDENCE_BADGES } from "@/lib/crm/utils";
 
 type ContactListItem = Pick<
@@ -45,19 +46,25 @@ const CONFIDENCE_OPTIONS: Array<{ value: CrmConfidenceLevel | ""; label: string 
 
 const INPUT = "rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none";
 
-export function ContactsList({ contacts, role }: ContactsListProps) {
+export function ContactsList({ contacts: initialContacts, role }: ContactsListProps) {
+  const [contacts, setContacts] = useState(initialContacts);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<CrmContactRoleType | "">("");
   const [confidenceFilter, setConfidenceFilter] = useState<CrmConfidenceLevel | "">("");
   const [issuesPoOnly, setIssuesPoOnly] = useState(false);
   const [estimatingOnly, setEstimatingOnly] = useState(false);
+
+  const [editingContact, setEditingContact] = useState<CrmContact | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
   const isWriteRole = role === "admin" || role === "ops_manager";
 
   const filtered = useMemo(() => {
     return contacts.filter((c) => {
       if (search) {
         const q = search.toLowerCase();
-        const matches = c.display_name.toLowerCase().includes(q) ||
+        const matches =
+          c.display_name.toLowerCase().includes(q) ||
           c.account?.company_name.toLowerCase().includes(q) ||
           c.email?.toLowerCase().includes(q);
         if (!matches) return false;
@@ -69,6 +76,46 @@ export function ContactsList({ contacts, role }: ContactsListProps) {
       return true;
     });
   }, [contacts, search, roleFilter, confidenceFilter, issuesPoOnly, estimatingOnly]);
+
+  async function openEdit(id: string) {
+    if (!isWriteRole) return;
+    setLoadingId(id);
+    try {
+      const res = await fetch(`/api/crm/contacts/${id}`);
+      const json = await res.json();
+      if (res.ok) setEditingContact(json.contact as CrmContact);
+    } finally {
+      setLoadingId(null);
+    }
+  }
+
+  function handleSaved(updated: CrmContact) {
+    setContacts((prev) =>
+      prev.map((c) =>
+        c.id === updated.id
+          ? {
+              ...c,
+              display_name:                 updated.display_name,
+              role_type:                    updated.role_type,
+              title:                        updated.title,
+              email:                        updated.email,
+              phone:                        updated.phone,
+              is_active:                    updated.is_active,
+              confidence_level:             updated.confidence_level,
+              influence_level:              updated.influence_level,
+              issues_purchase_orders:       updated.issues_purchase_orders,
+              involved_in_estimating:       updated.involved_in_estimating,
+              involved_in_project_execution: updated.involved_in_project_execution,
+            }
+          : c
+      )
+    );
+    setEditingContact(null);
+  }
+
+  const editingAccountName = editingContact
+    ? contacts.find((c) => c.id === editingContact.id)?.account?.company_name
+    : undefined;
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-6">
@@ -126,6 +173,7 @@ export function ContactsList({ contacts, role }: ContactsListProps) {
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Confidence</th>
                 <th className="px-4 py-3">Flags</th>
+                {isWriteRole && <th className="px-4 py-3" />}
               </tr>
             </thead>
             <tbody className="divide-y divide-border-default bg-surface-base">
@@ -137,7 +185,11 @@ export function ContactsList({ contacts, role }: ContactsListProps) {
                   </td>
                   <td className="px-4 py-3">
                     {c.account ? (
-                      <Link href={`/crm/accounts/${c.account.id}`} className="text-brand-primary hover:underline">
+                      <Link
+                        href={`/crm/accounts/${c.account.id}`}
+                        className="text-brand-primary hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         {c.account.company_name}
                       </Link>
                     ) : "—"}
@@ -147,7 +199,13 @@ export function ContactsList({ contacts, role }: ContactsListProps) {
                   </td>
                   <td className="px-4 py-3">
                     {c.email ? (
-                      <a href={`mailto:${c.email}`} className="text-brand-primary hover:underline">{c.email}</a>
+                      <a
+                        href={`mailto:${c.email}`}
+                        className="text-brand-primary hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {c.email}
+                      </a>
                     ) : "—"}
                   </td>
                   <td className="px-4 py-3">
@@ -168,11 +226,31 @@ export function ContactsList({ contacts, role }: ContactsListProps) {
                       )}
                     </div>
                   </td>
+                  {isWriteRole && (
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => openEdit(c.id)}
+                        disabled={loadingId === c.id}
+                        className="rounded-lg border border-border-default px-2.5 py-1 text-xs text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary disabled:opacity-40"
+                      >
+                        {loadingId === c.id ? "…" : "Edit"}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {editingContact && (
+        <ContactEditModal
+          contact={editingContact}
+          accountName={editingAccountName}
+          onSaved={(updated) => handleSaved(updated as CrmContact)}
+          onClose={() => setEditingContact(null)}
+        />
       )}
     </div>
   );

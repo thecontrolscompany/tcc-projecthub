@@ -10,6 +10,7 @@ import { ActivityQuickLog } from "@/components/crm/activity-quick-log";
 import { TaskWidget } from "@/components/crm/task-widget";
 import { OpportunityStageBadge } from "@/components/crm/opportunity-stage-badge";
 import { ContactBadge } from "@/components/crm/contact-badge";
+import { ContactEditModal } from "@/components/crm/contact-edit-modal";
 import { CRM_HEALTH_BADGES, CRM_HEALTH_LABELS, CRM_ACCOUNT_TYPE_LABELS, fmtCrmDate, fmtCrmCurrency, daysSince } from "@/lib/crm/utils";
 
 type Props = {
@@ -30,9 +31,29 @@ export function AccountDetailClient({ account, activities: initialActivities, ta
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [activities, setActivities] = useState(initialActivities);
   const [tasks, setTasks] = useState(initialTasks);
+  const [contacts, setContacts] = useState<CrmContact[]>(account.contacts ?? []);
+  const [editingContact, setEditingContact] = useState<CrmContact | null>(null);
+  const [loadingContactId, setLoadingContactId] = useState<string | null>(null);
   const isWriteRole = role === "admin" || role === "ops_manager";
-  const contacts = account.contacts ?? [];
   const opportunities = account.opportunities ?? [];
+
+  async function openContactEdit(id: string) {
+    setLoadingContactId(id);
+    try {
+      const res = await fetch(`/api/crm/contacts/${id}`);
+      const json = await res.json();
+      if (res.ok) setEditingContact(json.contact as CrmContact);
+    } finally {
+      setLoadingContactId(null);
+    }
+  }
+
+  function handleContactSaved(updated: CrmContact) {
+    setContacts((prev) =>
+      prev.map((c) => c.id === updated.id ? { ...c, ...updated } : c)
+    );
+    setEditingContact(null);
+  }
 
   const daysSinceContact = daysSince(account.last_meaningful_contact_date);
 
@@ -256,6 +277,15 @@ export function AccountDetailClient({ account, activities: initialActivities, ta
                       {!c.is_active && <span className="rounded-full bg-surface-overlay text-text-tertiary px-1.5 py-0.5 text-xs">Inactive</span>}
                     </div>
                   </div>
+                  {isWriteRole && (
+                    <button
+                      onClick={() => openContactEdit(c.id)}
+                      disabled={loadingContactId === c.id}
+                      className="mt-3 rounded-lg border border-border-default px-2.5 py-1 text-xs text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary disabled:opacity-40"
+                    >
+                      {loadingContactId === c.id ? "Loading…" : "Edit"}
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -322,6 +352,15 @@ export function AccountDetailClient({ account, activities: initialActivities, ta
         <div className="max-w-2xl space-y-6">
           <HandoffSummary account={account} />
         </div>
+      )}
+
+      {editingContact && (
+        <ContactEditModal
+          contact={editingContact}
+          accountName={account.company_name}
+          onSaved={(updated) => handleContactSaved(updated as CrmContact)}
+          onClose={() => setEditingContact(null)}
+        />
       )}
     </div>
   );
