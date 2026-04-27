@@ -61,6 +61,26 @@ export async function GET(
   return NextResponse.json({ contact: data });
 }
 
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+
+  const profile = await resolveUserRole(user);
+  const role = profile?.role ?? "";
+  if (!(CRM_WRITE_ROLES as readonly string[]).includes(role)) {
+    return NextResponse.json({ error: "Access denied." }, { status: 403 });
+  }
+
+  const { error } = await supabase.from("crm_contacts").delete().eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

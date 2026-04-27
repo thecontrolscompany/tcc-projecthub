@@ -249,6 +249,10 @@ export function ContactsList({ contacts: initialContacts, role }: ContactsListPr
           contact={editingContact}
           accountName={editingAccountName}
           onSaved={(updated) => handleSaved(updated as CrmContact)}
+          onDeleted={(id) => {
+            setContacts((prev) => prev.filter((c) => c.id !== id));
+            setEditingContact(null);
+          }}
           onClose={() => setEditingContact(null)}
         />
       )}

@@ -352,6 +352,10 @@ export function AccountDetailClient({ account, activities: initialActivities, ta
           contact={editingContact}
           accountName={account.company_name}
           onSaved={(updated) => handleContactSaved(updated as CrmContact)}
+          onDeleted={(id) => {
+            setContacts((prev) => prev.filter((c) => c.id !== id));
+            setEditingContact(null);
+          }}
           onClose={() => setEditingContact(null)}
         />
       )}

@@ -18,6 +18,7 @@ type ContactEditModalProps = {
   contact: EditableContact;
   accountName?: string;
   onSaved: (updated: EditableContact) => void;
+  onDeleted?: (id: string) => void;
   onClose: () => void;
 };
 
@@ -80,7 +81,7 @@ function CheckRow({ label, checked, onChange }: { label: string; checked: boolea
   );
 }
 
-export function ContactEditModal({ contact, accountName, onSaved, onClose }: ContactEditModalProps) {
+export function ContactEditModal({ contact, accountName, onSaved, onDeleted, onClose }: ContactEditModalProps) {
   const [firstName,        setFirstName]        = useState(contact.first_name ?? "");
   const [lastName,         setLastName]          = useState(contact.last_name ?? "");
   const [displayName,      setDisplayName]       = useState(contact.display_name);
@@ -100,8 +101,10 @@ export function ContactEditModal({ contact, accountName, onSaved, onClose }: Con
   const [involvedEst,      setInvolvedEst]       = useState(contact.involved_in_estimating);
   const [involvedExec,     setInvolvedExec]      = useState(contact.involved_in_project_execution);
 
-  const [saving,  setSaving]  = useState(false);
-  const [error,   setError]   = useState<string | null>(null);
+  const [saving,    setSaving]    = useState(false);
+  const [deleting,  setDeleting]  = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [error,     setError]     = useState<string | null>(null);
 
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -295,21 +298,71 @@ export function ContactEditModal({ contact, accountName, onSaved, onClose }: Con
           {error && <p className="text-sm text-status-danger">{error}</p>}
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 border-t border-border-default pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-xl border border-border-default px-4 py-2 text-sm text-text-secondary transition hover:bg-surface-overlay"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving || !displayName.trim()}
-              className="rounded-xl bg-brand-primary px-5 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:opacity-60"
-            >
-              {saving ? "Saving…" : "Save Contact"}
-            </button>
+          <div className="flex items-center justify-between gap-3 border-t border-border-default pt-4">
+            {/* Delete — left side */}
+            <div>
+              {!confirmDelete ? (
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(true)}
+                  className="rounded-xl px-3 py-2 text-sm text-status-danger hover:bg-status-danger/10 transition"
+                >
+                  Delete contact
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-status-danger font-medium">Delete permanently?</span>
+                  <button
+                    type="button"
+                    disabled={deleting}
+                    onClick={async () => {
+                      setDeleting(true);
+                      try {
+                        const res = await fetch(`/api/crm/contacts/${contact.id}`, { method: "DELETE" });
+                        if (res.ok) {
+                          onDeleted?.(contact.id);
+                          onClose();
+                        } else {
+                          const json = await res.json();
+                          setError(json.error ?? "Delete failed.");
+                          setConfirmDelete(false);
+                        }
+                      } finally {
+                        setDeleting(false);
+                      }
+                    }}
+                    className="rounded-xl bg-status-danger px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-60"
+                  >
+                    {deleting ? "Deleting…" : "Yes, delete"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(false)}
+                    className="text-sm text-text-tertiary hover:text-text-primary"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Save / Close — right side */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-xl border border-border-default px-4 py-2 text-sm text-text-secondary transition hover:bg-surface-overlay"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving || !displayName.trim()}
+                className="rounded-xl bg-brand-primary px-5 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:opacity-60"
+              >
+                {saving ? "Saving…" : "Save Contact"}
+              </button>
+            </div>
           </div>
         </form>
       </div>
