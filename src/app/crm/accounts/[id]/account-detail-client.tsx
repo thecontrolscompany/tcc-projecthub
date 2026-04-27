@@ -245,14 +245,7 @@ export function AccountDetailClient({ account, activities: initialActivities, ta
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-text-primary">{contacts.length} Contacts</h2>
-            {isWriteRole && (
-              <Link
-                href={`/crm/contacts/new?account_id=${account.id}`}
-                className="rounded-xl border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:bg-surface-overlay"
-              >
-                + Add Contact
-              </Link>
-            )}
+        {/* + Add Contact page coming soon */}
           </div>
           {contacts.length === 0 ? (
             <p className="py-8 text-center text-sm text-text-tertiary">No contacts yet for this account.</p>

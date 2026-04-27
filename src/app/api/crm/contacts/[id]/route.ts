@@ -48,8 +48,7 @@ export async function GET(
     .from("crm_contacts")
     .select(`
       *,
-      account:crm_accounts!crm_contacts_account_id_fkey(id, company_name, type, relationship_health),
-      reports_to:crm_contacts!crm_contacts_reports_to_contact_id_fkey(id, display_name)
+      account:crm_accounts!crm_contacts_account_id_fkey(id, company_name, type, relationship_health)
     `)
     .eq("id", id)
     .single();

@@ -126,14 +126,7 @@ export function ContactsList({ contacts: initialContacts, role }: ContactsListPr
           <h1 className="text-xl font-semibold text-text-primary">Contacts</h1>
           <p className="text-sm text-text-tertiary">{filtered.length} of {contacts.length} contacts</p>
         </div>
-        {isWriteRole && (
-          <Link
-            href="/crm/contacts/new"
-            className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover"
-          >
-            + New Contact
-          </Link>
-        )}
+        {/* + New Contact page coming soon */}
       </div>
 
       <div className="mb-5 flex flex-wrap gap-3 items-center">
