@@ -126,7 +126,14 @@ export function ContactsList({ contacts: initialContacts, role }: ContactsListPr
           <h1 className="text-xl font-semibold text-text-primary">Contacts</h1>
           <p className="text-sm text-text-tertiary">{filtered.length} of {contacts.length} contacts</p>
         </div>
-        {/* + New Contact page coming soon */}
+        {isWriteRole && (
+          <Link
+            href="/crm/contacts/import-email"
+            className="rounded-xl border border-border-default px-4 py-2 text-sm text-text-secondary transition hover:bg-surface-overlay"
+          >
+            Import from Email
+          </Link>
+        )}
       </div>
 
       <div className="mb-5 flex flex-wrap gap-3 items-center">
