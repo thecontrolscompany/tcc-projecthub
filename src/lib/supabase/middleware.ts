@@ -95,6 +95,11 @@ export async function updateSession(request: NextRequest) {
       url.pathname = roleHome(role);
       return NextResponse.redirect(url);
     }
+    if (pathname.startsWith("/crm") && !["admin", "ops_manager", "pm", "lead"].includes(role ?? "")) {
+      const url = request.nextUrl.clone();
+      url.pathname = roleHome(role);
+      return NextResponse.redirect(url);
+    }
     if (pathname.startsWith("/feedback") && !["admin", "pm", "lead", "ops_manager"].includes(role ?? "")) {
       const url = request.nextUrl.clone();
       url.pathname = roleHome(role);

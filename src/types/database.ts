@@ -563,3 +563,287 @@ export interface BillingRow {
   poc_driven?: boolean;
   has_recent_update?: boolean;
 }
+
+// ============================================================
+// CRM MODULE TYPES — RelationshipHub
+// ============================================================
+
+export type CrmAccountType =
+  | "general_contractor"
+  | "mechanical_contractor"
+  | "controls_contractor"
+  | "hvac_oem"
+  | "controls_oem"
+  | "owner"
+  | "other";
+
+export type CrmAccountStatus = "active" | "inactive" | "prospect";
+export type CrmRelationshipHealth = "strong" | "good" | "at_risk" | "dormant" | "unknown";
+
+export type CrmContactRoleType =
+  | "salesperson"
+  | "sales_manager"
+  | "estimator"
+  | "project_manager"
+  | "senior_project_manager"
+  | "operations_manager"
+  | "owner"
+  | "cfo"
+  | "cfo_estimator"
+  | "unknown";
+
+export type CrmContactMethod = "email" | "phone" | "mobile" | "in_person";
+export type CrmInfluenceLevel = "high" | "medium" | "low" | "unknown";
+export type CrmBuyingRole =
+  | "decision_maker"
+  | "influencer"
+  | "evaluator"
+  | "user"
+  | "gatekeeper"
+  | "unknown";
+export type CrmConfidenceLevel = "confirmed" | "partially_confirmed" | "needs_verification";
+
+export type CrmOpportunityStage =
+  | "target_account"
+  | "initial_contact"
+  | "relationship_building"
+  | "opportunity_identified"
+  | "request_for_pricing"
+  | "estimating"
+  | "proposal_sent"
+  | "follow_up_negotiation"
+  | "verbal_award"
+  | "po_received"
+  | "closed_lost"
+  | "on_hold";
+
+export type CrmOpportunityContactRole =
+  | "primary"
+  | "secondary"
+  | "estimating"
+  | "pm_handoff"
+  | "technical"
+  | "executive";
+
+export type CrmActivityType =
+  | "meeting"
+  | "call"
+  | "email"
+  | "site_visit"
+  | "lunch"
+  | "estimate_request"
+  | "proposal_followup"
+  | "pm_handoff"
+  | "other";
+
+export type CrmTaskPriority = "low" | "medium" | "high" | "urgent";
+export type CrmTaskStatus = "open" | "in_progress" | "completed" | "cancelled";
+
+export interface CrmAccount {
+  id: string;
+  company_name: string;
+  type: CrmAccountType;
+  territory: string | null;
+  status: CrmAccountStatus;
+  notes: string | null;
+  relationship_owner_profile_id: string | null;
+  tags: string[];
+  website: string | null;
+  address: string | null;
+  relationship_health: CrmRelationshipHealth;
+  last_meaningful_contact_date: string | null;
+  next_scheduled_followup_date: string | null;
+  who_buys: string | null;
+  who_issues_po: string | null;
+  who_influences_spec: string | null;
+  who_owns_estimating_relationship: string | null;
+  handoff_notes: string | null;
+  linked_customer_id: string | null;
+  created_at: string;
+  updated_at: string;
+  // joined
+  relationship_owner?: Pick<Profile, "id" | "full_name" | "email"> | null;
+  contacts?: CrmContact[];
+  opportunities?: CrmOpportunity[];
+}
+
+export interface CrmContact {
+  id: string;
+  account_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  display_name: string;
+  role_type: CrmContactRoleType;
+  title: string | null;
+  email: string | null;
+  phone: string | null;
+  mobile: string | null;
+  location: string | null;
+  preferred_contact_method: CrmContactMethod;
+  influence_level: CrmInfluenceLevel;
+  buying_role: CrmBuyingRole;
+  reports_to_contact_id: string | null;
+  issues_purchase_orders: boolean;
+  involved_in_estimating: boolean;
+  involved_in_project_execution: boolean;
+  notes: string | null;
+  is_active: boolean;
+  confidence_level: CrmConfidenceLevel;
+  created_at: string;
+  updated_at: string;
+  // joined
+  account?: Pick<CrmAccount, "id" | "company_name" | "type"> | null;
+  reports_to?: Pick<CrmContact, "id" | "display_name"> | null;
+}
+
+export interface CrmOpportunity {
+  id: string;
+  opportunity_number: string;
+  account_id: string;
+  project_name: string;
+  primary_contact_id: string | null;
+  estimator_profile_id: string | null;
+  pm_profile_id: string | null;
+  internal_owner_profile_id: string | null;
+  estimated_value: number | null;
+  estimated_gross_margin: number | null;
+  estimated_margin_pct: number | null;
+  probability: number | null;
+  expected_close_date: string | null;
+  bid_due_date: string | null;
+  market_type: string | null;
+  stage: CrmOpportunityStage;
+  next_step: string | null;
+  last_activity_date: string | null;
+  lead_source: string | null;
+  notes: string | null;
+  linked_pursuit_id: string | null;
+  linked_quote_request_id: string | null;
+  created_at: string;
+  updated_at: string;
+  // joined
+  account?: Pick<CrmAccount, "id" | "company_name"> | null;
+  primary_contact?: Pick<CrmContact, "id" | "display_name" | "role_type"> | null;
+  opportunity_contacts?: CrmOpportunityContact[];
+}
+
+export interface CrmOpportunityContact {
+  id: string;
+  opportunity_id: string;
+  contact_id: string;
+  contact_role_on_opportunity: CrmOpportunityContactRole;
+  created_at: string;
+  // joined
+  contact?: Pick<CrmContact, "id" | "display_name" | "role_type" | "confidence_level"> | null;
+}
+
+export interface CrmActivity {
+  id: string;
+  activity_type: CrmActivityType;
+  activity_date: string;
+  summary: string;
+  key_decisions: string | null;
+  follow_up_actions: string | null;
+  follow_up_due_date: string | null;
+  attendees_text: string | null;
+  account_id: string | null;
+  contact_id: string | null;
+  opportunity_id: string | null;
+  logged_by_profile_id: string | null;
+  created_at: string;
+  updated_at: string;
+  // joined
+  account?: Pick<CrmAccount, "id" | "company_name"> | null;
+  contact?: Pick<CrmContact, "id" | "display_name"> | null;
+  opportunity?: Pick<CrmOpportunity, "id" | "project_name" | "opportunity_number"> | null;
+  logged_by?: Pick<Profile, "id" | "full_name" | "email"> | null;
+}
+
+export interface CrmTask {
+  id: string;
+  title: string;
+  description: string | null;
+  assigned_to_profile_id: string | null;
+  due_date: string | null;
+  priority: CrmTaskPriority;
+  status: CrmTaskStatus;
+  account_id: string | null;
+  contact_id: string | null;
+  opportunity_id: string | null;
+  reminder_date: string | null;
+  completed_at: string | null;
+  created_by_profile_id: string | null;
+  created_at: string;
+  updated_at: string;
+  // joined
+  assigned_to?: Pick<Profile, "id" | "full_name" | "email"> | null;
+  account?: Pick<CrmAccount, "id" | "company_name"> | null;
+  opportunity?: Pick<CrmOpportunity, "id" | "project_name" | "opportunity_number"> | null;
+}
+
+export interface CrmSalespersonTarget {
+  id: string;
+  profile_id: string;
+  period_start: string;
+  period_end: string;
+  target_customer_meetings_per_week: number | null;
+  target_outreach_touches_per_week: number | null;
+  target_active_opportunities: number | null;
+  target_proposals_requested: number | null;
+  target_proposals_sent: number | null;
+  target_closed_won_revenue: number | null;
+  target_gross_margin: number | null;
+  strategic_notes: string | null;
+  created_at: string;
+  updated_at: string;
+  // joined
+  profile?: Pick<Profile, "id" | "full_name" | "email"> | null;
+}
+
+export interface CrmDashboardMetrics {
+  pipeline_by_stage: Array<{
+    stage: CrmOpportunityStage;
+    count: number;
+    total_value: number;
+  }>;
+  open_opps_by_account: Array<{
+    account_id: string;
+    company_name: string;
+    count: number;
+    total_value: number;
+  }>;
+  revenue_by_close_month: Array<{
+    month: string;
+    total_value: number;
+    count: number;
+  }>;
+  stale_opportunities: Array<{
+    id: string;
+    opportunity_number: string;
+    project_name: string;
+    company_name: string;
+    last_activity_date: string | null;
+    days_stale: number;
+  }>;
+  accounts_single_contact: Array<{
+    id: string;
+    company_name: string;
+    contact_count: number;
+  }>;
+  contacts_by_role: Array<{
+    role_type: CrmContactRoleType;
+    count: number;
+  }>;
+  tasks_due_this_week: CrmTask[];
+  po_issuers: Array<{
+    id: string;
+    display_name: string;
+    company_name: string;
+    email: string | null;
+  }>;
+  estimating_contacts_by_account: Array<{
+    account_id: string;
+    company_name: string;
+    contacts: Array<{ id: string; display_name: string }>;
+  }>;
+}

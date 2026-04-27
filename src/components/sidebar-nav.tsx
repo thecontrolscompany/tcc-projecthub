@@ -101,6 +101,17 @@ function MessageIcon({ className = "h-5 w-5" }: IconProps) {
   );
 }
 
+function UsersIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <circle cx="9" cy="8" r="3" />
+      <path d="M2 19.5c1.2-2.5 3.5-4 7-4s5.8 1.5 7 4" />
+      <circle cx="17" cy="9" r="2.5" />
+      <path d="M17 13.5c1.5 0 3 .8 4 2.5" />
+    </svg>
+  );
+}
+
 function ClockIcon({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
@@ -150,6 +161,8 @@ export const NAV_LINKS: NavItem[] = [
   { label: "Contacts",         href: "/admin/contacts",           roles: ["admin"],                                             icon: UserIcon },
   { label: "ProjectHub",       href: "/pm",                       roles: ["pm", "lead", "ops_manager"],                         icon: ClipboardIcon },
   { label: "OpportunityHub",   href: "/quotes",                   roles: ["admin", "ops_manager", "customer"],                  icon: DocumentIcon },
+  { label: "RelationshipHub", href: "/crm",                       roles: ["admin", "ops_manager"],                              icon: UsersIcon },
+  { label: "RelationshipHub", href: "/crm",                       roles: ["pm", "lead"],                                        icon: UsersIcon },
   { label: "Projects",         href: "/projects",                 roles: [],                                                    icon: FolderIcon },
   { label: "Installer",        href: "/installer",                roles: ["installer"],                                         icon: WrenchIcon },
   { label: "BillingHub",       href: "/billing",                  roles: ["admin"],                                             icon: DollarIcon },
@@ -178,6 +191,14 @@ const PAGE_TITLE_OVERRIDES: Record<string, string> = {
   "/time-hub": "TimeHub",
   "/projects": "Projects",
   "/quotes": "OpportunityHub",
+  "/crm": "RelationshipHub",
+  "/crm/dashboard": "RelationshipHub",
+  "/crm/accounts": "Accounts",
+  "/crm/contacts": "Contacts",
+  "/crm/opportunities": "Pipeline",
+  "/crm/activities": "Activity Feed",
+  "/crm/tasks": "Tasks",
+  "/crm/targets": "Targets",
   "/time/clock": "Time Clock",
   "/time/employees": "Time Employees",
   "/time/export": "Reports",
