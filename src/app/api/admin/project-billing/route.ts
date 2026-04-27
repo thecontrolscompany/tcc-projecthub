@@ -15,6 +15,7 @@ type BillingPeriodRow = {
   pct_complete: number;
   prev_billed: number;
   actual_billed: number | null;
+  invoice_number: string | null;
   notes: string | null;
   synced_from_onedrive: boolean;
 };
@@ -22,6 +23,7 @@ type BillingPeriodRow = {
 type BillingPeriodUpdate = {
   id: string;
   actual_billed?: number | null;
+  invoice_number?: string | null;
   pct_complete?: number;
   notes?: string | null;
 };
@@ -106,7 +108,7 @@ async function loadProjectBilling(adminClient: AdminClient, projectId: string) {
 
   const { data: periods, error } = await adminClient
     .from("billing_periods")
-    .select("id, project_id, period_month, estimated_income_snapshot, prior_pct, pct_complete, prev_billed, actual_billed, notes, synced_from_onedrive")
+    .select("id, project_id, period_month, estimated_income_snapshot, prior_pct, pct_complete, prev_billed, actual_billed, invoice_number, notes, synced_from_onedrive")
     .eq("project_id", projectId)
     .order("period_month", { ascending: true });
 
@@ -145,6 +147,7 @@ export async function POST(request: Request) {
   const projectId = typeof body?.projectId === "string" ? body.projectId : "";
   const periodMonth = typeof body?.periodMonth === "string" ? normalizeMonth(body.periodMonth) : null;
   const actualBilled = normalizeNumber(body?.actual_billed);
+  const invoiceNumber = typeof body?.invoice_number === "string" ? body.invoice_number.trim() || null : null;
   const pctCompleteInput = normalizeNumber(body?.pct_complete);
   const notes = typeof body?.notes === "string" ? body.notes.trim() || null : null;
 
@@ -176,6 +179,7 @@ export async function POST(request: Request) {
           estimated_income_snapshot: estimatedIncome,
           pct_complete: pctComplete,
           actual_billed: actualBilled,
+          invoice_number: invoiceNumber,
           notes,
           synced_from_onedrive: false,
         },
@@ -211,6 +215,7 @@ export async function PATCH(request: Request) {
 
       const payload: Record<string, number | string | null> = {};
       if ("actual_billed" in update) payload.actual_billed = normalizeNumber(update.actual_billed);
+      if ("invoice_number" in update) payload.invoice_number = update.invoice_number?.trim() || null;
       if ("pct_complete" in update) {
         const pctComplete = normalizeNumber(update.pct_complete);
         if (pctComplete !== null) payload.pct_complete = Math.max(0, Math.min(1, pctComplete));

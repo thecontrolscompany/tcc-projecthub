@@ -11,12 +11,14 @@ type ProjectBillingPeriod = {
   pct_complete: number;
   prev_billed: number;
   actual_billed: number | null;
+  invoice_number: string | null;
   notes: string | null;
   synced_from_onedrive: boolean;
 };
 
 type BillingDraft = ProjectBillingPeriod & {
   actual_billed_input: string;
+  invoice_number_input: string;
   pct_complete_input: string;
   notes_input: string;
 };
@@ -62,6 +64,7 @@ function toDraft(period: ProjectBillingPeriod): BillingDraft {
   return {
     ...period,
     actual_billed_input: period.actual_billed === null ? "" : String(period.actual_billed),
+    invoice_number_input: period.invoice_number ?? "",
     pct_complete_input: String(Math.round((period.pct_complete ?? 0) * 1000) / 10),
     notes_input: period.notes ?? "",
   };
@@ -148,13 +151,14 @@ export function ProjectBillingSection({ projectId }: { projectId: string }) {
       periods.some(
         (period) =>
           (parseCurrencyInput(period.actual_billed_input) ?? null) !== (period.actual_billed ?? null) ||
+          period.invoice_number_input !== (period.invoice_number ?? "") ||
           parsePercentInput(period.pct_complete_input) !== (period.pct_complete ?? 0) ||
           period.notes_input !== (period.notes ?? "")
       ),
     [periods]
   );
 
-  function updatePeriod(id: string, patch: Partial<Pick<BillingDraft, "actual_billed_input" | "pct_complete_input" | "notes_input">>) {
+  function updatePeriod(id: string, patch: Partial<Pick<BillingDraft, "actual_billed_input" | "invoice_number_input" | "pct_complete_input" | "notes_input">>) {
     setStatus(null);
     setPeriods((current) => current.map((period) => (period.id === id ? { ...period, ...patch } : period)));
   }
@@ -174,6 +178,7 @@ export function ProjectBillingSection({ projectId }: { projectId: string }) {
           updates: periods.map((period) => ({
             id: period.id,
             actual_billed: parseCurrencyInput(period.actual_billed_input),
+            invoice_number: period.invoice_number_input,
             pct_complete: parsePercentInput(period.pct_complete_input),
             notes: period.notes_input,
           })),
@@ -320,6 +325,7 @@ export function ProjectBillingSection({ projectId }: { projectId: string }) {
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Month</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Prior Billed</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">Actual Billed</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Invoice #</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">% Complete</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Notes</th>
                 </tr>
@@ -344,6 +350,14 @@ export function ProjectBillingSection({ projectId }: { projectId: string }) {
                         onChange={(event) => updatePeriod(period.id, { actual_billed_input: event.target.value })}
                         className={`${compactInputClassName} text-right`}
                         placeholder="$0.00"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        value={period.invoice_number_input}
+                        onChange={(event) => updatePeriod(period.id, { invoice_number_input: event.target.value })}
+                        className={compactInputClassName}
+                        placeholder="Invoice #"
                       />
                     </td>
                     <td className="px-4 py-3">
