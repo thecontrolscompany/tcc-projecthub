@@ -914,7 +914,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
                   <tbody>
                     {billingRows.map((row) => (
                       <tr key={row.id}>
-                        <td>{format(new Date(row.period_month), "MMMM yyyy")}</td>
+                        <td>{format(new Date(row.period_month + "T00:00:00"), "MMMM yyyy")}</td>
                         <td>{row.invoice_number || "—"}</td>
                         <td className="number-cell">{fmtUSD(row.actual_billed)}</td>
                         <td className="number-cell">{fmtUSD(row.cumulative)}</td>

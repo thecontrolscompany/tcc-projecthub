@@ -676,10 +676,10 @@ function ProjectDetail({
     () =>
       [...project.billing_periods]
         .filter((period) => period.pct_complete != null)
-        .sort((a, b) => new Date(a.period_month).getTime() - new Date(b.period_month).getTime())
+        .sort((a, b) => new Date(a.period_month + "T00:00:00").getTime() - new Date(b.period_month + "T00:00:00").getTime())
         .map((period) => ({
-          label: format(new Date(period.period_month), "MMM ''yy"),
-          date: format(new Date(period.period_month), "MMMM yyyy"),
+          label: format(new Date(period.period_month + "T00:00:00"), "MMM ''yy"),
+          date: format(new Date(period.period_month + "T00:00:00"), "MMMM yyyy"),
           percent: Number(((period.pct_complete ?? 0) * 100).toFixed(1)),
         })),
     [project.billing_periods]
@@ -689,11 +689,11 @@ function ProjectDetail({
     let prior = 0;
     return [...project.billing_periods]
       .filter((period) => period.actual_billed !== null)
-      .sort((a, b) => new Date(a.period_month).getTime() - new Date(b.period_month).getTime())
+      .sort((a, b) => new Date(a.period_month + "T00:00:00").getTime() - new Date(b.period_month + "T00:00:00").getTime())
       .map((period) => {
         const thisMonth = period.actual_billed ?? 0;
         const row = {
-          label: format(new Date(period.period_month), "MMM ''yy"),
+          label: format(new Date(period.period_month + "T00:00:00"), "MMM ''yy"),
           prior,
           thisMonth,
         };
@@ -1079,7 +1079,7 @@ function ProjectDetail({
                 project.billing_periods.map((period) => (
                   <tr key={period.id} className="border-t border-slate-100">
                     <td className="px-5 py-3 font-medium text-slate-800">
-                      {format(new Date(period.period_month), "MMMM yyyy")}
+                      {format(new Date(period.period_month + "T00:00:00"), "MMMM yyyy")}
                     </td>
                     <td className="px-5 py-3 text-right text-slate-600">
                       {(period.pct_complete * 100).toFixed(1)}%
