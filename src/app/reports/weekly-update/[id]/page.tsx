@@ -865,6 +865,66 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
               <div>{format(generatedAt, "MMMM d, yyyy")}</div>
             </div>
 
+            {billingRows.length > 0 && (
+              <>
+                <div className="section-divider">
+                  <h2>BILLING</h2>
+                </div>
+
+                <div className="billing-summary">
+                  <div className="billing-summary-card">
+                    <div className="billing-summary-label">Contract Value</div>
+                    <div className="billing-summary-value">{fmtUSD(contractValue)}</div>
+                  </div>
+                  <div className="billing-summary-card">
+                    <div className="billing-summary-label">Total Billed</div>
+                    <div className="billing-summary-value">{fmtUSD(totalBilled)}</div>
+                  </div>
+                  <div className="billing-summary-card">
+                    <div className="billing-summary-label">Remaining Balance</div>
+                    <div className="billing-summary-value">{fmtUSD(remaining)}</div>
+                  </div>
+                </div>
+
+                {contractValue > 0 && (
+                  <>
+                    <div className="billing-progress-bar">
+                      <div
+                        className="billing-progress-fill"
+                        style={{ width: `${Math.min((totalBilled / contractValue) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <div className="billing-progress-label">
+                      {((totalBilled / contractValue) * 100).toFixed(1)}% billed
+                    </div>
+                  </>
+                )}
+
+                <div style={{ height: 14 }} />
+
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Period</th>
+                      <th>Invoice #</th>
+                      <th className="number-cell">Amount Billed</th>
+                      <th className="number-cell">Cumulative Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {billingRows.map((row) => (
+                      <tr key={row.id}>
+                        <td>{format(new Date(row.period_month), "MMMM yyyy")}</td>
+                        <td>{row.invoice_number || "—"}</td>
+                        <td className="number-cell">{fmtUSD(row.actual_billed)}</td>
+                        <td className="number-cell">{fmtUSD(row.cumulative)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+
             <div className="section-divider">
               <h2>{update.labor_hours_detail?.length ? "LABOR HOURS" : "CREW LOG"}</h2>
             </div>
@@ -1076,66 +1136,6 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
                   </tbody>
                 </table>
               </div>
-            )}
-
-            {billingRows.length > 0 && (
-              <>
-                <div className="section-divider">
-                  <h2>BILLING</h2>
-                </div>
-
-                <div className="billing-summary">
-                  <div className="billing-summary-card">
-                    <div className="billing-summary-label">Contract Value</div>
-                    <div className="billing-summary-value">{fmtUSD(contractValue)}</div>
-                  </div>
-                  <div className="billing-summary-card">
-                    <div className="billing-summary-label">Total Billed</div>
-                    <div className="billing-summary-value">{fmtUSD(totalBilled)}</div>
-                  </div>
-                  <div className="billing-summary-card">
-                    <div className="billing-summary-label">Remaining Balance</div>
-                    <div className="billing-summary-value">{fmtUSD(remaining)}</div>
-                  </div>
-                </div>
-
-                {contractValue > 0 && (
-                  <>
-                    <div className="billing-progress-bar">
-                      <div
-                        className="billing-progress-fill"
-                        style={{ width: `${Math.min((totalBilled / contractValue) * 100, 100)}%` }}
-                      />
-                    </div>
-                    <div className="billing-progress-label">
-                      {((totalBilled / contractValue) * 100).toFixed(1)}% billed
-                    </div>
-                  </>
-                )}
-
-                <div style={{ height: 14 }} />
-
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Period</th>
-                      <th>Invoice #</th>
-                      <th className="number-cell">Amount Billed</th>
-                      <th className="number-cell">Cumulative Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {billingRows.map((row) => (
-                      <tr key={row.id}>
-                        <td>{format(new Date(row.period_month), "MMMM yyyy")}</td>
-                        <td>{row.invoice_number || "—"}</td>
-                        <td className="number-cell">{fmtUSD(row.actual_billed)}</td>
-                        <td className="number-cell">{fmtUSD(row.cumulative)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </>
             )}
 
             <footer className="footer">
