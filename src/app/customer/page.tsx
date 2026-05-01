@@ -632,6 +632,7 @@ function ProjectList({
                   <div className="space-y-1 text-sm text-slate-500">
                     {project.site_address && <p>{project.site_address}</p>}
                     <p>{project.customer_name || "Customer project"}</p>
+                    {project.customer_poc && <p>PM: {project.customer_poc}</p>}
                   </div>
                 </div>
                 <ProgressDonut value={pct} />
