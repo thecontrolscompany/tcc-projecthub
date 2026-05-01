@@ -1637,12 +1637,12 @@ function WeeklyUpdateCard({ update }: { update: WeeklyUpdate }) {
               <thead>
                 <tr className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                   <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3 text-center">Mon {weekDateLabel(update.week_of, 0)}</th>
-                  <th className="px-4 py-3 text-center">Tue {weekDateLabel(update.week_of, 1)}</th>
-                  <th className="px-4 py-3 text-center">Wed {weekDateLabel(update.week_of, 2)}</th>
-                  <th className="px-4 py-3 text-center">Thu {weekDateLabel(update.week_of, 3)}</th>
-                  <th className="px-4 py-3 text-center">Fri {weekDateLabel(update.week_of, 4)}</th>
-                  <th className="px-4 py-3 text-center">Sat {weekDateLabel(update.week_of, 5)}</th>
+                  <th className="px-4 py-3 text-center"><div>Mon</div><div className="font-normal normal-case tracking-normal">{weekDateLabel(update.week_of, 0)}</div></th>
+                  <th className="px-4 py-3 text-center"><div>Tue</div><div className="font-normal normal-case tracking-normal">{weekDateLabel(update.week_of, 1)}</div></th>
+                  <th className="px-4 py-3 text-center"><div>Wed</div><div className="font-normal normal-case tracking-normal">{weekDateLabel(update.week_of, 2)}</div></th>
+                  <th className="px-4 py-3 text-center"><div>Thu</div><div className="font-normal normal-case tracking-normal">{weekDateLabel(update.week_of, 3)}</div></th>
+                  <th className="px-4 py-3 text-center"><div>Fri</div><div className="font-normal normal-case tracking-normal">{weekDateLabel(update.week_of, 4)}</div></th>
+                  <th className="px-4 py-3 text-center"><div>Sat</div><div className="font-normal normal-case tracking-normal">{weekDateLabel(update.week_of, 5)}</div></th>
                   <th className="px-4 py-3 text-center">Total</th>
                 </tr>
               </thead>
