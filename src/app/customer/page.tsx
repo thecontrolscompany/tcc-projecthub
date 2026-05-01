@@ -46,6 +46,7 @@ interface CustomerProject {
   job_number: string | null;
   site_address: string | null;
   general_contractor: string | null;
+  customer_poc: string | null;
   start_date: string | null;
   scheduled_completion: string | null;
   scope_description: string | null;
@@ -165,6 +166,7 @@ export default function CustomerPage() {
         job_number: string | null;
         site_address: string | null;
         general_contractor: string | null;
+        customer_poc: string | null;
         start_date: string | null;
         scheduled_completion: string | null;
         scope_description: string | null;
@@ -191,6 +193,7 @@ export default function CustomerPage() {
           job_number: project.job_number ?? null,
           site_address: project.site_address ?? null,
           general_contractor: project.general_contractor ?? null,
+          customer_poc: project.customer_poc ?? null,
           start_date: project.start_date ?? null,
           scheduled_completion: project.scheduled_completion ?? null,
           scope_description: project.scope_description ?? null,
@@ -735,6 +738,9 @@ function ProjectDetail({
               {project.general_contractor && (
                 <p className="text-sm text-slate-600">GC: {project.general_contractor}</p>
               )}
+              {project.customer_poc && (
+                <p className="text-sm text-slate-600">Customer PM: {project.customer_poc}</p>
+              )}
               {project.scope_description && (
                 <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-600">
                   {project.scope_description}
@@ -846,6 +852,7 @@ function ProjectDetail({
                 "Team member";
               const email = profile?.email ?? directory?.email ?? null;
               const phone = directory?.phone ?? null;
+              const isPrimaryPm = member.role_on_project === "pm" && !!member.is_primary;
               const roleLabel =
                 member.role_on_project === "pm" ? "Project Manager" :
                 member.role_on_project === "lead" ? "Field Lead" :
@@ -857,12 +864,22 @@ function ProjectDetail({
                   className="rounded-2xl border-l-4 border bg-white p-4 shadow-sm"
                   style={{ borderColor: BORDER, borderLeftColor: HEADER_BG }}
                 >
-                  <span
-                    className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase"
-                    style={{ backgroundColor: "#e6f6f4", color: HEADER_BG }}
-                  >
-                    {roleLabel}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span
+                      className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase"
+                      style={{ backgroundColor: "#e6f6f4", color: HEADER_BG }}
+                    >
+                      {roleLabel}
+                    </span>
+                    {isPrimaryPm && (
+                      <span
+                        className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase"
+                        style={{ backgroundColor: "#017a6f", color: "#ffffff" }}
+                      >
+                        Primary
+                      </span>
+                    )}
+                  </div>
                   <p className="mt-3 text-lg font-bold" style={{ color: CHARCOAL }}>
                     {name}
                   </p>
@@ -1527,6 +1544,13 @@ function PhotoIcon() {
   );
 }
 
+function weekDateLabel(weekOf: string, dayOffset: number): string {
+  const satStr = formatWeekEndingSaturday(weekOf, "yyyy-MM-dd");
+  const [y, m, d] = satStr.split("-").map(Number);
+  const target = new Date(y, m - 1, d - (5 - dayOffset));
+  return format(target, "M/d");
+}
+
 function WeeklyUpdateCard({ update }: { update: WeeklyUpdate }) {
   const visibleCrewRows = normalizeCrewLogRows(update.crew_log).filter(
     (row) => row.workers > 0 || row.hours > 0 || row.activities
@@ -1612,12 +1636,12 @@ function WeeklyUpdateCard({ update }: { update: WeeklyUpdate }) {
               <thead>
                 <tr className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                   <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3 text-center">Mon</th>
-                  <th className="px-4 py-3 text-center">Tue</th>
-                  <th className="px-4 py-3 text-center">Wed</th>
-                  <th className="px-4 py-3 text-center">Thu</th>
-                  <th className="px-4 py-3 text-center">Fri</th>
-                  <th className="px-4 py-3 text-center">Sat</th>
+                  <th className="px-4 py-3 text-center">Mon {weekDateLabel(update.week_of, 0)}</th>
+                  <th className="px-4 py-3 text-center">Tue {weekDateLabel(update.week_of, 1)}</th>
+                  <th className="px-4 py-3 text-center">Wed {weekDateLabel(update.week_of, 2)}</th>
+                  <th className="px-4 py-3 text-center">Thu {weekDateLabel(update.week_of, 3)}</th>
+                  <th className="px-4 py-3 text-center">Fri {weekDateLabel(update.week_of, 4)}</th>
+                  <th className="px-4 py-3 text-center">Sat {weekDateLabel(update.week_of, 5)}</th>
                   <th className="px-4 py-3 text-center">Total</th>
                 </tr>
               </thead>
