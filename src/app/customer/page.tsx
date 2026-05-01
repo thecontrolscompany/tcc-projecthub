@@ -1661,12 +1661,14 @@ function WeeklyUpdateCard({ update }: { update: WeeklyUpdate }) {
                 ))}
                 <tr className="border-t border-slate-200 bg-slate-50 font-semibold text-slate-700">
                   <td className="px-4 py-3">Total</td>
-                  <td className="px-4 py-3 text-center">-</td>
-                  <td className="px-4 py-3 text-center">-</td>
-                  <td className="px-4 py-3 text-center">-</td>
-                  <td className="px-4 py-3 text-center">-</td>
-                  <td className="px-4 py-3 text-center">-</td>
-                  <td className="px-4 py-3 text-center">-</td>
+                  {(["mon", "tue", "wed", "thu", "fri", "sat"] as const).map((day) => {
+                    const dayTotal = update.labor_hours_detail!.reduce((sum, w) => sum + (w[day] || 0), 0);
+                    return (
+                      <td key={day} className="px-4 py-3 text-center">
+                        {dayTotal > 0 ? dayTotal.toFixed(1) : "-"}
+                      </td>
+                    );
+                  })}
                   <td className="px-4 py-3 text-center">{totalLaborHours?.toFixed(1) ?? "-"}</td>
                 </tr>
               </tbody>
