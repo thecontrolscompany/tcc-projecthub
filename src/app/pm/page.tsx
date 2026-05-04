@@ -990,7 +990,7 @@ function UpdateForm({
                 onClick={() => setActiveTab("update")}
                 className="rounded-xl bg-status-success px-4 py-2.5 text-sm font-semibold text-text-inverse transition hover:opacity-90"
               >
-                {currentWeekUpdate?.status === "submitted" ? "Edit This Week's Report -\u003e" : "Submit This Week's Report -\u003e"}
+                {currentWeekUpdate?.status === "submitted" ? "Edit Weekly Report →" : "Create Weekly Report →"}
               </button>
               {draftUpdateId && (
                 <span className="inline-flex rounded-full border border-status-warning/30 bg-status-warning/10 px-2.5 py-1 text-xs font-medium text-status-warning">
@@ -1065,7 +1065,7 @@ function UpdateForm({
                 onClick={() => setActiveTab("update")}
                 className="mt-4 rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm font-semibold text-text-primary transition hover:bg-surface-base"
               >
-                Submit This Week&apos;s Report -&gt;
+                Create Weekly Report →
               </button>
             </div>
           )}
@@ -1437,14 +1437,17 @@ function UpdateForm({
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <label className={labelCls}>Week of (ending Saturday)</label>
+                <div className="rounded-xl border-2 border-status-success/40 bg-status-success/5 p-4">
+                  <label className="mb-1.5 block text-sm font-semibold text-status-success">
+                    Step 1 — Select Week Ending Date
+                  </label>
                   <input
                     type="date"
                     value={weekOf}
                     onChange={(e) => setWeekOf(e.target.value)}
-                    className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm text-text-primary focus:border-status-success/50 focus:outline-none"
+                    className="rounded-xl border border-status-success/40 bg-white px-4 py-2 text-sm font-medium text-text-primary focus:border-status-success focus:outline-none"
                   />
+                  <p className="mt-1.5 text-xs text-text-tertiary">Pick the Saturday this report covers. Defaults to the current week.</p>
                 </div>
                 <div className="rounded-xl border border-status-success/20 bg-status-success/5 px-5 py-3">
                   <p className="mb-1 text-xs text-text-tertiary">Overall % Complete</p>
@@ -1919,6 +1922,14 @@ function UpdateForm({
                   </>
                 ) : (
                   <>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("overview")}
+                      disabled={!!saving}
+                      className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-semibold text-text-primary transition hover:bg-surface-raised disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
                     <button
                       type="button"
                       onClick={() => void handleSaveDraft()}
