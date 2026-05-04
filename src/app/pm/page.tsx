@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ViewReportLink } from "@/components/view-report-link";
 import { BomTab } from "@/components/bom-tab";
-import { formatWeekEndingSaturday } from "@/lib/utils/week-ending";
+import { formatWeekEndingSaturday, normalizeWeekEndingSaturday } from "@/lib/utils/week-ending";
 import type { ChangeOrder, LaborHoursWorker } from "@/types/database";
 import type {
   BillingPeriod,
@@ -1444,10 +1444,10 @@ function UpdateForm({
                   <input
                     type="date"
                     value={weekOf}
-                    onChange={(e) => setWeekOf(e.target.value)}
+                    onChange={(e) => e.target.value && setWeekOf(normalizeWeekEndingSaturday(e.target.value))}
                     className="rounded-xl border border-status-success/40 bg-white px-4 py-2 text-sm font-medium text-text-primary focus:border-status-success focus:outline-none"
                   />
-                  <p className="mt-1.5 text-xs text-text-tertiary">Pick the Saturday this report covers. Defaults to the current week.</p>
+                  <p className="mt-1.5 text-xs text-text-tertiary">Any day you pick is automatically snapped to that week&apos;s Saturday.</p>
                 </div>
                 <div className="rounded-xl border border-status-success/20 bg-status-success/5 px-5 py-3">
                   <p className="mb-1 text-xs text-text-tertiary">Overall % Complete</p>
