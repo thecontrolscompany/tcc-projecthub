@@ -1028,32 +1028,64 @@ function ProjectDetail({
                       <p className="text-xs text-slate-400">Ref: {co.reference_doc}</p>
                     )}
                   </div>
-                  <span className="shrink-0 font-semibold" style={{ color: HEADER_BG }}>
-                    {co.amount >= 0 ? "+" : ""}
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "USD",
-                      maximumFractionDigits: 0,
-                    }).format(co.amount)}
-                  </span>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <span className="font-semibold" style={{ color: HEADER_BG }}>
+                      {co.amount >= 0 ? "+" : ""}
+                      {new Intl.NumberFormat("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                        maximumFractionDigits: 0,
+                      }).format(co.amount)}
+                    </span>
+                    <a
+                      href={`/reports/change-order/${co.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-medium underline"
+                      style={{ color: ACCENT }}
+                    >
+                      View / Download
+                    </a>
+                  </div>
                 </div>
               );
             })
           )}
         </div>
-        {project.change_orders.some((co) => co.status === "approved") && (
-          <div
-            className="mt-4 rounded-2xl px-4 py-3"
-            style={{ backgroundColor: "#e6f6f4" }}
-          >
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Total Approved Change Orders
-            </p>
-            <p className="mt-1 text-base font-bold" style={{ color: HEADER_BG }}>
-              {currency(getProjectApprovedCoTotal(project))}
-            </p>
-          </div>
-        )}
+        {project.change_orders.length > 0 && (() => {
+          const pendingTotal = project.change_orders
+            .filter((co) => co.status === "pending")
+            .reduce((sum, co) => sum + co.amount, 0);
+          const approvedTotal = getProjectApprovedCoTotal(project);
+          const rejectedTotal = project.change_orders
+            .filter((co) => co.status === "rejected")
+            .reduce((sum, co) => sum + co.amount, 0);
+          const hasPending = project.change_orders.some((co) => co.status === "pending");
+          const hasApproved = project.change_orders.some((co) => co.status === "approved");
+          const hasRejected = project.change_orders.some((co) => co.status === "rejected");
+          return (
+            <div className={`mt-4 grid gap-3 ${[hasPending, hasApproved, hasRejected].filter(Boolean).length === 1 ? "grid-cols-1" : [hasPending, hasApproved, hasRejected].filter(Boolean).length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+              {hasPending && (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">In Review</p>
+                  <p className="mt-1 text-base font-bold text-amber-700">{currency(pendingTotal)}</p>
+                </div>
+              )}
+              {hasApproved && (
+                <div className="rounded-2xl px-4 py-3" style={{ backgroundColor: "#e6f6f4" }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Approved</p>
+                  <p className="mt-1 text-base font-bold" style={{ color: HEADER_BG }}>{currency(approvedTotal)}</p>
+                </div>
+              )}
+              {hasRejected && (
+                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-red-500">Not Approved</p>
+                  <p className="mt-1 text-base font-bold text-red-700">{currency(rejectedTotal)}</p>
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </section>
 
       <div className="customer-print-hide flex gap-2 border-b pb-1" style={{ borderColor: BORDER }}>
