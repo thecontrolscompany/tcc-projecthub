@@ -1044,7 +1044,7 @@ function ProjectDetail({
                       className="text-xs font-medium underline"
                       style={{ color: ACCENT }}
                     >
-                      View / Download
+                      View Report
                     </a>
                   </div>
                 </div>
