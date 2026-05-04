@@ -438,7 +438,7 @@ export default async function ChangeOrderReportPage({ params }: PageProps) {
               <p style={{ fontWeight: 700, fontSize: 15, margin: "8px 0", flex: 1 }}>{co.title}</p>
               <div style={{ textAlign: "right", flexShrink: 0 }}>
                 <p style={{ margin: "4px 0 2px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "#6b7280" }}>Total Amount</p>
-                <p style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#017a6f" }}>{fmtCurrency(co.amount)}</p>
+                <p style={{ margin: 0, fontSize: 22, fontWeight: 700, color: co.amount < 0 ? "#dc2626" : "#017a6f" }}>{fmtCurrency(co.amount)}</p>
               </div>
             </div>
 
@@ -494,7 +494,7 @@ export default async function ChangeOrderReportPage({ params }: PageProps) {
                         <td className="amount-cell">{fmtCurrency(profit)}</td>
                       </tr>
                     )}
-                    <tr className="total-row">
+                    <tr className="total-row" style={co.amount < 0 ? { background: "#dc2626" } : undefined}>
                       <td>TOTAL CHANGE ORDER</td>
                       <td className="amount-cell">{fmtCurrency(co.amount)}</td>
                     </tr>
