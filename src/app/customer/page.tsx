@@ -976,23 +976,32 @@ function ProjectDetail({
         </ChartCard>
       </div>
 
-      {project.change_orders.filter((co) => co.status === "approved").length > 0 && (
-        <section
-          className="customer-print-card rounded-3xl border bg-white p-6 shadow-sm"
-          style={{ borderColor: BORDER }}
-        >
-          <div className="mb-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: HEADER_BG }}>
-              Change Orders
-            </p>
-            <h3 className="text-xl font-bold" style={{ color: CHARCOAL }}>
-              Approved Change Orders
-            </h3>
-          </div>
-          <div className="space-y-3">
-            {project.change_orders
-              .filter((co) => co.status === "approved")
-              .map((co) => (
+      <section
+        className="customer-print-card rounded-3xl border bg-white p-6 shadow-sm"
+        style={{ borderColor: BORDER }}
+      >
+        <div className="mb-4">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: HEADER_BG }}>
+            Change Orders
+          </p>
+          <h3 className="text-xl font-bold" style={{ color: CHARCOAL }}>
+            Change Orders
+          </h3>
+        </div>
+        <div className="space-y-3">
+          {project.change_orders.length === 0 ? (
+            <p className="text-sm text-slate-400">No change orders on record.</p>
+          ) : (
+            project.change_orders.map((co) => {
+              const badgeClasses =
+                co.status === "approved"
+                  ? "rounded-full border border-green-200 bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700"
+                  : co.status === "pending"
+                  ? "rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700"
+                  : "rounded-full border border-red-200 bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700";
+              const badgeLabel =
+                co.status === "approved" ? "Approved" : co.status === "pending" ? "In Review" : "Not Approved";
+              return (
                 <div
                   key={co.id}
                   className="flex items-center justify-between rounded-2xl border bg-slate-50 px-4 py-3 text-sm"
@@ -1003,10 +1012,16 @@ function ProjectDetail({
                       <span className="font-semibold text-slate-800">{co.co_number}</span>
                       <span className="text-slate-400">-</span>
                       <span className="text-slate-700">{co.title}</span>
+                      <span className={badgeClasses}>{badgeLabel}</span>
                     </div>
-                    {co.approved_date && (
+                    {co.status === "approved" && co.approved_date && (
                       <p className="text-xs text-slate-400">
                         Approved {format(new Date(co.approved_date), "MMM d, yyyy")}
+                      </p>
+                    )}
+                    {co.status === "pending" && co.submitted_date && (
+                      <p className="text-xs text-slate-400">
+                        Submitted {format(new Date(co.submitted_date), "MMM d, yyyy")}
                       </p>
                     )}
                     {co.reference_doc && (
@@ -1022,8 +1037,11 @@ function ProjectDetail({
                     }).format(co.amount)}
                   </span>
                 </div>
-              ))}
-          </div>
+              );
+            })
+          )}
+        </div>
+        {project.change_orders.some((co) => co.status === "approved") && (
           <div
             className="mt-4 rounded-2xl px-4 py-3"
             style={{ backgroundColor: "#e6f6f4" }}
@@ -1035,8 +1053,8 @@ function ProjectDetail({
               {currency(getProjectApprovedCoTotal(project))}
             </p>
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
       <div className="customer-print-hide flex gap-2 border-b pb-1" style={{ borderColor: BORDER }}>
         {(["updates", "billing", "bom"] as const).map((tab) => (

@@ -391,9 +391,10 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
 
   const { data: rawChangeOrders } = await admin
     .from("change_orders")
-    .select("amount")
+    .select("co_number, title, amount, approved_date, reference_doc")
     .eq("project_id", project.id)
-    .eq("status", "approved");
+    .eq("status", "approved")
+    .order("approved_date");
 
   const billingPeriods = (rawBillingPeriods ?? []) as {
     id: string;
@@ -402,8 +403,15 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
     invoice_number: string | null;
     pct_complete: number;
   }[];
-  const approvedCoTotal = (rawChangeOrders ?? []).reduce(
-    (sum, co: { amount: number }) => sum + (co.amount ?? 0),
+  const approvedChangeOrders = (rawChangeOrders ?? []) as {
+    co_number: string;
+    title: string;
+    amount: number;
+    approved_date: string | null;
+    reference_doc: string | null;
+  }[];
+  const approvedCoTotal = approvedChangeOrders.reduce(
+    (sum, co) => sum + (co.amount ?? 0),
     0
   );
   const contractValue = (project.estimated_income ?? 0) + approvedCoTotal;
@@ -921,6 +929,44 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
                       </tr>
                     ))}
                   </tbody>
+                </table>
+              </>
+            )}
+
+            {approvedChangeOrders.length > 0 && (
+              <>
+                <div className="section-divider">
+                  <h2>CHANGE ORDERS</h2>
+                </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>CO #</th>
+                      <th>Title</th>
+                      <th>Ref Doc</th>
+                      <th>Approved</th>
+                      <th className="number-cell">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {approvedChangeOrders.map((co) => (
+                      <tr key={co.co_number}>
+                        <td>{co.co_number}</td>
+                        <td>{co.title}</td>
+                        <td>{co.reference_doc || "—"}</td>
+                        <td>{co.approved_date ? format(new Date(co.approved_date), "MMM d, yyyy") : "—"}</td>
+                        <td className="number-cell">{fmtUSD(co.amount)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colSpan={4} style={{ fontWeight: 700, textAlign: "right", paddingRight: 12 }}>
+                        Total Approved Change Orders
+                      </td>
+                      <td className="number-cell" style={{ fontWeight: 700 }}>{fmtUSD(approvedCoTotal)}</td>
+                    </tr>
+                  </tfoot>
                 </table>
               </>
             )}
