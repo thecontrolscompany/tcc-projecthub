@@ -115,7 +115,7 @@ function formatPercent(value: number | null | undefined) {
 
 function formatDate(value: string | null | undefined, fallback = "Not submitted") {
   if (!value) return fallback;
-  return format(new Date(value), "MMMM d, yyyy");
+  return format(new Date(value), "EEEE, MMMM d, yyyy");
 }
 
 function coalesceText(value: string | null | undefined, fallback = "None") {
@@ -868,9 +868,9 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
                 }
               </div>
               <div className="meta-label">Week Ending:</div>
-              <div>{formatWeekEndingSaturday(update.week_of, "MMMM d, yyyy")}</div>
+              <div>{formatWeekEndingSaturday(update.week_of, "EEEE, MMMM d, yyyy")}</div>
               <div className="meta-label">Report Date:</div>
-              <div>{format(generatedAt, "MMMM d, yyyy")}</div>
+              <div>{format(generatedAt, "EEEE, MMMM d, yyyy")}</div>
             </div>
 
             {billingRows.length > 0 && (
