@@ -8,3 +8,8 @@ export function fmtCurrency(n: number): string {
 export function fmtCurrencyCompact(n: number): string {
   return USD_COMPACT.format(n);
 }
+
+/** Returns an inline style object with red color when the amount is negative, undefined otherwise. */
+export function negativeAmountStyle(n: number): { color: string } | undefined {
+  return n < 0 ? { color: "#dc2626" } : undefined;
+}

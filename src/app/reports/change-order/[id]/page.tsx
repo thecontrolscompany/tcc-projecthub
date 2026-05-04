@@ -473,25 +473,25 @@ export default async function ChangeOrderReportPage({ params }: PageProps) {
                     {lineItems.map((item, i) => (
                       <tr key={i}>
                         <td>{item.label}</td>
-                        <td className="amount-cell">{fmtCurrency(item.amount)}</td>
+                        <td className="amount-cell" style={item.amount < 0 ? { color: "#dc2626" } : undefined}>{fmtCurrency(item.amount)}</td>
                       </tr>
                     ))}
                     {subtotal !== null && (
                       <tr className="subtotal-row">
                         <td>Subtotal</td>
-                        <td className="amount-cell">{fmtCurrency(subtotal)}</td>
+                        <td className="amount-cell" style={subtotal < 0 ? { color: "#dc2626" } : undefined}>{fmtCurrency(subtotal)}</td>
                       </tr>
                     )}
                     {overhead !== null && (
                       <tr>
                         <td>Overhead (10%)</td>
-                        <td className="amount-cell">{fmtCurrency(overhead)}</td>
+                        <td className="amount-cell" style={overhead < 0 ? { color: "#dc2626" } : undefined}>{fmtCurrency(overhead)}</td>
                       </tr>
                     )}
                     {profit !== null && (
                       <tr>
                         <td>Profit (10%)</td>
-                        <td className="amount-cell">{fmtCurrency(profit)}</td>
+                        <td className="amount-cell" style={profit < 0 ? { color: "#dc2626" } : undefined}>{fmtCurrency(profit)}</td>
                       </tr>
                     )}
                     <tr className="total-row" style={co.amount < 0 ? { background: "#dc2626" } : undefined}>

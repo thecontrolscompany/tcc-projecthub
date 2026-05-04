@@ -25,7 +25,7 @@ import { ViewReportLink } from "@/components/view-report-link";
 import { BomTab } from "@/components/bom-tab";
 import { formatWeekEndingSaturday } from "@/lib/utils/week-ending";
 import type { BillingPeriod, CrewLogEntry, WeeklyUpdate } from "@/types/database";
-import { fmtCurrency, fmtCurrencyCompact } from "@/lib/utils/format";
+import { fmtCurrency, fmtCurrencyCompact, negativeAmountStyle } from "@/lib/utils/format";
 
 interface CustomerChangeOrder {
   id: string;
@@ -1033,7 +1033,7 @@ function ProjectDetail({
                     )}
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
-                    <span className="font-semibold" style={{ color: co.amount < 0 ? "#dc2626" : HEADER_BG }}>
+                    <span className="font-semibold" style={{ color: HEADER_BG, ...negativeAmountStyle(co.amount) }}>
                       {co.amount >= 0 ? "+" : ""}
                       {new Intl.NumberFormat("en-US", {
                         style: "currency",
