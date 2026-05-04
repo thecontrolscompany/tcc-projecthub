@@ -16,7 +16,7 @@ export type OpportunityStage =
   | "lost"
   | "archived";
 export type WeeklyUpdateStatus = "draft" | "submitted";
-export type ChangeOrderStatus = "pending" | "approved" | "rejected" | "void";
+export type ChangeOrderStatus = "pending" | "approved" | "approved_po" | "approved_email" | "rejected" | "void";
 export type WipStatus = "not_started" | "in_progress" | "blocked" | "in_review" | "complete";
 export type WipPriority = "low" | "medium" | "high";
 export type BomStatus = "not_received" | "partial" | "received" | "surplus";

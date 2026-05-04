@@ -393,7 +393,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
     .from("change_orders")
     .select("co_number, title, amount, approved_date, reference_doc")
     .eq("project_id", project.id)
-    .eq("status", "approved")
+    .in("status", ["approved", "approved_po", "approved_email"])
     .order("approved_date");
 
   const billingPeriods = (rawBillingPeriods ?? []) as {

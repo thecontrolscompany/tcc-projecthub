@@ -136,8 +136,12 @@ function toChangeOrder(row: Record<string, unknown>): ChangeOrder {
   };
 }
 
+function isApprovedStatus(status: string) {
+  return status === "approved" || status === "approved_po" || status === "approved_email";
+}
+
 async function generateCoNumber(admin: ReturnType<typeof adminClient>, projectId: string, status: ChangeOrderStatus) {
-  const prefix = status === "approved" ? "CO" : "PCO";
+  const prefix = isApprovedStatus(status) ? "CO" : "PCO";
   const { data, error } = await admin
     .from("change_orders")
     .select("co_number")
@@ -184,7 +188,7 @@ export async function GET(request: Request) {
 
     const changeOrders = (data ?? []).map((row) => toChangeOrder(row as Record<string, unknown>));
     const approvedTotal = changeOrders
-      .filter((co) => co.status === "approved")
+      .filter((co) => isApprovedStatus(co.status))
       .reduce((sum, co) => sum + co.amount, 0);
     const pendingTotal = changeOrders
       .filter((co) => co.status === "pending")
@@ -219,7 +223,7 @@ export async function POST(request: Request) {
   try {
     const coNumber = body?.coNumber?.trim() || (await generateCoNumber(context.adminClient, projectId, status));
     const approvedDate =
-      status === "approved"
+      isApprovedStatus(status)
         ? body?.approvedDate?.trim() || new Date().toISOString().slice(0, 10)
         : body?.approvedDate?.trim() || null;
 
@@ -233,7 +237,7 @@ export async function POST(request: Request) {
       submitted_date: body?.submittedDate?.trim() || null,
       approved_date: approvedDate,
       submitted_by: context.user.id,
-      approved_by: status === "approved" ? context.user.id : null,
+      approved_by: isApprovedStatus(status) ? context.user.id : null,
       reference_doc: body?.referenceDoc?.trim() || null,
       notes: body?.notes?.trim() || null,
     };
@@ -283,7 +287,7 @@ export async function PATCH(request: Request) {
   if ("referenceDoc" in (body ?? {})) payload.reference_doc = typeof body?.referenceDoc === "string" ? body.referenceDoc.trim() || null : null;
   if ("notes" in (body ?? {})) payload.notes = typeof body?.notes === "string" ? body.notes.trim() || null : null;
 
-  if (payload.status === "approved") {
+  if (typeof payload.status === "string" && isApprovedStatus(payload.status)) {
     if (!payload.approved_date) payload.approved_date = new Date().toISOString().slice(0, 10);
     payload.approved_by = context.user.id;
   }

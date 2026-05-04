@@ -47,7 +47,7 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
   }, [projectId]);
 
   const approvedTotal = useMemo(
-    () => changeOrders.filter((co) => co.status === "approved").reduce((sum, co) => sum + co.amount, 0),
+    () => changeOrders.filter((co) => co.status === "approved" || co.status === "approved_po" || co.status === "approved_email").reduce((sum, co) => sum + co.amount, 0),
     [changeOrders]
   );
   const pendingTotal = useMemo(
@@ -213,7 +213,8 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
                 className="w-full rounded-lg border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
               >
                 <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
+                <option value="approved_po">Approved (Purchase Order)</option>
+                <option value="approved_email">Approved (Email / Docs)</option>
                 <option value="rejected">Rejected</option>
               </select>
             </div>
@@ -312,17 +313,28 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
   );
 }
 
+const CO_STATUS_LABELS: Record<ChangeOrderStatus, string> = {
+  pending: "Pending",
+  approved: "Approved",
+  approved_po: "Approved (PO)",
+  approved_email: "Approved (Email)",
+  rejected: "Rejected",
+  void: "Void",
+};
+
 export function StatusBadge({ status }: { status: ChangeOrderStatus }) {
   const styles: Record<ChangeOrderStatus, string> = {
     pending: "bg-status-warning/10 text-status-warning",
     approved: "bg-status-success/10 text-status-success",
+    approved_po: "bg-status-success/10 text-status-success",
+    approved_email: "bg-status-success/10 text-status-success",
     rejected: "bg-status-danger/10 text-status-danger",
     void: "bg-surface-overlay text-text-tertiary",
   };
 
   return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${styles[status]}`}>
-      {status}
+    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${styles[status]}`}>
+      {CO_STATUS_LABELS[status]}
     </span>
   );
 }

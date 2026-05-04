@@ -993,14 +993,18 @@ function ProjectDetail({
             <p className="text-sm text-slate-400">No change orders on record.</p>
           ) : (
             project.change_orders.map((co) => {
-              const badgeClasses =
-                co.status === "approved"
+              const isApproved = co.status === "approved" || co.status === "approved_po" || co.status === "approved_email";
+              const badgeClasses = isApproved
                   ? "rounded-full border border-green-200 bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700"
                   : co.status === "pending"
                   ? "rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700"
                   : "rounded-full border border-red-200 bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700";
               const badgeLabel =
-                co.status === "approved" ? "Approved" : co.status === "pending" ? "In Review" : "Not Approved";
+                co.status === "approved_po" ? "Approved (PO)"
+                : co.status === "approved_email" ? "Approved (Email)"
+                : isApproved ? "Approved"
+                : co.status === "pending" ? "In Review"
+                : "Not Approved";
               return (
                 <div
                   key={co.id}
@@ -1014,12 +1018,12 @@ function ProjectDetail({
                       <span className="text-slate-700">{co.title}</span>
                       <span className={badgeClasses}>{badgeLabel}</span>
                     </div>
-                    {co.status === "approved" && co.approved_date && (
+                    {isApproved && co.approved_date && (
                       <p className="text-xs text-slate-400">
                         Approved {format(new Date(co.approved_date), "MMM d, yyyy")}
                       </p>
                     )}
-                    {co.status === "pending" && co.submitted_date && (
+                    {!isApproved && co.status === "pending" && co.submitted_date && (
                       <p className="text-xs text-slate-400">
                         Submitted {format(new Date(co.submitted_date), "MMM d, yyyy")}
                       </p>
@@ -1041,7 +1045,7 @@ function ProjectDetail({
                       href={`/reports/change-order/${co.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs font-medium underline"
+                      className="rounded-lg px-2.5 py-1 text-xs font-medium underline"
                       style={{ color: ACCENT }}
                     >
                       View Report
@@ -1053,28 +1057,42 @@ function ProjectDetail({
           )}
         </div>
         {project.change_orders.length > 0 && (() => {
-          const pendingTotal = project.change_orders
-            .filter((co) => co.status === "pending")
-            .reduce((sum, co) => sum + co.amount, 0);
-          const approvedTotal = getProjectApprovedCoTotal(project);
-          const rejectedTotal = project.change_orders
-            .filter((co) => co.status === "rejected")
-            .reduce((sum, co) => sum + co.amount, 0);
+          const pendingTotal = project.change_orders.filter((co) => co.status === "pending").reduce((sum, co) => sum + co.amount, 0);
+          const approvedPoTotal = project.change_orders.filter((co) => co.status === "approved_po").reduce((sum, co) => sum + co.amount, 0);
+          const approvedEmailTotal = project.change_orders.filter((co) => co.status === "approved_email").reduce((sum, co) => sum + co.amount, 0);
+          const approvedLegacyTotal = project.change_orders.filter((co) => co.status === "approved").reduce((sum, co) => sum + co.amount, 0);
+          const rejectedTotal = project.change_orders.filter((co) => co.status === "rejected").reduce((sum, co) => sum + co.amount, 0);
           const hasPending = project.change_orders.some((co) => co.status === "pending");
-          const hasApproved = project.change_orders.some((co) => co.status === "approved");
+          const hasApprovedPo = project.change_orders.some((co) => co.status === "approved_po");
+          const hasApprovedEmail = project.change_orders.some((co) => co.status === "approved_email");
+          const hasApprovedLegacy = project.change_orders.some((co) => co.status === "approved");
           const hasRejected = project.change_orders.some((co) => co.status === "rejected");
+          const cardCount = [hasPending, hasApprovedPo, hasApprovedEmail, hasApprovedLegacy, hasRejected].filter(Boolean).length;
+          const gridClass = cardCount === 1 ? "grid-cols-1" : cardCount === 2 ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3";
           return (
-            <div className={`mt-4 grid gap-3 ${[hasPending, hasApproved, hasRejected].filter(Boolean).length === 1 ? "grid-cols-1" : [hasPending, hasApproved, hasRejected].filter(Boolean).length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+            <div className={`mt-4 grid gap-3 ${gridClass}`}>
               {hasPending && (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">In Review</p>
                   <p className="mt-1 text-base font-bold text-amber-700">{currency(pendingTotal)}</p>
                 </div>
               )}
-              {hasApproved && (
+              {hasApprovedPo && (
+                <div className="rounded-2xl px-4 py-3" style={{ backgroundColor: "#e6f6f4" }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Approved (PO)</p>
+                  <p className="mt-1 text-base font-bold" style={{ color: HEADER_BG }}>{currency(approvedPoTotal)}</p>
+                </div>
+              )}
+              {hasApprovedEmail && (
+                <div className="rounded-2xl px-4 py-3" style={{ backgroundColor: "#e6f6f4" }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Approved (Email)</p>
+                  <p className="mt-1 text-base font-bold" style={{ color: HEADER_BG }}>{currency(approvedEmailTotal)}</p>
+                </div>
+              )}
+              {hasApprovedLegacy && (
                 <div className="rounded-2xl px-4 py-3" style={{ backgroundColor: "#e6f6f4" }}>
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Approved</p>
-                  <p className="mt-1 text-base font-bold" style={{ color: HEADER_BG }}>{currency(approvedTotal)}</p>
+                  <p className="mt-1 text-base font-bold" style={{ color: HEADER_BG }}>{currency(approvedLegacyTotal)}</p>
                 </div>
               )}
               {hasRejected && (
@@ -1970,7 +1988,7 @@ function getProjectBilledToDate(project: CustomerProject) {
 
 function getProjectApprovedCoTotal(project: CustomerProject): number {
   return project.change_orders
-    .filter((co) => co.status === "approved")
+    .filter((co) => co.status === "approved" || co.status === "approved_po" || co.status === "approved_email")
     .reduce((sum, co) => sum + co.amount, 0);
 }
 
