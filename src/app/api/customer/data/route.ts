@@ -122,7 +122,7 @@ export async function GET(request: Request) {
         .from("change_orders")
         .select("id, project_id, co_number, title, amount, status, submitted_date, approved_date, reference_doc")
         .in("project_id", projectIds)
-        .in("status", ["pending", "approved", "approved_po", "approved_email", "rejected"])
+        .neq("status", "void")
         .order("submitted_date", { ascending: true }),
       adminClient
         .from("project_photos")
