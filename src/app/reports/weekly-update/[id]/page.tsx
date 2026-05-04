@@ -963,7 +963,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
                           <td>{co.title}</td>
                           <td>{statusLabel}</td>
                           <td>{co.reference_doc || "—"}</td>
-                          <td className="number-cell">{fmtUSD(co.amount)}</td>
+                          <td className="number-cell" style={co.amount < 0 ? { color: "#dc2626" } : undefined}>{fmtUSD(co.amount)}</td>
                         </tr>
                       );
                     })}
