@@ -1029,7 +1029,7 @@ function ProjectDetail({
                     )}
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
-                    <span className="font-semibold" style={{ color: HEADER_BG }}>
+                    <span className="font-semibold" style={{ color: co.amount < 0 ? "#dc2626" : HEADER_BG }}>
                       {co.amount >= 0 ? "+" : ""}
                       {new Intl.NumberFormat("en-US", {
                         style: "currency",
