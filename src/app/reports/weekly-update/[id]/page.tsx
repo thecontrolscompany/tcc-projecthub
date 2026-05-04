@@ -391,10 +391,10 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
 
   const { data: rawChangeOrders } = await admin
     .from("change_orders")
-    .select("co_number, title, amount, approved_date, reference_doc")
+    .select("co_number, title, amount, status, approved_date, reference_doc")
     .eq("project_id", project.id)
-    .in("status", ["approved", "approved_po", "approved_email"])
-    .order("approved_date");
+    .not("status", "eq", "void")
+    .order("submitted_date");
 
   const billingPeriods = (rawBillingPeriods ?? []) as {
     id: string;
@@ -403,17 +403,17 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
     invoice_number: string | null;
     pct_complete: number;
   }[];
-  const approvedChangeOrders = (rawChangeOrders ?? []) as {
+  const allChangeOrders = (rawChangeOrders ?? []) as {
     co_number: string;
     title: string;
     amount: number;
+    status: string;
     approved_date: string | null;
     reference_doc: string | null;
   }[];
-  const approvedCoTotal = approvedChangeOrders.reduce(
-    (sum, co) => sum + (co.amount ?? 0),
-    0
-  );
+  const approvedCoTotal = allChangeOrders
+    .filter((co) => co.status === "approved" || co.status === "approved_po" || co.status === "approved_email")
+    .reduce((sum, co) => sum + (co.amount ?? 0), 0);
   const contractValue = (project.estimated_income ?? 0) + approvedCoTotal;
 
   let runningTotal = 0;
@@ -933,7 +933,7 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
               </>
             )}
 
-            {approvedChangeOrders.length > 0 && (
+            {allChangeOrders.length > 0 && (
               <>
                 <div className="section-divider">
                   <h2>CHANGE ORDERS</h2>
@@ -943,30 +943,41 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
                     <tr>
                       <th>CO #</th>
                       <th>Title</th>
+                      <th>Status</th>
                       <th>Ref Doc</th>
-                      <th>Approved</th>
                       <th className="number-cell">Amount</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {approvedChangeOrders.map((co) => (
-                      <tr key={co.co_number}>
-                        <td>{co.co_number}</td>
-                        <td>{co.title}</td>
-                        <td>{co.reference_doc || "—"}</td>
-                        <td>{co.approved_date ? format(new Date(co.approved_date), "MMM d, yyyy") : "—"}</td>
-                        <td className="number-cell">{fmtUSD(co.amount)}</td>
-                      </tr>
-                    ))}
+                    {allChangeOrders.map((co) => {
+                      const statusLabel =
+                        co.status === "approved_po" ? "Approved (PO)"
+                        : co.status === "approved_email" ? "Approved (Email)"
+                        : co.status === "approved" ? "Approved"
+                        : co.status === "pending" ? "In Review"
+                        : co.status === "rejected" ? "Not Approved"
+                        : co.status;
+                      return (
+                        <tr key={co.co_number}>
+                          <td>{co.co_number}</td>
+                          <td>{co.title}</td>
+                          <td>{statusLabel}</td>
+                          <td>{co.reference_doc || "—"}</td>
+                          <td className="number-cell">{fmtUSD(co.amount)}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colSpan={4} style={{ fontWeight: 700, textAlign: "right", paddingRight: 12 }}>
-                        Total Approved Change Orders
-                      </td>
-                      <td className="number-cell" style={{ fontWeight: 700 }}>{fmtUSD(approvedCoTotal)}</td>
-                    </tr>
-                  </tfoot>
+                  {approvedCoTotal > 0 && (
+                    <tfoot>
+                      <tr>
+                        <td colSpan={4} style={{ fontWeight: 700, textAlign: "right", paddingRight: 12 }}>
+                          Total Approved Change Orders
+                        </td>
+                        <td className="number-cell" style={{ fontWeight: 700 }}>{fmtUSD(approvedCoTotal)}</td>
+                      </tr>
+                    </tfoot>
+                  )}
                 </table>
               </>
             )}
