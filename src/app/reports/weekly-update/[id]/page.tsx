@@ -992,12 +992,12 @@ export default async function WeeklyUpdateReportPage({ params }: PageProps) {
                   <thead>
                     <tr>
                       <th>Name</th>
-                      <th className="number-cell">Mon</th>
-                      <th className="number-cell">Tue</th>
-                      <th className="number-cell">Wed</th>
-                      <th className="number-cell">Thu</th>
-                      <th className="number-cell">Fri</th>
-                      <th className="number-cell">Sat</th>
+                      {(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const).map((day) => (
+                        <th key={day} className="number-cell">
+                          <div>{day.slice(0, 3)}</div>
+                          <div style={{ fontSize: 10, fontWeight: 400, color: "#6b7280" }}>{getCrewLogDateLabel(update.week_of, day)}</div>
+                        </th>
+                      ))}
                       <th className="number-cell">Total</th>
                     </tr>
                   </thead>
