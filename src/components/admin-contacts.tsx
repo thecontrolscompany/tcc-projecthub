@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { AdminUsersPage } from "@/components/admin-users-page";
+import { ContactsList } from "@/app/crm/contacts/contacts-list";
 import { safeJson } from "@/lib/utils/safe-json";
 import type { InternalContactRole, UserRole } from "@/types/database";
 
 const INTERNAL_CONTACT_ROLES: InternalContactRole[] = ["pm", "lead", "installer", "ops_manager"];
-type ContactTab = "contacts" | "users";
+type ContactTab = "all" | "directory" | "users" | "relationships";
 
 type PmDirectoryRow = {
   id: string;
@@ -32,19 +33,28 @@ function formatPhone(raw: string): string {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
 
-export function AdminContactsPage() {
-  const [contactTab, setContactTab] = useState<ContactTab>("contacts");
+export function AdminContactsPage({ role = "admin" }: { role?: string }) {
+  const isAdmin = role === "admin";
+  const tabs: Array<{ id: ContactTab; label: string; adminOnly?: boolean }> = [
+    { id: "all", label: "All People" },
+    { id: "directory", label: "Directory", adminOnly: true },
+    { id: "users", label: "Portal Users", adminOnly: true },
+    { id: "relationships", label: "Relationship People" },
+  ];
+  const visibleTabs = tabs.filter((tab) => !tab.adminOnly || isAdmin);
+  const [contactTab, setContactTab] = useState<ContactTab>("all");
+
   return (
     <div className="mx-auto max-w-7xl space-y-4 px-6 py-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold text-text-primary">Contacts & Users</h1>
+        <h1 className="text-2xl font-bold text-text-primary">People</h1>
         <p className="text-sm text-text-secondary">
-          Manage internal contacts, external contacts, and portal user accounts from one place.
+          Manage the global people system: team directory, portal accounts, and relationship contacts.
         </p>
       </div>
 
       <div className="mb-4 flex gap-2 border-b border-border-default pb-3">
-        {(["contacts", "users"] as ContactTab[]).map((id) => (
+        {visibleTabs.map(({ id, label }) => (
           <button
             key={id}
             onClick={() => setContactTab(id)}
@@ -55,14 +65,230 @@ export function AdminContactsPage() {
                 : "text-text-secondary hover:text-text-primary",
             ].join(" ")}
           >
-            {id === "contacts" ? "Contacts" : "User Management"}
+            {label}
           </button>
         ))}
       </div>
 
-      {contactTab === "contacts" && <ContactsPanel />}
-      {contactTab === "users" && <AdminUsersPage />}
+      {contactTab === "all" && <UnifiedPeoplePanel />}
+      {contactTab === "directory" && isAdmin && <ContactsPanel />}
+      {contactTab === "users" && isAdmin && <AdminUsersPage />}
+      {contactTab === "relationships" && <RelationshipPeoplePanel role={role} />}
     </div>
+  );
+}
+
+type UnifiedPerson = {
+  key: string;
+  displayName: string;
+  email: string | null;
+  phone: string | null;
+  companyNames: string[];
+  roles: string[];
+  sources: Array<"portal" | "directory" | "relationship">;
+  profileIds: string[];
+  directoryIds: string[];
+  crmContactIds: string[];
+};
+
+const SOURCE_LABELS: Record<UnifiedPerson["sources"][number], string> = {
+  portal: "Portal",
+  directory: "Directory",
+  relationship: "Relationship",
+};
+
+function UnifiedPeoplePanel() {
+  const [people, setPeople] = useState<UnifiedPerson[]>([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadPeople() {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const response = await fetch("/api/people", { credentials: "include" });
+        const json = await safeJson(response);
+        if (!active) return;
+        if (!response.ok) {
+          setLoadError(json?.error ?? "Failed to load people.");
+          setPeople([]);
+        } else {
+          setPeople((json?.people as UnifiedPerson[]) ?? []);
+        }
+      } catch {
+        if (!active) return;
+        setLoadError("Failed to load people.");
+        setPeople([]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void loadPeople();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const filteredPeople = people.filter((person) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return [
+      person.displayName,
+      person.email,
+      person.phone,
+      ...person.companyNames,
+      ...person.roles,
+      ...person.sources.map((source) => SOURCE_LABELS[source]),
+    ]
+      .filter(Boolean)
+      .some((value) => value!.toLowerCase().includes(q));
+  });
+
+  if (loading) {
+    return <div className="py-10 text-center text-text-tertiary">Loading people...</div>;
+  }
+
+  if (loadError) {
+    return <div className="rounded-xl bg-status-danger/10 px-4 py-3 text-sm text-status-danger">{loadError}</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold text-text-primary">All People</h2>
+          <p className="text-sm text-text-secondary">
+            One row per person, merged by email first and name when no email exists. Source badges show where that person is used.
+          </p>
+        </div>
+        <input
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search people..."
+          className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none sm:w-72"
+        />
+      </div>
+
+      <div className="overflow-x-auto rounded-2xl border border-border-default">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border-default bg-surface-raised/80">
+              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Person</th>
+              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Phone</th>
+              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Company</th>
+              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Roles</th>
+              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Sources</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredPeople.map((person) => (
+              <tr key={person.key} className="border-b border-border-default hover:bg-surface-raised">
+                <td className="px-4 py-3">
+                  <p className="font-medium text-text-primary">{person.displayName}</p>
+                  <p className="text-xs text-text-tertiary">{person.email ?? "No email on file"}</p>
+                </td>
+                <td className="px-4 py-3 text-text-secondary">{person.phone ?? "-"}</td>
+                <td className="px-4 py-3 text-text-secondary">{person.companyNames.join(", ") || "-"}</td>
+                <td className="px-4 py-3 text-text-secondary">{person.roles.join(", ") || "-"}</td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap gap-1.5">
+                    {person.sources.map((source) => (
+                      <span key={source} className="rounded-full bg-brand-primary/10 px-2 py-0.5 text-xs font-medium text-brand-primary">
+                        {SOURCE_LABELS[source]}
+                      </span>
+                    ))}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {filteredPeople.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-border-default px-6 py-10 text-center text-sm text-text-tertiary">
+          No people match your search.
+        </div>
+      )}
+    </div>
+  );
+}
+
+type RelationshipContact = {
+  id: string;
+  display_name: string;
+  role_type: string;
+  title?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  is_active: boolean;
+  confidence_level: string;
+  influence_level: string;
+  issues_purchase_orders: boolean;
+  involved_in_estimating: boolean;
+  involved_in_project_execution: boolean;
+  account_id: string | null;
+  account?: { id: string; company_name: string; type: string } | null;
+};
+
+function RelationshipPeoplePanel({ role }: { role: string }) {
+  const [contacts, setContacts] = useState<RelationshipContact[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadContacts() {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const response = await fetch("/api/crm/contacts", { credentials: "include" });
+        const json = await safeJson(response);
+        if (!active) return;
+        if (!response.ok) {
+          setLoadError(json?.error ?? "Failed to load relationship people.");
+          setContacts([]);
+        } else {
+          setContacts((json?.contacts as RelationshipContact[]) ?? []);
+        }
+      } catch {
+        if (!active) return;
+        setLoadError("Failed to load relationship people.");
+        setContacts([]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    void loadContacts();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (loading) {
+    return <div className="py-10 text-center text-text-tertiary">Loading relationship people...</div>;
+  }
+
+  if (loadError) {
+    return <div className="rounded-xl bg-status-danger/10 px-4 py-3 text-sm text-status-danger">{loadError}</div>;
+  }
+
+  return (
+    <ContactsList
+      contacts={contacts as Parameters<typeof ContactsList>[0]["contacts"]}
+      role={role}
+      showSubnav={false}
+      title="Relationship People"
+      importHref="/crm/contacts/import-email"
+    />
   );
 }
 

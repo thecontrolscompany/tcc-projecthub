@@ -683,8 +683,7 @@ function AdminOverview({
           <div className="rounded-2xl border border-border-default bg-surface-raised p-5">
             <h3 className="text-lg font-semibold text-text-primary">Admin Shortcuts</h3>
             <div className="mt-4 grid gap-2">
-              <ShortcutLink href="/admin/users" label="User Management" />
-              <ShortcutLink href="/admin/contacts" label="Contacts" />
+              <ShortcutLink href="/people" label="People" />
               <ShortcutLink href="/ops" label="OperationsHub" />
               <ShortcutLink href="/admin/analytics" label="Analytics" />
               <ShortcutLink href="/admin/migrate-sharepoint" label="SharePoint Reconcile" />

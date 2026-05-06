@@ -21,6 +21,9 @@ type ContactListItem = Pick<
 type ContactsListProps = {
   contacts: ContactListItem[];
   role: string;
+  showSubnav?: boolean;
+  title?: string;
+  importHref?: string;
 };
 
 const ROLE_OPTIONS: Array<{ value: CrmContactRoleType | ""; label: string }> = [
@@ -46,7 +49,13 @@ const CONFIDENCE_OPTIONS: Array<{ value: CrmConfidenceLevel | ""; label: string 
 
 const INPUT = "rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none";
 
-export function ContactsList({ contacts: initialContacts, role }: ContactsListProps) {
+export function ContactsList({
+  contacts: initialContacts,
+  role,
+  showSubnav = true,
+  title = "Relationship People",
+  importHref = "/crm/contacts/import-email",
+}: ContactsListProps) {
   const [contacts, setContacts] = useState(initialContacts);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<CrmContactRoleType | "">("");
@@ -118,17 +127,17 @@ export function ContactsList({ contacts: initialContacts, role }: ContactsListPr
     : undefined;
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-6">
-      <CrmSubnav role={role} />
+    <div className={showSubnav ? "mx-auto max-w-7xl px-6 py-6" : "space-y-5"}>
+      {showSubnav && <CrmSubnav role={role} />}
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-text-primary">Contacts</h1>
-          <p className="text-sm text-text-tertiary">{filtered.length} of {contacts.length} contacts</p>
+          <h1 className="text-xl font-semibold text-text-primary">{title}</h1>
+          <p className="text-sm text-text-tertiary">{filtered.length} of {contacts.length} people</p>
         </div>
         {isWriteRole && (
           <Link
-            href="/crm/contacts/import-email"
+            href={importHref}
             className="rounded-xl border border-border-default px-4 py-2 text-sm text-text-secondary transition hover:bg-surface-overlay"
           >
             Import from Email
@@ -161,7 +170,7 @@ export function ContactsList({ contacts: initialContacts, role }: ContactsListPr
       </div>
 
       {filtered.length === 0 ? (
-        <p className="py-16 text-center text-sm text-text-tertiary">No contacts match your filters.</p>
+        <p className="py-16 text-center text-sm text-text-tertiary">No people match your filters.</p>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-border-default">
           <table className="w-full text-sm">

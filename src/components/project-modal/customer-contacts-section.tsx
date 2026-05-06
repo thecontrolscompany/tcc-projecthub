@@ -186,7 +186,7 @@ export function CustomerContactsSection({ projectId }: { projectId: string }) {
           )}
 
           {availableToAdd.length === 0 && availableContacts.length === 0 && (
-            <p className="text-xs text-text-tertiary">No customer accounts exist yet. Create one at Admin → User Management.</p>
+            <p className="text-xs text-text-tertiary">No customer accounts exist yet. Create one in People.</p>
           )}
         </div>
       )}
