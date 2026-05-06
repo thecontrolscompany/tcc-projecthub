@@ -18,6 +18,9 @@ type UnifiedPerson = {
   crmContactIds: string[];
 };
 
+const TCC_EMAIL_DOMAIN = "@controlsco.net";
+const TCC_COMPANY_NAME = "The Controls Company";
+
 function normalizeEmail(value: string | null | undefined) {
   const email = value?.trim().toLowerCase();
   return email || null;
@@ -33,6 +36,10 @@ function firstNonEmpty(...values: Array<string | null | undefined>) {
 
 function addUnique<T>(items: T[], value: T | null | undefined) {
   if (value && !items.includes(value)) items.push(value);
+}
+
+function companyForEmail(email: string | null) {
+  return email?.endsWith(TCC_EMAIL_DOMAIN) ? TCC_COMPANY_NAME : null;
 }
 
 function personKey(email: string | null, name: string | null, id: string, source: Source) {
@@ -124,6 +131,7 @@ export async function GET() {
     });
     addUnique(person.profileIds, row.id);
     addUnique(person.roles, row.role);
+    addUnique(person.companyNames, companyForEmail(email));
   }
 
   for (const row of directoryResult.data ?? []) {
@@ -140,6 +148,7 @@ export async function GET() {
     });
     addUnique(person.directoryIds, row.id);
     addUnique(person.roles, row.intended_role ?? null);
+    addUnique(person.companyNames, companyForEmail(email));
   }
 
   for (const row of crmResult.data ?? []) {
@@ -157,6 +166,7 @@ export async function GET() {
     const account = Array.isArray(row.account) ? row.account[0] : row.account;
     addUnique(person.crmContactIds, row.id);
     addUnique(person.roles, row.role_type);
+    addUnique(person.companyNames, companyForEmail(email));
     addUnique(person.companyNames, account?.company_name ?? null);
   }
 
