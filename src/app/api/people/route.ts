@@ -57,6 +57,10 @@ function addUnique<T>(items: T[], value: T | null | undefined) {
   if (value && !items.includes(value)) items.push(value);
 }
 
+function mergeUnique<T>(target: T[], source: T[]) {
+  for (const item of source) addUnique(target, item);
+}
+
 function companyForEmail(email: string | null) {
   const domain = email?.split("@")[1]?.toLowerCase();
   if (!domain) return null;
@@ -68,6 +72,75 @@ function personKey(email: string | null, name: string | null, id: string, source
   if (email) return `email:${email}`;
   if (name) return `name:${name}`;
   return `${source}:${id}`;
+}
+
+function editDistance(a: string, b: string) {
+  const dp = Array.from({ length: a.length + 1 }, () => Array<number>(b.length + 1).fill(0));
+  for (let i = 0; i <= a.length; i += 1) dp[i][0] = i;
+  for (let j = 0; j <= b.length; j += 1) dp[0][j] = j;
+
+  for (let i = 1; i <= a.length; i += 1) {
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
+  }
+
+  return dp[a.length][b.length];
+}
+
+function compactName(value: string) {
+  return value.toLowerCase().replace(/[^a-z]/g, "");
+}
+
+function namesAreClose(a: string, b: string) {
+  const left = compactName(a);
+  const right = compactName(b);
+  if (!left || !right) return false;
+  if (left === right) return true;
+
+  return editDistance(left, right) <= 2;
+}
+
+function shareCompany(a: UnifiedPerson, b: UnifiedPerson) {
+  return a.companyNames.some((company) => b.companyNames.includes(company));
+}
+
+function mergePeople(target: UnifiedPerson, duplicate: UnifiedPerson) {
+  target.email = target.email ?? duplicate.email;
+  target.phone = target.phone ?? duplicate.phone;
+  mergeUnique(target.companyNames, duplicate.companyNames);
+  mergeUnique(target.roles, duplicate.roles);
+  mergeUnique(target.sources, duplicate.sources);
+  mergeUnique(target.profileIds, duplicate.profileIds);
+  mergeUnique(target.directoryIds, duplicate.directoryIds);
+  mergeUnique(target.crmContactIds, duplicate.crmContactIds);
+}
+
+function dedupeLikelySamePeople(items: UnifiedPerson[]) {
+  const emailed = items.filter((person) => person.email);
+  const consumed = new Set<string>();
+
+  for (const person of items) {
+    if (person.email) continue;
+
+    const match = emailed.find((candidate) =>
+      !consumed.has(person.key) &&
+      shareCompany(candidate, person) &&
+      namesAreClose(candidate.displayName, person.displayName)
+    );
+
+    if (match) {
+      mergePeople(match, person);
+      consumed.add(person.key);
+    }
+  }
+
+  return items.filter((person) => !consumed.has(person.key));
 }
 
 export async function GET() {
@@ -198,6 +271,6 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    people: Array.from(people.values()).sort((a, b) => a.displayName.localeCompare(b.displayName)),
+    people: dedupeLikelySamePeople(Array.from(people.values())).sort((a, b) => a.displayName.localeCompare(b.displayName)),
   });
 }
