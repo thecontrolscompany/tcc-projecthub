@@ -685,7 +685,7 @@ function AdminOverview({
             <div className="mt-4 grid gap-2">
               <ShortcutLink href="/admin/users" label="User Management" />
               <ShortcutLink href="/admin/contacts" label="Contacts" />
-              <ShortcutLink href="/admin/ops" label="Ops View" />
+              <ShortcutLink href="/ops" label="OperationsHub" />
               <ShortcutLink href="/admin/analytics" label="Analytics" />
               <ShortcutLink href="/admin/migrate-sharepoint" label="SharePoint Reconcile" />
               <ShortcutLink href="/admin/billing-import" label="Historical Billing Import" />

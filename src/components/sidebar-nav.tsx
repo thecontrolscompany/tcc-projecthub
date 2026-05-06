@@ -157,7 +157,6 @@ export const NAV_LINKS: NavItem[] = [
   { label: "TimeHub",          href: "/time",                     roles: ["admin", "ops_manager"],                              icon: ClockIcon },
   { label: "Admin",            href: "/admin",                    roles: ["admin"],                                             icon: GridIcon },
   { label: "OperationsHub",    href: "/ops",                      roles: ["admin", "ops_manager"],                              icon: GridIcon },
-  { label: "Ops View",         href: "/admin/ops",                roles: ["admin"],                                             icon: GridIcon },
   { label: "Contacts",         href: "/admin/contacts",           roles: ["admin"],                                             icon: UserIcon },
   { label: "ProjectHub",       href: "/pm",                       roles: ["admin", "pm", "lead", "ops_manager"],                icon: ClipboardIcon },
   { label: "OpportunityHub",   href: "/quotes",                   roles: ["admin", "ops_manager", "customer"],                  icon: DocumentIcon },
