@@ -22,12 +22,17 @@ const applyChanges = process.argv.includes("--apply");
 
 const EMAIL_DOMAIN_COMPANIES: Record<string, string> = {
   "controlsco.net": "The Controls Company",
+  "tcctest.com": "The Controls Company Test",
   "jci.com": "Johnson Controls",
   "siemens.com": "Siemens",
   "trane.com": "Trane",
   "tranetechnologies.com": "Trane",
   "engcool.com": "Engineered Cooling Services",
   "engineeredcooling.com": "Engineered Cooling Services",
+  "csusasoutheast.com": "Comfort Systems",
+  "rqconstruction.com": "RQ Construction",
+  "us.af.mil": "USAF",
+  "walterscontrols.net": "Walters Controls",
 };
 
 type VCardContact = {
