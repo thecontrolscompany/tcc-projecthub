@@ -109,9 +109,22 @@ const ROLE_MATRIX_COLUMNS = [
   { key: "relationship", label: "Relationship" },
 ] as const;
 
+type MatrixColumnKey = "person" | "company" | (typeof ROLE_MATRIX_COLUMNS)[number]["key"];
+type SortDir = "asc" | "desc";
+type PresenceFilter = "all" | "checked" | "blank";
+
 function UnifiedPeoplePanel() {
   const [people, setPeople] = useState<UnifiedPerson[]>([]);
   const [search, setSearch] = useState("");
+  const [personFilter, setPersonFilter] = useState("");
+  const [companyFilter, setCompanyFilter] = useState("");
+  const [presenceFilters, setPresenceFilters] = useState<Record<(typeof ROLE_MATRIX_COLUMNS)[number]["key"], PresenceFilter>>(
+    () => Object.fromEntries(ROLE_MATRIX_COLUMNS.map((column) => [column.key, "all"])) as Record<(typeof ROLE_MATRIX_COLUMNS)[number]["key"], PresenceFilter>
+  );
+  const [sort, setSort] = useState<{ key: MatrixColumnKey; dir: SortDir }>({ key: "person", dir: "asc" });
+  const [editMode, setEditMode] = useState(false);
+  const [savingPersonKey, setSavingPersonKey] = useState<string | null>(null);
+  const [matrixStatus, setMatrixStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -146,10 +159,69 @@ function UnifiedPeoplePanel() {
     };
   }, []);
 
+  function getCheckedByColumn(person: UnifiedPerson): Record<(typeof ROLE_MATRIX_COLUMNS)[number]["key"], boolean> {
+    return {
+      directory: person.sources.includes("directory"),
+      portal: person.sources.includes("portal"),
+      admin: person.roles.includes("admin"),
+      pm: person.roles.includes("pm"),
+      lead: person.roles.includes("lead"),
+      installer: person.roles.includes("installer"),
+      ops_manager: person.roles.includes("ops_manager"),
+      customer: person.roles.includes("customer"),
+      relationship: person.sources.includes("relationship"),
+    };
+  }
+
+  function toggleSort(key: MatrixColumnKey) {
+    setSort((current) => ({
+      key,
+      dir: current.key === key && current.dir === "asc" ? "desc" : "asc",
+    }));
+  }
+
+  async function handleRoleChange(person: UnifiedPerson, role: UserRole) {
+    const userId = person.profileIds[0];
+    if (!userId) {
+      setMatrixStatus({ type: "error", message: "Create a portal user before assigning a portal role." });
+      return;
+    }
+
+    setSavingPersonKey(person.key);
+    setMatrixStatus(null);
+    try {
+      const response = await fetch("/api/admin/update-user-role", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userId, role }),
+      });
+      const json = await safeJson(response);
+      if (!response.ok) {
+        throw new Error(json?.error ?? "Failed to update portal role.");
+      }
+
+      setPeople((current) =>
+        current.map((item) =>
+          item.key === person.key
+            ? {
+                ...item,
+                roles: [...item.roles.filter((value) => !["admin", "pm", "lead", "installer", "ops_manager", "customer"].includes(value)), role],
+              }
+            : item
+        )
+      );
+      setMatrixStatus({ type: "success", message: `Updated ${person.displayName}.` });
+    } catch (error) {
+      setMatrixStatus({ type: "error", message: error instanceof Error ? error.message : "Failed to update portal role." });
+    } finally {
+      setSavingPersonKey(null);
+    }
+  }
+
   const filteredPeople = people.filter((person) => {
     const q = search.trim().toLowerCase();
-    if (!q) return true;
-    return [
+    const searchable = [
       person.displayName,
       person.email,
       person.phone,
@@ -157,8 +229,33 @@ function UnifiedPeoplePanel() {
       ...person.roles,
       ...person.sources.map((source) => SOURCE_LABELS[source]),
     ]
-      .filter(Boolean)
-      .some((value) => value!.toLowerCase().includes(q));
+      .filter(Boolean);
+
+    if (q && !searchable.some((value) => value!.toLowerCase().includes(q))) return false;
+    if (personFilter.trim()) {
+      const personQuery = personFilter.trim().toLowerCase();
+      if (![person.displayName, person.email, person.phone].filter(Boolean).some((value) => value!.toLowerCase().includes(personQuery))) return false;
+    }
+    if (companyFilter.trim()) {
+      const companyQuery = companyFilter.trim().toLowerCase();
+      if (!person.companyNames.some((company) => company.toLowerCase().includes(companyQuery))) return false;
+    }
+
+    const checkedByColumn = getCheckedByColumn(person);
+    return ROLE_MATRIX_COLUMNS.every((column) => {
+      const filter = presenceFilters[column.key];
+      if (filter === "all") return true;
+      return filter === "checked" ? checkedByColumn[column.key] : !checkedByColumn[column.key];
+    });
+  }).sort((a, b) => {
+    const multiplier = sort.dir === "asc" ? 1 : -1;
+    if (sort.key === "person") return a.displayName.localeCompare(b.displayName) * multiplier;
+    if (sort.key === "company") return (a.companyNames[0] ?? "").localeCompare(b.companyNames[0] ?? "") * multiplier;
+
+    const aChecked = getCheckedByColumn(a)[sort.key];
+    const bChecked = getCheckedByColumn(b)[sort.key];
+    if (aChecked === bChecked) return a.displayName.localeCompare(b.displayName);
+    return (Number(aChecked) - Number(bChecked)) * multiplier;
   });
 
   if (loading) {
@@ -178,26 +275,92 @@ function UnifiedPeoplePanel() {
             One row per person. Checked boxes show the current portal role, directory presence, and relationship contact context.
           </p>
         </div>
-        <input
-          type="search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search people..."
-          className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none sm:w-72"
-        />
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search people..."
+            className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none sm:w-72"
+          />
+          <button
+            type="button"
+            onClick={() => setEditMode((value) => !value)}
+            className={[
+              "rounded-xl border px-4 py-2 text-sm font-semibold transition",
+              editMode
+                ? "border-brand-primary/40 bg-brand-primary/10 text-brand-primary"
+                : "border-border-default bg-surface-raised text-text-secondary hover:bg-surface-overlay hover:text-text-primary",
+            ].join(" ")}
+          >
+            {editMode ? "Done Editing" : "Edit Matrix"}
+          </button>
+        </div>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-border-default">
+      {matrixStatus && (
+        <div
+          className={[
+            "rounded-xl border px-4 py-2.5 text-sm",
+            matrixStatus.type === "success"
+              ? "border-status-success/30 bg-status-success/10 text-status-success"
+              : "border-status-danger/30 bg-status-danger/10 text-status-danger",
+          ].join(" ")}
+        >
+          {matrixStatus.message}
+        </div>
+      )}
+
+      <div className="max-h-[70vh] overflow-auto rounded-2xl border border-border-default">
         <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border-default bg-surface-raised/80">
-              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Person</th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Company</th>
+          <thead className="sticky top-0 z-10 bg-surface-raised shadow-[0_1px_0_0_rgba(148,163,184,0.22)]">
+            <tr className="border-b border-border-default">
+              <th className="min-w-[240px] px-4 py-2.5 text-left align-bottom">
+                <button type="button" onClick={() => toggleSort("person")} className="text-xs font-semibold uppercase tracking-wide text-text-secondary hover:text-text-primary">
+                  Person {sort.key === "person" ? (sort.dir === "asc" ? "Asc" : "Desc") : ""}
+                </button>
+                <input
+                  type="search"
+                  value={personFilter}
+                  onChange={(event) => setPersonFilter(event.target.value)}
+                  placeholder="Filter..."
+                  className="mt-2 w-full rounded-lg border border-border-default bg-surface-base px-2 py-1 text-xs text-text-primary focus:border-brand-primary focus:outline-none"
+                />
+              </th>
+              <th className="min-w-[180px] px-4 py-2.5 text-left align-bottom">
+                <button type="button" onClick={() => toggleSort("company")} className="text-xs font-semibold uppercase tracking-wide text-text-secondary hover:text-text-primary">
+                  Company {sort.key === "company" ? (sort.dir === "asc" ? "Asc" : "Desc") : ""}
+                </button>
+                <input
+                  type="search"
+                  value={companyFilter}
+                  onChange={(event) => setCompanyFilter(event.target.value)}
+                  placeholder="Filter..."
+                  className="mt-2 w-full rounded-lg border border-border-default bg-surface-base px-2 py-1 text-xs text-text-primary focus:border-brand-primary focus:outline-none"
+                />
+              </th>
               {ROLE_MATRIX_COLUMNS.map((column) => (
-                <th key={column.key} className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">
-                  {column.label}
+                <th key={column.key} className="min-w-[110px] px-3 py-2.5 text-center align-bottom">
+                  <button type="button" onClick={() => toggleSort(column.key)} className="text-xs font-semibold uppercase tracking-wide text-text-secondary hover:text-text-primary">
+                    {column.label} {sort.key === column.key ? (sort.dir === "asc" ? "Asc" : "Desc") : ""}
+                  </button>
+                  <select
+                    value={presenceFilters[column.key]}
+                    onChange={(event) =>
+                      setPresenceFilters((current) => ({
+                        ...current,
+                        [column.key]: event.target.value as PresenceFilter,
+                      }))
+                    }
+                    className="mt-2 w-full rounded-lg border border-border-default bg-surface-base px-2 py-1 text-xs text-text-primary focus:border-brand-primary focus:outline-none"
+                  >
+                    <option value="all">All</option>
+                    <option value="checked">Checked</option>
+                    <option value="blank">Blank</option>
+                  </select>
                 </th>
               ))}
+              {editMode && <th className="min-w-[150px] px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Edit</th>}
             </tr>
           </thead>
           <tbody>
@@ -227,12 +390,40 @@ function UnifiedPeoplePanel() {
                       <input
                         type="checkbox"
                         checked={checkedByColumn[column.key]}
-                        readOnly
+                        readOnly={!editMode || !["admin", "pm", "lead", "installer", "ops_manager", "customer"].includes(column.key)}
+                        disabled={!editMode || !person.profileIds[0] || !["admin", "pm", "lead", "installer", "ops_manager", "customer"].includes(column.key) || savingPersonKey === person.key}
+                        onChange={() => {
+                          if (["admin", "pm", "lead", "installer", "ops_manager", "customer"].includes(column.key)) {
+                            void handleRoleChange(person, column.key as UserRole);
+                          }
+                        }}
                         aria-label={`${person.displayName} ${column.label}`}
-                        className="h-4 w-4 rounded border-border-default bg-surface-overlay accent-brand-primary"
+                        className="h-4 w-4 rounded border-border-default bg-surface-overlay accent-brand-primary disabled:opacity-45"
                       />
                     </td>
                   ))}
+                  {editMode && (
+                    <td className="px-3 py-3">
+                      {person.profileIds[0] ? (
+                        <select
+                          value={(["admin", "pm", "lead", "installer", "ops_manager", "customer"].find((role) => person.roles.includes(role)) ?? "")}
+                          onChange={(event) => void handleRoleChange(person, event.target.value as UserRole)}
+                          disabled={savingPersonKey === person.key}
+                          className="w-full rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-xs text-text-primary focus:border-brand-primary focus:outline-none disabled:opacity-50"
+                        >
+                          <option value="" disabled>Role</option>
+                          <option value="admin">Admin</option>
+                          <option value="pm">PM</option>
+                          <option value="lead">Lead</option>
+                          <option value="installer">Installer</option>
+                          <option value="ops_manager">Ops Manager</option>
+                          <option value="customer">Customer</option>
+                        </select>
+                      ) : (
+                        <span className="text-xs text-text-tertiary">No portal user</span>
+                      )}
+                    </td>
+                  )}
                 </tr>
               );
             })}
@@ -241,7 +432,7 @@ function UnifiedPeoplePanel() {
       </div>
 
       <p className="text-xs text-text-tertiary">
-        Matrix boxes are currently read-only because the app still stores one primary portal role per account. The next step is making these boxes editable against a true multi-role people schema.
+        In edit mode, portal role columns update the current single stored portal role. Directory, Portal User, and Relationship boxes are source indicators until the multi-role people schema lands.
       </p>
 
       {filteredPeople.length === 0 && (
