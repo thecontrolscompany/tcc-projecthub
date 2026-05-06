@@ -18,8 +18,15 @@ type UnifiedPerson = {
   crmContactIds: string[];
 };
 
-const TCC_EMAIL_DOMAIN = "@controlsco.net";
-const TCC_COMPANY_NAME = "The Controls Company";
+const EMAIL_DOMAIN_COMPANIES: Record<string, string> = {
+  "controlsco.net": "The Controls Company",
+  "jci.com": "Johnson Controls",
+  "siemens.com": "Siemens",
+  "trane.com": "Trane",
+  "tranetechnologies.com": "Trane",
+  "engcool.com": "Engineered Cooling Services",
+  "engineeredcooling.com": "Engineered Cooling Services",
+};
 
 function normalizeEmail(value: string | null | undefined) {
   const email = value?.trim().toLowerCase();
@@ -27,11 +34,23 @@ function normalizeEmail(value: string | null | undefined) {
 }
 
 function normalizeName(value: string | null | undefined) {
-  return value?.trim().replace(/\s+/g, " ").toLowerCase() || null;
+  return standardizePersonName(value)?.toLowerCase() || null;
 }
 
 function firstNonEmpty(...values: Array<string | null | undefined>) {
   return values.find((value) => value?.trim())?.trim() ?? null;
+}
+
+function standardizePersonName(value: string | null | undefined) {
+  const collapsed = value?.trim().replace(/\s+/g, " ");
+  if (!collapsed) return null;
+
+  const commaParts = collapsed.split(",").map((part) => part.trim()).filter(Boolean);
+  if (commaParts.length === 2) {
+    return `${commaParts[1]} ${commaParts[0]}`.replace(/\s+/g, " ");
+  }
+
+  return collapsed;
 }
 
 function addUnique<T>(items: T[], value: T | null | undefined) {
@@ -39,7 +58,10 @@ function addUnique<T>(items: T[], value: T | null | undefined) {
 }
 
 function companyForEmail(email: string | null) {
-  return email?.endsWith(TCC_EMAIL_DOMAIN) ? TCC_COMPANY_NAME : null;
+  const domain = email?.split("@")[1]?.toLowerCase();
+  if (!domain) return null;
+
+  return EMAIL_DOMAIN_COMPANIES[domain] ?? (domain.startsWith("trane.") ? "Trane" : null);
 }
 
 function personKey(email: string | null, name: string | null, id: string, source: Source) {
@@ -95,7 +117,7 @@ export async function GET() {
     const key = personKey(args.email, args.name, args.id, args.source);
     const existing = people.get(key);
     if (existing) {
-      existing.displayName = firstNonEmpty(existing.displayName, args.displayName, args.email, "Unknown") ?? "Unknown";
+      existing.displayName = standardizePersonName(firstNonEmpty(existing.displayName, args.displayName, args.email, "Unknown")) ?? "Unknown";
       existing.email = existing.email ?? args.email;
       existing.phone = existing.phone ?? args.phone;
       addUnique(existing.sources, args.source);
@@ -104,7 +126,7 @@ export async function GET() {
 
     const person: UnifiedPerson = {
       key,
-      displayName: firstNonEmpty(args.displayName, args.email, "Unknown") ?? "Unknown",
+      displayName: standardizePersonName(firstNonEmpty(args.displayName, args.email, "Unknown")) ?? "Unknown",
       email: args.email,
       phone: args.phone,
       companyNames: [],
@@ -120,13 +142,14 @@ export async function GET() {
 
   for (const row of profilesResult.data ?? []) {
     const email = normalizeEmail(row.email);
-    const name = normalizeName(row.full_name);
+    const fullName = standardizePersonName(row.full_name);
+    const name = normalizeName(fullName);
     const person = getPerson({
       id: row.id,
       source: "portal",
       email,
       name,
-      displayName: row.full_name ?? row.email,
+      displayName: fullName ?? row.email,
       phone: row.phone,
     });
     addUnique(person.profileIds, row.id);
@@ -136,7 +159,7 @@ export async function GET() {
 
   for (const row of directoryResult.data ?? []) {
     const email = normalizeEmail(row.email);
-    const fullName = [row.first_name, row.last_name].filter(Boolean).join(" ").trim();
+    const fullName = standardizePersonName([row.first_name, row.last_name].filter(Boolean).join(" ").trim());
     const name = normalizeName(fullName);
     const person = getPerson({
       id: row.id,
@@ -146,14 +169,15 @@ export async function GET() {
       displayName: fullName || row.email,
       phone: row.phone,
     });
+    const emailCompany = companyForEmail(email);
     addUnique(person.directoryIds, row.id);
     addUnique(person.roles, row.intended_role ?? null);
-    addUnique(person.companyNames, companyForEmail(email));
+    addUnique(person.companyNames, emailCompany);
   }
 
   for (const row of crmResult.data ?? []) {
     const email = normalizeEmail(row.email);
-    const fullName = firstNonEmpty(row.display_name, [row.first_name, row.last_name].filter(Boolean).join(" "));
+    const fullName = standardizePersonName(firstNonEmpty(row.display_name, [row.first_name, row.last_name].filter(Boolean).join(" ")));
     const name = normalizeName(fullName);
     const person = getPerson({
       id: row.id,
@@ -164,10 +188,13 @@ export async function GET() {
       phone: row.phone,
     });
     const account = Array.isArray(row.account) ? row.account[0] : row.account;
+    const emailCompany = companyForEmail(email);
     addUnique(person.crmContactIds, row.id);
     addUnique(person.roles, row.role_type);
-    addUnique(person.companyNames, companyForEmail(email));
-    addUnique(person.companyNames, account?.company_name ?? null);
+    addUnique(person.companyNames, emailCompany);
+    if (!emailCompany) {
+      addUnique(person.companyNames, account?.company_name ?? null);
+    }
   }
 
   return NextResponse.json({
