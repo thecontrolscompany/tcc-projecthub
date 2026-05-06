@@ -97,6 +97,18 @@ const SOURCE_LABELS: Record<UnifiedPerson["sources"][number], string> = {
   relationship: "Relationship",
 };
 
+const ROLE_MATRIX_COLUMNS = [
+  { key: "directory", label: "Directory" },
+  { key: "portal", label: "Portal User" },
+  { key: "admin", label: "Admin" },
+  { key: "pm", label: "PM" },
+  { key: "lead", label: "Lead" },
+  { key: "installer", label: "Installer" },
+  { key: "ops_manager", label: "Ops Manager" },
+  { key: "customer", label: "Customer" },
+  { key: "relationship", label: "Relationship" },
+] as const;
+
 function UnifiedPeoplePanel() {
   const [people, setPeople] = useState<UnifiedPerson[]>([]);
   const [search, setSearch] = useState("");
@@ -161,9 +173,9 @@ function UnifiedPeoplePanel() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-text-primary">All People</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Directory Matrix</h2>
           <p className="text-sm text-text-secondary">
-            One row per person, merged by email first and name when no email exists. Source badges show where that person is used.
+            One row per person. Checked boxes show the current portal role, directory presence, and relationship contact context.
           </p>
         </div>
         <input
@@ -180,36 +192,57 @@ function UnifiedPeoplePanel() {
           <thead>
             <tr className="border-b border-border-default bg-surface-raised/80">
               <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Person</th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Phone</th>
               <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Company</th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Roles</th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Sources</th>
+              {ROLE_MATRIX_COLUMNS.map((column) => (
+                <th key={column.key} className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                  {column.label}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {filteredPeople.map((person) => (
-              <tr key={person.key} className="border-b border-border-default hover:bg-surface-raised">
-                <td className="px-4 py-3">
-                  <p className="font-medium text-text-primary">{person.displayName}</p>
-                  <p className="text-xs text-text-tertiary">{person.email ?? "No email on file"}</p>
-                </td>
-                <td className="px-4 py-3 text-text-secondary">{person.phone ?? "-"}</td>
-                <td className="px-4 py-3 text-text-secondary">{person.companyNames.join(", ") || "-"}</td>
-                <td className="px-4 py-3 text-text-secondary">{person.roles.join(", ") || "-"}</td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-1.5">
-                    {person.sources.map((source) => (
-                      <span key={source} className="rounded-full bg-brand-primary/10 px-2 py-0.5 text-xs font-medium text-brand-primary">
-                        {SOURCE_LABELS[source]}
-                      </span>
-                    ))}
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {filteredPeople.map((person) => {
+              const checkedByColumn: Record<(typeof ROLE_MATRIX_COLUMNS)[number]["key"], boolean> = {
+                directory: person.sources.includes("directory"),
+                portal: person.sources.includes("portal"),
+                admin: person.roles.includes("admin"),
+                pm: person.roles.includes("pm"),
+                lead: person.roles.includes("lead"),
+                installer: person.roles.includes("installer"),
+                ops_manager: person.roles.includes("ops_manager"),
+                customer: person.roles.includes("customer"),
+                relationship: person.sources.includes("relationship"),
+              };
+
+              return (
+                <tr key={person.key} className="border-b border-border-default hover:bg-surface-raised">
+                  <td className="min-w-[240px] px-4 py-3">
+                    <p className="font-medium text-text-primary">{person.displayName}</p>
+                    <p className="text-xs text-text-tertiary">{person.email ?? "No email on file"}</p>
+                    {person.phone && <p className="text-xs text-text-tertiary">{person.phone}</p>}
+                  </td>
+                  <td className="min-w-[180px] px-4 py-3 text-text-secondary">{person.companyNames.join(", ") || "-"}</td>
+                  {ROLE_MATRIX_COLUMNS.map((column) => (
+                    <td key={column.key} className="px-3 py-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={checkedByColumn[column.key]}
+                        readOnly
+                        aria-label={`${person.displayName} ${column.label}`}
+                        className="h-4 w-4 rounded border-border-default bg-surface-overlay accent-brand-primary"
+                      />
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
+
+      <p className="text-xs text-text-tertiary">
+        Matrix boxes are currently read-only because the app still stores one primary portal role per account. The next step is making these boxes editable against a true multi-role people schema.
+      </p>
 
       {filteredPeople.length === 0 && (
         <div className="rounded-2xl border border-dashed border-border-default px-6 py-10 text-center text-sm text-text-tertiary">
