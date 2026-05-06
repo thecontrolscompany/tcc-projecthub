@@ -177,7 +177,6 @@ const PAGE_TITLE_OVERRIDES: Record<string, string> = {
   "/admin/analytics": "Analytics",
   "/admin/contacts": "Contacts & Users",
   "/admin/migrate-sharepoint": "SharePoint Reconcile",
-  "/admin/ops": "Ops View",
   "/admin/users": "User Management",
   "/billing": "BillingHub",
   "/customer": "My Portal",
