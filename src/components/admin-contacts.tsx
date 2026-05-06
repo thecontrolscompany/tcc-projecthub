@@ -97,21 +97,26 @@ const SOURCE_LABELS: Record<UnifiedPerson["sources"][number], string> = {
   relationship: "Relationship",
 };
 
+const PORTAL_ROLE_OPTIONS: { value: UserRole; label: string }[] = [
+  { value: "admin", label: "Admin" },
+  { value: "pm", label: "PM" },
+  { value: "lead", label: "Lead" },
+  { value: "installer", label: "Installer" },
+  { value: "ops_manager", label: "Ops Manager" },
+  { value: "customer", label: "Customer" },
+];
+
 const ROLE_MATRIX_COLUMNS = [
   { key: "directory", label: "Directory" },
   { key: "portal", label: "Portal User" },
-  { key: "admin", label: "Admin" },
-  { key: "pm", label: "PM" },
-  { key: "lead", label: "Lead" },
-  { key: "installer", label: "Installer" },
-  { key: "ops_manager", label: "Ops Manager" },
-  { key: "customer", label: "Customer" },
+  { key: "role", label: "Portal Role" },
   { key: "relationship", label: "Relationship" },
 ] as const;
 
 type MatrixColumnKey = "person" | "company" | (typeof ROLE_MATRIX_COLUMNS)[number]["key"];
 type SortDir = "asc" | "desc";
 type PresenceFilter = "all" | "checked" | "blank";
+type RoleFilter = "all" | "none" | UserRole;
 
 function UnifiedPeoplePanel() {
   const [people, setPeople] = useState<UnifiedPerson[]>([]);
@@ -121,6 +126,7 @@ function UnifiedPeoplePanel() {
   const [presenceFilters, setPresenceFilters] = useState<Record<(typeof ROLE_MATRIX_COLUMNS)[number]["key"], PresenceFilter>>(
     () => Object.fromEntries(ROLE_MATRIX_COLUMNS.map((column) => [column.key, "all"])) as Record<(typeof ROLE_MATRIX_COLUMNS)[number]["key"], PresenceFilter>
   );
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [sort, setSort] = useState<{ key: MatrixColumnKey; dir: SortDir }>({ key: "person", dir: "asc" });
   const [editMode, setEditMode] = useState(false);
   const [savingPersonKey, setSavingPersonKey] = useState<string | null>(null);
@@ -159,16 +165,15 @@ function UnifiedPeoplePanel() {
     };
   }, []);
 
+  function getPortalRole(person: UnifiedPerson): UserRole | null {
+    return PORTAL_ROLE_OPTIONS.find((role) => person.roles.includes(role.value))?.value ?? null;
+  }
+
   function getCheckedByColumn(person: UnifiedPerson): Record<(typeof ROLE_MATRIX_COLUMNS)[number]["key"], boolean> {
     return {
       directory: person.sources.includes("directory"),
       portal: person.sources.includes("portal"),
-      admin: person.roles.includes("admin"),
-      pm: person.roles.includes("pm"),
-      lead: person.roles.includes("lead"),
-      installer: person.roles.includes("installer"),
-      ops_manager: person.roles.includes("ops_manager"),
-      customer: person.roles.includes("customer"),
+      role: Boolean(getPortalRole(person)),
       relationship: person.sources.includes("relationship"),
     };
   }
@@ -206,7 +211,7 @@ function UnifiedPeoplePanel() {
           item.key === person.key
             ? {
                 ...item,
-                roles: [...item.roles.filter((value) => !["admin", "pm", "lead", "installer", "ops_manager", "customer"].includes(value)), role],
+                roles: [...item.roles.filter((value) => !PORTAL_ROLE_OPTIONS.some((option) => option.value === value)), role],
               }
             : item
         )
@@ -243,6 +248,11 @@ function UnifiedPeoplePanel() {
 
     const checkedByColumn = getCheckedByColumn(person);
     return ROLE_MATRIX_COLUMNS.every((column) => {
+      if (column.key === "role") {
+        const role = getPortalRole(person);
+        if (roleFilter === "all") return true;
+        return roleFilter === "none" ? !role : role === roleFilter;
+      }
       const filter = presenceFilters[column.key];
       if (filter === "all") return true;
       return filter === "checked" ? checkedByColumn[column.key] : !checkedByColumn[column.key];
@@ -254,6 +264,11 @@ function UnifiedPeoplePanel() {
 
     const aChecked = getCheckedByColumn(a)[sort.key];
     const bChecked = getCheckedByColumn(b)[sort.key];
+    if (sort.key === "role") {
+      const aRole = getPortalRole(a) ?? "";
+      const bRole = getPortalRole(b) ?? "";
+      return aRole.localeCompare(bRole) * multiplier || a.displayName.localeCompare(b.displayName);
+    }
     if (aChecked === bChecked) return a.displayName.localeCompare(b.displayName);
     return (Number(aChecked) - Number(bChecked)) * multiplier;
   });
@@ -272,7 +287,7 @@ function UnifiedPeoplePanel() {
         <div>
           <h2 className="text-2xl font-bold text-text-primary">Directory Matrix</h2>
           <p className="text-sm text-text-secondary">
-            One row per person. Checked boxes show the current portal role, directory presence, and relationship contact context.
+            One row per person. Source columns show where the person appears; portal users have one current role.
           </p>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
@@ -311,7 +326,7 @@ function UnifiedPeoplePanel() {
         </div>
       )}
 
-      <div className="max-h-[70vh] overflow-auto rounded-2xl border border-border-default">
+      <div className="overflow-x-auto rounded-2xl border border-border-default">
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10 bg-surface-raised shadow-[0_1px_0_0_rgba(148,163,184,0.22)]">
             <tr className="border-b border-border-default">
@@ -340,42 +355,46 @@ function UnifiedPeoplePanel() {
                 />
               </th>
               {ROLE_MATRIX_COLUMNS.map((column) => (
-                <th key={column.key} className="min-w-[110px] px-3 py-2.5 text-center align-bottom">
+                <th key={column.key} className="min-w-[140px] px-3 py-2.5 text-center align-bottom">
                   <button type="button" onClick={() => toggleSort(column.key)} className="text-xs font-semibold uppercase tracking-wide text-text-secondary hover:text-text-primary">
                     {column.label} {sort.key === column.key ? (sort.dir === "asc" ? "Asc" : "Desc") : ""}
                   </button>
-                  <select
-                    value={presenceFilters[column.key]}
-                    onChange={(event) =>
-                      setPresenceFilters((current) => ({
-                        ...current,
-                        [column.key]: event.target.value as PresenceFilter,
-                      }))
-                    }
-                    className="mt-2 w-full rounded-lg border border-border-default bg-surface-base px-2 py-1 text-xs text-text-primary focus:border-brand-primary focus:outline-none"
-                  >
-                    <option value="all">All</option>
-                    <option value="checked">Checked</option>
-                    <option value="blank">Blank</option>
-                  </select>
+                  {column.key === "role" ? (
+                    <select
+                      value={roleFilter}
+                      onChange={(event) => setRoleFilter(event.target.value as RoleFilter)}
+                      className="mt-2 w-full rounded-lg border border-border-default bg-surface-base px-2 py-1 text-xs text-text-primary focus:border-brand-primary focus:outline-none"
+                    >
+                      <option value="all">All roles</option>
+                      <option value="none">No role</option>
+                      {PORTAL_ROLE_OPTIONS.map((role) => (
+                        <option key={role.value} value={role.value}>{role.label}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <select
+                      value={presenceFilters[column.key]}
+                      onChange={(event) =>
+                        setPresenceFilters((current) => ({
+                          ...current,
+                          [column.key]: event.target.value as PresenceFilter,
+                        }))
+                      }
+                      className="mt-2 w-full rounded-lg border border-border-default bg-surface-base px-2 py-1 text-xs text-text-primary focus:border-brand-primary focus:outline-none"
+                    >
+                      <option value="all">All</option>
+                      <option value="checked">Checked</option>
+                      <option value="blank">Blank</option>
+                    </select>
+                  )}
                 </th>
               ))}
-              {editMode && <th className="min-w-[150px] px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Edit</th>}
             </tr>
           </thead>
           <tbody>
             {filteredPeople.map((person) => {
-              const checkedByColumn: Record<(typeof ROLE_MATRIX_COLUMNS)[number]["key"], boolean> = {
-                directory: person.sources.includes("directory"),
-                portal: person.sources.includes("portal"),
-                admin: person.roles.includes("admin"),
-                pm: person.roles.includes("pm"),
-                lead: person.roles.includes("lead"),
-                installer: person.roles.includes("installer"),
-                ops_manager: person.roles.includes("ops_manager"),
-                customer: person.roles.includes("customer"),
-                relationship: person.sources.includes("relationship"),
-              };
+              const checkedByColumn = getCheckedByColumn(person);
+              const portalRole = getPortalRole(person);
 
               return (
                 <tr key={person.key} className="border-b border-border-default hover:bg-surface-raised">
@@ -385,44 +404,39 @@ function UnifiedPeoplePanel() {
                     {person.phone && <p className="text-xs text-text-tertiary">{person.phone}</p>}
                   </td>
                   <td className="min-w-[180px] px-4 py-3 text-text-secondary">{person.companyNames.join(", ") || "-"}</td>
-                  {ROLE_MATRIX_COLUMNS.map((column) => (
-                    <td key={column.key} className="px-3 py-3 text-center">
-                      <input
-                        type="checkbox"
-                        checked={checkedByColumn[column.key]}
-                        readOnly={!editMode || !["admin", "pm", "lead", "installer", "ops_manager", "customer"].includes(column.key)}
-                        disabled={!editMode || !person.profileIds[0] || !["admin", "pm", "lead", "installer", "ops_manager", "customer"].includes(column.key) || savingPersonKey === person.key}
-                        onChange={() => {
-                          if (["admin", "pm", "lead", "installer", "ops_manager", "customer"].includes(column.key)) {
-                            void handleRoleChange(person, column.key as UserRole);
-                          }
-                        }}
-                        aria-label={`${person.displayName} ${column.label}`}
-                        className="h-4 w-4 rounded border-border-default bg-surface-overlay accent-brand-primary disabled:opacity-45"
-                      />
-                    </td>
-                  ))}
-                  {editMode && (
-                    <td className="px-3 py-3">
-                      {person.profileIds[0] ? (
+                  {ROLE_MATRIX_COLUMNS.map((column) =>
+                    column.key === "role" ? (
+                      <td key={column.key} className="min-w-[140px] px-3 py-3 text-center">
+                        {editMode && person.profileIds[0] ? (
                         <select
-                          value={(["admin", "pm", "lead", "installer", "ops_manager", "customer"].find((role) => person.roles.includes(role)) ?? "")}
+                          value={portalRole ?? ""}
                           onChange={(event) => void handleRoleChange(person, event.target.value as UserRole)}
                           disabled={savingPersonKey === person.key}
                           className="w-full rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-xs text-text-primary focus:border-brand-primary focus:outline-none disabled:opacity-50"
                         >
                           <option value="" disabled>Role</option>
-                          <option value="admin">Admin</option>
-                          <option value="pm">PM</option>
-                          <option value="lead">Lead</option>
-                          <option value="installer">Installer</option>
-                          <option value="ops_manager">Ops Manager</option>
-                          <option value="customer">Customer</option>
+                          {PORTAL_ROLE_OPTIONS.map((role) => (
+                            <option key={role.value} value={role.value}>{role.label}</option>
+                          ))}
                         </select>
-                      ) : (
-                        <span className="text-xs text-text-tertiary">No portal user</span>
-                      )}
-                    </td>
+                        ) : (
+                          <span className="text-sm text-text-secondary">
+                            {portalRole ? PORTAL_ROLE_OPTIONS.find((role) => role.value === portalRole)?.label : person.profileIds[0] ? "No role" : "-"}
+                          </span>
+                        )}
+                      </td>
+                    ) : (
+                      <td key={column.key} className="min-w-[140px] px-3 py-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={checkedByColumn[column.key]}
+                          readOnly
+                          disabled
+                          aria-label={`${person.displayName} ${column.label}`}
+                          className="h-4 w-4 rounded border-border-default bg-surface-overlay accent-brand-primary disabled:opacity-70"
+                        />
+                      </td>
+                    )
                   )}
                 </tr>
               );
@@ -432,7 +446,7 @@ function UnifiedPeoplePanel() {
       </div>
 
       <p className="text-xs text-text-tertiary">
-        In edit mode, portal role columns update the current single stored portal role. Directory, Portal User, and Relationship boxes are source indicators until the multi-role people schema lands.
+        Edit mode updates the current portal role for people who already have a portal user. Directory, Portal User, and Relationship remain source indicators.
       </p>
 
       {filteredPeople.length === 0 && (
