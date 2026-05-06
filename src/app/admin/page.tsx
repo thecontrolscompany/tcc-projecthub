@@ -11,7 +11,7 @@ import { calcToBill, generatePmEmailDrafts, rollForwardRows } from "@/lib/billin
 import type { BillingRow, BillingPeriod } from "@/types/database";
 import { safeJson } from "@/lib/utils/safe-json";
 
-type Tab = "billing" | "projects" | "backfill" | "weekly-updates" | "feedback";
+type Tab = "overview" | "billing" | "projects" | "backfill" | "weekly-updates" | "feedback";
 type ProjectOption = { id: string; name: string };
 type BillingPeriodRow = {
   id: string;
@@ -25,8 +25,14 @@ type BillingPeriodRow = {
   notes: string | null;
 };
 
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 0,
+});
+
 export default function AdminPage() {
-  const [tab, setTab] = useState<Tab>("billing");
+  const [tab, setTab] = useState<Tab>("overview");
   const [periodMonth, setPeriodMonth] = useState<Date>(startOfMonth(new Date()));
   const [rows, setRows] = useState<BillingRow[]>([]);
   const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
@@ -81,7 +87,7 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (!authReady || tab !== "billing") return;
+    if (!authReady || !["overview", "billing"].includes(tab)) return;
     loadBillingData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authReady, tab, periodMonth]);
@@ -426,6 +432,7 @@ export default function AdminPage() {
         <div className="mx-auto flex max-w-screen-2xl flex-wrap gap-2 px-6 py-4">
           {(
             [
+              { id: "overview", label: "Overview" },
               { id: "billing", label: "Billing Table" },
               { id: "projects", label: "Projects" },
               { id: "backfill", label: "Billing History" },
@@ -460,6 +467,18 @@ export default function AdminPage() {
           <div className="py-16 text-center text-text-tertiary">Loading admin data...</div>
         ) : (
           <>
+        {tab === "overview" && (
+          <AdminOverview
+            rows={rows}
+            loading={loading}
+            monthLabel={monthLabel}
+            projectCount={projectOptions.length}
+            onOpenBilling={() => setTab("billing")}
+            onOpenProjects={() => setTab("projects")}
+            onOpenBackfill={() => setTab("backfill")}
+          />
+        )}
+
         {tab === "billing" && (
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3">
@@ -542,6 +561,190 @@ export default function AdminPage() {
         )}
       </main>
     </div>
+  );
+}
+
+function AdminOverview({
+  rows,
+  loading,
+  monthLabel,
+  projectCount,
+  onOpenBilling,
+  onOpenProjects,
+  onOpenBackfill,
+}: {
+  rows: BillingRow[];
+  loading: boolean;
+  monthLabel: string;
+  projectCount: number;
+  onOpenBilling: () => void;
+  onOpenProjects: () => void;
+  onOpenBackfill: () => void;
+}) {
+  const metrics = useMemo(() => {
+    const toBill = rows.reduce((sum, row) => sum + (row.to_bill ?? 0), 0);
+    const actualBilled = rows.reduce((sum, row) => sum + (row.actual_billed ?? 0), 0);
+    const backlog = rows.reduce((sum, row) => sum + (row.backlog ?? 0), 0);
+    const staleUpdates = rows.filter((row) => !row.has_recent_update);
+    const missingPm = rows.filter((row) => !row.pm_email);
+    const needsInvoice = rows.filter((row) => (row.actual_billed ?? 0) > 0 && !row.invoice_number);
+    const readyToBill = rows
+      .filter((row) => (row.to_bill ?? 0) > 0)
+      .sort((a, b) => (b.to_bill ?? 0) - (a.to_bill ?? 0))
+      .slice(0, 5);
+
+    return {
+      toBill,
+      actualBilled,
+      backlog,
+      staleUpdates,
+      missingPm,
+      needsInvoice,
+      readyToBill,
+      pocDrivenCount: rows.filter((row) => row.poc_driven).length,
+    };
+  }, [rows]);
+
+  return (
+    <div className="space-y-6">
+      <section className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium uppercase tracking-wide text-brand-primary">Admin Overview</p>
+          <h2 className="mt-1 text-3xl font-bold text-text-primary">{monthLabel}</h2>
+          <p className="mt-2 max-w-2xl text-sm text-text-secondary">
+            Current billing, project upkeep, and admin shortcuts in one place.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={onOpenBilling}
+            className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover"
+          >
+            Open Billing
+          </button>
+          <button
+            type="button"
+            onClick={onOpenProjects}
+            className="rounded-xl border border-border-default bg-surface-raised px-4 py-2 text-sm font-semibold text-text-primary transition hover:bg-surface-overlay"
+          >
+            Manage Projects
+          </button>
+        </div>
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard label="Active Billing Rows" value={loading ? "..." : rows.length.toString()} detail={`${projectCount || rows.length} projects loaded`} />
+        <MetricCard label="Projected To Bill" value={loading ? "..." : currencyFormatter.format(metrics.toBill)} detail={`${metrics.pocDrivenCount} POC-driven projects`} />
+        <MetricCard label="Actual Billed" value={loading ? "..." : currencyFormatter.format(metrics.actualBilled)} detail={`${metrics.needsInvoice.length} need invoice numbers`} />
+        <MetricCard label="Remaining Backlog" value={loading ? "..." : currencyFormatter.format(metrics.backlog)} detail="Based on current billing period" />
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr),minmax(360px,0.65fr)]">
+        <div className="rounded-2xl border border-border-default bg-surface-raised">
+          <div className="flex items-center justify-between gap-3 border-b border-border-default px-5 py-4">
+            <div>
+              <h3 className="text-lg font-semibold text-text-primary">Ready To Bill</h3>
+              <p className="text-sm text-text-secondary">Largest projected billings for the current period.</p>
+            </div>
+            <button type="button" onClick={onOpenBilling} className="text-sm font-semibold text-brand-primary hover:text-brand-hover">
+              View table
+            </button>
+          </div>
+          {loading ? (
+            <div className="px-5 py-10 text-center text-sm text-text-tertiary">Loading billing signals...</div>
+          ) : metrics.readyToBill.length ? (
+            <div className="divide-y divide-border-default">
+              {metrics.readyToBill.map((row) => (
+                <div key={row.billing_period_id} className="grid gap-3 px-5 py-4 md:grid-cols-[minmax(0,1fr),140px,110px] md:items-center">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-text-primary">{row.project_name}</p>
+                    <p className="mt-1 truncate text-xs text-text-tertiary">{row.customer_name || "No customer"} {row.pm_name ? `- ${row.pm_name}` : ""}</p>
+                  </div>
+                  <div className="text-sm font-semibold text-text-primary md:text-right">{currencyFormatter.format(row.to_bill ?? 0)}</div>
+                  <div className="text-xs text-text-secondary md:text-right">{Math.round((row.pct_complete ?? 0) * 100)}% complete</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="px-5 py-10 text-center text-sm text-text-tertiary">No projected billings for this period.</div>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <AttentionCard
+            title="Needs Attention"
+            items={[
+              { label: "No recent weekly update", value: metrics.staleUpdates.length, action: onOpenBilling },
+              { label: "Missing PM email", value: metrics.missingPm.length, action: onOpenProjects },
+              { label: "Billed without invoice #", value: metrics.needsInvoice.length, action: onOpenBackfill },
+            ]}
+          />
+          <div className="rounded-2xl border border-border-default bg-surface-raised p-5">
+            <h3 className="text-lg font-semibold text-text-primary">Admin Shortcuts</h3>
+            <div className="mt-4 grid gap-2">
+              <ShortcutLink href="/admin/users" label="User Management" />
+              <ShortcutLink href="/admin/contacts" label="Contacts" />
+              <ShortcutLink href="/admin/ops" label="Ops View" />
+              <ShortcutLink href="/admin/analytics" label="Analytics" />
+              <ShortcutLink href="/admin/migrate-sharepoint" label="SharePoint Reconcile" />
+              <ShortcutLink href="/admin/billing-import" label="Historical Billing Import" />
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function MetricCard({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <div className="rounded-2xl border border-border-default bg-surface-raised p-5">
+      <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">{label}</p>
+      <p className="mt-3 text-2xl font-bold text-text-primary">{value}</p>
+      <p className="mt-2 text-sm text-text-secondary">{detail}</p>
+    </div>
+  );
+}
+
+function AttentionCard({
+  title,
+  items,
+}: {
+  title: string;
+  items: Array<{ label: string; value: number; action: () => void }>;
+}) {
+  return (
+    <div className="rounded-2xl border border-border-default bg-surface-raised p-5">
+      <h3 className="text-lg font-semibold text-text-primary">{title}</h3>
+      <div className="mt-4 space-y-2">
+        {items.map((item) => (
+          <button
+            key={item.label}
+            type="button"
+            onClick={item.action}
+            className="flex w-full items-center justify-between gap-3 rounded-xl border border-border-default bg-surface-base px-4 py-3 text-left transition hover:bg-surface-overlay"
+          >
+            <span className="text-sm text-text-secondary">{item.label}</span>
+            <span className={["text-sm font-bold", item.value > 0 ? "text-status-warning" : "text-status-success"].join(" ")}>
+              {item.value}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ShortcutLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center justify-between rounded-xl border border-border-default bg-surface-base px-4 py-3 text-sm font-medium text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
+    >
+      <span>{label}</span>
+      <span aria-hidden="true">-&gt;</span>
+    </Link>
   );
 }
 
