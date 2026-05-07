@@ -74,15 +74,26 @@ function optionalReportRow(label: string, value: string | null | undefined) {
   if (!value?.trim()) return "";
 
   return `
-    <tr>
-      <td style="padding: 12px 0; border-top: 1px solid #d8ebe8; color: #64748b; font-size: 13px; font-weight: 700; width: 34%;">
-        ${escapeHtml(label)}
-      </td>
-      <td style="padding: 12px 0; border-top: 1px solid #d8ebe8; color: #1f2937; font-size: 14px; line-height: 1.55;">
-        ${escapeHtml(value)}
-      </td>
-    </tr>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse: collapse; margin: 0 0 14px;">
+      <tr>
+        <td style="padding: 14px 16px; border: 1px solid #d9e7e5; background: #ffffff;">
+          <div style="color: #5d6b82; font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; line-height: 1.3; text-transform: uppercase;">
+            ${escapeHtml(label)}
+          </div>
+          <div style="margin-top: 6px; color: #1f2937; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.55; text-align: left;">
+            ${formatEmailText(value)}
+          </div>
+        </td>
+      </tr>
+    </table>
   `;
+}
+
+function formatEmailText(value: string) {
+  return escapeHtml(value)
+    .replace(/\r?\n/g, "<br>")
+    .replace(/(?:^|<br>)[\s-]*-\s*/g, "<br>&bull; ")
+    .replace(/^<br>/, "");
 }
 
 function buildWeeklyReportEmail({
@@ -103,54 +114,87 @@ function buildWeeklyReportEmail({
   const percentLabel = formatPercent(update.pct_complete);
 
   const html = `
-    <div style="margin: 0; padding: 28px; background: #eef6f4; font-family: Arial, Helvetica, sans-serif; color: #1f2937;">
-      <div style="max-width: 680px; margin: 0 auto; background: #ffffff; border: 1px solid #cfe3df; border-radius: 12px; overflow: hidden;">
-        <div style="padding: 26px 32px; background: #017a6f;">
-          <p style="margin: 0; color: rgba(255,255,255,0.78); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;">
-            The Controls Company
-          </p>
-          <h1 style="margin: 6px 0 0; color: #ffffff; font-size: 24px; line-height: 1.25;">
-            Weekly Project Report
-          </h1>
+    <!doctype html>
+    <html>
+      <body style="margin: 0; padding: 0; background: #f3f6f5;">
+        <div style="display: none; max-height: 0; overflow: hidden; opacity: 0;">
+          Weekly report for ${safeProjectName}, week ending ${weekLabel}.
         </div>
-        <div style="padding: 28px 32px;">
-          <p style="margin: 0 0 6px; color: #64748b; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">
-            ${safeCustomerName}
-          </p>
-          <h2 style="margin: 0; color: #0f172a; font-size: 22px; line-height: 1.25;">
-            ${safeProjectName}
-          </h2>
-          <div style="display: table; width: 100%; margin: 22px 0; border: 1px solid #d8ebe8; border-radius: 10px; overflow: hidden;">
-            <div style="display: table-cell; width: 50%; padding: 16px; background: #f7fbfa;">
-              <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase;">Week Ending</p>
-              <p style="margin: 5px 0 0; color: #0f172a; font-size: 18px; font-weight: 700;">${weekLabel}</p>
-            </div>
-            <div style="display: table-cell; width: 50%; padding: 16px; background: #f7fbfa; border-left: 1px solid #d8ebe8;">
-              <p style="margin: 0; color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase;">Complete</p>
-              <p style="margin: 5px 0 0; color: #017a6f; font-size: 18px; font-weight: 700;">${percentLabel}</p>
-            </div>
-          </div>
-          <table role="presentation" style="width: 100%; border-collapse: collapse;">
-            ${optionalReportRow("Activity Updates", update.activity_updates)}
-            ${optionalReportRow("Material Delivered", update.material_delivered)}
-            ${optionalReportRow("Equipment Set", update.equipment_set)}
-            ${optionalReportRow("Safety Incidents", update.safety_incidents)}
-            ${optionalReportRow("Inspections & Tests", update.inspections_tests)}
-            ${optionalReportRow("Delays / Impacts", update.delays_impacts)}
-            ${optionalReportRow("Other Remarks", update.other_remarks)}
-            ${optionalReportRow("Additional Notes", update.notes)}
-            ${update.include_bom_report ? optionalReportRow("BOM Report", "Included with this weekly report.") : ""}
-          </table>
-          <a href="${safeReportUrl}"
-             style="display: inline-block; margin-top: 24px; padding: 12px 22px; background: #017a6f; color: #ffffff; border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none;">
-            Open Printable Report
-          </a>
-          <p style="margin: 22px 0 0; color: #94a3b8; font-size: 12px; line-height: 1.5;">
-            Sent from tccprojecthub@controlsco.net by TCC ProjectHub.
-          </p>
-        </div>
-      </div>
-    </div>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse: collapse; background: #f3f6f5;">
+          <tr>
+            <td align="center" style="padding: 28px 12px;">
+              <table role="presentation" width="680" cellspacing="0" cellpadding="0" border="0" style="width: 680px; border-collapse: collapse; background: #ffffff; border: 1px solid #cfdcda;">
+                <tr>
+                  <td style="padding: 20px 28px; background: #017a6f;">
+                    <div style="color: #d8f1ee; font-family: Arial, Helvetica, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; line-height: 1.3; text-transform: uppercase;">
+                      The Controls Company
+                    </div>
+                    <div style="margin-top: 5px; color: #ffffff; font-family: Arial, Helvetica, sans-serif; font-size: 26px; font-weight: 700; line-height: 1.2;">
+                      Weekly Project Report
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 24px 28px 8px;">
+                    <div style="color: #64748b; font-family: Arial, Helvetica, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; line-height: 1.3; text-transform: uppercase;">
+                      ${safeCustomerName}
+                    </div>
+                    <div style="margin-top: 6px; color: #101827; font-family: Arial, Helvetica, sans-serif; font-size: 24px; font-weight: 700; line-height: 1.25;">
+                      ${safeProjectName}
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 28px 22px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse: collapse;">
+                      <tr>
+                        <td width="50%" style="padding: 14px 16px; background: #f3faf8; border: 1px solid #d9e7e5;">
+                          <div style="color: #64748b; font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">Week Ending</div>
+                          <div style="margin-top: 6px; color: #101827; font-family: Arial, Helvetica, sans-serif; font-size: 19px; font-weight: 700; line-height: 1.25;">${weekLabel}</div>
+                        </td>
+                        <td width="50%" style="padding: 14px 16px; background: #f3faf8; border: 1px solid #d9e7e5; border-left: 0;">
+                          <div style="color: #64748b; font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">Complete</div>
+                          <div style="margin-top: 6px; color: #017a6f; font-family: Arial, Helvetica, sans-serif; font-size: 19px; font-weight: 700; line-height: 1.25;">${percentLabel}</div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 0 28px 10px;">
+                    ${optionalReportRow("Activity Updates", update.activity_updates)}
+                    ${optionalReportRow("Material Delivered", update.material_delivered)}
+                    ${optionalReportRow("Equipment Set", update.equipment_set)}
+                    ${optionalReportRow("Safety Incidents", update.safety_incidents)}
+                    ${optionalReportRow("Inspections & Tests", update.inspections_tests)}
+                    ${optionalReportRow("Delays / Impacts", update.delays_impacts)}
+                    ${optionalReportRow("Other Remarks", update.other_remarks)}
+                    ${optionalReportRow("Additional Notes", update.notes)}
+                    ${update.include_bom_report ? optionalReportRow("BOM Report", "Included with this weekly report.") : ""}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 28px 28px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="border-collapse: collapse;">
+                      <tr>
+                        <td bgcolor="#017a6f" style="background: #017a6f; padding: 12px 18px;">
+                          <a href="${safeReportUrl}" style="color: #ffffff; display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: 14px; font-weight: 700; line-height: 1.2; text-decoration: none;">
+                            Open Printable Report
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                    <div style="margin-top: 20px; color: #8a98ab; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 1.5;">
+                      Sent from tccprojecthub@controlsco.net by TCC ProjectHub.
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
   `;
 
   const text = [
