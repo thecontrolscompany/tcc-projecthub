@@ -105,7 +105,7 @@ export function TimeReconcileUsersPanel({ snapshot }: { snapshot: TimeReconcileS
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Unmatched QB Users</p>
             <h2 className="mt-2 text-xl font-semibold text-text-primary">Create or map ProjectHub users</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
-              Search for the QuickBooks employee, then use Create and map when they do not already exist in ProjectHub.
+              Search for the QuickBooks employee, then use Create ProjectHub user when they do not already exist in ProjectHub.
             </p>
           </div>
           <label className="min-w-0 lg:w-80">
@@ -153,6 +153,52 @@ export function TimeReconcileUsersPanel({ snapshot }: { snapshot: TimeReconcileS
 
                     <div className="grid flex-1 gap-4 xl:grid-cols-[1.2fr_0.8fr]">
                       <div className="space-y-3">
+                        <div className="rounded-2xl border-2 border-brand-primary/40 bg-brand-primary/5 p-4">
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">
+                            New ProjectHub user
+                          </p>
+                          <p className="mt-1 text-sm text-text-secondary">
+                            Use this when the QuickBooks employee is not in ProjectHub yet.
+                          </p>
+                          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                            <select
+                              value={rolePick}
+                              onChange={(e) =>
+                                setRolePicks((current) => ({
+                                  ...current,
+                                  [user.qbUserId]: e.target.value as UserRole,
+                                }))
+                              }
+                              className="flex-1 rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary"
+                              aria-label={`ProjectHub role for ${user.displayName}`}
+                            >
+                              <option value="installer">installer</option>
+                              <option value="lead">lead</option>
+                              <option value="pm">pm</option>
+                              <option value="ops_manager">ops_manager</option>
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                runAction(
+                                  user.qbUserId,
+                                  { action: "create_projecthub_user", role: rolePick },
+                                  "create"
+                                )
+                              }
+                              disabled={!user.email || Boolean(pendingState)}
+                              className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-brand-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {pendingState === "create" ? "Creating..." : "Create ProjectHub user"}
+                            </button>
+                          </div>
+                          {!user.email && (
+                            <p className="mt-2 text-xs text-amber-700">
+                              Add an email to the QuickBooks user before creating a ProjectHub account.
+                            </p>
+                          )}
+                        </div>
+
                         <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-tertiary">
                             Suggested matches
@@ -203,51 +249,6 @@ export function TimeReconcileUsersPanel({ snapshot }: { snapshot: TimeReconcileS
                               ))
                             )}
                           </div>
-                        </div>
-
-                        <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-tertiary">
-                            Create ProjectHub user
-                          </p>
-                          <p className="mt-1 text-sm text-text-secondary">
-                            Use this when the QuickBooks employee is not in the directory yet.
-                          </p>
-                          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                            <select
-                              value={rolePick}
-                              onChange={(e) =>
-                                setRolePicks((current) => ({
-                                  ...current,
-                                  [user.qbUserId]: e.target.value as UserRole,
-                                }))
-                              }
-                              className="flex-1 rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary"
-                            >
-                              <option value="installer">installer</option>
-                              <option value="lead">lead</option>
-                              <option value="pm">pm</option>
-                              <option value="ops_manager">ops_manager</option>
-                            </select>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                runAction(
-                                  user.qbUserId,
-                                  { action: "create_projecthub_user", role: rolePick },
-                                  "create"
-                                )
-                              }
-                              disabled={!user.email || Boolean(pendingState)}
-                              className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                              {pendingState === "create" ? "Creating..." : "Create and map"}
-                            </button>
-                          </div>
-                          {!user.email && (
-                            <p className="mt-2 text-xs text-amber-700">
-                              Add an email to the QuickBooks user before creating a ProjectHub account.
-                            </p>
-                          )}
                         </div>
 
                         <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
