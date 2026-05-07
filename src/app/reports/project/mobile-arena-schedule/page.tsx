@@ -193,6 +193,10 @@ export default async function MobileArenaScheduleReportPage({ searchParams }: Pa
   return (
     <html lang="en">
       <body>
+        <style>{`
+          :root { color-scheme: light; }
+          body { color: #111827; background: #fff; }
+        `}</style>
         <PrintButton documentTitle={packet.title} />
         <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
       </body>
