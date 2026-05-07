@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { logUserActivity, requestIp } from "@/lib/auth/activity";
 
 const setUserPasswordSchema = z.object({
   userId: z.string().uuid("User ID is required."),
@@ -46,6 +47,16 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
+
+  await logUserActivity(adminClient, {
+    profileId: userId,
+    email: updatedUser.user?.email ?? null,
+    eventType: "password_changed",
+    actorProfileId: user.id,
+    ipAddress: requestIp(request),
+    userAgent: request.headers.get("user-agent"),
+    metadata: { source: "admin_set_password" },
+  });
 
   return NextResponse.json({ success: true, userId: updatedUser.user?.id ?? userId });
 }

@@ -27,9 +27,11 @@ export default function LoginPage() {
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
+      await logAuthActivity("login_failed", email, { message: error.message });
       setError(error.message);
       setLoading(false);
     } else {
+      await logAuthActivity("login_success", email, { method: "password" });
       router.refresh();
     }
   }
@@ -60,6 +62,7 @@ export default function LoginPage() {
     if (error) {
       setError(error.message);
     } else {
+      await logAuthActivity("password_reset_requested", email, { source: "login" });
       setResetSent(true);
     }
     setLoading(false);
@@ -210,6 +213,14 @@ export default function LoginPage() {
       </div>
     </main>
   );
+}
+
+async function logAuthActivity(eventType: string, email: string, metadata?: Record<string, unknown>) {
+  await fetch("/api/auth/activity", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ eventType, email, metadata }),
+  }).catch(() => null);
 }
 
 function MicrosoftIcon() {

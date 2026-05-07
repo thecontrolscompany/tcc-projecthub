@@ -474,7 +474,65 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ users: data ?? [] });
+    const { data: events, error: eventsError } = await adminClient
+      .from("user_activity_events")
+      .select("profile_id, email, event_type, created_at, metadata")
+      .order("created_at", { ascending: false })
+      .limit(2000);
+
+    if (eventsError && eventsError.code !== "42P01") {
+      return NextResponse.json({ error: eventsError.message }, { status: 500 });
+    }
+
+    const statsByProfile = new Map<string, {
+      last_login_at: string | null;
+      last_password_changed_at: string | null;
+      last_password_reset_requested_at: string | null;
+      failed_login_count: number;
+      last_activity_at: string | null;
+      recent_events: Array<{ event_type: string; created_at: string; metadata: unknown }>;
+    }>();
+
+    function getStats(profileId: string) {
+      if (!statsByProfile.has(profileId)) {
+        statsByProfile.set(profileId, {
+          last_login_at: null,
+          last_password_changed_at: null,
+          last_password_reset_requested_at: null,
+          failed_login_count: 0,
+          last_activity_at: null,
+          recent_events: [],
+        });
+      }
+      return statsByProfile.get(profileId)!;
+    }
+
+    const profileIdByEmail = new Map((data ?? []).map((profile) => [profile.email.toLowerCase(), profile.id]));
+
+    for (const event of events ?? []) {
+      const profileId = event.profile_id ?? (event.email ? profileIdByEmail.get(event.email.toLowerCase()) : null);
+      if (!profileId) continue;
+
+      const stats = getStats(profileId);
+      stats.last_activity_at ??= event.created_at;
+      if (stats.recent_events.length < 5) {
+        stats.recent_events.push({
+          event_type: event.event_type,
+          created_at: event.created_at,
+          metadata: event.metadata,
+        });
+      }
+      if (event.event_type === "login_success") stats.last_login_at ??= event.created_at;
+      if (event.event_type === "password_changed") stats.last_password_changed_at ??= event.created_at;
+      if (event.event_type === "password_reset_requested") stats.last_password_reset_requested_at ??= event.created_at;
+      if (event.event_type === "login_failed") stats.failed_login_count += 1;
+    }
+
+    return NextResponse.json({
+      users: data ?? [],
+      activityStats: Object.fromEntries(statsByProfile),
+      activityUnavailable: Boolean(eventsError && eventsError.code === "42P01"),
+    });
   }
 
   if (section === "analytics") {
@@ -715,9 +773,15 @@ export async function GET(request: Request) {
       };
     });
 
+    const availableContacts = [...directoryContacts, ...crmContacts].sort((a, b) => {
+      const aName = ("display_name" in a && a.display_name) || [a.first_name, a.last_name].filter(Boolean).join(" ").trim() || a.email;
+      const bName = ("display_name" in b && b.display_name) || [b.first_name, b.last_name].filter(Boolean).join(" ").trim() || b.email;
+      return aName.localeCompare(bName);
+    });
+
     return NextResponse.json({
       contacts: contactResult.data ?? [],
-      availableContacts: [...directoryContacts, ...crmContacts],
+      availableContacts,
     });
   }
 

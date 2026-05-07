@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
+import { logUserActivity, requestIp } from "@/lib/auth/activity";
 
 type PortalContactSource = {
   email: string;
@@ -238,6 +239,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: contactError?.message ?? "Failed to load created contact." }, { status: 500 });
   }
 
+  if (portalProfile.createdAccountEmail) {
+    await logUserActivity(adminClient, {
+      profileId: portalProfile.profileId,
+      email: portalProfile.createdAccountEmail,
+      eventType: "portal_user_created",
+      projectId,
+      actorProfileId: user.id,
+      ipAddress: requestIp(request),
+      userAgent: request.headers.get("user-agent"),
+      metadata: { source: crmContactId ? "crm_contact" : "directory_contact" },
+    });
+  }
+
   return NextResponse.json({ contact, createdAccountEmail: portalProfile.createdAccountEmail });
 }
 
@@ -325,6 +339,24 @@ export async function PATCH(request: Request) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (field === "portal_access") {
+    const { data: profile } = await adminClient
+      .from("profiles")
+      .select("email")
+      .eq("id", profileId)
+      .maybeSingle();
+
+    await logUserActivity(adminClient, {
+      profileId,
+      email: profile?.email ?? null,
+      eventType: value ? "portal_access_enabled" : "portal_access_disabled",
+      projectId,
+      actorProfileId: user.id,
+      ipAddress: requestIp(request),
+      userAgent: request.headers.get("user-agent"),
+    });
   }
 
   return NextResponse.json({ ok: true });

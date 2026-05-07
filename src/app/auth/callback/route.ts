@@ -4,6 +4,7 @@ import { roleHome } from "@/lib/auth/role-routes";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import type { UserRole } from "@/types/database";
 import { ensureResolvedProfile } from "@/lib/auth/resolve-user-role";
+import { logUserActivity, requestIp } from "@/lib/auth/activity";
 
 const INTERNAL_CONTACT_ROLES = new Set(["pm", "lead", "installer", "ops_manager"]);
 export async function GET(request: Request) {
@@ -70,6 +71,15 @@ export async function GET(request: Request) {
             effectiveRole = pmDirectory.intended_role as UserRole;
           }
         }
+
+        await logUserActivity(adminClient, {
+          profileId: user.id,
+          email: normalizedEmail || user.email,
+          eventType: "login_success",
+          ipAddress: requestIp(request),
+          userAgent: request.headers.get("user-agent"),
+          metadata: { method: "microsoft" },
+        });
 
         return NextResponse.redirect(`${origin}${roleHome(effectiveRole)}`);
       }

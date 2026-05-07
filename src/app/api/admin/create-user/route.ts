@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { logUserActivity, requestIp } from "@/lib/auth/activity";
 
 const createUserSchema = z.object({
   email: z.email("Email must be a valid email address."),
@@ -121,6 +122,16 @@ export async function POST(request: Request) {
       .update({ pm_directory_id: pmdId })
       .eq("id", userId)
       .is("pm_directory_id", null);
+
+    await logUserActivity(adminClient, {
+      profileId: userId,
+      email,
+      eventType: "portal_user_created",
+      actorProfileId: user.id,
+      ipAddress: requestIp(request),
+      userAgent: request.headers.get("user-agent"),
+      metadata: { source: "admin_create_user", role },
+    });
   }
 
   return NextResponse.json({ success: true, userId: newUser.user?.id });

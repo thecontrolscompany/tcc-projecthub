@@ -4,8 +4,19 @@ import { useEffect, useState } from "react";
 import type { Profile, UserRole } from "@/types/database";
 import { safeJson } from "@/lib/utils/safe-json";
 
+type UserActivityStats = {
+  last_login_at: string | null;
+  last_password_changed_at: string | null;
+  last_password_reset_requested_at: string | null;
+  failed_login_count: number;
+  last_activity_at: string | null;
+  recent_events: Array<{ event_type: string; created_at: string; metadata: unknown }>;
+};
+
 export function AdminUsersPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [activityStats, setActivityStats] = useState<Record<string, UserActivityStats>>({});
+  const [activityUnavailable, setActivityUnavailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -23,7 +34,11 @@ export function AdminUsersPage() {
     });
     const json = await safeJson(response);
     if (!response.ok) setLoadError(json?.error ?? "Failed to load users.");
-    if (response.ok) setProfiles((json?.users as Profile[]) ?? []);
+    if (response.ok) {
+      setProfiles((json?.users as Profile[]) ?? []);
+      setActivityStats((json?.activityStats as Record<string, UserActivityStats>) ?? {});
+      setActivityUnavailable(Boolean(json?.activityUnavailable));
+    }
     setLoading(false);
   }
 
@@ -101,61 +116,106 @@ export function AdminUsersPage() {
         <div className="rounded-xl bg-status-success/10 px-4 py-3 text-sm text-status-success">{statusMessage}</div>
       )}
 
+      {activityUnavailable && (
+        <div className="rounded-xl bg-status-warning/10 px-4 py-3 text-sm text-status-warning">
+          User activity tracking is not available until the latest database migration has been applied.
+        </div>
+      )}
+
       {loading ? (
         <div className="py-10 text-center text-text-tertiary">Loading...</div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-border-default">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border-default bg-surface-raised">
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Email</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Name</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Role</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Change Role</th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Password</th>
-              </tr>
-            </thead>
-            <tbody>
-              {profiles.map((p) => (
-                <tr key={p.id} className="border-b border-border-default hover:bg-surface-raised">
-                  <td className="px-4 py-2.5 text-text-secondary">{p.email}</td>
-                  <td className="px-4 py-2.5 text-text-primary">{p.full_name ?? "-"}</td>
-                  <td className="px-4 py-2.5">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${roleBadge(p.role)}`}>
-                      {p.role}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <select
-                      defaultValue={p.role}
-                      onChange={(e) => handleUpdateRole(p.id, e.target.value as UserRole)}
-                      className="rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-xs text-text-primary focus:border-brand-primary focus:outline-none"
-                    >
-                      <option value="admin">admin</option>
-                      <option value="pm">pm</option>
-                      <option value="lead">lead</option>
-                      <option value="installer">installer</option>
-                      <option value="ops_manager">ops_manager</option>
-                      <option value="customer">customer</option>
-                    </select>
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <button
-                      type="button"
-                      onClick={() => setPasswordUser(p)}
-                      className="rounded-lg bg-surface-overlay px-3 py-1 text-xs font-medium text-text-primary hover:bg-surface-overlay/80"
-                    >
-                      Set Password
-                    </button>
-                  </td>
+        <div className="space-y-6">
+          <section className="grid gap-3 md:grid-cols-4">
+            <StatCard label="Users" value={String(profiles.length)} />
+            <StatCard label="Logged in" value={String(profiles.filter((p) => activityStats[p.id]?.last_login_at).length)} />
+            <StatCard label="Passwords changed" value={String(profiles.filter((p) => activityStats[p.id]?.last_password_changed_at).length)} />
+            <StatCard label="Failed logins" value={String(Object.values(activityStats).reduce((sum, stats) => sum + stats.failed_login_count, 0))} />
+          </section>
+
+          <div className="overflow-x-auto rounded-2xl border border-border-default">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border-default bg-surface-raised">
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Email</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Name</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Role</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Last Login</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Password Changed</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Failed</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Change Role</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Password</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {profiles.map((p) => {
+                  const stats = activityStats[p.id];
+                  return (
+                    <tr key={p.id} className="border-b border-border-default hover:bg-surface-raised">
+                      <td className="px-4 py-2.5 text-text-secondary">{p.email}</td>
+                      <td className="px-4 py-2.5 text-text-primary">{p.full_name ?? "-"}</td>
+                      <td className="px-4 py-2.5">
+                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${roleBadge(p.role)}`}>
+                          {p.role}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-text-secondary">{formatActivityDate(stats?.last_login_at)}</td>
+                      <td className="px-4 py-2.5 text-text-secondary">{formatActivityDate(stats?.last_password_changed_at)}</td>
+                      <td className="px-4 py-2.5 text-text-secondary">{stats?.failed_login_count ?? 0}</td>
+                      <td className="px-4 py-2.5">
+                        <select
+                          defaultValue={p.role}
+                          onChange={(e) => handleUpdateRole(p.id, e.target.value as UserRole)}
+                          className="rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-xs text-text-primary focus:border-brand-primary focus:outline-none"
+                        >
+                          <option value="admin">admin</option>
+                          <option value="pm">pm</option>
+                          <option value="lead">lead</option>
+                          <option value="installer">installer</option>
+                          <option value="ops_manager">ops_manager</option>
+                          <option value="customer">customer</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <button
+                          type="button"
+                          onClick={() => setPasswordUser(p)}
+                          className="rounded-lg bg-surface-overlay px-3 py-1 text-xs font-medium text-text-primary hover:bg-surface-overlay/80"
+                        >
+                          Set Password
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
   );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-text-primary">{value}</p>
+    </div>
+  );
+}
+
+function formatActivityDate(value: string | null | undefined) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function SetPasswordForm({

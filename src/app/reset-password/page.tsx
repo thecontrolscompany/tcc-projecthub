@@ -69,6 +69,12 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    await fetch("/api/auth/activity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventType: "password_changed", metadata: { source: "reset_password" } }),
+    }).catch(() => null);
+
     setMessage("Password updated. Redirecting to sign in...");
     setLoading(false);
     window.setTimeout(() => {
