@@ -1268,8 +1268,8 @@ function ProjectDetail({
 
         <div
           className={[
-            "pointer-events-auto w-full max-w-md overflow-hidden rounded-3xl border bg-white shadow-[0_20px_50px_rgba(1,122,111,0.18)] transition-all duration-300",
-            showFeedback ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0",
+            "w-full max-w-md overflow-hidden rounded-3xl border bg-white shadow-[0_20px_50px_rgba(1,122,111,0.18)] transition-all duration-300",
+            showFeedback ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0",
           ].join(" ")}
           style={{ borderColor: BORDER }}
         >
@@ -2023,6 +2023,11 @@ function SignOutButton() {
   return (
     <button
       onClick={async () => {
+        await fetch("/api/auth/activity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ eventType: "logout", metadata: { source: "customer_portal" } }),
+        }).catch(() => null);
         await supabase.auth.signOut();
         window.location.href = "/login";
       }}
