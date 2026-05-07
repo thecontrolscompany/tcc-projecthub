@@ -145,6 +145,17 @@ function buildWeeklyReportEmail({
                   </td>
                 </tr>
                 <tr>
+                  <td style="padding: 4px 28px 8px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse: collapse;">
+                      <tr>
+                        <td style="padding: 12px 14px; background: #f8fafc; border: 1px solid #d9e2ea; color: #475569; font-family: Arial, Helvetica, sans-serif; font-size: 13px; line-height: 1.45;">
+                          This report is sent from an unmonitored mailbox. Please contact your TCC Project Manager with any questions or concerns.
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
                   <td style="padding: 12px 28px 22px;">
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse: collapse;">
                       <tr>
