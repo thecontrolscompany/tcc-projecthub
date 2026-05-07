@@ -54,6 +54,18 @@ async function canAccessProject(
     return true;
   }
 
+  if (role === "customer") {
+    const { data } = await supabase
+      .from("project_customer_contacts")
+      .select("id")
+      .eq("project_id", projectId)
+      .eq("profile_id", userId)
+      .eq("portal_access", true)
+      .limit(1)
+      .maybeSingle();
+    return Boolean(data);
+  }
+
   const { data } = await supabase
     .from("project_assignments")
     .select("id")
@@ -85,14 +97,14 @@ export default async function MobileArenaScheduleReportPage({ searchParams }: Pa
 
   const resolvedProfile = await resolveUserRole(user);
   const role = resolvedProfile?.role ?? "customer";
-  if (!["admin", "ops_manager", "pm", "lead"].includes(role)) {
+  if (!["admin", "ops_manager", "pm", "lead", "customer"].includes(role)) {
     redirect("/login");
   }
 
   const admin = adminClient();
   const allowed = await canAccessProject(admin, role, user.id, projectId);
   if (!allowed) {
-    redirect("/pm");
+    redirect(role === "customer" ? "/customer" : "/pm");
   }
 
   if (!packetDate) {

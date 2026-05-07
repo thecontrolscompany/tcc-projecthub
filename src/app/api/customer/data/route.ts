@@ -63,7 +63,7 @@ export async function GET(request: Request) {
       });
     }
 
-    const [projectsResult, billingResult, updatesResult, assignmentsResult, changeOrdersResult, photosResult] = await Promise.all([
+    const [projectsResult, billingResult, updatesResult, assignmentsResult, changeOrdersResult, photosResult, packetsResult] = await Promise.all([
       adminClient
         .from("projects")
         .select("id, name, estimated_income, job_number, site_address, general_contractor, start_date, scheduled_completion, scope_description, customer_poc, customer:customers(name)")
@@ -128,6 +128,12 @@ export async function GET(request: Request) {
         .from("project_photos")
         .select("project_id")
         .in("project_id", projectIds),
+      adminClient
+        .from("project_report_packets")
+        .select("id, project_id, packet_date, title")
+        .in("project_id", projectIds)
+        .eq("report_type", "mobile_arena_schedule_review")
+        .order("packet_date", { ascending: false }),
     ]);
 
     const readError =
@@ -136,7 +142,8 @@ export async function GET(request: Request) {
       updatesResult.error ||
       assignmentsResult.error ||
       changeOrdersResult.error ||
-      photosResult.error;
+      photosResult.error ||
+      packetsResult.error;
 
     if (readError) {
       return NextResponse.json({ error: readError.message }, { status: 500 });
@@ -152,6 +159,7 @@ export async function GET(request: Request) {
         acc[row.project_id] = (acc[row.project_id] ?? 0) + 1;
         return acc;
       }, {}),
+      scheduleReviewPackets: packetsResult.data ?? [],
     });
   }
 

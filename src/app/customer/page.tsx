@@ -56,6 +56,7 @@ interface CustomerProject {
   team_members: ProjectTeamMember[];
   change_orders: CustomerChangeOrder[];
   photo_count: number;
+  schedule_review_packets: Array<{ id: string; packet_date: string; title: string }>;
 }
 
 type ProjectTeamMember = {
@@ -177,6 +178,7 @@ export default function CustomerPage() {
       const assignments = (json?.assignments ?? []) as Array<ProjectTeamMember & { project_id: string }>;
       const changeOrders = (json?.changeOrders ?? []) as CustomerChangeOrder[];
       const photosByProject = (json?.photosByProject ?? {}) as Record<string, number>;
+      const schedulePackets = (json?.scheduleReviewPackets ?? []) as Array<{ id: string; project_id: string; packet_date: string; title: string }>;
 
       if (!projectData?.length) {
         setProjects([]);
@@ -203,6 +205,7 @@ export default function CustomerPage() {
           team_members: assignments.filter((assignment) => assignment.project_id === project.id),
           change_orders: changeOrders.filter((co) => co.project_id === project.id),
           photo_count: photosByProject[project.id] ?? 0,
+          schedule_review_packets: schedulePackets.filter((p) => p.project_id === project.id),
         };
       });
 
@@ -669,7 +672,7 @@ function ProjectDetail({
   userId: string;
   onBack: () => void;
 }) {
-  const [view, setView] = useState<"updates" | "billing" | "bom">("updates");
+  const [view, setView] = useState<"updates" | "billing" | "bom" | "schedule-reviews">("updates");
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackSaving, setFeedbackSaving] = useState(false);
@@ -1123,6 +1126,19 @@ function ProjectDetail({
             {tab === "updates" ? "Weekly Updates" : tab === "billing" ? "Billing History" : "Materials"}
           </button>
         ))}
+        {project.schedule_review_packets.length > 0 && (
+          <button
+            onClick={() => setView("schedule-reviews")}
+            className="rounded-full px-4 py-2 text-sm font-semibold transition"
+            style={
+              view === "schedule-reviews"
+                ? { backgroundColor: HEADER_BG, color: "#ffffff" }
+                : { backgroundColor: "#ffffff", color: "#475569", border: `1px solid ${BORDER}` }
+            }
+          >
+            Schedule Reviews
+          </button>
+        )}
       </div>
 
       <section className={view === "updates" ? "block print:block" : "hidden print:block"}>
@@ -1209,6 +1225,39 @@ function ProjectDetail({
           </div>
         </div>
       </section>
+
+      {project.schedule_review_packets.length > 0 && (
+        <section className={view === "schedule-reviews" ? "block" : "hidden"}>
+          <div className="customer-print-card rounded-3xl border bg-white shadow-sm" style={{ borderColor: BORDER }}>
+            <div className="px-6 pt-5 pb-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: HEADER_BG }}>
+                Schedule Impact Reviews
+              </p>
+              <p className="mt-0.5 text-sm text-slate-500">
+                Schedule analysis reports comparing predecessor activity dates, work windows, and access conditions.
+              </p>
+            </div>
+            <div className="divide-y divide-slate-100">
+              {project.schedule_review_packets.map((packet) => (
+                <a
+                  key={packet.id}
+                  href={`/reports/project/mobile-arena-schedule?projectId=${encodeURIComponent(project.id)}&packetDate=${encodeURIComponent(packet.packet_date)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between px-6 py-4 text-sm transition hover:bg-slate-50"
+                >
+                  <span className="font-medium text-slate-800">
+                    {format(new Date(packet.packet_date + "T00:00:00"), "MMMM d, yyyy")}
+                  </span>
+                  <span className="text-xs font-semibold" style={{ color: HEADER_BG }}>
+                    View Report →
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="customer-print-hide fixed bottom-6 right-6 z-30 flex flex-col items-end gap-3">
         {feedbackStatus && (
