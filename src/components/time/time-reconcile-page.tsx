@@ -5,7 +5,7 @@ import { startTransition, useState } from "react";
 import type { TimeReconcileSnapshot } from "@/lib/time/data";
 import type { UserRole } from "@/types/database";
 
-type PendingState = Record<number, "map" | "create" | "ignore" | undefined>;
+type PendingState = Record<number, "map" | "create" | "ignore" | "restore" | undefined>;
 type ManualPickState = Record<number, string | undefined>;
 type RolePickState = Record<number, UserRole | undefined>;
 
@@ -43,14 +43,23 @@ export function TimeReconcileUsersPanel({ snapshot }: { snapshot: TimeReconcileS
           .includes(normalizedQuery)
       )
     : snapshot.users;
+  const visibleIgnoredUsers = normalizedQuery
+    ? snapshot.ignoredUsers.filter((user) =>
+        [user.displayName, user.email, user.username, String(user.qbUserId)]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedQuery)
+      )
+    : snapshot.ignoredUsers;
 
   async function runAction(
     qbUserId: number,
     payload:
       | { action: "map_existing_profile"; pmDirectoryId: string }
       | { action: "create_projecthub_user"; role: UserRole }
-      | { action: "ignore_user" },
-    pendingState: "map" | "create" | "ignore"
+      | { action: "ignore_user" }
+      | { action: "restore_ignored_user" },
+    pendingState: "map" | "create" | "ignore" | "restore"
   ) {
     setPending((current) => ({ ...current, [qbUserId]: pendingState }));
     setErrors((current) => ({ ...current, [qbUserId]: "" }));
@@ -76,6 +85,8 @@ export function TimeReconcileUsersPanel({ snapshot }: { snapshot: TimeReconcileS
             ? "Ignored for now."
             : payload.action === "create_projecthub_user"
               ? "ProjectHub user created and mapped."
+              : payload.action === "restore_ignored_user"
+                ? "Restored to matching queue."
               : "Mapping saved."
       }));
       startTransition(() => {
@@ -96,7 +107,7 @@ export function TimeReconcileUsersPanel({ snapshot }: { snapshot: TimeReconcileS
       <div className="grid gap-4 md:grid-cols-3">
         <MetricCard label="Unmatched users" value={String(snapshot.users.length)} />
         <MetricCard label="Mapped already" value={String(snapshot.mappedCount)} />
-        <MetricCard label="Ignored for now" value={String(snapshot.ignoredCount)} />
+        <MetricCard label="Ignored users" value={String(snapshot.ignoredCount)} />
       </div>
 
       <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
@@ -327,6 +338,71 @@ export function TimeReconcileUsersPanel({ snapshot }: { snapshot: TimeReconcileS
           )}
         </div>
       </section>
+
+      {snapshot.ignoredUsers.length > 0 && (
+        <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Ignored QB Users</p>
+              <h2 className="mt-2 text-xl font-semibold text-text-primary">Restore rehires to the matching queue</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
+                Ignored users are hidden from matching. Restore them when someone comes back or needs ProjectHub access later.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {visibleIgnoredUsers.length === 0 ? (
+              <div className="rounded-2xl border border-border-default bg-surface-overlay px-4 py-5 text-sm text-text-secondary">
+                No ignored QuickBooks users match this search.
+              </div>
+            ) : (
+              visibleIgnoredUsers.map((user) => {
+                const pendingState = pending[user.qbUserId];
+
+                return (
+                  <article key={user.qbUserId} className="rounded-2xl border border-border-default bg-surface-overlay p-4">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-lg font-semibold text-text-primary">{user.displayName}</h3>
+                          <StateChip label={user.active ? "active" : "inactive"} tone={user.active ? "success" : "warn"} />
+                        </div>
+                        <p className="text-sm text-text-secondary">{user.email || "No email on QuickBooks record"}</p>
+                        <div className="flex flex-wrap gap-4 text-sm text-text-secondary">
+                          <span>QB ID: {user.qbUserId}</span>
+                          {user.username && <span>Username: {user.username}</span>}
+                          {user.payrollId && <span>Payroll: {user.payrollId}</span>}
+                          <span>Ignored: {formatDateTime(user.ignoredAt)}</span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => runAction(user.qbUserId, { action: "restore_ignored_user" }, "restore")}
+                        disabled={Boolean(pendingState)}
+                        className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse hover:bg-brand-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {pendingState === "restore" ? "Restoring..." : "Restore to matching queue"}
+                      </button>
+                    </div>
+
+                    {messages[user.qbUserId] && (
+                      <p className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                        {messages[user.qbUserId]}
+                      </p>
+                    )}
+                    {errors[user.qbUserId] && (
+                      <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900">
+                        {errors[user.qbUserId]}
+                      </p>
+                    )}
+                  </article>
+                );
+              })
+            )}
+          </div>
+        </section>
+      )}
     </>
   );
 }
@@ -347,4 +423,17 @@ function StateChip({ label, tone }: { label: string; tone: "success" | "warn" })
       {label}
     </span>
   );
+}
+
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return "Unknown";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  }).format(new Date(value));
 }

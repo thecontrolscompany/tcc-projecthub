@@ -77,6 +77,16 @@ export interface TimeReconcileUser {
   suggestions: TimeReconcileCandidate[];
 }
 
+export interface TimeIgnoredReconcileUser {
+  qbUserId: number;
+  displayName: string;
+  email: string;
+  username: string;
+  payrollId: string;
+  active: boolean;
+  ignoredAt: string | null;
+}
+
 export interface TimeReconcileProfile {
   id: string;
   fullName: string;
@@ -88,6 +98,7 @@ export interface TimeReconcileProfile {
 
 export interface TimeReconcileSnapshot {
   users: TimeReconcileUser[];
+  ignoredUsers: TimeIgnoredReconcileUser[];
   eligibleProfiles: TimeReconcileProfile[];
   ignoredCount: number;
   mappedCount: number;
@@ -120,6 +131,8 @@ type QbJobcodeRow = {
 type PortalReviewStateRow = {
   qb_user_id: number;
   status: "ignored";
+  created_at?: string | null;
+  updated_at?: string | null;
 };
 
 type PortalJobcodeReviewStateRow = {
@@ -494,7 +507,7 @@ async function loadPortalReconcileSnapshot() {
       .order("first_name"),
     supabase
       .from("qb_time_user_review_states")
-      .select("qb_user_id, status"),
+      .select("qb_user_id, status, created_at, updated_at"),
   ]);
 
   if (qbUsersResult.error) throw qbUsersResult.error;
@@ -514,6 +527,11 @@ async function loadPortalReconcileSnapshot() {
     ((reviewStatesResult.data ?? []) as PortalReviewStateRow[])
       .filter((s) => s.status === "ignored")
       .map((s) => s.qb_user_id)
+  );
+  const ignoredStateByQbUserId = new Map(
+    ((reviewStatesResult.data ?? []) as PortalReviewStateRow[])
+      .filter((s) => s.status === "ignored")
+      .map((s) => [s.qb_user_id, s])
   );
 
   const allPmd = ((pmdResult.data ?? []) as PmdCandidateRow[]).map((entry) => {
@@ -536,11 +554,11 @@ async function loadPortalReconcileSnapshot() {
     (p) => !p.profileId || !mappedProfileIds.has(p.profileId)
   );
 
-  const users = (
-    (qbUsersResult.data ?? []) as Array<
-      Pick<QbUserRow, "qb_user_id" | "display_name" | "email" | "username" | "payroll_id" | "active">
-    >
-  )
+  const qbUsers = (qbUsersResult.data ?? []) as Array<
+    Pick<QbUserRow, "qb_user_id" | "display_name" | "email" | "username" | "payroll_id" | "active">
+  >;
+
+  const users = qbUsers
     .filter(
       (u) =>
         !mappedQbUserIds.has(u.qb_user_id) &&
@@ -561,8 +579,25 @@ async function loadPortalReconcileSnapshot() {
     }))
     .sort((a, b) => a.displayName.localeCompare(b.displayName));
 
+  const ignoredUsers = qbUsers
+    .filter((u) => ignoredQbUserIds.has(u.qb_user_id) && !mappedQbUserIds.has(u.qb_user_id))
+    .map((user) => {
+      const ignoredState = ignoredStateByQbUserId.get(user.qb_user_id);
+      return {
+        qbUserId: user.qb_user_id,
+        displayName: user.display_name,
+        email: user.email ?? "",
+        username: user.username ?? "",
+        payrollId: user.payroll_id ?? "",
+        active: user.active,
+        ignoredAt: ignoredState?.updated_at ?? ignoredState?.created_at ?? null,
+      };
+    })
+    .sort((a, b) => a.displayName.localeCompare(b.displayName));
+
   return {
     users,
+    ignoredUsers,
     eligibleProfiles: eligiblePmd.map((p) => ({
       id: p.id,
       fullName: p.fullName,

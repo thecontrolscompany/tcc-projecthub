@@ -18,6 +18,10 @@ const requestSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("ignore_user"),
     qbUserId: z.number().int().positive()
+  }),
+  z.object({
+    action: z.literal("restore_ignored_user"),
+    qbUserId: z.number().int().positive()
   })
 ]);
 
@@ -255,6 +259,25 @@ export async function POST(request: Request) {
       if (upsertError) throw upsertError;
 
       await client.from("qb_time_user_review_states").delete().eq("qb_user_id", qbUserId);
+
+      return NextResponse.json({ success: true });
+    }
+
+    if (parsed.data.action === "restore_ignored_user") {
+      const { qbUserId } = parsed.data;
+
+      const { data: qbUser, error: qbUserError } = await client
+        .from("qb_time_users")
+        .select("qb_user_id")
+        .eq("qb_user_id", qbUserId)
+        .maybeSingle();
+
+      if (qbUserError) throw qbUserError;
+      if (!qbUser) return NextResponse.json({ error: "QuickBooks user not found." }, { status: 404 });
+
+      const { error } = await client.from("qb_time_user_review_states").delete().eq("qb_user_id", qbUserId);
+
+      if (error) throw error;
 
       return NextResponse.json({ success: true });
     }
