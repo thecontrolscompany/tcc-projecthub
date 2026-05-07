@@ -347,6 +347,7 @@ function UpdateForm({
   const [otherRemarks, setOtherRemarks] = useState("");
   const [includeBomReport, setIncludeBomReport] = useState(false);
   const [saving, setSaving] = useState<"draft" | "submit" | false>(false);
+  const [sendingTestEmail, setSendingTestEmail] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [recentUpdates, setRecentUpdates] = useState<WeeklyUpdate[]>([]);
@@ -768,6 +769,32 @@ function UpdateForm({
 
   async function handleSaveDraft() {
     await saveWeeklyUpdate("draft", { stayOnForm: true });
+  }
+
+  async function handleSendTestReportEmail() {
+    if (!submittedUpdateId) return;
+
+    setSendingTestEmail(true);
+    setSaveError(null);
+    setStatusMessage(null);
+
+    try {
+      const response = await fetch(`/api/reports/weekly-update/${encodeURIComponent(submittedUpdateId)}/test-email`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const json = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(json?.error ?? "Unable to send test email.");
+      }
+
+      setStatusMessage(`Test email sent to ${json?.recipientEmail ?? "your email address"}.`);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Unable to send test email.");
+    } finally {
+      setSendingTestEmail(false);
+    }
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -1301,6 +1328,16 @@ function UpdateForm({
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   {submittedUpdateId && <ViewReportLink updateId={submittedUpdateId} />}
+                  {submittedUpdateId && (
+                    <button
+                      type="button"
+                      onClick={() => void handleSendTestReportEmail()}
+                      disabled={sendingTestEmail}
+                      className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm font-semibold text-text-primary transition hover:bg-surface-base disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {sendingTestEmail ? "Sending..." : "Email Test"}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
