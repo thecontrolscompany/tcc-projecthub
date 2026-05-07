@@ -38,22 +38,22 @@ export function TimeReconciliationPage({
     <div className="space-y-6">
       <TimeSubnav />
       <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Reconciliation</p>
-        <h1 className="mt-2 font-heading text-3xl font-bold text-text-primary">Match imported QB Time data to ProjectHub</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">TimeHub</p>
+        <h1 className="mt-2 font-heading text-3xl font-bold text-text-primary">QuickBooks Time dashboard</h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-text-secondary">
-          Review unmatched employees and jobcodes from QuickBooks Time, then map them to existing
-          ProjectHub records without leaving the time module.
+          Review imported labor, map unmatched QuickBooks employees and jobcodes, and export project time.
+          QuickBooks Time sync runs automatically every night.
         </p>
 
         <div className="mt-5 flex flex-wrap gap-2">
           <TabLink href="/time/reconciliation?tab=overview" active={activeTab === "overview"}>
-            Overview
+            Dashboard
           </TabLink>
           <TabLink href="/time/reconciliation?tab=employees" active={activeTab === "employees"}>
-            Employees
+            Match Employees
           </TabLink>
           <TabLink href="/time/reconciliation?tab=projects" active={activeTab === "projects"}>
-            Projects
+            Match Projects
           </TabLink>
         </div>
       </section>
@@ -138,12 +138,12 @@ function TimeReconciliationOverview({
         <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Data</p>
-              <h2 className="mt-2 text-xl font-semibold text-text-primary">Sync QB Time</h2>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Sync</p>
+              <h2 className="mt-2 text-xl font-semibold text-text-primary">QuickBooks Time sync</h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
-                Pull the last 30 days of QuickBooks Time users, jobcodes, and timesheets into ProjectHub.
+                Automatic sync runs nightly at 8:00 AM UTC and pulls the last 30 days of QuickBooks Time data.
               </p>
-              <p className="mt-2 text-xs text-text-tertiary">Syncs last 30 days of timesheets.</p>
+              <p className="mt-2 text-xs text-text-tertiary">Use the manual sync when you need fresh data before the nightly run.</p>
             </div>
             <button
               type="button"
@@ -151,7 +151,7 @@ function TimeReconciliationOverview({
               disabled={syncing}
               className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse transition hover:bg-brand-primary-hover disabled:opacity-50"
             >
-              {syncing ? "Syncing..." : "Sync QB Time"}
+              {syncing ? "Syncing..." : "Sync Now"}
             </button>
           </div>
 
@@ -172,11 +172,11 @@ function TimeReconciliationOverview({
 
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Next routes</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Common work</p>
           <div className="mt-4 grid gap-3 md:grid-cols-4">
-            <ActionCard href="/time/clock" title="Clock" description="Future clock in / out workflow." />
-            <ActionCard href="/time/employees" title="Employees" description="Labor drilldowns by employee, project, and day." />
-            <ActionCard href="/time/projects" title="Projects" description="Labor drilldowns by project, employee, and day." />
+            <ActionCard href="/time/employees" title="Employee Hours" description="See each worker's hours by project and day." />
+            <ActionCard href="/time/projects" title="Project Hours" description="See each project's labor by worker and day." />
+            <ActionCard href="/time/reconciliation?tab=employees" title="Match QB Data" description="Connect unmatched QB employees and jobcodes to ProjectHub records." />
             <ActionCard href="/time/export" title="Export" description="Download QB Time entries for a project to Excel." />
           </div>
         </section>

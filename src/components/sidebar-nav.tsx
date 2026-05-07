@@ -198,9 +198,9 @@ const PAGE_TITLE_OVERRIDES: Record<string, string> = {
   "/crm/tasks": "Tasks",
   "/crm/targets": "Targets",
   "/time/clock": "Time Clock",
-  "/time/employees": "Time Employees",
-  "/time/export": "Reports",
-  "/time/projects": "Time Projects",
+  "/time/employees": "Employee Hours",
+  "/time/export": "Time Export",
+  "/time/projects": "Project Hours",
 };
 
 export function getUserInitials(userEmail: string) {

@@ -6,17 +6,18 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 const ADMIN_ITEMS = [
-  { href: "/time/clock", label: "Clock" },
-  { href: "/time/employees", label: "Employees" },
-  { href: "/time/projects", label: "Projects" },
-  { href: "/time/export", label: "Reports" },
-  { href: "/time/reconciliation?tab=overview", label: "Reconciliation" },
+  { href: "/time/reconciliation?tab=overview", label: "Dashboard" },
+  { href: "/time/employees", label: "Employee Hours" },
+  { href: "/time/projects", label: "Project Hours" },
+  { href: "/time/reconciliation?tab=employees", label: "Match QB Data" },
+  { href: "/time/export", label: "Export" },
 ];
 
 const OPS_MANAGER_ITEMS = [
-  { href: "/time/clock", label: "Clock" },
-  { href: "/time/reconciliation?tab=overview", label: "Approval" },
-  { href: "/time/export", label: "Reports" },
+  { href: "/time/reconciliation?tab=overview", label: "Dashboard" },
+  { href: "/time/employees", label: "Employee Hours" },
+  { href: "/time/projects", label: "Project Hours" },
+  { href: "/time/export", label: "Export" },
 ];
 
 export function TimeSubnav() {
@@ -50,7 +51,10 @@ export function TimeSubnav() {
           const itemTab = itemQuery ? new URLSearchParams(itemQuery).get("tab") : null;
           const active =
             pathname === itemPath &&
-            (itemPath !== "/time/reconciliation" || itemTab === tab || (!tab && itemTab === "employees"));
+            (itemPath !== "/time/reconciliation" ||
+              itemTab === tab ||
+              (itemTab === "employees" && tab === "projects") ||
+              (!tab && itemTab === "overview"));
 
           return (
             <Link
