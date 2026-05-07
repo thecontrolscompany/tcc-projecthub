@@ -148,19 +148,15 @@ export function AdminUsersPage() {
             <StatCard label="Passwords changed" value={String(profiles.filter((p) => activityStats[p.id]?.last_password_changed_at).length)} />
           </section>
 
-          <div className="overflow-x-auto rounded-2xl border border-border-default">
-            <table className="w-full text-sm">
+          <div className="rounded-2xl border border-border-default">
+            <table className="w-full table-fixed text-sm">
               <thead>
                 <tr className="border-b border-border-default bg-surface-raised">
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Email</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Name</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Role</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Last Login</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Last Logout</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Password Changed</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Failed</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Change Role</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Password</th>
+                  <th className="w-[30%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">User</th>
+                  <th className="w-[12%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Role</th>
+                  <th className="w-[24%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Activity</th>
+                  <th className="w-[10%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Failed</th>
+                  <th className="w-[24%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Admin</th>
                 </tr>
               </thead>
               <tbody>
@@ -168,22 +164,26 @@ export function AdminUsersPage() {
                   const stats = activityStats[p.id];
                   return (
                     <tr key={p.id} className="border-b border-border-default hover:bg-surface-raised">
-                      <td className="px-4 py-2.5 text-text-secondary">{p.email}</td>
-                      <td className="px-4 py-2.5 text-text-primary">{p.full_name ?? "-"}</td>
+                      <td className="px-4 py-3 align-top">
+                        <div className="break-words font-medium text-text-primary">{p.full_name ?? "-"}</div>
+                        <div className="break-all text-xs text-text-secondary">{p.email}</div>
+                      </td>
                       <td className="px-4 py-2.5">
                         <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${roleBadge(p.role)}`}>
                           {p.role}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-text-secondary">{formatActivityDate(stats?.last_login_at)}</td>
-                      <td className="px-4 py-2.5 text-text-secondary">{formatActivityDate(stats?.last_logout_at)}</td>
-                      <td className="px-4 py-2.5 text-text-secondary">{formatActivityDate(stats?.last_password_changed_at)}</td>
+                      <td className="space-y-1 px-4 py-3 text-xs text-text-secondary">
+                        <div><span className="font-medium text-text-tertiary">Login:</span> {formatActivityDate(stats?.last_login_at)}</div>
+                        <div><span className="font-medium text-text-tertiary">Logout:</span> {formatActivityDate(stats?.last_logout_at)}</div>
+                        <div><span className="font-medium text-text-tertiary">Password:</span> {formatActivityDate(stats?.last_password_changed_at)}</div>
+                      </td>
                       <td className="px-4 py-2.5 text-text-secondary">{stats?.failed_login_count ?? 0}</td>
-                      <td className="px-4 py-2.5">
+                      <td className="space-y-2 px-4 py-3">
                         <select
                           defaultValue={p.role}
                           onChange={(e) => handleUpdateRole(p.id, e.target.value as UserRole)}
-                          className="rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-xs text-text-primary focus:border-brand-primary focus:outline-none"
+                          className="w-full rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-xs text-text-primary focus:border-brand-primary focus:outline-none"
                         >
                           <option value="admin">admin</option>
                           <option value="pm">pm</option>
@@ -192,12 +192,10 @@ export function AdminUsersPage() {
                           <option value="ops_manager">ops_manager</option>
                           <option value="customer">customer</option>
                         </select>
-                      </td>
-                      <td className="px-4 py-2.5">
                         <button
                           type="button"
                           onClick={() => setPasswordUser(p)}
-                          className="rounded-lg bg-surface-overlay px-3 py-1 text-xs font-medium text-text-primary hover:bg-surface-overlay/80"
+                          className="w-full rounded-lg bg-surface-overlay px-3 py-1 text-xs font-medium text-text-primary hover:bg-surface-overlay/80"
                         >
                           Set Password
                         </button>
@@ -214,16 +212,16 @@ export function AdminUsersPage() {
               <h2 className="font-heading text-lg font-semibold text-text-primary">Recent User Activity</h2>
               <p className="mt-1 text-xs text-text-secondary">Latest login, logout, password, and portal access events across all users.</p>
             </div>
-            <div className="max-h-[520px] overflow-auto">
-              <table className="w-full text-sm">
+            <div className="max-h-[520px] overflow-y-auto">
+              <table className="w-full table-fixed text-sm">
                 <thead className="sticky top-0 bg-surface-raised">
                   <tr className="border-b border-border-default">
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Time</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Event</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">User</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Role</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">IP</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Details</th>
+                    <th className="w-[16%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Time</th>
+                    <th className="w-[16%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Event</th>
+                    <th className="w-[28%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">User</th>
+                    <th className="w-[10%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Role</th>
+                    <th className="w-[14%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">IP</th>
+                    <th className="w-[16%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Details</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -237,12 +235,12 @@ export function AdminUsersPage() {
                           </span>
                         </td>
                         <td className="px-4 py-2.5">
-                          <div className="text-text-primary">{event.full_name ?? event.email ?? "Unknown user"}</div>
-                          {event.email && <div className="text-xs text-text-tertiary">{event.email}</div>}
+                          <div className="break-words text-text-primary">{event.full_name ?? event.email ?? "Unknown user"}</div>
+                          {event.email && <div className="break-all text-xs text-text-tertiary">{event.email}</div>}
                         </td>
-                        <td className="px-4 py-2.5 text-text-secondary">{event.role ?? "-"}</td>
-                        <td className="px-4 py-2.5 text-text-secondary">{event.ip_address ?? "-"}</td>
-                        <td className="px-4 py-2.5 text-xs text-text-tertiary">{formatMetadata(event.metadata)}</td>
+                        <td className="break-words px-4 py-2.5 text-text-secondary">{event.role ?? "-"}</td>
+                        <td className="break-all px-4 py-2.5 text-text-secondary">{event.ip_address ?? "-"}</td>
+                        <td className="break-words px-4 py-2.5 text-xs text-text-tertiary">{formatMetadata(event.metadata)}</td>
                       </tr>
                     ))
                   ) : (

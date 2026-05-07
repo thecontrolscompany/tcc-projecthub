@@ -81,16 +81,16 @@ export function AdminUserActivityPage() {
               <h2 className="font-heading text-lg font-semibold text-text-primary">Recent Activity</h2>
               <p className="mt-1 text-xs text-text-secondary">Showing the latest {activity.length} recorded events.</p>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div>
+              <table className="w-full table-fixed text-sm">
                 <thead>
                   <tr className="border-b border-border-default bg-surface-raised">
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Time</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Event</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">User</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Role</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">IP</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Details</th>
+                    <th className="w-[16%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Time</th>
+                    <th className="w-[16%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Event</th>
+                    <th className="w-[28%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">User</th>
+                    <th className="w-[10%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Role</th>
+                    <th className="w-[14%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">IP</th>
+                    <th className="w-[16%] px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Details</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -104,12 +104,12 @@ export function AdminUserActivityPage() {
                           </span>
                         </td>
                         <td className="px-4 py-2.5">
-                          <div className="text-text-primary">{event.full_name ?? event.email ?? "Unknown user"}</div>
-                          {event.email && <div className="text-xs text-text-tertiary">{event.email}</div>}
+                          <div className="break-words text-text-primary">{event.full_name ?? event.email ?? "Unknown user"}</div>
+                          {event.email && <div className="break-all text-xs text-text-tertiary">{event.email}</div>}
                         </td>
-                        <td className="px-4 py-2.5 text-text-secondary">{event.role ?? "-"}</td>
-                        <td className="px-4 py-2.5 text-text-secondary">{event.ip_address ?? "-"}</td>
-                        <td className="px-4 py-2.5 text-xs text-text-tertiary">{formatMetadata(event.metadata)}</td>
+                        <td className="break-words px-4 py-2.5 text-text-secondary">{event.role ?? "-"}</td>
+                        <td className="break-all px-4 py-2.5 text-text-secondary">{event.ip_address ?? "-"}</td>
+                        <td className="break-words px-4 py-2.5 text-xs text-text-tertiary">{formatMetadata(event.metadata)}</td>
                       </tr>
                     ))
                   ) : (
