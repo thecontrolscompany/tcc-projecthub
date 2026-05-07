@@ -155,9 +155,8 @@ function ExternalLinkIcon({ className = "h-3.5 w-3.5" }: IconProps) {
 export const NAV_LINKS: NavItem[] = [
   { label: "TimeHub",          href: "/time-hub",                 roles: ["pm", "lead", "installer"],                           icon: ClockIcon },
   { label: "TimeHub",          href: "/time",                     roles: ["admin", "ops_manager"],                              icon: ClockIcon },
-  { label: "Admin",            href: "/admin",                    roles: ["admin"],                                             icon: GridIcon },
+  { label: "AdminHub",         href: "/admin",                    roles: ["admin"],                                             icon: GridIcon },
   { label: "OperationsHub",    href: "/ops",                      roles: ["admin", "ops_manager"],                              icon: GridIcon },
-  { label: "People",           href: "/people",                   roles: ["admin", "ops_manager"],                              icon: UserIcon },
   { label: "ProjectHub",       href: "/pm",                       roles: ["admin", "pm", "lead", "ops_manager"],                icon: ClipboardIcon },
   { label: "OpportunityHub",   href: "/crm/dashboard",            roles: ["admin", "ops_manager"],                              icon: DocumentIcon },
   { label: "OpportunityHub",   href: "/crm/accounts",             roles: ["pm", "lead"],                                        icon: DocumentIcon },
@@ -172,7 +171,7 @@ export const NAV_LINKS: NavItem[] = [
 ];
 
 const PAGE_TITLE_OVERRIDES: Record<string, string> = {
-  "/admin": "Admin",
+  "/admin": "AdminHub",
   "/admin/analytics": "Analytics",
   "/admin/billing-import": "Historical Billing Import",
   "/admin/contacts": "People",

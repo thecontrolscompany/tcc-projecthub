@@ -7,7 +7,7 @@ const ADMIN_SECTIONS = [
     links: [
       { href: "/people", label: "People Directory" },
       { href: "/admin/users", label: "Portal Users" },
-      { href: "/admin/contacts", label: "Directory Admin" },
+      { href: "/admin/contacts", label: "Directory Management" },
     ],
   },
   {
@@ -33,7 +33,7 @@ export default function AdminPage() {
   return (
     <main className="mx-auto max-w-screen-xl px-6 py-8">
       <section className="mb-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-primary">Admin</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-primary">AdminHub</p>
         <h1 className="mt-2 font-heading text-3xl font-bold text-text-primary">System Administration</h1>
         <p className="mt-3 max-w-3xl text-sm text-text-secondary">
           User administration, access control, and system maintenance. Billing-heavy workflows have moved to BillingHub.
