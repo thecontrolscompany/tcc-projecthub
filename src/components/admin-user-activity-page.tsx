@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { safeJson } from "@/lib/utils/safe-json";
 
@@ -47,9 +48,25 @@ export function AdminUserActivityPage() {
 
   return (
     <main className="mx-auto max-w-screen-xl space-y-6 px-6 py-8">
-      <section>
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-primary">AdminHub</p>
-        <h1 className="mt-2 font-heading text-3xl font-bold text-text-primary">User Activity</h1>
+      <section className="space-y-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-primary">Analytics</p>
+          <h1 className="mt-2 font-heading text-3xl font-bold text-text-primary">User Activity</h1>
+        </div>
+        <nav className="flex flex-wrap gap-2" aria-label="Analytics navigation">
+          <Link
+            href="/admin/analytics"
+            className="rounded-full border border-border-default bg-surface-overlay px-4 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-surface-raised hover:text-text-primary"
+          >
+            System Analytics
+          </Link>
+          <Link
+            href="/admin/user-activity"
+            className="rounded-full bg-brand-primary px-4 py-1.5 text-sm font-medium text-text-inverse"
+          >
+            User Activity
+          </Link>
+        </nav>
         <p className="mt-3 max-w-3xl text-sm text-text-secondary">
           Audit trail for login, logout, password, and portal access events across internal and customer users.
         </p>

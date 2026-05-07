@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   Bar,
@@ -193,7 +194,26 @@ export default function AnalyticsPage() {
 
   return (
     <div className="mx-auto max-w-screen-xl space-y-8 px-6 py-6">
-      <h1 className="font-heading text-2xl font-bold text-text-primary">Analytics</h1>
+      <section className="space-y-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-primary">Analytics</p>
+          <h1 className="mt-2 font-heading text-2xl font-bold text-text-primary">System Analytics</h1>
+        </div>
+        <nav className="flex flex-wrap gap-2" aria-label="Analytics navigation">
+          <Link
+            href="/admin/analytics"
+            className="rounded-full bg-brand-primary px-4 py-1.5 text-sm font-medium text-text-inverse"
+          >
+            System Analytics
+          </Link>
+          <Link
+            href="/admin/user-activity"
+            className="rounded-full border border-border-default bg-surface-overlay px-4 py-1.5 text-sm font-medium text-text-secondary transition hover:bg-surface-raised hover:text-text-primary"
+          >
+            User Activity
+          </Link>
+        </nav>
+      </section>
 
       {loading ? (
         <div className="py-20 text-center text-text-tertiary">Loading analytics...</div>

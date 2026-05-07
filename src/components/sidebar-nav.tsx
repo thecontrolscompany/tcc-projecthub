@@ -6,11 +6,17 @@ import { createClient as createBrowserClient } from "@/lib/supabase/client";
 
 export type NavRole = "admin" | "pm" | "lead" | "installer" | "ops_manager" | "customer";
 type IconProps = { className?: string };
+type NavChild = {
+  label: string;
+  href: string;
+  roles: NavRole[];
+};
 type NavItem = {
   label: string;
   href: string;
   roles: NavRole[];
   icon: (props: IconProps) => React.ReactNode;
+  children?: NavChild[];
   external?: boolean;
 };
 
@@ -179,7 +185,15 @@ export const NAV_LINKS: NavItem[] = [
   { label: "Projects",         href: "/projects",                 roles: [],                                                    icon: FolderIcon },
   { label: "Installer",        href: "/installer",                roles: ["installer"],                                         icon: WrenchIcon },
   { label: "BillingHub",       href: "/billing",                  roles: ["admin", "ops_manager"],                              icon: DollarIcon },
-  { label: "Analytics",        href: "/admin/analytics",          roles: ["admin", "ops_manager"],                              icon: ChartIcon },
+  {
+    label: "Analytics",
+    href: "/admin/analytics",
+    roles: ["admin", "ops_manager"],
+    icon: ChartIcon,
+    children: [
+      { label: "User Activity", href: "/admin/user-activity", roles: ["admin"] },
+    ],
+  },
   { label: "SharePoint",       href: "https://controlsco.sharepoint.com/sites/TCCProjects", roles: ["admin", "pm", "lead", "installer", "ops_manager"], icon: SharePointIcon, external: true },
   { label: "SP Reconcile",     href: "/admin/migrate-sharepoint", roles: ["admin"],                                             icon: FolderIcon },
   { label: "My Portal",        href: "/customer",                 roles: ["customer"],                                          icon: UserIcon },
@@ -259,6 +273,10 @@ function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function isActiveLink(pathname: string, link: NavItem) {
+  return isActivePath(pathname, link.href) || (link.children ?? []).some((child) => isActivePath(pathname, child.href));
+}
+
 export function SidebarNav({
   role,
   userEmail,
@@ -279,7 +297,10 @@ export function SidebarNav({
   const links = NAV_LINKS.filter((link) => {
     if (link.href === "/customer" && hasPortalAccess) return true;
     return link.roles.includes(effectiveRole);
-  });
+  }).map((link) => ({
+    ...link,
+    children: link.children?.filter((child) => child.roles.includes(effectiveRole)),
+  }));
   const initials = getUserInitials(userEmail);
 
   return (
@@ -318,7 +339,7 @@ export function SidebarNav({
       <nav className="flex-1 overflow-y-auto px-2 py-3">
         <div className="space-y-1">
           {links.map((link) => {
-            const isActive = !link.external && isActivePath(pathname, link.href);
+            const isActive = !link.external && isActiveLink(pathname, link);
             const Icon = link.icon;
 
             if (link.external) {
@@ -346,21 +367,43 @@ export function SidebarNav({
             }
 
             return (
-              <Link
-                key={`${link.href}-${link.label}`}
-                href={link.href}
-                title={collapsed ? link.label : undefined}
-                className={[
-                  "flex items-center rounded-xl px-3 py-2.5 text-sm transition-colors",
-                  collapsed ? "justify-center" : "gap-3",
-                  isActive
-                    ? "bg-surface-overlay text-text-primary font-medium"
-                    : "text-text-secondary hover:bg-surface-overlay hover:text-text-primary",
-                ].join(" ")}
-              >
-                <Icon className="h-5 w-5 shrink-0" />
-                {!collapsed && <span className="truncate">{link.label}</span>}
-              </Link>
+              <div key={`${link.href}-${link.label}`}>
+                <Link
+                  href={link.href}
+                  title={collapsed ? link.label : undefined}
+                  className={[
+                    "flex items-center rounded-xl px-3 py-2.5 text-sm transition-colors",
+                    collapsed ? "justify-center" : "gap-3",
+                    isActive
+                      ? "bg-surface-overlay text-text-primary font-medium"
+                      : "text-text-secondary hover:bg-surface-overlay hover:text-text-primary",
+                  ].join(" ")}
+                >
+                  <Icon className="h-5 w-5 shrink-0" />
+                  {!collapsed && <span className="truncate">{link.label}</span>}
+                </Link>
+                {!collapsed && link.children && link.children.length > 0 && (
+                  <div className="ml-8 mt-1 space-y-1 border-l border-border-default pl-2">
+                    {link.children.map((child) => {
+                      const childActive = isActivePath(pathname, child.href);
+                      return (
+                        <Link
+                          key={`${child.href}-${child.label}`}
+                          href={child.href}
+                          className={[
+                            "block rounded-lg px-3 py-2 text-xs transition-colors",
+                            childActive
+                              ? "bg-surface-overlay text-text-primary font-medium"
+                              : "text-text-tertiary hover:bg-surface-overlay hover:text-text-primary",
+                          ].join(" ")}
+                        >
+                          <span className="truncate">{child.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
