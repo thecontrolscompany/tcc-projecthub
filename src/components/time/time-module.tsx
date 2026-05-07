@@ -60,11 +60,7 @@ export function TimeClockPage({
   );
 }
 
-export function TimeEmployeesPage({
-  canManage = false
-}: {
-  canManage?: boolean;
-}) {
+export function TimeEmployeesPage() {
   return (
     <div className="space-y-6">
       <TimeSubnav />
@@ -74,60 +70,20 @@ export function TimeEmployeesPage({
         description="Review QuickBooks Time labor by employee, project, and day."
       />
 
-      {canManage && (
-        <div className="flex justify-end">
-          <Link href="/time/reconciliation?tab=employees" className="rounded-xl border border-border-default px-4 py-2 text-sm font-medium text-text-primary hover:bg-surface-overlay">
-            Match QB users
-          </Link>
-        </div>
-      )}
-
       <EmployeeHoursSection />
     </div>
   );
 }
 
-export function TimeProjectsPage({
-  projects,
-  canManage = false
-}: {
-  projects: TimeModuleProject[];
-  canManage?: boolean;
-}) {
-  const childJobcodes = projects.filter((project) => (project.parentQbJobcodeId ?? 0) > 0).length;
-
+export function TimeProjectsPage() {
   return (
     <div className="space-y-6">
       <TimeSubnav />
       <HeaderBlock
         eyebrow="Projects"
         title="Project hours"
-        description="Use this page for project labor breakdowns. Imported QuickBooks jobcode review and mapping now live in the reconciliation workspace."
+        description="Review QuickBooks Time labor by project, worker, and day."
       />
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <MetricCard label="QB jobcodes" value={String(projects.length)} />
-        <MetricCard label="Active jobcodes" value={String(projects.filter((project) => project.active).length)} />
-        <MetricCard label="Child jobcodes" value={String(childJobcodes)} />
-      </div>
-
-      <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
-        <div className="rounded-2xl border border-border-default bg-surface-overlay px-4 py-3 text-sm text-text-secondary">
-          {childJobcodes} imported jobcode{childJobcodes === 1 ? "" : "s"} have a parent jobcode and likely represent project-level entries.
-        </div>
-
-        {canManage && (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-default bg-surface-overlay px-4 py-3">
-            <div>
-              <p className="text-sm font-medium text-text-primary">Need to match imported jobcodes to portal projects?</p>
-              <p className="text-sm text-text-secondary">Open the reconciliation workspace for imported jobcode review, mapping, and cleanup.</p>
-            </div>
-            <Link href="/time/reconciliation?tab=projects" className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-primary-hover">
-              Open reconciliation
-            </Link>
-          </div>
-        )}
-      </section>
 
       <ProjectHoursSection />
     </div>

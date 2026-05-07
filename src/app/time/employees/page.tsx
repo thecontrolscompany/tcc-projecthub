@@ -1,13 +1,9 @@
 export const dynamic = "force-dynamic";
 
 import { TimeEmployeesPage, TimeModuleError } from "@/components/time/time-module";
-import { getShellIdentity } from "@/lib/auth/get-shell-identity";
-
 export default async function EmployeesPage() {
-  const identity = await getShellIdentity("ops_manager");
-
   try {
-    return <TimeEmployeesPage canManage={identity.role === "admin"} />;
+    return <TimeEmployeesPage />;
   } catch (error) {
     return (
       <TimeModuleError

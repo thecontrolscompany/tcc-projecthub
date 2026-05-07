@@ -8,8 +8,6 @@ import { createClient } from "@/lib/supabase/client";
 const ADMIN_ITEMS = [
   { href: "/time/employees", label: "Employee Hours" },
   { href: "/time/projects", label: "Project Hours" },
-  { href: "/time/reconciliation?tab=employees", label: "Match QB Users" },
-  { href: "/time/reconciliation?tab=projects", label: "Match QB Projects" },
   { href: "/time/export", label: "Export" },
   { href: "/time/reconciliation?tab=overview", label: "TimeHub QB Sync" },
 ];
