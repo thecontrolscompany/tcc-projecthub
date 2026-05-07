@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { startTransition, useState } from "react";
 import type { TimeReconcileSnapshot } from "@/lib/time/data";
+import type { UserRole } from "@/types/database";
 
-type PendingState = Record<number, "map" | "ignore" | undefined>;
+type PendingState = Record<number, "map" | "create" | "ignore" | undefined>;
 type ManualPickState = Record<number, string | undefined>;
+type RolePickState = Record<number, UserRole | undefined>;
 
 export function TimeReconcilePage({ snapshot }: { snapshot: TimeReconcileSnapshot }) {
   return (
@@ -30,13 +32,15 @@ export function TimeReconcileUsersPanel({ snapshot }: { snapshot: TimeReconcileS
   const [messages, setMessages] = useState<Record<number, string>>({});
   const [errors, setErrors] = useState<Record<number, string>>({});
   const [manualPicks, setManualPicks] = useState<ManualPickState>({});
+  const [rolePicks, setRolePicks] = useState<RolePickState>({});
 
   async function runAction(
     qbUserId: number,
     payload:
       | { action: "map_existing_profile"; pmDirectoryId: string }
+      | { action: "create_projecthub_user"; role: UserRole }
       | { action: "ignore_user" },
-    pendingState: "map" | "ignore"
+    pendingState: "map" | "create" | "ignore"
   ) {
     setPending((current) => ({ ...current, [qbUserId]: pendingState }));
     setErrors((current) => ({ ...current, [qbUserId]: "" }));
@@ -57,7 +61,12 @@ export function TimeReconcileUsersPanel({ snapshot }: { snapshot: TimeReconcileS
 
       setMessages((current) => ({
         ...current,
-        [qbUserId]: payload.action === "ignore_user" ? "Ignored for now." : "Mapping saved."
+        [qbUserId]:
+          payload.action === "ignore_user"
+            ? "Ignored for now."
+            : payload.action === "create_projecthub_user"
+              ? "ProjectHub user created and mapped."
+              : "Mapping saved."
       }));
       startTransition(() => {
         router.refresh();
@@ -90,6 +99,7 @@ export function TimeReconcileUsersPanel({ snapshot }: { snapshot: TimeReconcileS
             snapshot.users.map((user) => {
               const pendingState = pending[user.qbUserId];
               const manualPickId = manualPicks[user.qbUserId] ?? "";
+              const rolePick = rolePicks[user.qbUserId] ?? "installer";
 
               return (
                 <article key={user.qbUserId} className="rounded-2xl border border-border-default bg-surface-overlay p-4">
@@ -159,6 +169,51 @@ export function TimeReconcileUsersPanel({ snapshot }: { snapshot: TimeReconcileS
                               ))
                             )}
                           </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-tertiary">
+                            Create ProjectHub user
+                          </p>
+                          <p className="mt-1 text-sm text-text-secondary">
+                            Use this when the QuickBooks employee is not in the directory yet.
+                          </p>
+                          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                            <select
+                              value={rolePick}
+                              onChange={(e) =>
+                                setRolePicks((current) => ({
+                                  ...current,
+                                  [user.qbUserId]: e.target.value as UserRole,
+                                }))
+                              }
+                              className="flex-1 rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary"
+                            >
+                              <option value="installer">installer</option>
+                              <option value="lead">lead</option>
+                              <option value="pm">pm</option>
+                              <option value="ops_manager">ops_manager</option>
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                runAction(
+                                  user.qbUserId,
+                                  { action: "create_projecthub_user", role: rolePick },
+                                  "create"
+                                )
+                              }
+                              disabled={!user.email || Boolean(pendingState)}
+                              className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {pendingState === "create" ? "Creating..." : "Create and map"}
+                            </button>
+                          </div>
+                          {!user.email && (
+                            <p className="mt-2 text-xs text-amber-700">
+                              Add an email to the QuickBooks user before creating a ProjectHub account.
+                            </p>
+                          )}
                         </div>
 
                         <div className="rounded-2xl border border-border-default bg-surface-raised p-4">
