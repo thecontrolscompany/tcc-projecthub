@@ -8,6 +8,7 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
   const [changeOrders, setChangeOrders] = useState<ChangeOrder[]>([]);
   const [coLoading, setCoLoading] = useState(false);
   const [showCoForm, setShowCoForm] = useState(false);
+  const [editingCoId, setEditingCoId] = useState<string | null>(null);
   const [coForm, setCoForm] = useState({
     coNumber: "",
     title: "",
@@ -55,43 +56,8 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
     [changeOrders]
   );
 
-  async function handleAddCo() {
-    if (!coForm.title.trim()) {
-      setCoError("Title is required.");
-      return;
-    }
-
-    setCoSaving(true);
-    setCoError(null);
-
-    const res = await fetch("/api/admin/change-orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        projectId,
-        coNumber: coForm.coNumber.trim() || undefined,
-        title: coForm.title.trim(),
-        description: coForm.description.trim() || undefined,
-        amount: Number(coForm.amount) || 0,
-        status: coForm.status,
-        submittedDate: coForm.submittedDate || undefined,
-        approvedDate: coForm.approvedDate || undefined,
-        referenceDoc: coForm.referenceDoc.trim() || undefined,
-        notes: coForm.notes.trim() || undefined,
-      }),
-    });
-
-    const json = await res.json().catch(() => ({}));
-    setCoSaving(false);
-
-    if (!res.ok) {
-      setCoError(json?.error ?? "Failed to save.");
-      return;
-    }
-
-    setChangeOrders((prev) => [...prev, json.changeOrder as ChangeOrder]);
-    setShowCoForm(false);
+  function resetCoForm() {
+    setEditingCoId(null);
     setCoForm({
       coNumber: "",
       title: "",
@@ -103,6 +69,81 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
       referenceDoc: "",
       notes: "",
     });
+  }
+
+  function startNewCo() {
+    setCoError(null);
+    if (showCoForm && !editingCoId) {
+      setShowCoForm(false);
+      return;
+    }
+    resetCoForm();
+    setShowCoForm(true);
+  }
+
+  function startEditCo(co: ChangeOrder) {
+    setCoError(null);
+    setEditingCoId(co.id);
+    setCoForm({
+      coNumber: co.co_number,
+      title: co.title,
+      description: co.description ?? "",
+      amount: String(co.amount),
+      status: co.status,
+      submittedDate: co.submitted_date ?? "",
+      approvedDate: co.approved_date ?? "",
+      referenceDoc: co.reference_doc ?? "",
+      notes: co.notes ?? "",
+    });
+    setShowCoForm(true);
+  }
+
+  async function handleSaveCo() {
+    if (!coForm.title.trim()) {
+      setCoError("Title is required.");
+      return;
+    }
+
+    setCoSaving(true);
+    setCoError(null);
+
+    const payload = {
+      id: editingCoId ?? undefined,
+      projectId,
+      coNumber: coForm.coNumber.trim() || undefined,
+      title: coForm.title.trim(),
+      description: coForm.description.trim() || undefined,
+      amount: Number(coForm.amount) || 0,
+      status: coForm.status,
+      submittedDate: coForm.submittedDate || undefined,
+      approvedDate: coForm.approvedDate || undefined,
+      referenceDoc: coForm.referenceDoc.trim() || undefined,
+      notes: coForm.notes.trim() || undefined,
+    };
+
+    const res = await fetch("/api/admin/change-orders", {
+      method: editingCoId ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+
+    const json = await res.json().catch(() => ({}));
+    setCoSaving(false);
+
+    if (!res.ok) {
+      setCoError(json?.error ?? "Failed to save.");
+      return;
+    }
+
+    const saved = json.changeOrder as ChangeOrder;
+    setChangeOrders((prev) =>
+      editingCoId
+        ? prev.map((co) => (co.id === saved.id ? saved : co))
+        : [...prev, saved]
+    );
+    setShowCoForm(false);
+    resetCoForm();
   }
 
   async function handleVoidCo(id: string) {
@@ -124,7 +165,7 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
         <h4 className="font-heading text-lg font-semibold text-text-primary">Change Orders</h4>
         <button
           type="button"
-          onClick={() => setShowCoForm((value) => !value)}
+          onClick={startNewCo}
           className="rounded-lg bg-brand-primary/10 px-3 py-1.5 text-xs font-medium text-brand-primary hover:bg-brand-primary/20"
         >
           + Add CO
@@ -177,6 +218,13 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
                 </a>
                 <button
                   type="button"
+                  onClick={() => startEditCo(co)}
+                  className="text-xs text-brand-primary hover:underline"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
                   onClick={() => void handleVoidCo(co.id)}
                   className="text-xs text-text-tertiary hover:text-status-danger"
                 >
@@ -194,6 +242,16 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
 
       {showCoForm && (
         <div className="space-y-3 rounded-xl border border-border-default bg-surface-overlay p-4">
+          <div>
+            <p className="text-sm font-semibold text-text-primary">
+              {editingCoId ? "Edit Change Order" : "Add Change Order"}
+            </p>
+            {editingCoId && (
+              <p className="mt-0.5 text-xs text-text-tertiary">
+                Update status, amount, reference document, dates, or notes.
+              </p>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-text-secondary">CO Number</label>
@@ -293,18 +351,21 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
           <div className="flex justify-end gap-2">
             <button
               type="button"
-              onClick={() => setShowCoForm(false)}
+              onClick={() => {
+                setShowCoForm(false);
+                resetCoForm();
+              }}
               className="rounded-lg px-3 py-1.5 text-sm text-text-secondary hover:bg-surface-raised"
             >
               Cancel
             </button>
             <button
               type="button"
-              onClick={() => void handleAddCo()}
+              onClick={() => void handleSaveCo()}
               disabled={coSaving}
               className="rounded-lg bg-brand-primary px-4 py-1.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
             >
-              {coSaving ? "Saving..." : "Save CO"}
+              {coSaving ? "Saving..." : editingCoId ? "Save Changes" : "Save CO"}
             </button>
           </div>
         </div>
