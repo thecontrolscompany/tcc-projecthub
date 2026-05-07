@@ -164,8 +164,7 @@ export const NAV_LINKS: NavItem[] = [
   { label: "OpportunityHub",   href: "/quotes",                   roles: ["customer"],                                          icon: DocumentIcon },
   { label: "Projects",         href: "/projects",                 roles: [],                                                    icon: FolderIcon },
   { label: "Installer",        href: "/installer",                roles: ["installer"],                                         icon: WrenchIcon },
-  { label: "BillingHub",       href: "/billing",                  roles: ["admin"],                                             icon: DollarIcon },
-  { label: "BillingHub",       href: "/admin",                    roles: ["ops_manager"],                                       icon: DollarIcon },
+  { label: "BillingHub",       href: "/billing",                  roles: ["admin", "ops_manager"],                              icon: DollarIcon },
   { label: "Analytics",        href: "/admin/analytics",          roles: ["admin", "ops_manager"],                              icon: ChartIcon },
   { label: "SharePoint",       href: "https://controlsco.sharepoint.com/sites/TCCProjects", roles: ["admin", "pm", "lead", "installer", "ops_manager"], icon: SharePointIcon, external: true },
   { label: "SP Reconcile",     href: "/admin/migrate-sharepoint", roles: ["admin"],                                             icon: FolderIcon },
@@ -175,6 +174,7 @@ export const NAV_LINKS: NavItem[] = [
 const PAGE_TITLE_OVERRIDES: Record<string, string> = {
   "/admin": "Admin",
   "/admin/analytics": "Analytics",
+  "/admin/billing-import": "Historical Billing Import",
   "/admin/contacts": "People",
   "/admin/migrate-sharepoint": "SharePoint Reconcile",
   "/admin/users": "People",
