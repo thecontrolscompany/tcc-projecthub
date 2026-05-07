@@ -404,6 +404,11 @@ export function SidebarNav({
 
               <button
                 onClick={async () => {
+                  await fetch("/api/auth/activity", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ eventType: "logout", metadata: { source: "app_shell" } }),
+                  }).catch(() => null);
                   await supabase.auth.signOut();
                   router.push("/login");
                 }}

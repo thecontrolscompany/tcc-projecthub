@@ -6,6 +6,7 @@ import { safeJson } from "@/lib/utils/safe-json";
 
 type UserActivityStats = {
   last_login_at: string | null;
+  last_logout_at: string | null;
   last_password_changed_at: string | null;
   last_password_reset_requested_at: string | null;
   failed_login_count: number;
@@ -13,9 +14,22 @@ type UserActivityStats = {
   recent_events: Array<{ event_type: string; created_at: string; metadata: unknown }>;
 };
 
+type UserActivityRow = {
+  profile_id: string | null;
+  email: string | null;
+  full_name: string | null;
+  role: string | null;
+  event_type: string;
+  created_at: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  metadata: unknown;
+};
+
 export function AdminUsersPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [activityStats, setActivityStats] = useState<Record<string, UserActivityStats>>({});
+  const [recentActivity, setRecentActivity] = useState<UserActivityRow[]>([]);
   const [activityUnavailable, setActivityUnavailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -37,6 +51,7 @@ export function AdminUsersPage() {
     if (response.ok) {
       setProfiles((json?.users as Profile[]) ?? []);
       setActivityStats((json?.activityStats as Record<string, UserActivityStats>) ?? {});
+      setRecentActivity((json?.recentActivity as UserActivityRow[]) ?? []);
       setActivityUnavailable(Boolean(json?.activityUnavailable));
     }
     setLoading(false);
@@ -129,8 +144,8 @@ export function AdminUsersPage() {
           <section className="grid gap-3 md:grid-cols-4">
             <StatCard label="Users" value={String(profiles.length)} />
             <StatCard label="Logged in" value={String(profiles.filter((p) => activityStats[p.id]?.last_login_at).length)} />
+            <StatCard label="Logged out" value={String(profiles.filter((p) => activityStats[p.id]?.last_logout_at).length)} />
             <StatCard label="Passwords changed" value={String(profiles.filter((p) => activityStats[p.id]?.last_password_changed_at).length)} />
-            <StatCard label="Failed logins" value={String(Object.values(activityStats).reduce((sum, stats) => sum + stats.failed_login_count, 0))} />
           </section>
 
           <div className="overflow-x-auto rounded-2xl border border-border-default">
@@ -141,6 +156,7 @@ export function AdminUsersPage() {
                   <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Name</th>
                   <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Role</th>
                   <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Last Login</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Last Logout</th>
                   <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Password Changed</th>
                   <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Failed</th>
                   <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Change Role</th>
@@ -160,6 +176,7 @@ export function AdminUsersPage() {
                         </span>
                       </td>
                       <td className="px-4 py-2.5 text-text-secondary">{formatActivityDate(stats?.last_login_at)}</td>
+                      <td className="px-4 py-2.5 text-text-secondary">{formatActivityDate(stats?.last_logout_at)}</td>
                       <td className="px-4 py-2.5 text-text-secondary">{formatActivityDate(stats?.last_password_changed_at)}</td>
                       <td className="px-4 py-2.5 text-text-secondary">{stats?.failed_login_count ?? 0}</td>
                       <td className="px-4 py-2.5">
@@ -191,10 +208,71 @@ export function AdminUsersPage() {
               </tbody>
             </table>
           </div>
+
+          <section className="rounded-2xl border border-border-default bg-surface-raised">
+            <div className="border-b border-border-default px-4 py-3">
+              <h2 className="font-heading text-lg font-semibold text-text-primary">Recent User Activity</h2>
+              <p className="mt-1 text-xs text-text-secondary">Latest login, logout, password, and portal access events across all users.</p>
+            </div>
+            <div className="max-h-[520px] overflow-auto">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-surface-raised">
+                  <tr className="border-b border-border-default">
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Time</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Event</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">User</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Role</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">IP</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Details</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentActivity.length > 0 ? (
+                    recentActivity.map((event, index) => (
+                      <tr key={`${event.created_at}-${event.event_type}-${event.email ?? index}`} className="border-b border-border-default">
+                        <td className="px-4 py-2.5 text-text-secondary">{formatActivityDate(event.created_at)}</td>
+                        <td className="px-4 py-2.5">
+                          <span className="rounded-full bg-surface-overlay px-2.5 py-0.5 text-xs font-medium text-text-primary">
+                            {formatEventType(event.event_type)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <div className="text-text-primary">{event.full_name ?? event.email ?? "Unknown user"}</div>
+                          {event.email && <div className="text-xs text-text-tertiary">{event.email}</div>}
+                        </td>
+                        <td className="px-4 py-2.5 text-text-secondary">{event.role ?? "-"}</td>
+                        <td className="px-4 py-2.5 text-text-secondary">{event.ip_address ?? "-"}</td>
+                        <td className="px-4 py-2.5 text-xs text-text-tertiary">{formatMetadata(event.metadata)}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-8 text-center text-text-tertiary">No activity recorded yet.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
         </div>
       )}
     </div>
   );
+}
+
+function formatEventType(value: string) {
+  return value
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function formatMetadata(value: unknown) {
+  if (!value || typeof value !== "object") return "-";
+  const entries = Object.entries(value as Record<string, unknown>)
+    .filter(([, entryValue]) => entryValue !== null && entryValue !== undefined && entryValue !== "")
+    .map(([key, entryValue]) => `${key}: ${String(entryValue)}`);
+  return entries.length > 0 ? entries.join(", ") : "-";
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {

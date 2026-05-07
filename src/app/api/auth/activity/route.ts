@@ -4,7 +4,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { logUserActivity, requestIp, type UserActivityEventType } from "@/lib/auth/activity";
 
 const PUBLIC_EVENTS = new Set<UserActivityEventType>(["login_failed", "password_reset_requested"]);
-const AUTHENTICATED_EVENTS = new Set<UserActivityEventType>(["login_success", "password_changed"]);
+const AUTHENTICATED_EVENTS = new Set<UserActivityEventType>(["login_success", "logout", "password_changed"]);
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);

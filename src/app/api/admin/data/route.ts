@@ -476,7 +476,7 @@ export async function GET(request: Request) {
 
     const { data: events, error: eventsError } = await adminClient
       .from("user_activity_events")
-      .select("profile_id, email, event_type, created_at, metadata")
+      .select("profile_id, email, event_type, created_at, ip_address, user_agent, metadata")
       .order("created_at", { ascending: false })
       .limit(2000);
 
@@ -486,6 +486,7 @@ export async function GET(request: Request) {
 
     const statsByProfile = new Map<string, {
       last_login_at: string | null;
+      last_logout_at: string | null;
       last_password_changed_at: string | null;
       last_password_reset_requested_at: string | null;
       failed_login_count: number;
@@ -497,6 +498,7 @@ export async function GET(request: Request) {
       if (!statsByProfile.has(profileId)) {
         statsByProfile.set(profileId, {
           last_login_at: null,
+          last_logout_at: null,
           last_password_changed_at: null,
           last_password_reset_requested_at: null,
           failed_login_count: 0,
@@ -508,9 +510,34 @@ export async function GET(request: Request) {
     }
 
     const profileIdByEmail = new Map((data ?? []).map((profile) => [profile.email.toLowerCase(), profile.id]));
+    const profileById = new Map((data ?? []).map((profile) => [profile.id, profile]));
+    const recentActivity: Array<{
+      profile_id: string | null;
+      email: string | null;
+      full_name: string | null;
+      role: string | null;
+      event_type: string;
+      created_at: string;
+      ip_address: string | null;
+      user_agent: string | null;
+      metadata: unknown;
+    }> = [];
 
     for (const event of events ?? []) {
       const profileId = event.profile_id ?? (event.email ? profileIdByEmail.get(event.email.toLowerCase()) : null);
+      const profile = profileId ? profileById.get(profileId) : null;
+      recentActivity.push({
+        profile_id: profileId ?? null,
+        email: event.email ?? profile?.email ?? null,
+        full_name: profile?.full_name ?? null,
+        role: profile?.role ?? null,
+        event_type: event.event_type,
+        created_at: event.created_at,
+        ip_address: event.ip_address ?? null,
+        user_agent: event.user_agent ?? null,
+        metadata: event.metadata,
+      });
+
       if (!profileId) continue;
 
       const stats = getStats(profileId);
@@ -523,6 +550,7 @@ export async function GET(request: Request) {
         });
       }
       if (event.event_type === "login_success") stats.last_login_at ??= event.created_at;
+      if (event.event_type === "logout") stats.last_logout_at ??= event.created_at;
       if (event.event_type === "password_changed") stats.last_password_changed_at ??= event.created_at;
       if (event.event_type === "password_reset_requested") stats.last_password_reset_requested_at ??= event.created_at;
       if (event.event_type === "login_failed") stats.failed_login_count += 1;
@@ -531,6 +559,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       users: data ?? [],
       activityStats: Object.fromEntries(statsByProfile),
+      recentActivity: recentActivity.slice(0, 250),
       activityUnavailable: Boolean(eventsError && eventsError.code === "42P01"),
     });
   }

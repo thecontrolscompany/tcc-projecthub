@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export type UserActivityEventType =
   | "login_success"
   | "login_failed"
+  | "logout"
   | "password_changed"
   | "password_reset_requested"
   | "portal_user_created"
