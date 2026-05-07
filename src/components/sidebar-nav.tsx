@@ -171,7 +171,6 @@ export const NAV_LINKS: NavItem[] = [
   { label: "TimeHub",          href: "/time-hub",                 roles: ["pm", "lead", "installer"],                           icon: ClockIcon },
   { label: "TimeHub",          href: "/time",                     roles: ["admin", "ops_manager"],                              icon: ClockIcon },
   { label: "AdminHub",         href: "/admin",                    roles: ["admin"],                                             icon: GearIcon },
-  { label: "User Activity",    href: "/admin/user-activity",      roles: ["admin"],                                             icon: ChartIcon },
   { label: "OperationsHub",    href: "/ops",                      roles: ["admin", "ops_manager"],                              icon: OperationsIcon },
   { label: "ProjectHub",       href: "/pm",                       roles: ["admin", "pm", "lead", "ops_manager"],                icon: BuildingIcon },
   { label: "OpportunityHub",   href: "/crm",                      roles: ["admin", "ops_manager"],                              icon: TargetIcon },

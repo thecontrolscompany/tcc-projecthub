@@ -7,7 +7,6 @@ const ADMIN_SECTIONS = [
     links: [
       { href: "/people", label: "People Directory" },
       { href: "/admin/users", label: "Portal Users" },
-      { href: "/admin/user-activity", label: "User Activity" },
       { href: "/admin/contacts", label: "Directory Management" },
     ],
   },
@@ -17,6 +16,7 @@ const ADMIN_SECTIONS = [
     links: [
       { href: "/admin/migrate-sharepoint", label: "SharePoint Migration" },
       { href: "/admin/analytics", label: "System Analytics" },
+      { href: "/admin/user-activity", label: "User Activity" },
       { href: "/time/reconciliation", label: "QuickBooks Time Reconciliation" },
     ],
   },
