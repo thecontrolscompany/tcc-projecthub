@@ -102,6 +102,7 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
   const [modalError, setModalError] = useState<string | null>(null);
   const [customers, setCustomers] = useState<ProjectCustomerOption[]>([]);
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
+  const [confirmDeleteUpdateId, setConfirmDeleteUpdateId] = useState<string | null>(null);
   const [contacts, setContacts] = useState<ProjectContactOption[]>([]);
   const [formValues, setFormValues] = useState<ProjectFormValues>(EMPTY_PROJECT_FORM);
   const [assignments, setAssignments] = useState<ProjectAssignmentDraft[]>([]);
@@ -277,6 +278,24 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
       setProjectUpdates((prev) => ({ ...prev, [projectId]: [] }));
     } finally {
       setLoadingUpdatesFor(null);
+    }
+  }
+
+  async function handleDeleteUpdate(updateId: string, projectId: string) {
+    try {
+      const res = await fetch("/api/admin/weekly-update", {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ updateId }),
+      });
+      if (!res.ok) return;
+      setProjectUpdates((prev) => ({
+        ...prev,
+        [projectId]: (prev[projectId] ?? []).filter((u) => u.id !== updateId),
+      }));
+    } finally {
+      setConfirmDeleteUpdateId(null);
     }
   }
 
@@ -473,32 +492,58 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
 
     return (
       <div className="space-y-1.5">
-        {updates.slice(0, 8).map((update) => (
-          <div
-            key={update.id}
-            className="flex items-center justify-between rounded-lg border border-border-default bg-surface-base px-3 py-1.5 text-xs"
-          >
-            <span className="text-text-secondary">Week of {update.week_of}</span>
-            <div className="flex items-center gap-3">
-              {update.pct_complete !== null && (
-                <span className="font-semibold text-status-success">
-                  {(update.pct_complete * 100).toFixed(1)}%
+        {updates.slice(0, 8).map((update) => {
+          const isConfirming = confirmDeleteUpdateId === update.id;
+          return (
+            <div
+              key={update.id}
+              className="flex items-center justify-between rounded-lg border border-border-default bg-surface-base px-3 py-1.5 text-xs"
+            >
+              <span className="text-text-secondary">Week of {update.week_of}</span>
+              <div className="flex items-center gap-3">
+                {update.pct_complete !== null && (
+                  <span className="font-semibold text-status-success">
+                    {(update.pct_complete * 100).toFixed(1)}%
+                  </span>
+                )}
+                <span
+                  className={[
+                    "rounded-full px-2 py-0.5 font-medium capitalize",
+                    update.status === "draft"
+                      ? "bg-status-warning/10 text-status-warning"
+                      : "bg-status-success/10 text-status-success",
+                  ].join(" ")}
+                >
+                  {update.status}
                 </span>
-              )}
-              <span
-                className={[
-                  "rounded-full px-2 py-0.5 font-medium capitalize",
-                  update.status === "draft"
-                    ? "bg-status-warning/10 text-status-warning"
-                    : "bg-status-success/10 text-status-success",
-                ].join(" ")}
-              >
-                {update.status}
-              </span>
-              {update.status === "submitted" && <ViewReportLink updateId={update.id} />}
+                {update.status === "submitted" && <ViewReportLink updateId={update.id} />}
+                {isConfirming ? (
+                  <>
+                    <button
+                      onClick={() => void handleDeleteUpdate(update.id, projectId)}
+                      className="rounded px-2 py-0.5 font-semibold text-red-600 hover:bg-red-50"
+                    >
+                      Confirm
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteUpdateId(null)}
+                      className="rounded px-2 py-0.5 text-text-secondary hover:bg-surface-raised"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDeleteUpdateId(update.id)}
+                    className="rounded px-2 py-0.5 text-text-tertiary hover:bg-red-50 hover:text-red-600"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
