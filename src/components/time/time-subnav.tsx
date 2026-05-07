@@ -9,7 +9,8 @@ const ADMIN_ITEMS = [
   { href: "/time/reconciliation?tab=overview", label: "Dashboard" },
   { href: "/time/employees", label: "Employee Hours" },
   { href: "/time/projects", label: "Project Hours" },
-  { href: "/time/reconciliation?tab=employees", label: "Match QB Data" },
+  { href: "/time/reconciliation?tab=employees", label: "Match QB Users" },
+  { href: "/time/reconciliation?tab=projects", label: "Match QB Projects" },
   { href: "/time/export", label: "Export" },
 ];
 
@@ -53,7 +54,6 @@ export function TimeSubnav() {
             pathname === itemPath &&
             (itemPath !== "/time/reconciliation" ||
               itemTab === tab ||
-              (itemTab === "employees" && tab === "projects") ||
               (!tab && itemTab === "overview"));
 
           return (

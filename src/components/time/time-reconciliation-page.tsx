@@ -50,10 +50,10 @@ export function TimeReconciliationPage({
             Dashboard
           </TabLink>
           <TabLink href="/time/reconciliation?tab=employees" active={activeTab === "employees"}>
-            Match Employees
+            Match QB Users
           </TabLink>
           <TabLink href="/time/reconciliation?tab=projects" active={activeTab === "projects"}>
-            Match Projects
+            Match QB Projects
           </TabLink>
         </div>
       </section>
@@ -170,13 +170,45 @@ function TimeReconciliationOverview({
         </section>
       )}
 
+      {(snapshot.users.some((user) => !user.matchedEmployee) || snapshot.projects.some((project) => !project.mappedProject)) && (
+        <section className="rounded-3xl border border-amber-200 bg-amber-50 p-6 text-amber-950">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">Needs Matching</p>
+              <h2 className="mt-2 text-xl font-semibold">QuickBooks Time records need ProjectHub links</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6">
+                New QuickBooks users and jobcodes show here after sync. Match users first so employee hours can roll up cleanly.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2 text-sm">
+                {snapshot.users
+                  .filter((user) => !user.matchedEmployee)
+                  .slice(0, 4)
+                  .map((user) => (
+                    <span key={user.qbUserId} className="rounded-full bg-white px-3 py-1 font-medium text-amber-900">
+                      {user.displayName}
+                    </span>
+                  ))}
+              </div>
+            </div>
+            <div className="flex shrink-0 flex-wrap gap-2">
+              <Link href="/time/reconciliation?tab=employees" className="rounded-xl bg-amber-900 px-4 py-2 text-sm font-medium text-white hover:bg-amber-800">
+                Match QB Users
+              </Link>
+              <Link href="/time/reconciliation?tab=projects" className="rounded-xl border border-amber-300 bg-white px-4 py-2 text-sm font-medium text-amber-950 hover:bg-amber-100">
+                Match QB Projects
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Common work</p>
           <div className="mt-4 grid gap-3 md:grid-cols-4">
             <ActionCard href="/time/employees" title="Employee Hours" description="See each worker's hours by project and day." />
             <ActionCard href="/time/projects" title="Project Hours" description="See each project's labor by worker and day." />
-            <ActionCard href="/time/reconciliation?tab=employees" title="Match QB Data" description="Connect unmatched QB employees and jobcodes to ProjectHub records." />
+            <ActionCard href="/time/reconciliation?tab=employees" title="Match QB Users" description="Create or link ProjectHub users from unmatched QuickBooks employees." />
             <ActionCard href="/time/export" title="Export" description="Download QB Time entries for a project to Excel." />
           </div>
         </section>

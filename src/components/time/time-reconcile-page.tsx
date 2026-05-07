@@ -33,6 +33,16 @@ export function TimeReconcileUsersPanel({ snapshot }: { snapshot: TimeReconcileS
   const [errors, setErrors] = useState<Record<number, string>>({});
   const [manualPicks, setManualPicks] = useState<ManualPickState>({});
   const [rolePicks, setRolePicks] = useState<RolePickState>({});
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLowerCase();
+  const visibleUsers = normalizedQuery
+    ? snapshot.users.filter((user) =>
+        [user.displayName, user.email, user.username, String(user.qbUserId)]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedQuery)
+      )
+    : snapshot.users;
 
   async function runAction(
     qbUserId: number,
@@ -90,13 +100,37 @@ export function TimeReconcileUsersPanel({ snapshot }: { snapshot: TimeReconcileS
       </div>
 
       <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
+        <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Unmatched QB Users</p>
+            <h2 className="mt-2 text-xl font-semibold text-text-primary">Create or map ProjectHub users</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
+              Search for the QuickBooks employee, then use Create and map when they do not already exist in ProjectHub.
+            </p>
+          </div>
+          <label className="min-w-0 lg:w-80">
+            <span className="mb-1 block text-xs font-medium text-text-secondary">Search QB users</span>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="William Caldwell"
+              className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+            />
+          </label>
+        </div>
+
         <div className="space-y-4">
           {snapshot.users.length === 0 ? (
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-5 text-sm text-emerald-900">
               No unmatched QuickBooks users are waiting in the reconciliation queue.
             </div>
+          ) : visibleUsers.length === 0 ? (
+            <div className="rounded-2xl border border-border-default bg-surface-overlay px-4 py-5 text-sm text-text-secondary">
+              No unmatched QuickBooks users match this search.
+            </div>
           ) : (
-            snapshot.users.map((user) => {
+            visibleUsers.map((user) => {
               const pendingState = pending[user.qbUserId];
               const manualPickId = manualPicks[user.qbUserId] ?? "";
               const rolePick = rolePicks[user.qbUserId] ?? "installer";
