@@ -1249,7 +1249,7 @@ function ProjectDetail({
                   <span className="font-medium text-slate-800">
                     {format(new Date(packet.packet_date + "T00:00:00"), "MMMM d, yyyy")}
                   </span>
-                  <span className="text-xs font-semibold" style={{ color: HEADER_BG }}>
+                  <span className="shrink-0 rounded-full px-3 py-1 text-xs font-semibold text-white" style={{ backgroundColor: HEADER_BG }}>
                     View Report →
                   </span>
                 </a>
@@ -1501,6 +1501,12 @@ function CustomerPasswordDialog({ onClose }: { onClose: () => void }) {
       setSaving(false);
       return;
     }
+
+    await fetch("/api/auth/activity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventType: "password_changed", metadata: { source: "customer_portal" } }),
+    }).catch(() => null);
 
     setMessage("Password updated.");
     setPassword("");
