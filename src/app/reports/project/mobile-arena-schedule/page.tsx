@@ -156,7 +156,7 @@ export default async function MobileArenaScheduleReportPage({ searchParams }: Pa
                       <h2 className="mt-1 text-lg font-bold">{packet.title}</h2>
                     </div>
                     <Link
-                      href={`/reports/project/mobile-arena-schedule?projectId=${encodeURIComponent(projectId)}&packetDate=${encodeURIComponent(packet.packet_date)}`}
+                      href={`/api/schedule-review?projectId=${encodeURIComponent(projectId)}&packetDate=${encodeURIComponent(packet.packet_date)}`}
                       className="inline-flex items-center rounded-xl border border-brand-primary/20 bg-brand-primary/10 px-3 py-2 text-sm font-semibold text-brand-primary transition hover:bg-brand-primary/20"
                     >
                       View Report &rarr;

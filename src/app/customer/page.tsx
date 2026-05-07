@@ -1241,7 +1241,7 @@ function ProjectDetail({
               {project.schedule_review_packets.map((packet) => (
                 <a
                   key={packet.id}
-                  href={`/reports/project/mobile-arena-schedule?projectId=${encodeURIComponent(project.id)}&packetDate=${encodeURIComponent(packet.packet_date)}`}
+                  href={`/api/schedule-review?projectId=${encodeURIComponent(project.id)}&packetDate=${encodeURIComponent(packet.packet_date)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-between px-6 py-4 text-sm transition hover:bg-slate-50"
