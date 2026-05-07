@@ -14,24 +14,61 @@ type NavItem = {
   external?: boolean;
 };
 
-function GridIcon({ className = "h-5 w-5" }: IconProps) {
+function GearIcon({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
-      <rect x="3" y="3" width="7" height="7" rx="1.5" />
-      <rect x="14" y="3" width="7" height="7" rx="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" />
-      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 2.8v3" />
+      <path d="M12 18.2v3" />
+      <path d="m4.7 4.7 2.1 2.1" />
+      <path d="m17.2 17.2 2.1 2.1" />
+      <path d="M2.8 12h3" />
+      <path d="M18.2 12h3" />
+      <path d="m4.7 19.3 2.1-2.1" />
+      <path d="m17.2 6.8 2.1-2.1" />
     </svg>
   );
 }
 
-function DocumentIcon({ className = "h-5 w-5" }: IconProps) {
+function OperationsIcon({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
-      <path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
-      <path d="M14 3v6h6" />
-      <path d="M9 13h6" />
-      <path d="M9 17h6" />
+      <rect x="3" y="4" width="6" height="5" rx="1.4" />
+      <rect x="15" y="4" width="6" height="5" rx="1.4" />
+      <rect x="9" y="15" width="6" height="5" rx="1.4" />
+      <path d="M9 6.5h6" />
+      <path d="M6 9v2.5A3.5 3.5 0 0 0 9.5 15" />
+      <path d="M18 9v2.5A3.5 3.5 0 0 1 14.5 15" />
+    </svg>
+  );
+}
+
+function BuildingIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" />
+      <path d="M16 9h2a2 2 0 0 1 2 2v10" />
+      <path d="M3 21h18" />
+      <path d="M8 7h1.5" />
+      <path d="M12.5 7H14" />
+      <path d="M8 11h1.5" />
+      <path d="M12.5 11H14" />
+      <path d="M8 15h1.5" />
+      <path d="M12.5 15H14" />
+      <path d="M9 21v-3h2" />
+    </svg>
+  );
+}
+
+function TargetIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 2.5v3" />
+      <path d="M21.5 12h-3" />
+      <path d="M12 18.5v3" />
+      <path d="M5.5 12h-3" />
     </svg>
   );
 }
@@ -65,17 +102,6 @@ function FolderIcon({ className = "h-5 w-5" }: IconProps) {
   );
 }
 
-function ClipboardIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
-      <rect x="6" y="4" width="12" height="17" rx="2" />
-      <path d="M9 4.5h6" />
-      <path d="M9 10h6" />
-      <path d="M9 14h6" />
-    </svg>
-  );
-}
-
 function WrenchIcon({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
@@ -97,17 +123,6 @@ function MessageIcon({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
       <path d="M7 18.5H4a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H11l-4 3v-3Z" />
-    </svg>
-  );
-}
-
-function UsersIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
-      <circle cx="9" cy="8" r="3" />
-      <path d="M2 19.5c1.2-2.5 3.5-4 7-4s5.8 1.5 7 4" />
-      <circle cx="17" cy="9" r="2.5" />
-      <path d="M17 13.5c1.5 0 3 .8 4 2.5" />
     </svg>
   );
 }
@@ -155,12 +170,12 @@ function ExternalLinkIcon({ className = "h-3.5 w-3.5" }: IconProps) {
 export const NAV_LINKS: NavItem[] = [
   { label: "TimeHub",          href: "/time-hub",                 roles: ["pm", "lead", "installer"],                           icon: ClockIcon },
   { label: "TimeHub",          href: "/time",                     roles: ["admin", "ops_manager"],                              icon: ClockIcon },
-  { label: "AdminHub",         href: "/admin",                    roles: ["admin"],                                             icon: GridIcon },
-  { label: "OperationsHub",    href: "/ops",                      roles: ["admin", "ops_manager"],                              icon: GridIcon },
-  { label: "ProjectHub",       href: "/pm",                       roles: ["admin", "pm", "lead", "ops_manager"],                icon: ClipboardIcon },
-  { label: "OpportunityHub",   href: "/crm/dashboard",            roles: ["admin", "ops_manager"],                              icon: DocumentIcon },
-  { label: "OpportunityHub",   href: "/crm/accounts",             roles: ["pm", "lead"],                                        icon: DocumentIcon },
-  { label: "OpportunityHub",   href: "/quotes",                   roles: ["customer"],                                          icon: DocumentIcon },
+  { label: "AdminHub",         href: "/admin",                    roles: ["admin"],                                             icon: GearIcon },
+  { label: "OperationsHub",    href: "/ops",                      roles: ["admin", "ops_manager"],                              icon: OperationsIcon },
+  { label: "ProjectHub",       href: "/pm",                       roles: ["admin", "pm", "lead", "ops_manager"],                icon: BuildingIcon },
+  { label: "OpportunityHub",   href: "/crm/dashboard",            roles: ["admin", "ops_manager"],                              icon: TargetIcon },
+  { label: "OpportunityHub",   href: "/crm/accounts",             roles: ["pm", "lead"],                                        icon: TargetIcon },
+  { label: "OpportunityHub",   href: "/quotes",                   roles: ["customer"],                                          icon: TargetIcon },
   { label: "Projects",         href: "/projects",                 roles: [],                                                    icon: FolderIcon },
   { label: "Installer",        href: "/installer",                roles: ["installer"],                                         icon: WrenchIcon },
   { label: "BillingHub",       href: "/billing",                  roles: ["admin", "ops_manager"],                              icon: DollarIcon },
