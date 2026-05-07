@@ -61,12 +61,25 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get("projectId");
   const reportType = searchParams.get("reportType");
+  const list = searchParams.get("list") === "true";
   if (!projectId || !reportType) {
     return NextResponse.json({ error: "Missing projectId or reportType." }, { status: 400 });
   }
 
   const hasAccess = await verifyProjectAccess(projectId, user.id, role);
   if (!hasAccess) return NextResponse.json({ error: "Not assigned to this project." }, { status: 403 });
+
+  if (list) {
+    const { data, error } = await adminClient()
+      .from("project_report_packets")
+      .select("id, packet_date, title")
+      .eq("project_id", projectId)
+      .eq("report_type", reportType)
+      .order("packet_date", { ascending: false });
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ packets: data ?? [] });
+  }
 
   const { data, error } = await adminClient()
     .from("project_report_packets")

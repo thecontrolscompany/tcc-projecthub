@@ -107,6 +107,11 @@ function isEglin1416Project(projectName: string) {
   return normalized.includes("eglin") && normalized.includes("1416");
 }
 
+function isMobileArenaProject(projectName: string) {
+  const normalized = projectName.toLowerCase();
+  return normalized.includes("mobile") && normalized.includes("arena");
+}
+
 function normalizeCrewLogRows(rows: CrewLogEntry[] | null | undefined): CrewLogEntry[] {
   const byDay = new Map((rows ?? []).map((row) => {
     const legacyWorkers = (row as CrewLogEntry & { men?: number }).men;
@@ -884,6 +889,7 @@ function UpdateForm({
     : !draftUpdateId && !submittedUpdateId && weekOf === thisSaturday;
   const activeChangeOrders = changeOrders.filter((co) => co.status !== "void");
   const showEglinReportBuilder = isEglin1416Project(project.name);
+  const showScheduleReviews = isMobileArenaProject(project.name);
   const laborEffectiveHours =
     laborOverrideActive && laborOverride !== "" ? Number(laborOverride) : laborPulled;
   const laborGrandTotal = laborDetail?.reduce((sum, worker) => sum + worker.total, 0) ?? 0;
@@ -900,14 +906,26 @@ function UpdateForm({
             <p className="text-xs font-semibold uppercase tracking-wide text-status-success">Daily Construction Report</p>
             <h2 className="mt-1 text-xl font-bold text-text-primary">{project.name}</h2>
             <p className="text-sm text-text-secondary">{project.customer?.name}</p>
-            {showEglinReportBuilder && (
-              <div className="mt-3">
+            {(showEglinReportBuilder || showScheduleReviews) && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {showEglinReportBuilder && (
                 <a
                   href={`/pm/reports/eglin-1416?projectId=${encodeURIComponent(project.id)}`}
                   className="inline-flex items-center rounded-xl border border-brand-primary/20 bg-brand-primary/10 px-3 py-2 text-sm font-semibold text-brand-primary transition hover:bg-brand-primary/20"
                 >
                   Open Eglin Report Builder
                 </a>
+                )}
+                {showScheduleReviews && (
+                  <a
+                    href={`/reports/project/mobile-arena-schedule?projectId=${encodeURIComponent(project.id)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center rounded-xl border border-brand-primary/20 bg-brand-primary/10 px-3 py-2 text-sm font-semibold text-brand-primary transition hover:bg-brand-primary/20"
+                  >
+                    Schedule Reviews
+                  </a>
+                )}
               </div>
             )}
           </div>
