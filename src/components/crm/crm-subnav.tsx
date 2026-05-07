@@ -7,7 +7,9 @@ const TABS = [
   { label: "Dashboard",     href: "/crm/dashboard" },
   { label: "Accounts",      href: "/crm/accounts" },
   { label: "People",        href: "/people" },
-  { label: "Pipeline",      href: "/crm/opportunities" },
+  { label: "Relationship Pipeline", href: "/crm/opportunities" },
+  { label: "Pursuits",      href: "/quotes/pursuits" },
+  { label: "Quote Pipeline", href: "/quotes" },
   { label: "Activities",    href: "/crm/activities" },
   { label: "Tasks",         href: "/crm/tasks" },
 ];

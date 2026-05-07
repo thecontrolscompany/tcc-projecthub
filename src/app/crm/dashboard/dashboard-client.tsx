@@ -48,7 +48,7 @@ export function DashboardClient({ metrics, role }: DashboardClientProps) {
       <CrmSubnav role={role} />
 
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-text-primary">RelationshipHub Dashboard</h1>
+        <h1 className="text-xl font-semibold text-text-primary">OpportunityHub Dashboard</h1>
       </div>
 
       {/* Top metric cards */}
