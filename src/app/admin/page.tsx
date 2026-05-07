@@ -7,6 +7,7 @@ const ADMIN_SECTIONS = [
     links: [
       { href: "/people", label: "People Directory" },
       { href: "/admin/users", label: "Portal Users" },
+      { href: "/admin/user-activity", label: "User Activity" },
       { href: "/admin/contacts", label: "Directory Management" },
     ],
   },
