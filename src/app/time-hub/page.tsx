@@ -33,7 +33,7 @@ export default async function TimeHubPage() {
     .single();
 
   if (profile?.role === 'admin' || profile?.role === 'ops_manager') {
-    redirect('/time/reconciliation?tab=overview');
+    redirect('/time/employees');
   }
 
   let projects: TimeTrackingProject[] = [];

@@ -47,7 +47,7 @@ export function TimeReconciliationPage({
 
         <div className="mt-5 flex flex-wrap gap-2">
           <TabLink href="/time/reconciliation?tab=overview" active={activeTab === "overview"}>
-            Dashboard
+            TimeHub QB Sync
           </TabLink>
           <TabLink href="/time/reconciliation?tab=employees" active={activeTab === "employees"}>
             Match QB Users

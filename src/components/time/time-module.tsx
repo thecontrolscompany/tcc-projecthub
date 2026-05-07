@@ -61,10 +61,8 @@ export function TimeClockPage({
 }
 
 export function TimeEmployeesPage({
-  users,
   canManage = false
 }: {
-  users: TimeModuleUser[];
   canManage?: boolean;
 }) {
   return (
@@ -73,27 +71,15 @@ export function TimeEmployeesPage({
       <HeaderBlock
         eyebrow="Employees"
         title="Employee hours"
-        description="Use this page for weekly and pay-period labor views. Imported QuickBooks user reconciliation now lives in the dedicated reconciliation workspace."
+        description="Review QuickBooks Time labor by employee, project, and day."
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <MetricCard label="QB users" value={String(users.length)} />
-        <MetricCard label="Active users" value={String(users.filter((user) => user.active).length)} />
-        <MetricCard label="Mapped to TCC" value={String(users.filter((user) => user.matchedEmployee).length)} />
-      </div>
-
       {canManage && (
-        <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-default bg-surface-overlay px-4 py-3">
-            <div>
-              <p className="text-sm font-medium text-text-primary">Need to match imported employees to portal logins?</p>
-              <p className="text-sm text-text-secondary">Open the reconciliation workspace for imported user review, mapping, and cleanup.</p>
-            </div>
-            <Link href="/time/reconciliation?tab=employees" className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse hover:bg-brand-primary-hover">
-              Open reconciliation
-            </Link>
-          </div>
-        </section>
+        <div className="flex justify-end">
+          <Link href="/time/reconciliation?tab=employees" className="rounded-xl border border-border-default px-4 py-2 text-sm font-medium text-text-primary hover:bg-surface-overlay">
+            Match QB users
+          </Link>
+        </div>
       )}
 
       <EmployeeHoursSection />

@@ -6,19 +6,19 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 const ADMIN_ITEMS = [
-  { href: "/time/reconciliation?tab=overview", label: "Dashboard" },
   { href: "/time/employees", label: "Employee Hours" },
   { href: "/time/projects", label: "Project Hours" },
   { href: "/time/reconciliation?tab=employees", label: "Match QB Users" },
   { href: "/time/reconciliation?tab=projects", label: "Match QB Projects" },
   { href: "/time/export", label: "Export" },
+  { href: "/time/reconciliation?tab=overview", label: "TimeHub QB Sync" },
 ];
 
 const OPS_MANAGER_ITEMS = [
-  { href: "/time/reconciliation?tab=overview", label: "Dashboard" },
   { href: "/time/employees", label: "Employee Hours" },
   { href: "/time/projects", label: "Project Hours" },
   { href: "/time/export", label: "Export" },
+  { href: "/time/reconciliation?tab=overview", label: "TimeHub QB Sync" },
 ];
 
 export function TimeSubnav() {
