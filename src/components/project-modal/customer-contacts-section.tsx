@@ -3,15 +3,20 @@
 import { useEffect, useState } from "react";
 import type { Profile, ProjectCustomerContact } from "@/types/database";
 
+type AvailablePortalContact = {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  display_name?: string | null;
+  company_name?: string | null;
+  profile_id: string | null;
+  source: "directory" | "crm";
+};
+
 export function CustomerContactsSection({ projectId }: { projectId: string }) {
   const [contacts, setContacts] = useState<(ProjectCustomerContact & { profile: Profile })[]>([]);
-  const [availableContacts, setAvailableContacts] = useState<Array<{
-    id: string;
-    email: string;
-    first_name: string | null;
-    last_name: string | null;
-    profile_id: string | null;
-  }>>([]);
+  const [availableContacts, setAvailableContacts] = useState<AvailablePortalContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
@@ -26,13 +31,7 @@ export function CustomerContactsSection({ projectId }: { projectId: string }) {
         });
         const json = await response.json();
         setContacts((((response.ok ? json?.contacts : []) ?? []) as (ProjectCustomerContact & { profile: Profile })[]));
-        setAvailableContacts((((response.ok ? json?.availableContacts : []) ?? []) as Array<{
-          id: string;
-          email: string;
-          first_name: string | null;
-          last_name: string | null;
-          profile_id: string | null;
-        }>));
+        setAvailableContacts((((response.ok ? json?.availableContacts : []) ?? []) as AvailablePortalContact[]));
       } finally {
         setLoading(false);
       }
@@ -53,7 +52,12 @@ export function CustomerContactsSection({ projectId }: { projectId: string }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ projectId, pmDirectoryId: selectedContactId }),
+      body: JSON.stringify({
+        projectId,
+        ...(selectedContactId.startsWith("crm:")
+          ? { crmContactId: selectedContactId.replace(/^crm:/, "") }
+          : { pmDirectoryId: selectedContactId.replace(/^directory:/, "") }),
+      }),
     });
     const json = await res.json();
     if (!res.ok) {
@@ -159,10 +163,12 @@ export function CustomerContactsSection({ projectId }: { projectId: string }) {
               >
                 <option value="">Select a contact...</option>
                 {availableToAdd.map((contact) => {
-                  const fullName = [contact.first_name, contact.last_name].filter(Boolean).join(" ").trim();
+                  const fullName = contact.display_name || [contact.first_name, contact.last_name].filter(Boolean).join(" ").trim();
+                  const sourceLabel = contact.source === "crm" ? "CRM" : "Directory";
+                  const companyLabel = contact.company_name ? ` - ${contact.company_name}` : "";
                   return (
-                    <option key={contact.id} value={contact.id}>
-                      {fullName ? `${fullName} <${contact.email}>` : contact.email}
+                    <option key={`${contact.source}:${contact.id}`} value={`${contact.source}:${contact.id}`}>
+                      {fullName ? `${fullName} <${contact.email}>` : contact.email} ({sourceLabel}{companyLabel})
                     </option>
                   );
                 })}

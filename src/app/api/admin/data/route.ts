@@ -648,7 +648,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Missing project id." }, { status: 400 });
     }
 
-    const [contactResult, availableContactsResult] = await Promise.all([
+    const [contactResult, availableContactsResult, crmContactsResult] = await Promise.all([
       adminClient
         .from("project_customer_contacts")
         .select("*, profile:profiles(*)")
@@ -657,20 +657,67 @@ export async function GET(request: Request) {
         .from("pm_directory")
         .select("id, email, first_name, last_name, profile_id")
         .order("email"),
+      adminClient
+        .from("crm_contacts")
+        .select("id, email, first_name, last_name, display_name, account:crm_accounts!crm_contacts_account_id_fkey(company_name)")
+        .not("email", "is", null)
+        .eq("is_active", true)
+        .order("display_name"),
     ]);
 
-    if (contactResult.error || availableContactsResult.error) {
+    if (contactResult.error || availableContactsResult.error || crmContactsResult.error) {
       return NextResponse.json({
         error:
           contactResult.error?.message ||
           availableContactsResult.error?.message ||
+          crmContactsResult.error?.message ||
           "Failed to load customer contacts.",
       }, { status: 500 });
     }
 
+    const emails = [
+      ...(availableContactsResult.data ?? []).map((contact) => contact.email),
+      ...(crmContactsResult.data ?? []).map((contact) => contact.email),
+    ].filter(Boolean);
+
+    const { data: matchingProfiles, error: profilesError } = emails.length > 0
+      ? await adminClient
+          .from("profiles")
+          .select("id, email")
+          .in("email", emails)
+      : { data: [], error: null };
+
+    if (profilesError) {
+      return NextResponse.json({ error: profilesError.message }, { status: 500 });
+    }
+
+    const profileIdByEmail = new Map(
+      (matchingProfiles ?? []).map((profile) => [profile.email.toLowerCase(), profile.id])
+    );
+
+    const directoryContacts = (availableContactsResult.data ?? []).map((contact) => ({
+      ...contact,
+      source: "directory",
+      profile_id: contact.profile_id ?? profileIdByEmail.get(contact.email.toLowerCase()) ?? null,
+    }));
+
+    const crmContacts = (crmContactsResult.data ?? []).map((contact) => {
+      const account = Array.isArray(contact.account) ? contact.account[0] : contact.account;
+      return {
+        id: contact.id,
+        email: contact.email,
+        first_name: contact.first_name,
+        last_name: contact.last_name,
+        display_name: contact.display_name,
+        company_name: account?.company_name ?? null,
+        profile_id: profileIdByEmail.get(contact.email.toLowerCase()) ?? null,
+        source: "crm",
+      };
+    });
+
     return NextResponse.json({
       contacts: contactResult.data ?? [],
-      availableContacts: availableContactsResult.data ?? [],
+      availableContacts: [...directoryContacts, ...crmContacts],
     });
   }
 
