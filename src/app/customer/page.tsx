@@ -1259,16 +1259,16 @@ function ProjectDetail({
         </section>
       )}
 
-      <div className="customer-print-hide fixed bottom-6 right-6 z-30 flex flex-col items-end gap-3">
+      <div className="customer-print-hide fixed bottom-6 right-6 z-30 flex flex-col items-end gap-3 pointer-events-none">
         {feedbackStatus && (
-          <div className="rounded-2xl border border-status-success/20 bg-white px-4 py-3 text-sm text-status-success shadow-lg">
+          <div className="pointer-events-auto rounded-2xl border border-status-success/20 bg-white px-4 py-3 text-sm text-status-success shadow-lg">
             {feedbackStatus}
           </div>
         )}
 
         <div
           className={[
-            "w-full max-w-md overflow-hidden rounded-3xl border bg-white shadow-[0_20px_50px_rgba(1,122,111,0.18)] transition-all duration-300",
+            "pointer-events-auto w-full max-w-md overflow-hidden rounded-3xl border bg-white shadow-[0_20px_50px_rgba(1,122,111,0.18)] transition-all duration-300",
             showFeedback ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0",
           ].join(" ")}
           style={{ borderColor: BORDER }}
@@ -1347,7 +1347,7 @@ function ProjectDetail({
             setFeedbackStatus(null);
             setShowFeedback((current) => !current);
           }}
-          className="rounded-full px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:opacity-90"
+          className="pointer-events-auto rounded-full px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:opacity-90"
           style={{ backgroundColor: HEADER_BG }}
         >
           Leave Feedback
