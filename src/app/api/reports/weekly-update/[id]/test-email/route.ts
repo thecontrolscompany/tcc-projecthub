@@ -312,6 +312,8 @@ function buildWeeklyReportEmail({
   customerName,
   pmName,
   reportUrl,
+  portalUrl,
+  logoUrl,
   reportData,
 }: {
   update: WeeklyUpdateEmailRow;
@@ -319,12 +321,16 @@ function buildWeeklyReportEmail({
   customerName: string | null;
   pmName: string;
   reportUrl: string;
+  portalUrl: string;
+  logoUrl: string;
   reportData: EmailReportData;
 }) {
   const project = normalizeSingle(update.project);
   const safeProjectName = escapeHtml(customerProjectName(projectName));
   const safeCustomerName = customerName ? escapeHtml(customerName) : "The Controls Company";
   const safeReportUrl = escapeHtml(reportUrl);
+  const safePortalUrl = escapeHtml(portalUrl);
+  const safeLogoUrl = escapeHtml(logoUrl);
   const weekLabel = formatWeekLabel(update.week_of);
   const percentLabel = formatPercent(update.pct_complete);
   const crewLog = update.crew_log && update.crew_log.length > 0 ? normalizeCrewLog(update.crew_log) : emptyCrewLog();
@@ -475,13 +481,25 @@ function buildWeeklyReportEmail({
             <td align="center" style="padding: 28px 12px;">
               <table role="presentation" width="680" cellspacing="0" cellpadding="0" border="0" style="width: 680px; border-collapse: collapse; background: #ffffff; border: 1px solid #cfdcda;">
                 <tr>
-                  <td style="padding: 20px 28px; background: #017a6f;">
-                    <div style="color: #d8f1ee; font-family: Arial, Helvetica, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; line-height: 1.3; text-transform: uppercase;">
-                      The Controls Company
-                    </div>
-                    <div style="margin-top: 5px; color: #ffffff; font-family: Arial, Helvetica, sans-serif; font-size: 26px; font-weight: 700; line-height: 1.2;">
-                      Weekly Project Report
-                    </div>
+                  <td style="padding: 18px 28px; background: #017a6f;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse: collapse;">
+                      <tr>
+                        <td width="82" style="vertical-align: middle;">
+                          <img src="${safeLogoUrl}" width="70" alt="The Controls Company" style="display: block; width: 70px; height: auto; border: 0;">
+                        </td>
+                        <td style="vertical-align: middle;">
+                          <div style="color: #d8f1ee; font-family: Arial, Helvetica, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; line-height: 1.3; text-transform: uppercase;">
+                            The Controls Company, LLC
+                          </div>
+                          <div style="margin-top: 5px; color: #ffffff; font-family: Arial, Helvetica, sans-serif; font-size: 26px; font-weight: 700; line-height: 1.2;">
+                            Weekly Project Report
+                          </div>
+                          <div style="margin-top: 4px; color: #d8f1ee; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 1.4;">
+                            Service Disabled Veteran Owned Small Business
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
                 <tr>
@@ -562,6 +580,12 @@ function buildWeeklyReportEmail({
                         <td bgcolor="#017a6f" style="background: #017a6f; padding: 12px 18px;">
                           <a href="${safeReportUrl}" style="color: #ffffff; display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: 14px; font-weight: 700; line-height: 1.2; text-decoration: none;">
                             Open Printable Report
+                          </a>
+                        </td>
+                        <td width="10" style="font-size: 1px; line-height: 1px;">&nbsp;</td>
+                        <td bgcolor="#ffffff" style="background: #ffffff; border: 1px solid #017a6f; padding: 11px 17px;">
+                          <a href="${safePortalUrl}" style="color: #017a6f; display: inline-block; font-family: Arial, Helvetica, sans-serif; font-size: 14px; font-weight: 700; line-height: 1.2; text-decoration: none;">
+                            View Customer Portal
                           </a>
                         </td>
                       </tr>
@@ -872,7 +896,10 @@ export async function POST(_request: Request, { params }: RouteContext) {
   const reportData = await loadEmailReportData(admin, update.project_id, update.include_bom_report);
   reportData.contractValue = (project.estimated_income ?? 0) + reportData.approvedCoTotal;
   reportData.remaining = Math.max(reportData.contractValue - reportData.totalBilled, 0);
-  const reportUrl = `${appUrl()}/reports/weekly-update/${encodeURIComponent(update.id)}`;
+  const baseUrl = appUrl();
+  const reportUrl = `${baseUrl}/reports/weekly-update/${encodeURIComponent(update.id)}`;
+  const portalUrl = `${baseUrl}/customer`;
+  const logoUrl = `${baseUrl}/logo.png`;
   const logId = await createSendAttemptLog({
     admin,
     recipientEmail: user.email,
@@ -885,6 +912,8 @@ export async function POST(_request: Request, { params }: RouteContext) {
     customerName: customer?.name ?? null,
     pmName,
     reportUrl,
+    portalUrl,
+    logoUrl,
     reportData,
   });
 
