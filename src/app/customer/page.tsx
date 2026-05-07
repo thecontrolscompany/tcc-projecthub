@@ -1239,20 +1239,23 @@ function ProjectDetail({
             </div>
             <div className="divide-y divide-slate-100">
               {project.schedule_review_packets.map((packet) => (
-                <a
+                <div
                   key={packet.id}
-                  href={`/api/schedule-review?projectId=${encodeURIComponent(project.id)}&packetDate=${encodeURIComponent(packet.packet_date)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between px-6 py-4 text-sm transition hover:bg-slate-50"
+                  className="flex items-center justify-between px-6 py-4 text-sm"
                 >
                   <span className="font-medium text-slate-800">
                     {format(new Date(packet.packet_date + "T00:00:00"), "MMMM d, yyyy")}
                   </span>
-                  <span className="shrink-0 rounded-full px-3 py-1 text-xs font-semibold text-white" style={{ backgroundColor: HEADER_BG }}>
+                  <a
+                    href={`/api/schedule-review?projectId=${encodeURIComponent(project.id)}&packetDate=${encodeURIComponent(packet.packet_date)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 rounded-full px-3 py-1 text-xs font-semibold text-white transition hover:opacity-80"
+                    style={{ backgroundColor: HEADER_BG }}
+                  >
                     View Report →
-                  </span>
-                </a>
+                  </a>
+                </div>
               ))}
             </div>
           </div>
