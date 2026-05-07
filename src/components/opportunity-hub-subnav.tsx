@@ -5,7 +5,24 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-const ALL_ITEMS = [
+const CRM_ADMIN_ITEMS = [
+  { href: "/crm/dashboard", label: "Dashboard" },
+  { href: "/crm/accounts", label: "Accounts" },
+  { href: "/crm/opportunities", label: "Rel. Pipeline" },
+  { href: "/crm/activities", label: "Activities" },
+  { href: "/crm/tasks", label: "Tasks" },
+  { href: "/crm/targets", label: "Targets" },
+];
+
+const CRM_OPS_ITEMS = [
+  { href: "/crm/dashboard", label: "Dashboard" },
+  { href: "/crm/accounts", label: "Accounts" },
+  { href: "/crm/opportunities", label: "Rel. Pipeline" },
+  { href: "/crm/activities", label: "Activities" },
+  { href: "/crm/tasks", label: "Tasks" },
+];
+
+const QUOTES_ALL_ITEMS = [
   { href: "/quotes", label: "Pipeline" },
   { href: "/quotes/pursuits", label: "Pursuits" },
   { href: "/quotes/analytics", label: "Analytics" },
@@ -17,14 +34,14 @@ const ALL_ITEMS = [
   { href: "/estimating", label: "Estimating" },
 ];
 
-const OPS_MANAGER_ITEMS = [
+const QUOTES_OPS_ITEMS = [
   { href: "/quotes", label: "Pipeline" },
   { href: "/estimating", label: "Estimating" },
 ];
 
 export function OpportunityHubSubnav() {
   const pathname = usePathname();
-  const [items, setItems] = useState(ALL_ITEMS);
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -36,12 +53,17 @@ export function OpportunityHubSubnav() {
         .eq("id", user.id)
         .maybeSingle()
         .then(({ data }) => {
-          if (data?.role === "ops_manager") {
-            setItems(OPS_MANAGER_ITEMS);
-          }
+          if (data?.role) setRole(data.role);
         });
     });
   }, []);
+
+  const items =
+    role === "admin"
+      ? [...CRM_ADMIN_ITEMS, ...QUOTES_ALL_ITEMS]
+      : role === "ops_manager"
+      ? [...CRM_OPS_ITEMS, ...QUOTES_OPS_ITEMS]
+      : QUOTES_ALL_ITEMS;
 
   return (
     <nav className="rounded-2xl border border-border-default bg-surface-raised p-2">

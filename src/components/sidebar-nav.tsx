@@ -173,7 +173,7 @@ export const NAV_LINKS: NavItem[] = [
   { label: "AdminHub",         href: "/admin",                    roles: ["admin"],                                             icon: GearIcon },
   { label: "OperationsHub",    href: "/ops",                      roles: ["admin", "ops_manager"],                              icon: OperationsIcon },
   { label: "ProjectHub",       href: "/pm",                       roles: ["admin", "pm", "lead", "ops_manager"],                icon: BuildingIcon },
-  { label: "OpportunityHub",   href: "/crm/dashboard",            roles: ["admin", "ops_manager"],                              icon: TargetIcon },
+  { label: "OpportunityHub",   href: "/crm",                      roles: ["admin", "ops_manager"],                              icon: TargetIcon },
   { label: "OpportunityHub",   href: "/crm/accounts",             roles: ["pm", "lead"],                                        icon: TargetIcon },
   { label: "OpportunityHub",   href: "/quotes",                   roles: ["customer"],                                          icon: TargetIcon },
   { label: "Projects",         href: "/projects",                 roles: [],                                                    icon: FolderIcon },
@@ -243,6 +243,16 @@ export function resolvePageTitle(pathname: string) {
 function isActivePath(pathname: string, href: string) {
   if (href === "/admin") {
     return pathname === "/admin";
+  }
+  // OpportunityHub for admin/ops_manager spans /crm/*, /quotes/*, and /estimating
+  if (href === "/crm") {
+    return pathname.startsWith("/crm") || pathname.startsWith("/quotes") ||
+           pathname === "/estimating" || pathname.startsWith("/estimating/");
+  }
+  // OpportunityHub for pm/lead (href=/crm/accounts) also covers /quotes/* and /estimating
+  if (href === "/crm/accounts") {
+    return pathname.startsWith("/crm") || pathname.startsWith("/quotes") ||
+           pathname === "/estimating" || pathname.startsWith("/estimating/");
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);
