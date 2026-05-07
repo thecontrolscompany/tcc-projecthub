@@ -394,7 +394,7 @@ function ProjectList({
     const billedThisPeriod = projects.reduce((sum, project) => sum + (project.billing_periods[0]?.actual_billed ?? 0), 0);
     const averageProgress =
       projects.length > 0
-        ? projects.reduce((sum, project) => sum + (project.billing_periods[0]?.pct_complete ?? 0), 0) / projects.length
+        ? projects.reduce((sum, project) => sum + (project.weekly_updates[0]?.pct_complete ?? project.billing_periods[0]?.pct_complete ?? 0), 0) / projects.length
         : 0;
 
     const financialChartData = projects.map((project) => {
@@ -601,7 +601,7 @@ function ProjectList({
         {filteredProjects.map((project) => {
           const latestPeriod = project.billing_periods[0];
           const latestUpdate = project.weekly_updates[0];
-          const pct = latestPeriod ? latestPeriod.pct_complete * 100 : 0;
+          const pct = (latestUpdate?.pct_complete ?? latestPeriod?.pct_complete ?? 0) * 100;
           const status = getProjectStatus(project);
           const lastUpdateLabel = latestUpdate
             ? `Last update: ${formatWeekEndingSaturday(latestUpdate.week_of, "MMM d, yyyy")} (${formatDistanceToNow(new Date(latestUpdate.week_of), { addSuffix: true })})`
@@ -675,6 +675,8 @@ function ProjectDetail({
   const [feedbackSaving, setFeedbackSaving] = useState(false);
   const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null);
   const latestPeriod = project.billing_periods[0];
+  const latestUpdate = project.weekly_updates[0];
+  const currentProgressPct = latestUpdate?.pct_complete ?? latestPeriod?.pct_complete ?? null;
 
   const progressChartData = useMemo(
     () =>
@@ -771,19 +773,19 @@ function ProjectDetail({
                 </div>
               )}
             </div>
-            {latestPeriod && (
+            {currentProgressPct !== null && (
               <div className="max-w-xl">
                 <div className="mb-2 flex items-center justify-between text-sm">
                   <span className="font-medium text-slate-600">Overall progress</span>
                   <span className="font-semibold" style={{ color: HEADER_BG }}>
-                    {(latestPeriod.pct_complete * 100).toFixed(1)}%
+                    {(currentProgressPct * 100).toFixed(1)}%
                   </span>
                 </div>
                 <div className="overflow-hidden rounded-full bg-slate-100">
                   <div
                     className="h-3 rounded-full transition-all"
                     style={{
-                      width: `${Math.min(latestPeriod.pct_complete * 100, 100)}%`,
+                      width: `${Math.min(currentProgressPct * 100, 100)}%`,
                       backgroundColor: ACCENT,
                     }}
                   />
@@ -798,7 +800,7 @@ function ProjectDetail({
             const contractValue = getProjectContractValue(project);
             const totalBilled = project.billing_periods.reduce((sum, p) => sum + (p.actual_billed ?? 0), 0);
             const remaining = Math.max(contractValue - totalBilled, 0);
-            const currentPct = latestPeriod ? latestPeriod.pct_complete * 100 : null;
+            const currentPct = currentProgressPct !== null ? currentProgressPct * 100 : null;
             return (
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <MetricCard
