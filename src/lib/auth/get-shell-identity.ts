@@ -23,19 +23,29 @@ export async function getShellIdentity(defaultRole: UserRole) {
     const resolvedProfile = await resolveUserRole(user);
     const role = resolvedProfile?.role ?? defaultRole;
 
-    // Check if this staff user also has customer portal access
+    // Check if this staff user also has customer portal access.
+    // PMs and above inherit portal visibility for projects assigned to them.
     let hasPortalAccess = false;
     if (role !== "customer") {
       const adminClient = createAdminClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
-      const { count } = await adminClient
-        .from("project_customer_contacts")
-        .select("id", { count: "exact", head: true })
-        .eq("profile_id", user.id)
-        .eq("portal_access", true);
-      hasPortalAccess = (count ?? 0) > 0;
+      const canViewAssignedProjects = ["admin", "ops_manager", "pm"].includes(role);
+      const [contactResult, assignmentResult] = await Promise.all([
+        adminClient
+          .from("project_customer_contacts")
+          .select("id", { count: "exact", head: true })
+          .eq("profile_id", user.id)
+          .eq("portal_access", true),
+        canViewAssignedProjects
+          ? adminClient
+              .from("project_assignments")
+              .select("id", { count: "exact", head: true })
+              .eq("profile_id", user.id)
+          : Promise.resolve({ count: 0 }),
+      ]);
+      hasPortalAccess = (contactResult.count ?? 0) > 0 || (assignmentResult.count ?? 0) > 0;
     }
 
     return {

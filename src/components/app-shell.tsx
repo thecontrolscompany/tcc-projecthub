@@ -70,13 +70,25 @@ export function AppShell({
   return (
     <>
       <div className="hidden md:block">
-        <SidebarNav role={role} userEmail={userEmail} collapsed={collapsed} onToggle={() => setCollapsed((value) => !value)} />
+        <SidebarNav
+          role={role}
+          userEmail={userEmail}
+          hasPortalAccess={hasPortalAccess}
+          collapsed={collapsed}
+          onToggle={() => setCollapsed((value) => !value)}
+        />
       </div>
       {mobileOpen && (
         <>
           <div className="fixed inset-0 z-40 bg-black/40 md:hidden" onClick={() => setMobileOpen(false)} />
           <div className="fixed inset-y-0 left-0 z-50 md:hidden">
-            <SidebarNav role={role} userEmail={userEmail} collapsed={false} onToggle={() => setMobileOpen(false)} />
+            <SidebarNav
+              role={role}
+              userEmail={userEmail}
+              hasPortalAccess={hasPortalAccess}
+              collapsed={false}
+              onToggle={() => setMobileOpen(false)}
+            />
           </div>
         </>
       )}

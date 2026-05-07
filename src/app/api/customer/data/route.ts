@@ -40,17 +40,48 @@ export async function GET(request: Request) {
   const viewingAs = isAdminPreview ? previewAs : user.id;
 
   if (section === "projects") {
-    const { data: contactRows, error: contactError } = await adminClient
-      .from("project_customer_contacts")
-      .select("project_id")
-      .eq("profile_id", viewingAs)
-      .eq("portal_access", true);
+    const { data: viewingProfile, error: profileError } = await adminClient
+      .from("profiles")
+      .select("role")
+      .eq("id", viewingAs)
+      .maybeSingle();
+
+    if (profileError) {
+      return NextResponse.json({ error: profileError.message }, { status: 500 });
+    }
+
+    const canViewAssignedProjects = ["admin", "ops_manager", "pm"].includes(viewingProfile?.role ?? "");
+
+    const [contactResult, assignmentResult] = await Promise.all([
+      adminClient
+        .from("project_customer_contacts")
+        .select("project_id")
+        .eq("profile_id", viewingAs)
+        .eq("portal_access", true),
+      canViewAssignedProjects
+        ? adminClient
+            .from("project_assignments")
+            .select("project_id")
+            .eq("profile_id", viewingAs)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+
+    const contactError = contactResult.error;
+    const assignmentError = assignmentResult.error;
 
     if (contactError) {
       return NextResponse.json({ error: contactError.message }, { status: 500 });
     }
+    if (assignmentError) {
+      return NextResponse.json({ error: assignmentError.message }, { status: 500 });
+    }
 
-    const projectIds = [...new Set((contactRows ?? []).map((row) => row.project_id))];
+    const projectIds = [
+      ...new Set([
+        ...(contactResult.data ?? []).map((row) => row.project_id),
+        ...(assignmentResult.data ?? []).map((row) => row.project_id),
+      ]),
+    ];
 
     if (projectIds.length === 0) {
       return NextResponse.json({

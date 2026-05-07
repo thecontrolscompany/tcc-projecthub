@@ -261,11 +261,13 @@ function isActivePath(pathname: string, href: string) {
 export function SidebarNav({
   role,
   userEmail,
+  hasPortalAccess = false,
   collapsed,
   onToggle,
 }: {
   role: string;
   userEmail: string;
+  hasPortalAccess?: boolean;
   collapsed: boolean;
   onToggle: () => void;
 }) {
@@ -273,7 +275,10 @@ export function SidebarNav({
   const router = useRouter();
   const supabase = createBrowserClient();
   const effectiveRole = role as NavRole;
-  const links = NAV_LINKS.filter((link) => link.roles.includes(effectiveRole));
+  const links = NAV_LINKS.filter((link) => {
+    if (link.href === "/customer" && hasPortalAccess) return true;
+    return link.roles.includes(effectiveRole);
+  });
   const initials = getUserInitials(userEmail);
 
   return (
