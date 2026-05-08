@@ -2,7 +2,7 @@
 
 ## Current User Request
 
-Commit and push the direct legacy HVAC Estimator UI port into ProjectHub, then answer whether saves can support undo or recovery points. Maintain this continuity document at the beginning and end of each prompt so progress is not lost if chat state breaks again.
+Commit and push the HVAC Estimator screen-size, conduit fill, and authored VAV/FCU SVG fixes. Maintain this continuity document at the beginning and end of each prompt so progress is not lost if chat state breaks again.
 
 ## Starting State
 
@@ -571,3 +571,75 @@ Recovery/undo answer to carry forward:
   3. UI actions: `Undo`, `Redo`, `Save checkpoint`, `Restore previous version`, and optional diff/preview.
   4. Store snapshot metadata: estimate id, organization id, user id, label, reason/autosave/manual, body jsonb, summary totals, created_at.
 - Best next implementation is server-side snapshots around `PUT /api/estimates/[id]`, because it protects against browser crashes, bad saves, and accidental destructive edits.
+
+## End-of-Prompt Continuity Update — Estimator Screen/Conduit/SVG Fixes
+
+User reported:
+
+1. The migrated estimator UI is too smooshed and should fill more of the screen, especially when the sidebar is hidden.
+2. Conduit fill does not work.
+3. VAV and FCU are not using the authored SVG drawings.
+
+Implemented:
+
+- Expanded `/estimating/[id]` page layout:
+  - removed the `max-w-7xl` constraint
+  - reduced outer padding
+  - gave the legacy estimator workspace a larger viewport-height minimum
+- Copied old VAV/FCU authored SVG assets into ProjectHub:
+  - `public/diagrams/vav-template.svg`
+  - `public/diagrams/vav-flow.svg`
+  - `public/diagrams/vav-elec.svg`
+  - `public/diagrams/fcu-template.svg`
+  - `public/diagrams/fcu-flow.svg`
+  - `public/diagrams/fcu-elec.svg`
+- Fixed an initial copy mistake where `public/diagrams` was created as a file instead of a directory; it is now a directory containing the SVG assets.
+- Copied old conduit fill page into ProjectHub:
+  - `src/modules/hvac-estimator/components/conduitFill/ConduitFillPage.jsx`
+- Wired conduit fill inside the ProjectHub estimator workspace:
+  - listens for the old `open-conduit-fill` custom event
+  - shows the conduit fill calculator inside `/estimating/[id]`
+  - listens for `return-from-conduit-fill`
+  - restores the prior editor/subpage with `conduitFillDraft`
+  - preserves the old workflow of applying the calculated home-run conduit count back to the editor
+
+Validation:
+
+- `npm run build` passes.
+- Existing warning only: Next middleware/proxy deprecation.
+
+Current state:
+
+- Changes are implemented but not committed.
+- Need browser verification for:
+  - VAV template visibility by selected component ids
+  - FCU template visibility by selected component ids
+  - conduit fill apply/return from AHU/VAV/common UnitEditorPage flows
+
+## End-of-Prompt Continuity Update — Screen/Conduit/SVG Fix Commit
+
+User asked to commit and push the screen-size, conduit fill, and authored VAV/FCU SVG fixes.
+
+Commit scope:
+
+- Expanded `/estimating/[id]` full-width layout.
+- Added conduit fill page and ProjectHub event routing/return handling.
+- Added authored VAV/FCU SVG assets under `public/diagrams`.
+- Continuity document update.
+
+Validation:
+
+- `npm run build` passed before staging.
+
+Staged files:
+
+- `codex/continuity-integrate-hvac-estimator-workflow.md`
+- `public/diagrams/fcu-elec.svg`
+- `public/diagrams/fcu-flow.svg`
+- `public/diagrams/fcu-template.svg`
+- `public/diagrams/vav-elec.svg`
+- `public/diagrams/vav-flow.svg`
+- `public/diagrams/vav-template.svg`
+- `src/app/estimating/[id]/estimate-detail-client.tsx`
+- `src/app/estimating/[id]/page.tsx`
+- `src/modules/hvac-estimator/components/conduitFill/ConduitFillPage.jsx`

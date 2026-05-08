@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { calcEstimate, calcItem, COMPS_MAP, TYPE_META } from "@/modules/hvac-estimator/components/estimate/estimateCalc";
 import { AddEquipButtons } from "@/modules/hvac-estimator/components/estimate/AddEquipButtons";
 import { EstimateDetail } from "@/modules/hvac-estimator/components/estimate/EstimateDetail";
+import ConduitFillPage from "@/modules/hvac-estimator/components/conduitFill/ConduitFillPage";
 import { ProjectSettingsPanel } from "@/modules/hvac-estimator/components/estimate/ProjectSettingsPanel";
 import { computeCosts, DEFAULT_SETTINGS } from "@/modules/hvac-estimator/components/estimate/projectSettings";
 import AHUSchematic from "@/modules/hvac-estimator/components/ahu/AHUSchematic";
@@ -23,6 +24,7 @@ import { applyVavDefaultSelections, getVisibleVavComponents, normalizeVavCfg } f
 import { buildDefaultVrfSelected, getVisibleVrfComponents, normalizeVrfCfg } from "@/modules/hvac-estimator/components/vrf/vrfData";
 import { summarizeHvacEstimate, type HvacEstimateBody } from "@/modules/hvac-estimator/platform-adapter";
 import { ProjectHubEstimateProvider, useEstimate } from "@/modules/hvac-estimator/shared/EstimateContext";
+import { CONDUIT_FILL_RESTORE_KEY } from "@/modules/hvac-estimator/shared/conduitFill";
 import { UnitaryFlowDiagram } from "@/modules/hvac-estimator/shared/UnitaryFlowDiagram";
 import type { EstimateRecord, EstimateStatus } from "@/types/database";
 
@@ -456,7 +458,7 @@ export function EstimateDetailClient({ estimate }: Props) {
     return (
       <ProjectHubEstimateProvider estimate={body} onChange={updateBody}>
         <div
-          className="overflow-hidden rounded-2xl border border-border-default bg-surface-raised"
+          className="min-h-[calc(100vh-7.5rem)] overflow-hidden rounded-xl border border-border-default bg-surface-raised"
           style={legacyDiagramTheme}
         >
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-default bg-surface-overlay px-4 py-3">
@@ -987,7 +989,64 @@ function LegacyEstimatorWorkspace({
   onUpdate: (patch: Partial<EstimateBody>) => void;
   onBack: () => void;
 }) {
-  const { subPage } = useEstimate() as unknown as { subPage?: { type?: string } | null };
+  const { subPage, setSubPage } = useEstimate() as unknown as {
+    subPage?: { type?: string } | null;
+    setSubPage: (value: Record<string, unknown> | null) => void;
+  };
+  const [showConduitFill, setShowConduitFill] = useState(false);
+
+  useEffect(() => {
+    function openConduitFill() {
+      setShowConduitFill(true);
+    }
+
+    function returnFromConduitFill() {
+      try {
+        const raw = sessionStorage.getItem(CONDUIT_FILL_RESTORE_KEY);
+        if (!raw) {
+          setShowConduitFill(false);
+          return;
+        }
+        const restore = JSON.parse(raw);
+        sessionStorage.removeItem(CONDUIT_FILL_RESTORE_KEY);
+        if (restore?.returnSubPage) {
+          setSubPage({
+            ...restore.returnSubPage,
+            conduitFillDraft: restore.draft || null,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to restore conduit fill state", error);
+      } finally {
+        setShowConduitFill(false);
+      }
+    }
+
+    window.addEventListener("open-conduit-fill", openConduitFill);
+    window.addEventListener("return-from-conduit-fill", returnFromConduitFill);
+    return () => {
+      window.removeEventListener("open-conduit-fill", openConduitFill);
+      window.removeEventListener("return-from-conduit-fill", returnFromConduitFill);
+    };
+  }, [setSubPage]);
+
+  if (showConduitFill) {
+    return (
+      <div style={{ height: "calc(100vh - 8rem)", overflow: "auto" }}>
+        <div className="flex items-center justify-between border-b border-border-default bg-surface-overlay px-4 py-2">
+          <div className="text-sm font-semibold text-text-primary">Conduit Fill Calculator</div>
+          <button
+            type="button"
+            onClick={() => setShowConduitFill(false)}
+            className="rounded-lg border border-border-default px-3 py-1.5 text-sm font-semibold text-text-secondary transition hover:bg-surface-raised hover:text-text-primary"
+          >
+            Back to Editor
+          </button>
+        </div>
+        <ConduitFillPage />
+      </div>
+    );
+  }
 
   if (subPage?.type) {
     switch (subPage.type) {

@@ -33,7 +33,7 @@ export default async function EstimateDetailPage({
   if (error || !estimate) notFound();
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-6">
+    <div className="mx-auto w-full max-w-none px-2 py-2 md:px-3 md:py-3">
       <OpportunityHubSubnav />
       <EstimateDetailClient estimate={estimate as EstimateRecord} />
     </div>
