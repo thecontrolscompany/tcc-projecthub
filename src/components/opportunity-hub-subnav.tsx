@@ -6,34 +6,37 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 const ADMIN_ITEMS = [
-  { href: "/crm/dashboard",     label: "Dashboard" },
-  { href: "/crm/accounts",      label: "Accounts" },
+  { href: "/crm/dashboard",      label: "Dashboard" },
+  { href: "/crm/accounts",       label: "Accounts" },
   { href: "/crm/opportunities",  label: "Pipeline" },
-  { href: "/quotes/pursuits",   label: "Pursuits" },
-  { href: "/estimating",        label: "Estimator" },
-  { href: "/crm/activities",    label: "Activities" },
-  { href: "/crm/tasks",         label: "Tasks" },
-  { href: "/crm/targets",       label: "Targets" },
+  { href: "/quotes/pursuits",    label: "Pursuits" },
+  { href: "/crm/contacts",       label: "Contacts" },
+  { href: "/estimating",         label: "Estimator" },
+  { href: "/crm/activities",     label: "Activities" },
+  { href: "/crm/tasks",          label: "Tasks" },
+  { href: "/crm/targets",        label: "Targets" },
 ];
 
 const OPS_ITEMS = [
-  { href: "/crm/dashboard",     label: "Dashboard" },
-  { href: "/crm/accounts",      label: "Accounts" },
+  { href: "/crm/dashboard",      label: "Dashboard" },
+  { href: "/crm/accounts",       label: "Accounts" },
   { href: "/crm/opportunities",  label: "Pipeline" },
-  { href: "/quotes/pursuits",   label: "Pursuits" },
-  { href: "/estimating",        label: "Estimator" },
-  { href: "/crm/activities",    label: "Activities" },
-  { href: "/crm/tasks",         label: "Tasks" },
-  { href: "/crm/targets",       label: "Targets" },
+  { href: "/quotes/pursuits",    label: "Pursuits" },
+  { href: "/crm/contacts",       label: "Contacts" },
+  { href: "/estimating",         label: "Estimator" },
+  { href: "/crm/activities",     label: "Activities" },
+  { href: "/crm/tasks",          label: "Tasks" },
+  { href: "/crm/targets",        label: "Targets" },
 ];
 
 const PM_ITEMS = [
-  { href: "/crm/accounts",      label: "Accounts" },
+  { href: "/crm/accounts",       label: "Accounts" },
   { href: "/crm/opportunities",  label: "Pipeline" },
-  { href: "/quotes/pursuits",   label: "Pursuits" },
-  { href: "/estimating",        label: "Estimator" },
-  { href: "/crm/activities",    label: "Activities" },
-  { href: "/crm/tasks",         label: "Tasks" },
+  { href: "/quotes/pursuits",    label: "Pursuits" },
+  { href: "/crm/contacts",       label: "Contacts" },
+  { href: "/estimating",         label: "Estimator" },
+  { href: "/crm/activities",     label: "Activities" },
+  { href: "/crm/tasks",          label: "Tasks" },
 ];
 
 export function OpportunityHubSubnav() {

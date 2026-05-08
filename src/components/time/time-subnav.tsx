@@ -8,15 +8,17 @@ import { createClient } from "@/lib/supabase/client";
 const ADMIN_ITEMS = [
   { href: "/time/employees", label: "Employee Hours" },
   { href: "/time/projects", label: "Project Hours" },
+  { href: "/time/clock", label: "Time Clock" },
   { href: "/time/export", label: "Export" },
-  { href: "/time/reconciliation?tab=overview", label: "TimeHub QB Sync" },
+  { href: "/time/reconciliation?tab=overview", label: "QB Sync" },
 ];
 
 const OPS_MANAGER_ITEMS = [
   { href: "/time/employees", label: "Employee Hours" },
   { href: "/time/projects", label: "Project Hours" },
+  { href: "/time/clock", label: "Time Clock" },
   { href: "/time/export", label: "Export" },
-  { href: "/time/reconciliation?tab=overview", label: "TimeHub QB Sync" },
+  { href: "/time/reconciliation?tab=overview", label: "QB Sync" },
 ];
 
 export function TimeSubnav() {
