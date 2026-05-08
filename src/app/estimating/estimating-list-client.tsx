@@ -31,6 +31,8 @@ export function EstimatingListClient() {
   const [estimates, setEstimates] = useState<EstimateRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -61,6 +63,33 @@ export function EstimatingListClient() {
       active = false;
     };
   }, []);
+
+  async function deleteEstimate(estimate: EstimateRecord) {
+    const name = (estimate.name ?? getEstimateBodyField(estimate.body, "name")) || "this estimate";
+    const confirmed = window.confirm(
+      `Delete ${name}?\n\nThis archives the estimate and removes it from the active estimating list.`,
+    );
+    if (!confirmed) return;
+
+    setDeletingId(estimate.id);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const res = await fetch(`/api/estimates/${estimate.id}`, { method: "DELETE" });
+      const json = (await res.json().catch(() => null)) as { error?: string } | null;
+
+      if (!res.ok) {
+        setError(json?.error ?? "Unable to delete estimate.");
+        return;
+      }
+
+      setEstimates((current) => current.filter((item) => item.id !== estimate.id));
+      setMessage("Estimate deleted.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -115,6 +144,12 @@ export function EstimatingListClient() {
         </div>
       </div>
 
+      {message && (
+        <div className="mb-5 rounded-2xl border border-status-success/30 bg-status-success/10 p-4 text-sm text-status-success">
+          {message}
+        </div>
+      )}
+
       {loading ? (
         <div className="rounded-2xl border border-border-default bg-surface-raised p-8 text-sm text-text-secondary">
           Loading estimates...
@@ -146,6 +181,7 @@ export function EstimatingListClient() {
                 <th className="px-4 py-3 font-semibold">Status</th>
                 <th className="px-4 py-3 text-right font-semibold">Total</th>
                 <th className="px-4 py-3 font-semibold">Updated</th>
+                <th className="px-4 py-3 text-right font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-default">
@@ -172,6 +208,16 @@ export function EstimatingListClient() {
                       {formatCurrency(estimate.total_amount)}
                     </td>
                     <td className="px-4 py-4 text-text-tertiary">{formatDate(estimate.updated_at)}</td>
+                    <td className="px-4 py-4 text-right">
+                      <button
+                        type="button"
+                        onClick={() => deleteEstimate(estimate)}
+                        disabled={deletingId === estimate.id}
+                        className="rounded-lg border border-status-danger/40 px-3 py-1.5 text-xs font-semibold text-status-danger transition hover:bg-status-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {deletingId === estimate.id ? "Deleting..." : "Delete"}
+                      </button>
+                    </td>
                   </tr>
                 );
               })}

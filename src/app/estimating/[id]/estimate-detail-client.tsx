@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { calcEstimate, calcItem, COMPS_MAP, TYPE_META } from "@/modules/hvac-estimator/components/estimate/estimateCalc";
 import { AddEquipButtons } from "@/modules/hvac-estimator/components/estimate/AddEquipButtons";
@@ -281,6 +282,7 @@ function buildItemFromForm(form: AddItemForm): EstimateItem {
 }
 
 export function EstimateDetailClient({ estimate }: Props) {
+  const router = useRouter();
   const [body, setBody] = useState<EstimateBody>(() => normalizeBody(estimate));
   const [status, setStatus] = useState<EstimateStatus>(estimate.status);
   const [addForm, setAddForm] = useState<AddItemForm>(() => buildAddForm());
@@ -288,6 +290,7 @@ export function EstimateDetailClient({ estimate }: Props) {
   const [showSettings, setShowSettings] = useState(false);
   const [editingComponentsFor, setEditingComponentsFor] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -453,6 +456,32 @@ export function EstimateDetailClient({ estimate }: Props) {
     }
   }
 
+  async function handleDelete() {
+    const confirmed = window.confirm(
+      `Delete ${body.name || "this estimate"}?\n\nThis archives the estimate and returns you to the estimating list.`,
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setMessage(null);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/estimates/${estimate.id}`, { method: "DELETE" });
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        setError(typeof json?.error === "string" ? json.error : "Unable to delete estimate.");
+        return;
+      }
+
+      router.push("/estimating");
+      router.refresh();
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const useLegacyUi = true;
   if (useLegacyUi) {
     return (
@@ -494,10 +523,18 @@ export function EstimateDetailClient({ estimate }: Props) {
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saving || deleting}
                 className="rounded-lg bg-brand-primary px-3 py-1.5 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {saving ? "Saving..." : dirty ? "Save Changes" : "Save"}
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={saving || deleting}
+                className="rounded-lg border border-status-danger/40 px-3 py-1.5 text-sm font-semibold text-status-danger transition hover:bg-status-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
@@ -530,10 +567,18 @@ export function EstimateDetailClient({ estimate }: Props) {
           <button
             type="button"
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || deleting}
             className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? "Saving..." : dirty ? "Save Changes" : "Save"}
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={saving || deleting}
+            className="rounded-xl border border-status-danger/40 px-4 py-2 text-sm font-semibold text-status-danger transition hover:bg-status-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {deleting ? "Deleting..." : "Delete"}
           </button>
           <a
             href="https://estimates.thecontrolscompany.com"
