@@ -7,6 +7,7 @@ const CRM_WRITE_ROLES = ["admin", "ops_manager"] as const;
 const CRM_READ_ROLES = ["admin", "ops_manager", "pm", "lead"] as const;
 
 const accountCreateSchema = z.object({
+  organization_id: z.string().uuid().nullish(),
   company_name: z.string().min(1),
   type: z.enum(["general_contractor","mechanical_contractor","controls_contractor","hvac_oem","controls_oem","owner","other"]).default("other"),
   territory: z.string().nullish(),
@@ -85,9 +86,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  const { data: defaultOrganizationId } = await supabase.rpc("current_user_default_organization_id");
+  const payload = {
+    ...parsed.data,
+    organization_id:
+      parsed.data.organization_id ?? (typeof defaultOrganizationId === "string" ? defaultOrganizationId : null),
+  };
+
   const { data, error } = await supabase
     .from("crm_accounts")
-    .insert(parsed.data)
+    .insert(payload)
     .select()
     .single();
 

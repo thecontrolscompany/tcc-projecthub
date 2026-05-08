@@ -11,6 +11,7 @@ export type HvacEstimateBody = {
   platformContext?: Record<string, unknown> | null;
   name: string;
   number: string;
+  customerAccountId?: string | null;
   customer: string;
   version: string;
   notes: string;
@@ -26,8 +27,10 @@ export type HvacEstimateCreateInput = {
   organizationId?: string | null;
   linkedOpportunityId?: string | null;
   linkedProjectId?: string | null;
+  estimateNumber?: string | null;
   opportunityNumber?: string | null;
   projectName: string;
+  customerAccountId?: string | null;
   customer?: string | null;
   notes?: string | null;
   user?: { id: string; email?: string | null; name?: string | null } | null;
@@ -50,7 +53,8 @@ export function buildHvacEstimateBody(input: HvacEstimateCreateInput): HvacEstim
       opportunityNumber: input.opportunityNumber ?? "",
     },
     name: input.projectName || "New Estimate",
-    number: input.opportunityNumber ?? "",
+    number: input.estimateNumber ?? input.opportunityNumber ?? "",
+    customerAccountId: input.customerAccountId ?? null,
     customer: input.customer ?? "",
     version: "1.0",
     notes: input.notes ?? "",

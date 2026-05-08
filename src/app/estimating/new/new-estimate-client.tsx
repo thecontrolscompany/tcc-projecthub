@@ -2,21 +2,29 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { OpportunityHubSubnav } from "@/components/opportunity-hub-subnav";
 import { buildHvacEstimateBody, toPlatformEstimatePayload } from "@/modules/hvac-estimator/platform-adapter";
 
 type InitialEstimate = {
   organizationId: string | null;
   linkedOpportunityId: string | null;
+  estimateNumber: string;
   opportunityNumber: string;
   projectName: string;
+  customerAccountId: string;
   customer: string;
   notes: string;
 };
 
+type AccountOption = {
+  id: string;
+  company_name: string;
+};
+
 type Props = {
   initialEstimate: InitialEstimate;
+  accounts: AccountOption[];
 };
 
 const inputClassName =
@@ -24,14 +32,29 @@ const inputClassName =
 
 const labelClassName = "mb-1 block text-xs font-medium uppercase tracking-wide text-text-tertiary";
 
-export function NewEstimateClient({ initialEstimate }: Props) {
+export function NewEstimateClient({ initialEstimate, accounts }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState(initialEstimate);
+  const returnPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+  const newAccountHref = `/crm/accounts/new?returnTo=${encodeURIComponent(returnPath)}`;
 
   function setField(field: keyof InitialEstimate, value: string) {
-    setForm((current) => ({ ...current, [field]: value }));
+    setForm((current) => {
+      if (field === "customerAccountId") {
+        const account = accounts.find((item) => item.id === value);
+        return {
+          ...current,
+          customerAccountId: value,
+          customer: account?.company_name ?? "",
+        };
+      }
+
+      return { ...current, [field]: value };
+    });
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -48,8 +71,10 @@ export function NewEstimateClient({ initialEstimate }: Props) {
       const body = buildHvacEstimateBody({
         organizationId: form.organizationId,
         linkedOpportunityId: form.linkedOpportunityId,
-        opportunityNumber: form.opportunityNumber,
+        estimateNumber: form.estimateNumber.trim(),
+        opportunityNumber: form.opportunityNumber.trim(),
         projectName: form.projectName.trim(),
+        customerAccountId: form.customerAccountId || null,
         customer: form.customer.trim() || null,
         notes: form.notes.trim() || null,
       });
@@ -103,20 +128,35 @@ export function NewEstimateClient({ initialEstimate }: Props) {
           <label>
             <span className={labelClassName}>Estimate / opportunity number</span>
             <input
-              value={form.opportunityNumber}
-              onChange={(event) => setField("opportunityNumber", event.target.value)}
+              value={form.estimateNumber}
+              onChange={(event) => setField("estimateNumber", event.target.value)}
               className={inputClassName}
             />
+            <span className="mt-1 block text-xs text-text-tertiary">
+              Auto-numbered by default. You can overwrite it before creating the estimate.
+            </span>
           </label>
 
-          <label>
-            <span className={labelClassName}>Customer</span>
-            <input
-              value={form.customer}
-              onChange={(event) => setField("customer", event.target.value)}
-              className={inputClassName}
-            />
-          </label>
+          <div>
+            <label>
+              <span className={labelClassName}>Customer</span>
+              <select
+                value={form.customerAccountId}
+                onChange={(event) => setField("customerAccountId", event.target.value)}
+                className={inputClassName}
+              >
+                <option value="">Select account</option>
+                {accounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.company_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <Link href={newAccountHref} className="mt-1 inline-flex text-xs font-medium text-brand-primary hover:underline">
+              Add new customer
+            </Link>
+          </div>
 
           <label>
             <span className={labelClassName}>Linked opportunity</span>
