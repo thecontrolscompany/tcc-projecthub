@@ -1,0 +1,40 @@
+export const otherSystemTree = {
+  id: "other-system",
+  label: "Custom Application",
+  abbr: "CUST",
+  color: "#78716C",
+  description: "Custom or non-standard HVAC controls application.",
+  systemType: "other-system",
+  configurations: [{ id: "standard", label: "Custom Application" }],
+  mechanicalTree: [
+    {
+      id: "cust-general-point-monitoring-100",
+      label: "General Point Monitoring",
+      scope: "mechanical",
+      required: true,
+      items: [
+        { id: "cust-zone-temperature-sensor-110", label: "Zone Temperature Sensor (AI)", type: "check", defaultChecked: false },
+        { id: "cust-zone-humidity-sensor-120", label: "Zone Humidity Sensor (AI)", type: "check", defaultChecked: false },
+        { id: "cust-zone-co2-sensor-130", label: "Zone CO2 Sensor (AI)", type: "check", defaultChecked: false },
+        { id: "cust-outdoor-air-temperature-141", label: "Outdoor Air Temperature Sensor (AI)", type: "check", defaultChecked: false },
+        { id: "cust-duct-temperature-sensor-151", label: "Duct Temperature Sensor (AI)", type: "check", defaultChecked: false },
+        { id: "cust-water-flow-sensor-200", label: "Water Flow Sensor (AI)", type: "check", defaultChecked: false },
+        { id: "cust-generator-status-211", label: "Monitor Status (BI)", type: "check", defaultChecked: false },
+        { id: "cust-electrical-power-223", label: "Monitor Current (3 AI)", type: "check", defaultChecked: false },
+        { id: "cust-natural-gas-flow-sensor-295", label: "Monitor Flow Sensor (AI)", type: "check", defaultChecked: false },
+        { id: "cust-misc-refrigerant-alarm-501", label: "Monitor Refrigerant Alarm (BI)", type: "check", defaultChecked: false },
+      ],
+    },
+    {
+      id: "cust-misc-outputs-569",
+      label: "Misc Outputs",
+      scope: "control",
+      required: false,
+      items: [
+        { id: "cust-command-motor-570", label: "Command Motor (BO)", type: "check", defaultChecked: false },
+        { id: "cust-command-general-equipment-lighting-590", label: "Command General Equipment or Lighting (BO)", type: "check", defaultChecked: false },
+        { id: "cust-command-heat-tape-620", label: "Command Heat Tape (BO)", type: "check", defaultChecked: false },
+      ],
+    },
+  ],
+};

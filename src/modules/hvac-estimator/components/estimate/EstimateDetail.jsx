@@ -190,14 +190,24 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                 <AddEquipButtons
                   onAdd={type => setSubPage({type})}
                 />
-                <button onClick={()=>setShowSettings(s=>!s)}
-                  title="Project settings"
-                  style={{ padding:"7px 10px", border:"1px solid "+(showSettings?T.blue:T.border2),
-                    borderRadius:5, background:showSettings?T.blueFaint:"none",
-                    color:showSettings?T.blue:T.muted, cursor:"pointer", fontSize:12,
-                    fontFamily:T.mono, fontWeight:600 }}>
-                  Settings
-                </button>
+                <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
+                  <button onClick={()=>setSubPage({ type:"wizard" })}
+                    title="Open system selection wizard"
+                    style={{ padding:"7px 10px", border:"1px solid "+T.border2,
+                      borderRadius:5, background:"none",
+                      color:T.muted, cursor:"pointer", fontSize:12,
+                      fontFamily:T.mono, fontWeight:600 }}>
+                    System Wizard
+                  </button>
+                  <button onClick={()=>setShowSettings(s=>!s)}
+                    title="Project settings"
+                    style={{ padding:"7px 10px", border:"1px solid "+(showSettings?T.blue:T.border2),
+                      borderRadius:5, background:showSettings?T.blueFaint:"none",
+                      color:showSettings?T.blue:T.muted, cursor:"pointer", fontSize:12,
+                      fontFamily:T.mono, fontWeight:600 }}>
+                    Settings
+                  </button>
+                </div>
               </div>
             )}
           </div>

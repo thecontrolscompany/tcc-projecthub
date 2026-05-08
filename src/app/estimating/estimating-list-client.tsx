@@ -33,7 +33,10 @@ export function EstimatingListClient() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [copyingId, setCopyingId] = useState<string | null>(null);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [tab, setTab] = useState<"active" | "archived">("active");
 
   useEffect(() => {
     let active = true;
@@ -42,7 +45,7 @@ export function EstimatingListClient() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("/api/estimates", { cache: "no-store" });
+        const res = await fetch("/api/estimates?include_archived=true", { cache: "no-store" });
         const json = (await res.json().catch(() => null)) as ApiResponse | null;
         if (!active) return;
 
@@ -91,6 +94,88 @@ export function EstimatingListClient() {
     }
   }
 
+  async function restoreEstimate(estimate: EstimateRecord) {
+    setRestoringId(estimate.id);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const res = await fetch(`/api/estimates/${estimate.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          archived: false,
+          status: "draft",
+        }),
+      });
+      const json = (await res.json().catch(() => null)) as { estimate?: EstimateRecord; error?: string } | null;
+
+      if (!res.ok || !json?.estimate) {
+        setError(json?.error ?? "Unable to restore estimate.");
+        return;
+      }
+
+      setEstimates((current) => current.map((item) => (item.id === estimate.id ? json.estimate as EstimateRecord : item)));
+      setMessage("Estimate restored.");
+      setTab("active");
+    } finally {
+      setRestoringId(null);
+    }
+  }
+
+  async function copyEstimate(estimate: EstimateRecord) {
+    const baseBody = (estimate.body ?? {}) as Record<string, unknown>;
+    const baseName = (estimate.name ?? getEstimateBodyField(estimate.body, "name")) || "Untitled Estimate";
+    const nextName = window.prompt("Name for copied estimate", `${baseName} - Copy`);
+    if (!nextName?.trim()) return;
+
+    setCopyingId(estimate.id);
+    setError(null);
+    setMessage(null);
+
+    const nextBody = {
+      ...baseBody,
+      id: crypto.randomUUID(),
+      name: nextName.trim(),
+      number: "",
+      version: "1.0",
+      archived: false,
+      copiedFromEstimateId: estimate.id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    try {
+      const res = await fetch("/api/estimates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          organization_id: estimate.organization_id,
+          linked_opportunity_id: estimate.linked_opportunity_id,
+          linked_project_id: estimate.linked_project_id,
+          body: nextBody,
+          status: "draft",
+          archived: false,
+          total_amount: estimate.total_amount,
+          gross_margin_amount: estimate.gross_margin_amount,
+          gross_margin_pct: estimate.gross_margin_pct,
+        }),
+      });
+      const json = (await res.json().catch(() => null)) as { estimate?: EstimateRecord; error?: string } | null;
+
+      if (!res.ok || !json?.estimate) {
+        setError(json?.error ?? "Unable to copy estimate.");
+        return;
+      }
+
+      setEstimates((current) => [json.estimate as EstimateRecord, ...current]);
+      setMessage("Estimate copied.");
+      setTab("active");
+    } finally {
+      setCopyingId(null);
+    }
+  }
+
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return estimates;
@@ -102,6 +187,14 @@ export function EstimatingListClient() {
       return `${name} ${number} ${customer}`.toLowerCase().includes(query);
     });
   }, [estimates, search]);
+
+  const visibleEstimates = useMemo(() => {
+    const archived = tab === "archived";
+    return filtered.filter((estimate) => Boolean(estimate.archived) === archived);
+  }, [filtered, tab]);
+
+  const activeCount = estimates.filter((estimate) => !estimate.archived).length;
+  const archivedCount = estimates.filter((estimate) => estimate.archived).length;
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-6">
@@ -121,6 +214,18 @@ export function EstimatingListClient() {
           >
             New Estimate
           </Link>
+          <Link
+            href="/estimating/pricebook"
+            className="rounded-xl border border-border-default px-4 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
+          >
+            Price Book
+          </Link>
+          <Link
+            href="/estimating/help"
+            className="rounded-xl border border-border-default px-4 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
+          >
+            Help
+          </Link>
           <a
             href="https://estimates.thecontrolscompany.com"
             target="_blank"
@@ -133,14 +238,33 @@ export function EstimatingListClient() {
       </div>
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-default bg-surface-raised p-4">
-        <input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search estimates..."
-          className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none md:w-80"
-        />
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex rounded-xl border border-border-default bg-surface-overlay p-1">
+            {[
+              ["active", `Active (${activeCount})`],
+              ["archived", `Archived (${archivedCount})`],
+            ].map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setTab(id as "active" | "archived")}
+                className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
+                  tab === id ? "bg-brand-primary text-text-inverse" : "text-text-secondary hover:bg-surface-raised"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search estimates..."
+            className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none md:w-80"
+          />
+        </div>
         <div className="text-sm text-text-tertiary">
-          {filtered.length} of {estimates.length} estimates
+          {visibleEstimates.length} of {filtered.length} matching estimates
         </div>
       </div>
 
@@ -158,9 +282,11 @@ export function EstimatingListClient() {
         <div className="rounded-2xl border border-status-danger/30 bg-status-danger/10 p-4 text-sm text-status-danger">
           {error}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : visibleEstimates.length === 0 ? (
         <div className="rounded-2xl border border-border-default bg-surface-raised p-8 text-center">
-          <p className="text-sm font-medium text-text-primary">No estimates yet.</p>
+          <p className="text-sm font-medium text-text-primary">
+            {tab === "archived" ? "No archived estimates." : "No active estimates yet."}
+          </p>
           <p className="mt-1 text-sm text-text-secondary">
             Create an estimate directly or launch from an OpportunityHub opportunity.
           </p>
@@ -185,7 +311,7 @@ export function EstimatingListClient() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border-default">
-              {filtered.map((estimate) => {
+              {visibleEstimates.map((estimate) => {
                 const name = (estimate.name ?? getEstimateBodyField(estimate.body, "name")) || "Untitled Estimate";
                 const number = estimate.number ?? getEstimateBodyField(estimate.body, "number");
                 const customer = getEstimateBodyField(estimate.body, "customer");
@@ -209,14 +335,35 @@ export function EstimatingListClient() {
                     </td>
                     <td className="px-4 py-4 text-text-tertiary">{formatDate(estimate.updated_at)}</td>
                     <td className="px-4 py-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => deleteEstimate(estimate)}
-                        disabled={deletingId === estimate.id}
-                        className="rounded-lg border border-status-danger/40 px-3 py-1.5 text-xs font-semibold text-status-danger transition hover:bg-status-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {deletingId === estimate.id ? "Deleting..." : "Delete"}
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => copyEstimate(estimate)}
+                          disabled={copyingId === estimate.id}
+                          className="rounded-lg border border-border-default px-3 py-1.5 text-xs font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {copyingId === estimate.id ? "Copying..." : "Copy"}
+                        </button>
+                        {estimate.archived ? (
+                          <button
+                            type="button"
+                            onClick={() => restoreEstimate(estimate)}
+                            disabled={restoringId === estimate.id}
+                            className="rounded-lg border border-brand-primary/40 px-3 py-1.5 text-xs font-semibold text-brand-primary transition hover:bg-brand-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {restoringId === estimate.id ? "Restoring..." : "Restore"}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => deleteEstimate(estimate)}
+                            disabled={deletingId === estimate.id}
+                            className="rounded-lg border border-status-danger/40 px-3 py-1.5 text-xs font-semibold text-status-danger transition hover:bg-status-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {deletingId === estimate.id ? "Deleting..." : "Delete"}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

@@ -1,0 +1,292 @@
+export const vavDDTree = {
+  id: "vav-dd",
+  label: "VAV Box — Dual Duct",
+  abbr: "VAV-DD",
+  color: "#7C3AED",
+  description: "Dual duct VAV terminal unit with cold and hot deck dampers.",
+  systemType: "vav",
+  configurations: [{ id: "dd", label: "Dual Duct" }],
+  mechanicalTree: [
+    {
+      id: "vav-dd-cold-deck-damper-actuator-4",
+      label: "Cold Deck Damper Actuator",
+      scope: "mechanical",
+      required: true,
+      items: [
+        {
+          id: "vav-dd-cold-deck-actuator-type-4",
+          label: "Actuator Type",
+          type: "radio",
+          defaultOption: "integrated-actuator-50",
+          options: [
+            { id: "integrated-actuator-50", label: "Integrated Actuator" },
+            { id: "proportional-actuator-51", label: "Proportional Actuator" },
+            { id: "incremental-actuator-52", label: "Incremental Actuator" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "vav-dd-hot-deck-damper-actuator-5",
+      label: "Hot Deck Damper Actuator",
+      scope: "mechanical",
+      required: true,
+      items: [
+        {
+          id: "vav-dd-hot-deck-actuator-type-5",
+          label: "Actuator Type",
+          type: "radio",
+          defaultOption: "proportional-actuator-54",
+          options: [
+            { id: "integrated-actuator-53", label: "Integrated Actuator" },
+            { id: "proportional-actuator-54", label: "Proportional Actuator" },
+            { id: "incremental-actuator-55", label: "Incremental Actuator" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "vav-dd-flow-sensor-locations-6",
+      label: "Flow Sensor Locations",
+      scope: "mechanical",
+      required: true,
+      items: [
+        {
+          id: "vav-dd-flow-sensor-location-type-6",
+          label: "Sensor Scheme",
+          type: "radio",
+          defaultOption: "hot-and-cold-deck-flow-7",
+          options: [
+            { id: "hot-and-cold-deck-flow-7", label: "Hot and Cold Deck Flow" },
+            { id: "hot-deck-and-total-flow-9", label: "Hot Deck and Total Flow" },
+            { id: "cold-deck-and-total-flow-8", label: "Cold Deck and Total Flow" },
+            { id: "total-flow-only-g36-3013", label: "Total Flow Only (G36)" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "vav-dd-exhaust-damper-actuator-10",
+      label: "Exhaust Damper Actuator",
+      scope: "mechanical",
+      required: false,
+      items: [
+        { id: "vav-dd-exhaust-damper-enabled-10", label: "Include Exhaust Damper Actuator", type: "check", defaultChecked: false },
+        {
+          id: "vav-dd-exhaust-damper-type-10",
+          label: "Actuator Type",
+          type: "radio",
+          defaultOption: "proportional-actuator-74",
+          showWhen: { itemId: "vav-dd-exhaust-damper-enabled-10", value: true },
+          options: [
+            { id: "proportional-actuator-74", label: "Proportional Actuator" },
+            { id: "incremental-actuator-75", label: "Incremental Actuator" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "vav-dd-coils-505",
+      label: "Coils",
+      scope: "mechanical",
+      required: false,
+      items: [
+        { id: "vav-dd-supplemental-heating-60", label: "Supplemental Heating", type: "check", defaultChecked: false },
+        {
+          id: "vav-dd-supplemental-heating-group-60",
+          label: "Supplemental Heating Options",
+          type: "group",
+          showWhen: { itemId: "vav-dd-supplemental-heating-60", value: true },
+          items: [
+            {
+              id: "vav-dd-supplemental-heating-type-60",
+              label: "Heating Type",
+              type: "radio",
+              defaultOption: "hot-water-or-steam-64",
+              options: [
+                { id: "electric-stage-61", label: "Electric Stage" },
+                { id: "hot-water-or-steam-64", label: "Hot Water or Steam" },
+              ],
+            },
+            {
+              id: "vav-dd-heating-output-64",
+              label: "Output Type",
+              type: "radio",
+              defaultOption: "proportional-output-66",
+              showWhen: { itemId: "vav-dd-supplemental-heating-type-60", value: "hot-water-or-steam-64" },
+              options: [
+                { id: "proportional-output-66", label: "Proportional Output" },
+                { id: "incremental-output-67", label: "Incremental Output" },
+                { id: "two-position-output-68", label: "Two Position Output" },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: "vav-dd-sensors-24",
+      label: "Sensors",
+      scope: "mechanical",
+      required: true,
+      items: [
+        { id: "vav-dd-discharge-air-temperature-26", label: "Discharge Air Temperature", type: "check", defaultChecked: false },
+        {
+          id: "vav-dd-zone-88",
+          label: "Zone",
+          type: "group",
+          items: [
+            {
+              id: "vav-dd-zone-temperature-89",
+              label: "Temperature",
+              type: "group",
+              items: [
+                { id: "vav-dd-setpoint-adjust-91", label: "Setpoint Adjust", type: "check", defaultChecked: true },
+                {
+                  id: "vav-dd-setpoint-adjust-type-92",
+                  label: "Setpoint Adjust Type",
+                  type: "radio",
+                  defaultOption: "common-setpoint-adjust-92",
+                  showWhen: { itemId: "vav-dd-setpoint-adjust-91", value: true },
+                  options: [
+                    { id: "common-setpoint-adjust-92", label: "Common Setpoint Adjust" },
+                    { id: "warm-cool-adjust-93", label: "Warm Cool Adjust" },
+                  ],
+                },
+                { id: "vav-dd-temp-occ-support-94", label: "Temp Occ Support", type: "check", defaultChecked: false },
+              ],
+            },
+            { id: "vav-dd-zone-humidity-105", label: "Humidity", type: "check", defaultChecked: false },
+            { id: "vav-dd-zone-occupancy-120", label: "Occupancy", type: "check", defaultChecked: false },
+            { id: "vav-dd-zone-co2-sensor-96", label: "CO2 Sensor", type: "check", defaultChecked: false },
+            { id: "vav-dd-minimum-flow-reset-131", label: "Used for Minimum Flow Reset", type: "check", defaultChecked: false, showWhen: { itemId: "vav-dd-zone-co2-sensor-96", value: true } },
+          ],
+        },
+      ],
+    },
+    {
+      id: "vav-dd-misc-123",
+      label: "Misc",
+      scope: "mechanical",
+      required: false,
+      items: [
+        { id: "vav-dd-energy-hold-off-switch-121", label: "Energy Hold Off Switch", type: "check", defaultChecked: false },
+        { id: "vav-dd-unit-enable-switch-122", label: "Unit Enable Switch", type: "check", defaultChecked: false },
+      ],
+    },
+    {
+      id: "vav-dd-n2-compatibility-options-15020",
+      label: "N2 Compatibility Options",
+      scope: "mechanical",
+      required: false,
+      items: [
+        { id: "vav-dd-enable-n2-compatibility-15020", label: "Enable N2 Compatibility Options", type: "check", defaultChecked: false },
+        {
+          id: "vav-dd-n2-controller-replacement-15020",
+          label: "Replacement Mode",
+          type: "radio",
+          defaultOption: "replacing-vma1400-series-controller-15003",
+          showWhen: { itemId: "vav-dd-enable-n2-compatibility-15020", value: true },
+          options: [
+            { id: "replacing-vma1400-series-controller-15003", label: "Replacing VMA1400 Series Controller" },
+            { id: "replacing-vav-series-controller-15004", label: "Replacing VAV Series Controller" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "vav-dd-optional-equipment-22",
+      label: "Optional Equipment",
+      scope: "optional-hardware",
+      required: false,
+      items: [
+        { id: "vav-dd-lighting-23", label: "Lighting", type: "check", defaultChecked: false },
+        { id: "vav-dd-calibration-solenoid-valve-2001", label: "Calibration Solenoid Valve (BO)", type: "check", defaultChecked: false },
+      ],
+    },
+    {
+      id: "vav-dd-control-scheme-200",
+      label: "Control Scheme",
+      scope: "control",
+      required: false,
+      items: [
+        {
+          id: "vav-dd-control-scheme-type-200",
+          label: "Control Scheme",
+          type: "radio",
+          defaultOption: "constant-box-flow-201",
+          options: [
+            { id: "constant-box-flow-201", label: "Constant Box Flow" },
+            { id: "variable-box-flow-202", label: "Variable Box Flow" },
+            { id: "variable-box-flow-g36-3016", label: "Variable Box Flow (G36)" },
+          ],
+        },
+        { id: "vav-dd-optimized-minimum-flow-506", label: "Optimized Minimum Flow", type: "check", defaultChecked: false, showWhen: { itemId: "vav-dd-control-scheme-type-200", value: "variable-box-flow-202" } },
+        {
+          id: "vav-dd-high-performance-minimum-flow-3014",
+          label: "High Performance Minimum Flow (G36)",
+          type: "radio",
+          defaultOption: "snap-acting-control-3007",
+          showWhen: { itemId: "vav-dd-control-scheme-type-200", value: "variable-box-flow-g36-3016" },
+          options: [
+            { id: "snap-acting-control-3007", label: "Snap-Acting Control" },
+            { id: "mixing-control-3008", label: "Mixing Control" },
+            { id: "cold-duct-minimum-flow-3009", label: "Cold Duct Minimum Flow" },
+          ],
+        },
+        {
+          id: "vav-dd-min-occ-flow-setpoint-calculation-3010",
+          label: "Min Occ Flow Setpoint Calculation (G36)",
+          type: "radio",
+          defaultOption: "ashrae-62-1-3012",
+          showWhen: { itemId: "vav-dd-control-scheme-type-200", value: "variable-box-flow-g36-3016" },
+          options: [
+            { id: "ashrae-62-1-3012", label: "ASHRAE 62.1" },
+            { id: "ca-title-24-3011", label: "CA Title 24" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "vav-dd-occupancy-49",
+      label: "Occupancy",
+      scope: "control",
+      required: false,
+      items: [
+        {
+          id: "vav-dd-occupancy-mode-49",
+          label: "Occupancy Mode",
+          type: "radio",
+          defaultOption: "scheduled-occupancy-49",
+          options: [
+            { id: "always-occupied-504", label: "Always Occupied" },
+            { id: "scheduled-occupancy-49", label: "Scheduled Occupancy" },
+          ],
+        },
+        { id: "vav-dd-override-support-125", label: "Override Support", type: "check", defaultChecked: false, showWhen: { itemId: "vav-dd-occupancy-mode-49", value: "scheduled-occupancy-49" } },
+      ],
+    },
+    {
+      id: "vav-dd-optional-features-57",
+      label: "Optional Features",
+      scope: "control",
+      required: false,
+      items: [
+        { id: "vav-dd-smoke-control-support-2105", label: "Smoke Control Support (UL-864-UUKL)", type: "check", defaultChecked: false },
+        { id: "vav-dd-unit-enable-503", label: "Unit Enable", type: "check", defaultChecked: true },
+        { id: "vav-dd-power-fail-restart-130", label: "Power Fail Restart Logic", type: "check", defaultChecked: false },
+        { id: "vav-dd-energy-hold-off-133", label: "Energy Hold Off", type: "check", defaultChecked: false },
+        { id: "vav-dd-network-warmup-cooldown-134", label: "Network Warmup-Cooldown Support", type: "check", defaultChecked: true },
+        { id: "vav-dd-zone-low-limit-support-58", label: "Zone Low Limit Support", type: "check", defaultChecked: false },
+        { id: "vav-dd-summer-winter-compensation-59", label: "Summer-Winter Compensation Setpoint Shift", type: "check", defaultChecked: false },
+        { id: "vav-dd-system-request-generation-g36-3001", label: "System Request Generation (G36)", type: "check", defaultChecked: true },
+        { id: "vav-dd-request-accumulation-3015", label: "Request Accumulation", type: "check", defaultChecked: true, showWhen: { itemId: "vav-dd-system-request-generation-g36-3001", value: true } },
+        { id: "vav-dd-system-ok-g36-3002", label: "System OK (G36)", type: "check", defaultChecked: true },
+        { id: "vav-dd-window-switch-g36-3003", label: "Window Switch (G36)", type: "check", defaultChecked: false },
+        { id: "vav-dd-warmup-cooldown-g36-3004", label: "Warmup-Cooldown (G36)", type: "check", defaultChecked: true },
+        { id: "vav-dd-terminal-unit-alarms-g36-3005", label: "Terminal Unit Alarms (G36)", type: "check", defaultChecked: true },
+        { id: "vav-dd-generic-thermal-zone-alarms-g36-3006", label: "Generic Thermal Zone Alarms (G36)", type: "check", defaultChecked: true },
+      ],
+    },
+  ],
+};

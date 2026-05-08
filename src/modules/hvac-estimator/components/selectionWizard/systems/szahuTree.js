@@ -1,0 +1,25 @@
+export const szahuTree = {
+  id: "szahu",
+  label: "Single Zone VAV AHU",
+  abbr: "SZAHU",
+  color: "#2563EB",
+  description: "Top-level single-zone VAV AHU structure derived from the CCT SQL tree.",
+  systemType: "ahu",
+  configurations: [
+    { id: "single-zone-vav", label: "Single Zone VAV" },
+    { id: "with-return", label: "Single Zone VAV with Return Fan" },
+    { id: "with-relief", label: "Single Zone VAV with Relief Fan" },
+  ],
+  mechanicalTree: [
+    { id: "szahu-fans-200", label: "Fans", scope: "mechanical", required: true, items: [] },
+    { id: "szahu-dampers-400", label: "Dampers", scope: "mechanical", required: false, items: [] },
+    { id: "szahu-min-flow-control-500", label: "Min Flow Control", scope: "mechanical", required: false, items: [] },
+    { id: "szahu-occupancy-control-503", label: "Occupancy Control", scope: "mechanical", required: false, items: [] },
+    { id: "szahu-temperature-control-600", label: "Temperature Control", scope: "mechanical", required: true, items: [] },
+    { id: "szahu-economizer-suitability-700", label: "Economizer Suitability", scope: "mechanical", required: false, items: [] },
+    { id: "szahu-optional-features-800", label: "Optional Features", scope: "mechanical", required: false, items: [] },
+    { id: "szahu-optional-sensors-2001", label: "Optional Sensors", scope: "optional-hardware", required: false, items: [] },
+    { id: "szahu-optional-equipment-2800", label: "Optional Equipment", scope: "optional-hardware", required: false, items: [] },
+    { id: "szahu-monitored-safeties-2900", label: "Monitored Safeties", scope: "optional-hardware", required: false, items: [] },
+  ],
+};
