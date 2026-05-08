@@ -157,7 +157,9 @@ export function EstimatingListClient() {
                 return (
                   <tr key={estimate.id} className="hover:bg-surface-overlay/60">
                     <td className="px-4 py-4">
-                      <div className="font-medium text-text-primary">{name}</div>
+                      <Link href={`/estimating/${estimate.id}`} className="font-medium text-text-primary hover:text-brand-primary">
+                        {name}
+                      </Link>
                       <div className="mt-0.5 text-xs text-text-tertiary">{number || estimate.id}</div>
                     </td>
                     <td className="px-4 py-4 text-text-secondary">{customer || "-"}</td>
