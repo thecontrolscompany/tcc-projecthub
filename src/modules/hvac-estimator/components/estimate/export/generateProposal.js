@@ -5,6 +5,8 @@
  * C:\Users\TimothyCollins\dev\tcc-templates\proposal-template.html
  */
 
+import { calcItem } from "../estimateCalc.js";
+
 const TEMPLATE_PATH = "/report-assets/proposal-template.html";
 const LOGO_PATH = "/report-assets/logo.png";
 const SDVOSB_PATH = "/report-assets/sdvosb.jpg";
@@ -97,6 +99,154 @@ function normalizeCompName(name) {
     .trim();
 }
 
+const SECTION_DEFS = [
+  {
+    id: "airside",
+    label: "Section 1 - Airside Systems",
+    types: new Set(["ahu", "rtu", "vav", "dx", "vrf", "fcu", "uh"]),
+  },
+  {
+    id: "waterside",
+    label: "Section 2 - Waterside / Plant Systems",
+    types: new Set(["plant"]),
+  },
+  {
+    id: "network",
+    label: "Section 3 - BAS Network Infrastructure",
+    types: new Set(["network"]),
+  },
+];
+
+const TYPE_SCOPE_LABELS = {
+  ahu: "Air Handling Units",
+  rtu: "Rooftop Units",
+  vav: "VAV Terminal Units",
+  dx: "DX / Heat Pump Systems",
+  vrf: "VRF Systems",
+  fcu: "Fan Coil Units",
+  uh: "Unit Heaters",
+  plant: "Central Plant Equipment",
+  network: "BAS Network Infrastructure",
+};
+
+function getSectionDef(type) {
+  return SECTION_DEFS.find(section => section.types.has(type)) || {
+    id: "misc",
+    label: "Additional HVAC Controls Scope",
+    types: new Set(),
+  };
+}
+
+function getItemWeight(item) {
+  try {
+    const cost = calcItem(item);
+    return Math.max(0, (cost.totalMtl || 0) + (cost.totalLbr || 0) * 100);
+  } catch {
+    return 0;
+  }
+}
+
+function buildSections(itemsWithComps = [], grandTotal = 0) {
+  const sections = new Map();
+
+  for (const entry of itemsWithComps) {
+    const sectionDef = getSectionDef(entry.item?.type);
+    if (!sections.has(sectionDef.id)) {
+      sections.set(sectionDef.id, {
+        id: sectionDef.id,
+        label: sectionDef.label,
+        entries: [],
+        weight: 0,
+      });
+    }
+
+    const section = sections.get(sectionDef.id);
+    section.entries.push(entry);
+    section.weight += getItemWeight(entry.item);
+  }
+
+  const result = Array.from(sections.values());
+  const totalWeight = result.reduce((sum, section) => sum + section.weight, 0);
+
+  if (result.length === 0) {
+    return [{
+      id: "base",
+      label: "Base Bid - HVAC Controls Installation",
+      entries: [],
+      weight: 1,
+      price: grandTotal || 0,
+    }];
+  }
+
+  if (totalWeight <= 0) {
+    const price = (grandTotal || 0) / result.length;
+    return result.map(section => ({ ...section, price }));
+  }
+
+  return result.map(section => ({
+    ...section,
+    price: (grandTotal || 0) * (section.weight / totalWeight),
+  }));
+}
+
+function renderPricingTable(sections, grandTotal, totalBond) {
+  const rows = sections.map(section => `
+          <tr>
+            <td>${esc(section.label)}</td>
+            <td class="cell-number">${fmtMoney(section.price)}</td>
+            <td class="cell-number" style="color:var(--muted);">add ${fmtMoney(section.price * BOND_RATE)}</td>
+          </tr>`).join("");
+
+  return `
+      <table>
+        <thead>
+          <tr>
+            <th style="width:55%;">Description</th>
+            <th class="cell-number" style="width:22%;">Base Price</th>
+            <th class="cell-number" style="width:23%;">Opt. Bond (4%)</th>
+          </tr>
+        </thead>
+        <tbody>
+${rows}
+          <tr class="row-total">
+            <td><strong>TOTAL INSTALLED PRICE</strong></td>
+            <td class="cell-number"><strong>${fmtMoney(grandTotal)}</strong></td>
+            <td class="cell-number"><strong>${fmtMoney((grandTotal || 0) + (totalBond || 0))}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+`;
+}
+
+function replacePricingSection(template, pricingHtml) {
+  const start = template.indexOf("      <table>", template.indexOf("<!-- PRICING -->"));
+  const end = template.indexOf("      <!-- SCOPE OF WORK -->");
+
+  if (start === -1 || end === -1 || end <= start) return template;
+  return `${template.slice(0, start)}${pricingHtml}\n${template.slice(end)}`;
+}
+
+function groupEntriesByType(entries) {
+  const groups = new Map();
+  for (const entry of entries) {
+    const type = entry.item?.type || "misc";
+    if (!groups.has(type)) groups.set(type, []);
+    groups.get(type).push(entry);
+  }
+  return Array.from(groups.entries());
+}
+
+function summarizeComponents(entries) {
+  const names = new Set();
+  for (const entry of entries) {
+    for (const name of entry.compNames || []) {
+      const normalized = normalizeCompName(name);
+      if (normalized && names.size < 6) names.add(normalized);
+    }
+  }
+  return Array.from(names);
+}
+
 function renderGeneratedScope(itemsWithComps = []) {
   if (!itemsWithComps.length) {
     return `
@@ -111,38 +261,45 @@ function renderGeneratedScope(itemsWithComps = []) {
 `;
   }
 
-  const rows = itemsWithComps.map(({ item, compNames }) => {
-    const label = item.tag
-      ? `${item.tag} - ${item.label || item.type || "System"}`
-      : item.label || item.type || "System";
-    const location = item.location ? ` (${item.location})` : "";
-    const qty = item.qty || 1;
-    const components = compNames?.length ? compNames : ["controls installation per project specifications"];
+  const sections = buildSections(itemsWithComps, 0);
+  const rows = sections.map(section => {
+    const typeGroups = groupEntriesByType(section.entries).map(([type, entries]) => {
+      const label = TYPE_SCOPE_LABELS[type] || "HVAC Controls Systems";
+      const totalQty = entries.reduce((sum, entry) => sum + (Number(entry.item?.qty) || 1), 0);
+      const tags = entries.map(entry => entry.item?.tag).filter(Boolean).slice(0, 8);
+      const locations = entries.map(entry => entry.item?.location).filter(Boolean).slice(0, 4);
+      const components = summarizeComponents(entries);
 
-    return `
-        <li><strong>${esc(`${qty} ${label}${location}`)}</strong>
+      return `
+        <li><strong>${esc(`${totalQty} ${label}${tags.length ? ` (${tags.join(", ")})` : ""}`)}</strong>
           <ul style="margin-top:4px; padding-left:18px; line-height:1.7;">
-            ${components.map(name => {
+            ${locations.length ? `<li>Work areas include ${esc(locations.join(", "))}.</li>` : ""}
+            ${components.length ? components.map(name => {
               const normalized = normalizeCompName(name);
               if (/conduit|wire|cable|raceway/i.test(normalized)) {
                 return `<li>Furnish and install ${esc(normalized.toLowerCase())} required for this system.</li>`;
               }
               return `<li>Install ${esc(normalized.toLowerCase())} provided by others; furnish and install associated control wiring.</li>`;
-            }).join("")}
-            <li>Demolish and remove existing controls associated with this system where required; return removed equipment to owner's stock.</li>
+            }).join("") : `<li>Install controls field devices provided by others; furnish and install associated control wiring.</li>`}
+            <li>Demolish and remove existing controls associated with this equipment where required; return removed equipment to owner's stock.</li>
           </ul>
         </li>`;
+    }).join("\n");
+
+    return `
+      <p style="margin: 14px 0 6px; font-size: 14px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: 0.06em;">
+        ${esc(section.label)}
+      </p>
+      <ul class="scope-list">
+${typeGroups}
+      </ul>`;
   }).join("\n");
 
-  return `
-      <ul class="scope-list">
-${rows}
-      </ul>
-`;
+  return rows;
 }
 
 function replaceScopeSection(template, scopeHtml) {
-  const start = template.indexOf('<ul class="scope-list">');
+  const start = template.indexOf("      <!-- SCOPE SECTION 1");
   const endMarker = "      <!-- Add additional scope sections";
   const end = template.indexOf(endMarker);
 
@@ -173,8 +330,9 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   const versionSuffix = getVersionSuffix(estimate);
   const installedTotal = grandTotal || 0;
   const totalBond = bondAmount || installedTotal * BOND_RATE;
-  const sectionLabel = "Base Bid - HVAC Controls Installation";
+  const sections = buildSections(itemsWithComps, installedTotal);
   const scopeHtml = renderGeneratedScope(itemsWithComps);
+  const pricingHtml = renderPricingTable(sections, installedTotal, totalBond);
 
   const tokens = {
     PAGE_HEADER_PROJECT: `${projectName} | HVAC Controls Estimate`,
@@ -185,7 +343,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
     DRAWING_BASIS: getDrawingBasis(settings),
     ESTIMATE_DATE: todayStr(),
     SCOPE_INTRO: getScopeIntro(estimate),
-    SECTION_1_LABEL: sectionLabel,
+    SECTION_1_LABEL: sections[0]?.label || "Base Bid - HVAC Controls Installation",
     SECTION_1_PRICE: fmtMoney(installedTotal),
     SECTION_1_BOND: fmtMoney(totalBond),
     GRAND_TOTAL: fmtMoney(installedTotal),
@@ -193,7 +351,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   };
 
   return embedTemplateImages(
-    replaceScopeSection(replaceTemplateTokens(template, tokens), scopeHtml),
+    replaceScopeSection(replacePricingSection(replaceTemplateTokens(template, tokens), pricingHtml), scopeHtml),
     assets,
   );
 }

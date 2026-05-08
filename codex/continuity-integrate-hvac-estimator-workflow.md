@@ -2,7 +2,7 @@
 
 ## Current User Request
 
-Commit and push the HVAC Estimator proposal template/logo fix that uses `C:\Users\TimothyCollins\dev\tcc-templates` as the proposal template source. Maintain this continuity document at the beginning and end of each prompt so progress is not lost if chat state breaks again.
+Incorporate reusable style/content features from the Bruner Middle School proposal example at `C:\Users\TimothyCollins\OneDrive - The Controls Company, LLC\Projects\_Archive\OCSD Bruner Middle School\ocsd-bruner-ms-quote.html` into the HVAC Estimator proposal export so generated proposals feel more dynamic and less AI generated. Maintain this continuity document at the beginning and end of each prompt so progress is not lost if chat state breaks again.
 
 ## Starting State
 
@@ -673,6 +673,39 @@ Current uncommitted files for this slice:
 
 - `codex/continuity-integrate-hvac-estimator-workflow.md`
 - `src/modules/hvac-estimator/components/estimate/export/generateProposal.js`
+
+## End-of-Prompt Continuity Update - Estimator Header Recovery Tweak
+
+User provided screenshot `C:\Users\TimothyCollins\dev\tcc-projecthub\screenshots\Screenshot 2026-05-08 165440.png` and clarified that the HVAC Estimator UI had issues, especially the project name section being scrunched.
+
+Implemented:
+
+- Updated `src/modules/hvac-estimator/components/estimate/EstimateDetail.jsx`.
+- Split the legacy estimator header into:
+  - a back/export/project identity/totals row
+  - a dedicated add-equipment/settings toolbar row
+- Increased the project identity block's flex basis/minimum width and bumped the project name typography so long names do not collapse into one-word-per-line stacks.
+- Removed emoji labels from the export/settings buttons touched in this pass, keeping the controls quieter and more professional.
+- Changed the line-items scroll container from vertical-only scrolling to full overflow scrolling.
+- Added a minimum desktop table width so columns keep their spacing instead of squeezing into unreadable cells.
+
+Validation:
+
+- `npm run build` passes.
+- Existing Next warning only: middleware/proxy deprecation.
+- A local dev server was briefly started at `http://localhost:3000`, then stopped after the user clarified to skip local server review and go straight to commit/deploy.
+
+Current uncommitted files for the recovered active work:
+
+- `codex/continuity-integrate-hvac-estimator-workflow.md`
+- `src/modules/hvac-estimator/components/estimate/EstimateDetail.jsx`
+- `src/modules/hvac-estimator/components/estimate/export/generateProposal.js`
+
+Notes:
+
+- Bruner proposal style features remain implemented but uncommitted in `generateProposal.js`.
+- The header fix is intentionally scoped to ProjectHub's copied estimator UI; the standalone `hvac-estimator` repo was not changed.
+- User requested commit and deploy directly; they will roll back deployment if needed.
 - `public/report-assets/proposal-template.html`
 - `public/report-assets/logo.png`
 - `public/report-assets/sdvosb.jpg`
@@ -697,3 +730,38 @@ Intent:
 
 - HVAC Estimator proposal export now uses the shared TCC proposal template copied from `C:\Users\TimothyCollins\dev\tcc-templates`.
 - Exported proposal HTML embeds the TCC and SDVOSB logos as data URLs so they render when the downloaded HTML is opened independently.
+
+## End-of-Prompt Continuity Update — Bruner Proposal Style Features
+
+User asked to incorporate reusable features from the Bruner Middle School proposal example because it felt more dynamic and less AI-generated.
+
+Implemented:
+
+- Updated `src/modules/hvac-estimator/components/estimate/export/generateProposal.js`.
+- Proposal export now generates a Bruner-style pricing table:
+  - section rows
+  - base price column
+  - optional 4% bond column
+  - combined installed price / bonded total row
+- Proposal export now groups estimate items into proposal sections:
+  - Airside systems: AHU, RTU, VAV, DX/HP, VRF, FCU, UH
+  - Waterside / plant systems
+  - BAS network infrastructure
+- Section prices are allocated from the final estimate total using each section's estimated material/labor weight.
+- Scope language is now grouped by equipment family and tag list instead of flat component rows.
+- Generated scope uses more field-proposal phrasing:
+  - work areas when locations exist
+  - install selected devices provided by others
+  - furnish/install conduit, wiring, cable, raceway items
+  - demolition/return-to-owner stock language per equipment group
+- Existing shared TCC proposal template, editable sections, callout bars, logos, and print behavior remain intact.
+
+Validation:
+
+- `npm run build` passes.
+- Existing warning only: Next middleware/proxy deprecation.
+
+Current uncommitted files for this slice:
+
+- `codex/continuity-integrate-hvac-estimator-workflow.md`
+- `src/modules/hvac-estimator/components/estimate/export/generateProposal.js`

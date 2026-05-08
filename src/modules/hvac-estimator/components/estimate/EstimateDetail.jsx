@@ -105,40 +105,42 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
       {/* ── TOP HEADER BAR ── */}
       <div style={{ padding:"14px 24px", borderBottom:"1px solid "+T.border,
         background:T.surface, flexShrink:0 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
-          <button onClick={onBack} style={{ background:"none", border:"1px solid "+T.border,
-            borderRadius:4, color:T.muted, cursor:"pointer", fontSize:12,
-            fontFamily:T.mono, padding:"4px 10px", whiteSpace:"nowrap" }}>← All Estimates</button>
+        {!editHeader ? (
+          <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+            <div style={{ display:"flex", alignItems:"flex-start", gap:12, flexWrap:"wrap" }}>
+              <button onClick={onBack} style={{ background:"none", border:"1px solid "+T.border,
+                borderRadius:4, color:T.muted, cursor:"pointer", fontSize:12,
+                fontFamily:T.mono, padding:"6px 11px", whiteSpace:"nowrap" }}>← All Estimates</button>
 
-          {!customerMode && <div style={{ display:"flex", alignItems:"center", gap:6, flexShrink:0 }}>
-            <button onClick={exportProposal} disabled={exporting||!estimate.items?.length}
-              title="Generate customer proposal (.html)"
-              style={{ display:"flex", alignItems:"center", gap:5,
-                padding:"7px 13px", border:"none", borderRadius:5,
-                background:estimate.items?.length?"#01766A":T.faint,
-                color:estimate.items?.length?"#fff":T.dim,
-                cursor:estimate.items?.length?"pointer":"default",
-                fontSize:12, fontWeight:600, fontFamily:T.mono, whiteSpace:"nowrap",
-                opacity:exporting?0.7:1 }}>
-              {exporting?"⏳ Generating…":"📄 Generate Proposal"}
-            </button>
-            <button onClick={exportInternal} disabled={!estimate.items?.length}
-              title="Generate readable internal estimate report (.html)"
-              style={{ display:"flex", alignItems:"center", gap:5,
-                padding:"7px 13px", border:"1px solid "+T.border2, borderRadius:5,
-                background:estimate.items?.length?T.surface:T.faint,
-                color:estimate.items?.length?T.text:T.dim,
-                cursor:estimate.items?.length?"pointer":"default",
-                fontSize:12, fontWeight:600, fontFamily:T.mono, whiteSpace:"nowrap" }}>
-              🗂 Internal Report
-            </button>
-          </div>}
+              {!customerMode && <div style={{ display:"flex", alignItems:"center", gap:6, flex:"0 0 auto", flexWrap:"wrap" }}>
+                <button onClick={exportProposal} disabled={exporting||!estimate.items?.length}
+                  title="Generate customer proposal (.html)"
+                  style={{ display:"flex", alignItems:"center", gap:5,
+                    padding:"8px 13px", border:"none", borderRadius:5,
+                    background:estimate.items?.length?"#01766A":T.faint,
+                    color:estimate.items?.length?"#fff":T.dim,
+                    cursor:estimate.items?.length?"pointer":"default",
+                    fontSize:12, fontWeight:600, fontFamily:T.mono, whiteSpace:"nowrap",
+                    opacity:exporting?0.7:1 }}>
+                  {exporting?"Generating...":"Generate Proposal"}
+                </button>
+                <button onClick={exportInternal} disabled={!estimate.items?.length}
+                  title="Generate readable internal estimate report (.html)"
+                  style={{ display:"flex", alignItems:"center", gap:5,
+                    padding:"8px 13px", border:"1px solid "+T.border2, borderRadius:5,
+                    background:estimate.items?.length?T.surface:T.faint,
+                    color:estimate.items?.length?T.text:T.dim,
+                    cursor:estimate.items?.length?"pointer":"default",
+                    fontSize:12, fontWeight:600, fontFamily:T.mono, whiteSpace:"nowrap" }}>
+                  Internal Report
+                </button>
+              </div>}
 
-          {!editHeader ? (
-            <>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:2 }}>
-                  <span style={{ fontSize:15, fontWeight:700, color:T.text }}>{estimate.name}</span>
+              <div style={{ flex:"1 1 420px", minWidth:280, maxWidth:"100%" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:3 }}>
+                  <span style={{ fontSize:18, lineHeight:1.25, fontWeight:800, color:T.text, overflowWrap:"break-word" }}>
+                    {estimate.name}
+                  </span>
                   {estimate.number && <span style={{ fontSize:11, color:T.muted, background:T.panel,
                     padding:"1px 6px", borderRadius:8, fontFamily:T.mono, border:"1px solid "+T.border }}>
                     #{estimate.number}</span>}
@@ -161,7 +163,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
 
               {/* 4-bucket totals pill */}
               <div style={{ display:"flex", gap:0, background:T.panel, border:"1px solid "+T.border,
-                borderRadius:7, overflow:"hidden", flexShrink:0, fontSize:11, fontFamily:T.mono }}>
+                borderRadius:7, overflow:"hidden", flex:"0 0 auto", fontSize:11, fontFamily:T.mono }}>
                 {[
                   { label:"Labor",    val:costs.labor,    color:T.steel  },
                   { label:"Material", val:costs.material, color:T.blue   },
@@ -179,23 +181,31 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                   <div style={{ fontWeight:700, fontSize:13, color:T.text }}>{fmt$(costs.total)}</div>
                 </div>
               </div>
+            </div>
 
-              {/* Add equipment + Settings */}
-              <div style={{ display:"flex", alignItems:"center", gap:6, flexShrink:0 }}>
+            {/* Add equipment + Settings */}
+            {!customerMode && (
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
+                gap:10, flexWrap:"wrap", paddingTop:10, borderTop:"1px solid "+T.border }}>
                 <AddEquipButtons
                   onAdd={type => setSubPage({type})}
                 />
-                {!customerMode && <button onClick={()=>setShowSettings(s=>!s)}
+                <button onClick={()=>setShowSettings(s=>!s)}
                   title="Project settings"
                   style={{ padding:"7px 10px", border:"1px solid "+(showSettings?T.blue:T.border2),
                     borderRadius:5, background:showSettings?T.blueFaint:"none",
                     color:showSettings?T.blue:T.muted, cursor:"pointer", fontSize:12,
                     fontFamily:T.mono, fontWeight:600 }}>
-                  ⚙ Settings
-                </button>}
+                  Settings
+                </button>
               </div>
-            </>
-          ) : (
+            )}
+          </div>
+        ) : (
+          <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+            <button onClick={onBack} style={{ background:"none", border:"1px solid "+T.border,
+              borderRadius:4, color:T.muted, cursor:"pointer", fontSize:12,
+              fontFamily:T.mono, padding:"4px 10px", whiteSpace:"nowrap" }}>← All Estimates</button>
             <div style={{ flex:1, display:"flex", flexWrap:"wrap", gap:8, alignItems:"flex-end" }}>
               {[["Name",name,setName,200],["Est #",number,setNumber,100],
                 ["Customer",customer,setCustomer,160],["Version",version,setVersion,80]].map(([lbl,val,fn,w])=>(
@@ -218,8 +228,8 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                 border:"1px solid "+T.border2, borderRadius:4, background:"none",
                 color:T.muted, cursor:"pointer", fontSize:13 }}>Cancel</button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* ── PROJECT SETTINGS PANEL ── */}
@@ -230,7 +240,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
       )}
 
       {/* ── LINE ITEMS TABLE ── */}
-      <div style={{ flex:1, overflowY:"auto", padding:"20px 24px" }}>
+      <div style={{ flex:1, overflow:"auto", padding:"20px 24px" }}>
         <div style={{
           position:"sticky",
           top:0,
@@ -376,7 +386,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
             )}
           </div>
         ) : (
-          <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+          <table style={{ width:"100%", minWidth:1120, borderCollapse:"collapse", fontSize:13 }}>
             <thead>
               <tr style={{ borderBottom:"2px solid "+T.border }}>
                 {["Tag","Type","Location","Qty","Install","Unit Mtl","Unit Lbr","Total Mtl","Total Lbr","Actions"].map(h=>(
