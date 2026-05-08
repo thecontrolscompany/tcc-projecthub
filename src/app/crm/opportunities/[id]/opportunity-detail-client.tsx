@@ -33,6 +33,14 @@ export function OpportunityDetailClient({ opportunity, activities: initialActivi
   const [updatingStage, setUpdatingStage] = useState(false);
   const [currentStage, setCurrentStage] = useState<CrmOpportunityStage>(opportunity.stage);
   const isWriteRole = role === "admin" || role === "ops_manager";
+  const estimatorUrl =
+    "https://estimates.thecontrolscompany.com/?" +
+    new URLSearchParams({
+      opportunityId: opportunity.id,
+      opportunityNumber: opportunity.opportunity_number ?? "",
+      projectName: opportunity.project_name,
+      customer: opportunity.account?.company_name ?? "",
+    }).toString();
 
   async function handleStageChange(newStage: CrmOpportunityStage) {
     if (!isWriteRole || newStage === currentStage) return;
@@ -72,7 +80,17 @@ export function OpportunityDetailClient({ opportunity, activities: initialActivi
               {opportunity.market_type && <span>· {opportunity.market_type}</span>}
             </div>
           </div>
-          <OpportunityStageBadge stage={currentStage} />
+          <div className="flex flex-wrap items-center gap-2">
+            <a
+              href={estimatorUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover"
+            >
+              Estimate in HVAC Estimator
+            </a>
+            <OpportunityStageBadge stage={currentStage} />
+          </div>
         </div>
       </div>
 

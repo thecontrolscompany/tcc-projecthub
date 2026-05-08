@@ -24,3 +24,5 @@ next-env.d.ts
 
 # database backups (contain live data — never commit)
 /backups/
+
+.vercel

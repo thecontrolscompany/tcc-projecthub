@@ -10,6 +10,7 @@ const ADMIN_ITEMS = [
   { href: "/crm/accounts",      label: "Accounts" },
   { href: "/quotes",            label: "Pipeline" },
   { href: "/quotes/pursuits",   label: "Pursuits" },
+  { href: "/estimating",        label: "Estimator" },
   { href: "/crm/activities",    label: "Activities" },
   { href: "/crm/tasks",         label: "Tasks" },
   { href: "/crm/targets",       label: "Targets" },
@@ -20,6 +21,7 @@ const OPS_ITEMS = [
   { href: "/crm/accounts",      label: "Accounts" },
   { href: "/quotes",            label: "Pipeline" },
   { href: "/quotes/pursuits",   label: "Pursuits" },
+  { href: "/estimating",        label: "Estimator" },
   { href: "/crm/activities",    label: "Activities" },
   { href: "/crm/tasks",         label: "Tasks" },
   { href: "/crm/targets",       label: "Targets" },
@@ -29,6 +31,7 @@ const PM_ITEMS = [
   { href: "/crm/accounts",      label: "Accounts" },
   { href: "/quotes",            label: "Pipeline" },
   { href: "/quotes/pursuits",   label: "Pursuits" },
+  { href: "/estimating",        label: "Estimator" },
   { href: "/crm/activities",    label: "Activities" },
   { href: "/crm/tasks",         label: "Tasks" },
 ];

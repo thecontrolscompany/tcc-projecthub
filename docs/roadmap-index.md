@@ -62,6 +62,7 @@ Central index for roadmap, planning, and feature follow-up documents in `tcc-pro
 
 ## Platform
 
+- [Modal Workflow Consolidation Roadmap](C:/Users/TimothyCollins/dev/tcc-projecthub/codex/roadmap-modal-workflow-consolidation.md)
 - [Offline Access and Background Sync Roadmap](C:/Users/TimothyCollins/dev/tcc-projecthub/codex/roadmap-offline-sync.md)
 
 ---
