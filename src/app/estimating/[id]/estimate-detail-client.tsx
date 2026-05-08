@@ -12,6 +12,8 @@ import { computeCosts, DEFAULT_SETTINGS } from "@/modules/hvac-estimator/compone
 import AHUSchematic from "@/modules/hvac-estimator/components/ahu/AHUSchematic";
 import DXSchematic from "@/modules/hvac-estimator/components/dx/DXSchematic";
 import FCUSchematic from "@/modules/hvac-estimator/components/fcu/FCUSchematic";
+import NetworkSchematic from "@/modules/hvac-estimator/components/network/NetworkSchematic";
+import PlantSchematic from "@/modules/hvac-estimator/components/plant/PlantSchematic";
 import RTUSchematic from "@/modules/hvac-estimator/components/rtu/RTUSchematic";
 import UHSchematic from "@/modules/hvac-estimator/components/uh/UHSchematic";
 import VAVSchematic from "@/modules/hvac-estimator/components/vav/VAVSchematic";
@@ -77,7 +79,7 @@ const statusOptions: EstimateStatus[] = [
   "archived",
 ];
 
-const supportedEquipmentTypes = ["ahu", "vav", "rtu", "dx", "vrf", "fcu", "uh", "network"];
+const supportedEquipmentTypes = ["ahu", "vav", "rtu", "dx", "vrf", "fcu", "uh", "plant", "network"];
 const diagramSupportedEquipmentTypes = new Set(["rtu", "dx", "vrf", "uh"]);
 
 const inputClassName =
@@ -1109,6 +1111,10 @@ function LegacyEstimatorWorkspace({
         return <FCUSchematic />;
       case "uh":
         return <UHSchematic />;
+      case "plant":
+        return <PlantSchematic />;
+      case "network":
+        return <NetworkSchematic />;
       default:
         return <EstimateDetail estimate={estimate} onBack={onBack} onUpdate={onUpdate} />;
     }

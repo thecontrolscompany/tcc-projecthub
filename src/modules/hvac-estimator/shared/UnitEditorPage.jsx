@@ -50,7 +50,7 @@ export function UnitEditorPage({
   assemblyCategory,
   addAssemblyLabel = "Add assembly...",
 }) {
-  const { editingItem, subPage } = useEstimate();
+  const { editingItem, subPage, setSubPage } = useEstimate();
   const isEditing = !!editingItem;
 
   const [selected, setSel] = useState(() => {
@@ -162,6 +162,24 @@ export function UnitEditorPage({
         flexShrink: 0,
         flexWrap: "wrap",
       }}>
+        <button
+          type="button"
+          onClick={() => setSubPage(null)}
+          title="Return to this estimate without adding a system"
+          style={{
+            padding: "4px 10px",
+            border: `1px solid ${T.border2}`,
+            borderRadius: 4,
+            background: T.surface,
+            color: T.muted,
+            cursor: "pointer",
+            fontSize: 11,
+            fontFamily: T.mono,
+            whiteSpace: "nowrap",
+          }}
+        >
+          ← Estimate
+        </button>
         <div style={{ padding: "3px 10px", background: accentBg, border: `1px solid ${accentBorder}`, borderRadius: 4 }}>
           <span style={{ fontSize: 11, color: accent, fontFamily: T.mono, fontWeight: 700, letterSpacing: 1 }}>{badge}</span>
         </div>
