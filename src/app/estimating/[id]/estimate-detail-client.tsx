@@ -3,11 +3,9 @@
 import Link from "next/link";
 import { Fragment, useMemo, useState } from "react";
 import { calcEstimate, calcItem, COMPS_MAP, TYPE_META } from "@/modules/hvac-estimator/components/estimate/estimateCalc";
-import {
-  computeCosts,
-  DEFAULT_SETTINGS,
-  VERTICAL_MARKETS,
-} from "@/modules/hvac-estimator/components/estimate/projectSettings";
+import { AddEquipButtons } from "@/modules/hvac-estimator/components/estimate/AddEquipButtons";
+import { ProjectSettingsPanel } from "@/modules/hvac-estimator/components/estimate/ProjectSettingsPanel";
+import { computeCosts, DEFAULT_SETTINGS } from "@/modules/hvac-estimator/components/estimate/projectSettings";
 import { summarizeHvacEstimate, type HvacEstimateBody } from "@/modules/hvac-estimator/platform-adapter";
 import type { EstimateRecord, EstimateStatus } from "@/types/database";
 
@@ -173,6 +171,8 @@ export function EstimateDetailClient({ estimate }: Props) {
   const [body, setBody] = useState<EstimateBody>(() => normalizeBody(estimate));
   const [status, setStatus] = useState<EstimateStatus>(estimate.status);
   const [addForm, setAddForm] = useState<AddItemForm>(() => buildAddForm());
+  const [showAddEditor, setShowAddEditor] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [editingComponentsFor, setEditingComponentsFor] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -397,66 +397,33 @@ export function EstimateDetailClient({ estimate }: Props) {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-border-default bg-surface-raised p-5">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <section className="overflow-hidden rounded-2xl border border-border-default bg-surface-raised">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-default px-5 py-4">
               <div>
                 <h2 className="text-lg font-semibold text-text-primary">Project Settings</h2>
                 <p className="mt-1 text-sm text-text-secondary">
-                  Core migrated settings that drive the estimator cost model.
+                  Old estimator settings panel, now backed by ProjectHub estimate persistence.
                 </p>
               </div>
               <button
                 type="button"
-                onClick={applyDefaultInstallTypeToItems}
-                disabled={body.items.length === 0}
-                className="rounded-xl border border-border-default px-3 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => setShowSettings((current) => !current)}
+                className="rounded-xl border border-border-default px-3 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
               >
-                Apply Default Install
+                {showSettings ? "Hide Settings" : "Show Settings"}
               </button>
             </div>
-
-            <div className="grid gap-3 md:grid-cols-4">
-              <NumberSetting label="Wage Rate" value={body.settings.wageRate} step={0.01} onChange={(value) => updateSettings({ wageRate: value })} />
-              <NumberSetting label="Overhead %" value={body.settings.overheadPct} onChange={(value) => updateSettings({ overheadPct: value })} />
-              <NumberSetting label="Profit %" value={body.settings.profitPct} onChange={(value) => updateSettings({ profitPct: value })} />
-              <NumberSetting label="Bond %" value={body.settings.bondPct} step={0.1} onChange={(value) => updateSettings({ bondPct: value })} />
-              <label>
-                <span className={labelClassName}>Default Install</span>
-                <select
-                  value={asString(body.settings.defaultInstallType) || "EMT"}
-                  onChange={(event) => updateSettings({ defaultInstallType: event.target.value })}
-                  className={inputClassName}
-                >
-                  <option value="EMT">EMT</option>
-                  <option value="Plenum">Plenum</option>
-                </select>
-              </label>
-              <label>
-                <span className={labelClassName}>Vertical Market</span>
-                <select
-                  value={asString(body.settings.verticalMarket) || "commercial"}
-                  onChange={(event) => updateSettings({ verticalMarket: event.target.value })}
-                  className={inputClassName}
-                >
-                  {VERTICAL_MARKETS.map((market: { id: string; label: string }) => (
-                    <option key={market.id} value={market.id}>
-                      {market.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <NumberSetting label="Miles Round Trip" value={body.settings.milesOneWay} onChange={(value) => updateSettings({ milesOneWay: value })} />
-              <NumberSetting label="Trips" value={body.settings.trips} onChange={(value) => updateSettings({ trips: value })} />
-            </div>
-
-            <div className="mt-4 grid gap-2 md:grid-cols-3">
-              <BooleanSetting label="Site Access" checked={Boolean(body.settings.siteAccess)} onChange={(value) => updateSettings({ siteAccess: value })} />
-              <BooleanSetting label="Safety Requirements" checked={Boolean(body.settings.safetyReqs)} onChange={(value) => updateSettings({ safetyReqs: value })} />
-              <BooleanSetting label="VAV Field Mount" checked={Boolean(body.settings.vavFieldMount)} onChange={(value) => updateSettings({ vavFieldMount: value })} />
-              <BooleanSetting label="Fire Seals" checked={Boolean(body.settings.fireSeals)} onChange={(value) => updateSettings({ fireSeals: value })} />
-              <BooleanSetting label="Misc Materials" checked={Boolean(body.settings.miscMaterials)} onChange={(value) => updateSettings({ miscMaterials: value })} />
-              <BooleanSetting label="Supervision" checked={Boolean(body.settings.supervision)} onChange={(value) => updateSettings({ supervision: value })} />
-            </div>
+            {showSettings && (
+              <ProjectSettingsPanel
+                settings={body.settings}
+                onChange={updateSettings}
+                costs={costs}
+                rawLbrHrs={rawTotals.lbrHrs}
+                itemCount={body.items.length}
+                estimateId={estimate.id}
+                onApplyDefaultInstallType={applyDefaultInstallTypeToItems}
+              />
+            )}
           </section>
 
           <section className="rounded-2xl border border-border-default bg-surface-raised p-5">
@@ -464,11 +431,21 @@ export function EstimateDetailClient({ estimate }: Props) {
               <div>
                 <h2 className="text-lg font-semibold text-text-primary">Add Equipment</h2>
                 <p className="mt-1 text-sm text-text-secondary">
-                  First migrated editor slice: add priced line items from the copied estimator catalogs.
+                  Old estimator equipment buttons with a platform-native item editor.
                 </p>
               </div>
               <div className="text-sm text-text-tertiary">{body.items.length} line items</div>
             </div>
+
+            <AddEquipButtons
+              onAdd={(type: string) => {
+                setAddType(type);
+                setShowAddEditor(true);
+              }}
+            />
+
+            {showAddEditor && (
+              <div className="mt-4 border-t border-border-default pt-4">
 
             <div className="grid gap-3 md:grid-cols-5">
               <label>
@@ -557,6 +534,8 @@ export function EstimateDetailClient({ estimate }: Props) {
                 Add Equipment
               </button>
             </div>
+              </div>
+            )}
           </section>
 
           <section className="overflow-hidden rounded-2xl border border-border-default bg-surface-raised">

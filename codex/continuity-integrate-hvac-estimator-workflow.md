@@ -2,7 +2,7 @@
 
 ## Current User Request
 
-User is still getting `No organization selected.` and asked to commit/push the current HVAC Estimator migration work to see if deployment clears the error. Maintain this continuity document at the beginning and end of each prompt so progress is not lost if chat state breaks again.
+Implement the next HVAC Estimator migration phase by bringing the ProjectHub estimator UI closer to the old standalone HVAC Estimator UI rather than continuing the temporary bridge editor. Maintain this continuity document at the beginning and end of each prompt so progress is not lost if chat state breaks again.
 
 ## Starting State
 
@@ -312,3 +312,68 @@ Recommended next phase:
 2. Add default component selections from the estimator data helpers instead of requiring manual component selection.
 3. Add price snapshot generation/refresh behavior to preserve historical estimates.
 4. Then port proposal/internal export actions.
+
+## End-of-Prompt Continuity Update — Supabase Migrations Applied
+
+User asked to apply Supabase migrations because `No organization selected.` persisted.
+
+Actions taken:
+
+- Ran `supabase migration list`.
+- Found remote missing:
+  - `20260507000000_report_email_send_attempts`
+  - `20260508000000_estimates_opportunity_architecture`
+  - `20260508000001_platform_tenants_modules`
+  - `20260508000002_estimates_tenant_module_policies`
+- `supabase db push` was initially blocked by a stale remote migration history entry for `20260415`.
+- Repaired that remote history entry:
+  - `supabase migration repair --status reverted 20260415`
+- Applied pending migrations:
+  - `supabase db push --include-all`
+- Verified remote now has the May 8 migrations applied.
+- Verified via Supabase client/env that remote data now contains:
+  - organization slug `tcc`
+  - platform modules `crm`, `hvac_estimator`, `projecthub`
+  - enabled organization modules for `tcc`: `crm`, `hvac_estimator`, `projecthub`
+
+Note:
+
+- `supabase migration list` still displays an odd April 15 history mismatch row, but the relevant May 8 tenant/module migrations are applied and data exists.
+- If `No organization selected.` persists, likely causes are deployment not yet updated, app using a different Supabase project/env, or the authenticated user/session hitting a different environment than `.env.local`.
+
+## End-of-Prompt Continuity Update — Old UI Alignment Phase
+
+User wanted the migrated ProjectHub estimator UI aligned with the older standalone HVAC Estimator UI, because the old UI was further along.
+
+Implemented first alignment slice:
+
+- Copied old standalone UI support files into the ProjectHub HVAC Estimator module:
+  - `src/modules/hvac-estimator/components/estimate/AddEquipButtons.jsx`
+  - `src/modules/hvac-estimator/components/estimate/ProjectSettingsPanel.jsx`
+  - `src/modules/hvac-estimator/shared/utils.js`
+- Updated `/estimating/[id]/estimate-detail-client.tsx` to use:
+  - old `AddEquipButtons` equipment button strip
+  - old `ProjectSettingsPanel` for project settings/cost controls
+- Kept ProjectHub API-backed persistence:
+  - estimate body still lives in platform `estimates.body`
+  - save still writes via `PUT /api/estimates/[id]`
+  - cost calculations still use migrated estimator cost functions
+- The add-equipment form remains the temporary platform-native editor, but is now launched from the old equipment button strip.
+- The settings UI is now the old estimator settings panel, including mileage/geocode, labor/material/overhead settings, and the old visual style.
+- Validation: `npm run build` passes.
+- Existing warning only: Next middleware/proxy deprecation.
+
+Current uncommitted files:
+
+- `codex/continuity-integrate-hvac-estimator-workflow.md`
+- `src/app/estimating/[id]/estimate-detail-client.tsx`
+- `src/modules/hvac-estimator/components/estimate/AddEquipButtons.jsx`
+- `src/modules/hvac-estimator/components/estimate/ProjectSettingsPanel.jsx`
+- `src/modules/hvac-estimator/shared/utils.js`
+
+Recommended next alignment slice:
+
+1. Port old `EstimateDetail.jsx` table/header layout more directly, now that settings/buttons are copied.
+2. Port old system-specific editor entry flow (`setSubPage`) into ProjectHub routing/state.
+3. Port one full system editor first, likely RTU or VAV, including default selections and diagrams.
+4. Then port assembly picker and export actions.
