@@ -34,8 +34,9 @@ export function OpportunityDetailClient({ opportunity, activities: initialActivi
   const [currentStage, setCurrentStage] = useState<CrmOpportunityStage>(opportunity.stage);
   const isWriteRole = role === "admin" || role === "ops_manager";
   const estimatorUrl =
-    "https://estimates.thecontrolscompany.com/?" +
+    "/estimating/new?" +
     new URLSearchParams({
+      organizationId: opportunity.organization_id ?? "",
       opportunityId: opportunity.id,
       opportunityNumber: opportunity.opportunity_number ?? "",
       projectName: opportunity.project_name,
@@ -81,14 +82,12 @@ export function OpportunityDetailClient({ opportunity, activities: initialActivi
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <a
+            <Link
               href={estimatorUrl}
-              target="_blank"
-              rel="noopener noreferrer"
               className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover"
             >
               Estimate in HVAC Estimator
-            </a>
+            </Link>
             <OpportunityStageBadge stage={currentStage} />
           </div>
         </div>

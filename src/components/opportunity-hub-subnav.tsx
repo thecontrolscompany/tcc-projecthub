@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 const ADMIN_ITEMS = [
   { href: "/crm/dashboard",     label: "Dashboard" },
   { href: "/crm/accounts",      label: "Accounts" },
-  { href: "/quotes",            label: "Pipeline" },
+  { href: "/crm/opportunities",  label: "Pipeline" },
   { href: "/quotes/pursuits",   label: "Pursuits" },
   { href: "/estimating",        label: "Estimator" },
   { href: "/crm/activities",    label: "Activities" },
@@ -19,7 +19,7 @@ const ADMIN_ITEMS = [
 const OPS_ITEMS = [
   { href: "/crm/dashboard",     label: "Dashboard" },
   { href: "/crm/accounts",      label: "Accounts" },
-  { href: "/quotes",            label: "Pipeline" },
+  { href: "/crm/opportunities",  label: "Pipeline" },
   { href: "/quotes/pursuits",   label: "Pursuits" },
   { href: "/estimating",        label: "Estimator" },
   { href: "/crm/activities",    label: "Activities" },
@@ -29,7 +29,7 @@ const OPS_ITEMS = [
 
 const PM_ITEMS = [
   { href: "/crm/accounts",      label: "Accounts" },
-  { href: "/quotes",            label: "Pipeline" },
+  { href: "/crm/opportunities",  label: "Pipeline" },
   { href: "/quotes/pursuits",   label: "Pursuits" },
   { href: "/estimating",        label: "Estimator" },
   { href: "/crm/activities",    label: "Activities" },

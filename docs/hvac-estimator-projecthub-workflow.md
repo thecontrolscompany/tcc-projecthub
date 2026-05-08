@@ -1,4 +1,6 @@
-# HVAC Estimator to ProjectHub Workflow
+# HVAC Estimator, CRM, And ProjectHub Workflow
+
+This workflow now assumes the long-term SaaS architecture: CRM, HVAC Estimator, and ProjectHub are peer modules inside a tenant-aware platform. ProjectHub is the shell and operational project module, not the owner of the estimator domain.
 
 ## Current Workflow
 
@@ -29,14 +31,15 @@
    - Carry the estimate id into `projects.source_estimate_id`.
    - Use the existing estimator-to-POC endpoint later for schedule-of-values setup.
 
-## What It Takes To Bring HVAC Estimator Into ProjectHub
+## What It Takes To Bring HVAC Estimator Into The Platform
 
-The apps should converge around ProjectHub as the shell and CRM/project source of truth, with HVAC Estimator becoming the estimating module inside that architecture.
+The apps should converge around the platform shell, with HVAC Estimator becoming a selectable module. CRM remains the opportunity module. ProjectHub remains the awarded-project execution module.
 
 ### 1. Shared Data Model
 
 Add first-class opportunity linkage to estimates:
 
+- `estimates.organization_id -> organizations.id`
 - `estimates.linked_opportunity_id -> crm_opportunities.id`
 - Keep `estimates.linked_project_id -> projects.id` for awarded work.
 - Keep full estimate payload in `estimates.body` so historical estimates remain reconstructable.
@@ -66,7 +69,7 @@ The estimator already has clean shared modules for estimate context, stores, ass
 
 ### 4. API Boundary
 
-ProjectHub should own the persistence API:
+The platform should own the persistence API:
 
 - `GET /api/estimates?opportunity_id=...`
 - `POST /api/estimates`
@@ -76,16 +79,17 @@ ProjectHub should own the persistence API:
 - `POST /api/estimates/[id]/internal-export`
 - `POST /api/estimator/sync-poc`
 
-HVAC Estimator should stop writing directly to Supabase from browser code once it lives inside ProjectHub.
+HVAC Estimator should stop writing directly to Supabase from browser code once it lives inside the SaaS platform.
 
 ### 5. Opportunity-Aware Estimate Creation
 
 When launched from an opportunity, the estimator should:
 
 - Read `opportunityId` from the route or query string.
+- Read `organizationId` from the route, query string, or selected tenant context.
 - Fetch the opportunity and account from ProjectHub.
 - Pre-fill estimate name, number, customer, bid due date, estimator, and notes.
-- Save the estimate with `linked_opportunity_id`.
+- Save the estimate with `organization_id` and `linked_opportunity_id`.
 - Update the CRM opportunity totals when the estimate is marked ready or proposal is exported.
 
 ### 6. Award Handoff

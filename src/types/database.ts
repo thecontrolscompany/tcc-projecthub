@@ -3,6 +3,17 @@
 export type UserRole = "admin" | "pm" | "lead" | "installer" | "ops_manager" | "customer";
 export type InternalContactRole = "pm" | "lead" | "installer" | "ops_manager";
 export type ProjectAssignmentRole = "pm" | "lead" | "installer" | "ops_manager";
+export type OrganizationStatus = "active" | "trial" | "suspended" | "archived";
+export type OrganizationMemberRole = "owner" | "admin" | "manager" | "member" | "customer";
+export type PlatformModuleId =
+  | "platform"
+  | "crm"
+  | "hvac_estimator"
+  | "projecthub"
+  | "billing"
+  | "time"
+  | "documents"
+  | "analytics";
 export type QuoteRequestStatus = "new" | "reviewing" | "quoted" | "won" | "lost";
 export type OpportunityStage =
   | "new"
@@ -28,16 +39,59 @@ export interface Profile {
   email: string;
   pm_directory_id: string | null;
   phone: string | null;
+  default_organization_id?: string | null;
+}
+
+export interface Organization {
+  id: string;
+  slug: string;
+  name: string;
+  status: OrganizationStatus;
+  billing_email: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PlatformModule {
+  id: PlatformModuleId;
+  name: string;
+  description: string | null;
+  route_prefix: string;
+  is_core: boolean;
+  created_at: string;
+}
+
+export interface OrganizationModule {
+  organization_id: string;
+  module_id: PlatformModuleId;
+  enabled: boolean;
+  enabled_at: string;
+  disabled_at: string | null;
+  settings: Record<string, unknown>;
+  module?: PlatformModule;
+}
+
+export interface OrganizationMembership {
+  organization_id: string;
+  profile_id: string;
+  role: OrganizationMemberRole;
+  module_roles: Record<string, unknown>;
+  is_default: boolean;
+  created_at: string;
+  organization?: Organization;
+  profile?: Profile;
 }
 
 export interface Customer {
   id: string;
+  organization_id?: string | null;
   name: string;
   contact_email: string | null;
 }
 
 export interface Project {
   id: string;
+  organization_id?: string | null;
   customer_id: string;
   pm_id: string | null;
   name: string;
@@ -210,6 +264,31 @@ export interface EstimatePayload {
     labor_hours: number;
     description: string;
   }>;
+}
+
+export type EstimateStatus = "draft" | "in_progress" | "ready" | "proposal_exported" | "awarded" | "archived";
+
+export interface EstimateRecord {
+  id: string;
+  organization_id: string | null;
+  owner_id: string;
+  body: Record<string, unknown>;
+  name: string | null;
+  number: string | null;
+  archived: boolean;
+  status: EstimateStatus;
+  linked_opportunity_id: string | null;
+  linked_project_id: string | null;
+  total_amount: number | null;
+  gross_margin_amount: number | null;
+  gross_margin_pct: number | null;
+  proposal_exported_at: string | null;
+  estimate_ready_at: string | null;
+  created_at: string;
+  updated_at: string;
+  owner?: Pick<Profile, "id" | "full_name" | "email"> | null;
+  opportunity?: Pick<CrmOpportunity, "id" | "opportunity_number" | "project_name" | "stage"> | null;
+  project?: Pick<Project, "id" | "name" | "job_number"> | null;
 }
 
 export interface PursuitSummary {
@@ -641,6 +720,7 @@ export type CrmTaskStatus = "open" | "in_progress" | "completed" | "cancelled";
 
 export interface CrmAccount {
   id: string;
+  organization_id?: string | null;
   company_name: string;
   type: CrmAccountType;
   territory: string | null;
@@ -669,6 +749,7 @@ export interface CrmAccount {
 
 export interface CrmContact {
   id: string;
+  organization_id?: string | null;
   account_id: string;
   first_name: string | null;
   last_name: string | null;
@@ -698,6 +779,7 @@ export interface CrmContact {
 
 export interface CrmOpportunity {
   id: string;
+  organization_id?: string | null;
   opportunity_number: string;
   account_id: string;
   project_name: string;
@@ -729,6 +811,7 @@ export interface CrmOpportunity {
 
 export interface CrmOpportunityContact {
   id: string;
+  organization_id?: string | null;
   opportunity_id: string;
   contact_id: string;
   contact_role_on_opportunity: CrmOpportunityContactRole;
@@ -739,6 +822,7 @@ export interface CrmOpportunityContact {
 
 export interface CrmActivity {
   id: string;
+  organization_id?: string | null;
   activity_type: CrmActivityType;
   activity_date: string;
   summary: string;
@@ -761,6 +845,7 @@ export interface CrmActivity {
 
 export interface CrmTask {
   id: string;
+  organization_id?: string | null;
   title: string;
   description: string | null;
   assigned_to_profile_id: string | null;
