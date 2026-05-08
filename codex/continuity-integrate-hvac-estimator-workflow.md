@@ -2,7 +2,7 @@
 
 ## Current User Request
 
-Implement the next HVAC Estimator migration phase by bringing the ProjectHub estimator UI closer to the old standalone HVAC Estimator UI rather than continuing the temporary bridge editor. Maintain this continuity document at the beginning and end of each prompt so progress is not lost if chat state breaks again.
+Continue the HVAC Estimator migration after committing the first old-UI alignment slice. Next focus: make the ProjectHub editor behave more like the old standalone estimator rather than a manual component picker. Maintain this continuity document at the beginning and end of each prompt so progress is not lost if chat state breaks again.
 
 ## Starting State
 
@@ -377,3 +377,38 @@ Recommended next alignment slice:
 2. Port old system-specific editor entry flow (`setSubPage`) into ProjectHub routing/state.
 3. Port one full system editor first, likely RTU or VAV, including default selections and diagrams.
 4. Then port assembly picker and export actions.
+
+## End-of-Prompt Continuity Update — Default Selection Phase
+
+Continued old UI/behavior alignment after commit `4ca5237`.
+
+Implemented:
+
+- ProjectHub add-equipment flow now uses migrated standalone estimator default-selection helpers instead of starting with no selected components.
+- Added imports and wiring for:
+  - AHU: `normalizeAhuCfg`, `getVisibleAhuComponents`, `applyAhuDefaultSelections`
+  - VAV: `normalizeVavCfg`, `getVisibleVavComponents`, `applyVavDefaultSelections`
+  - RTU: `normalizeRtuCfg`, `getVisibleRtuComponents`, `applyRtuDefaultSelections`
+  - DX: `normalizeDxCfg`, `getVisibleDxComponents`, `applyDxDefaultSelections`
+  - VRF: `normalizeVrfCfg`, `getVisibleVrfComponents`, `buildDefaultVrfSelected`
+  - FCU: `normalizeFcuCfg`, `getVisibleFcuComponents`, `applyFcuDefaultSelections`
+  - UH: `normalizeUhCfg`, `getVisibleUhComponents`, `applyUhDefaultSelections`
+- The add form now stores:
+  - `cfg`
+  - selected components with per-component quantity
+- Component list in the add form now uses visible components for the selected system config.
+- New line items are created with default config and default selected components, closer to the old standalone estimator behavior.
+- Add form component quantities are editable before adding the line item.
+- Validation: `npm run build` passes.
+- Existing warning only: Next middleware/proxy deprecation.
+
+Current uncommitted files:
+
+- `codex/continuity-integrate-hvac-estimator-workflow.md`
+- `src/app/estimating/[id]/estimate-detail-client.tsx`
+
+Recommended next phase:
+
+1. Add compact system-specific config controls for RTU and VAV in the add/edit form.
+2. Reconcile selected components when config changes, using the imported `reconcile*Selected` helpers.
+3. Then port one old full system editor surface.

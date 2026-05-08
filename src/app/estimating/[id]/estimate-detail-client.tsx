@@ -6,6 +6,13 @@ import { calcEstimate, calcItem, COMPS_MAP, TYPE_META } from "@/modules/hvac-est
 import { AddEquipButtons } from "@/modules/hvac-estimator/components/estimate/AddEquipButtons";
 import { ProjectSettingsPanel } from "@/modules/hvac-estimator/components/estimate/ProjectSettingsPanel";
 import { computeCosts, DEFAULT_SETTINGS } from "@/modules/hvac-estimator/components/estimate/projectSettings";
+import { applyAhuDefaultSelections, getVisibleAhuComponents, normalizeAhuCfg } from "@/modules/hvac-estimator/components/ahu/ahuData";
+import { applyDxDefaultSelections, getVisibleDxComponents, normalizeDxCfg } from "@/modules/hvac-estimator/components/dx/dxData";
+import { applyFcuDefaultSelections, getVisibleFcuComponents, normalizeFcuCfg } from "@/modules/hvac-estimator/components/fcu/fcuData";
+import { applyRtuDefaultSelections, getVisibleRtuComponents, normalizeRtuCfg } from "@/modules/hvac-estimator/components/rtu/rtuData";
+import { applyUhDefaultSelections, getVisibleUhComponents, normalizeUhCfg } from "@/modules/hvac-estimator/components/uh/uhData";
+import { applyVavDefaultSelections, getVisibleVavComponents, normalizeVavCfg } from "@/modules/hvac-estimator/components/vav/vavData";
+import { buildDefaultVrfSelected, getVisibleVrfComponents, normalizeVrfCfg } from "@/modules/hvac-estimator/components/vrf/vrfData";
 import { summarizeHvacEstimate, type HvacEstimateBody } from "@/modules/hvac-estimator/platform-adapter";
 import type { EstimateRecord, EstimateStatus } from "@/types/database";
 
@@ -37,7 +44,8 @@ type AddItemForm = {
   location: string;
   qty: string;
   installType: "EMT" | "Plenum";
-  selectedIds: string[];
+  cfg: Record<string, unknown>;
+  selected: Array<{ id: string; qty: number }>;
 };
 
 type HvacComponent = {
@@ -111,6 +119,71 @@ function getComponentLabel(component: HvacComponent) {
   return component.label ?? component.name ?? component.id;
 }
 
+function getDefaultCfg(type: string) {
+  switch (type) {
+    case "ahu":
+      return normalizeAhuCfg({});
+    case "vav":
+      return normalizeVavCfg({});
+    case "rtu":
+      return normalizeRtuCfg({});
+    case "dx":
+      return normalizeDxCfg({});
+    case "vrf":
+      return normalizeVrfCfg({});
+    case "fcu":
+      return normalizeFcuCfg({});
+    case "uh":
+      return normalizeUhCfg({});
+    default:
+      return {};
+  }
+}
+
+function getVisibleComponentsForType(type: string, cfg: Record<string, unknown>) {
+  switch (type) {
+    case "ahu":
+      return getVisibleAhuComponents(cfg);
+    case "vav":
+      return getVisibleVavComponents(cfg);
+    case "rtu":
+      return getVisibleRtuComponents(cfg);
+    case "dx":
+      return getVisibleDxComponents(cfg);
+    case "vrf":
+      return getVisibleVrfComponents(cfg);
+    case "fcu":
+      return getVisibleFcuComponents(cfg);
+    case "uh":
+      return getVisibleUhComponents(cfg);
+    default:
+      return getComponents(type);
+  }
+}
+
+function getDefaultSelectedForType(type: string, cfg: Record<string, unknown>) {
+  switch (type) {
+    case "ahu":
+      return applyAhuDefaultSelections([], cfg);
+    case "vav":
+      return applyVavDefaultSelections([], cfg);
+    case "rtu":
+      return applyRtuDefaultSelections([], cfg);
+    case "dx":
+      return applyDxDefaultSelections([], cfg);
+    case "vrf":
+      return buildDefaultVrfSelected(cfg);
+    case "fcu":
+      return applyFcuDefaultSelections([], cfg);
+    case "uh":
+      return applyUhDefaultSelections([], cfg);
+    default:
+      return getComponents(type)
+        .filter((component) => Boolean((component as HvacComponent & { def?: boolean }).def))
+        .map((component) => ({ id: component.id, qty: 1 }));
+  }
+}
+
 function normalizeBody(record: EstimateRecord): EstimateBody {
   const body = record.body as Partial<EstimateBody>;
   return {
@@ -136,13 +209,15 @@ function normalizeBody(record: EstimateRecord): EstimateBody {
 
 function buildAddForm(type = "ahu"): AddItemForm {
   const meta = getTypeMeta(type);
+  const cfg = getDefaultCfg(type);
   return {
     type,
     tag: `${meta.label}-1`,
     location: "",
     qty: "1",
     installType: "EMT",
-    selectedIds: [],
+    cfg,
+    selected: getDefaultSelectedForType(type, cfg),
   };
 }
 
@@ -160,10 +235,10 @@ function buildItemFromForm(form: AddItemForm): EstimateItem {
     location: form.location.trim(),
     qty: Math.max(1, Number.parseInt(form.qty, 10) || 1),
     installType: form.installType,
-    selected: form.selectedIds.map((id) => ({ id, qty: 1 })),
+    selected: form.selected,
     custom: [],
     priceSnap: {},
-    cfg: {},
+    cfg: form.cfg,
   };
 }
 
@@ -194,7 +269,7 @@ export function EstimateDetailClient({ estimate }: Props) {
     [body, rawTotals.lbrHrs, rawTotals.mtl],
   );
 
-  const addFormComponents = getComponents(addForm.type);
+  const addFormComponents = getVisibleComponentsForType(addForm.type, addForm.cfg);
 
   function updateBody(patch: Partial<EstimateBody>) {
     setBody((current) => ({
@@ -216,11 +291,23 @@ export function EstimateDetailClient({ estimate }: Props) {
 
   function toggleSelectedComponent(componentId: string) {
     setAddForm((current) => {
-      const selected = new Set(current.selectedIds);
+      const selected = new Map(current.selected.map((component) => [component.id, component.qty]));
       if (selected.has(componentId)) selected.delete(componentId);
-      else selected.add(componentId);
-      return { ...current, selectedIds: Array.from(selected) };
+      else selected.set(componentId, 1);
+      return {
+        ...current,
+        selected: Array.from(selected.entries()).map(([id, qty]) => ({ id, qty })),
+      };
     });
+  }
+
+  function updateSelectedComponentQty(componentId: string, qty: number) {
+    setAddForm((current) => ({
+      ...current,
+      selected: current.selected.map((component) =>
+        component.id === componentId ? { ...component, qty: Math.max(1, qty) } : component,
+      ),
+    }));
   }
 
   function handleAddItem() {
@@ -502,26 +589,41 @@ export function EstimateDetailClient({ estimate }: Props) {
             <div className="mt-4 rounded-xl border border-border-default bg-surface-overlay p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div className="text-sm font-medium text-text-primary">Components</div>
-                <div className="text-xs text-text-tertiary">{addForm.selectedIds.length} selected</div>
+                <div className="text-xs text-text-tertiary">{addForm.selected.length} selected by default</div>
               </div>
               <div className="grid max-h-64 gap-2 overflow-auto pr-1 md:grid-cols-2">
-                {addFormComponents.map((component) => (
-                  <label
-                    key={component.id}
-                    className="flex items-start gap-2 rounded-lg border border-border-default bg-surface-raised px-3 py-2 text-sm text-text-secondary"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={addForm.selectedIds.includes(component.id)}
-                      onChange={() => toggleSelectedComponent(component.id)}
-                      className="mt-1"
-                    />
-                    <span>
-                      <span className="block text-text-primary">{getComponentLabel(component)}</span>
-                      {component.groupId && <span className="text-xs text-text-tertiary">{component.groupId}</span>}
-                    </span>
-                  </label>
-                ))}
+                {addFormComponents.map((component) => {
+                  const selectedQty = addForm.selected.find((entry) => entry.id === component.id)?.qty;
+                  return (
+                    <div
+                      key={component.id}
+                      className="flex items-start justify-between gap-3 rounded-lg border border-border-default bg-surface-raised px-3 py-2 text-sm text-text-secondary"
+                    >
+                      <label className="flex min-w-0 flex-1 items-start gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedQty !== undefined}
+                          onChange={() => toggleSelectedComponent(component.id)}
+                          className="mt-1"
+                        />
+                        <span className="min-w-0">
+                          <span className="block text-text-primary">{getComponentLabel(component)}</span>
+                          {component.groupId && <span className="text-xs text-text-tertiary">{component.groupId}</span>}
+                        </span>
+                      </label>
+                      {selectedQty !== undefined && (
+                        <input
+                          type="number"
+                          min="1"
+                          value={selectedQty}
+                          onChange={(event) => updateSelectedComponentQty(component.id, asNumber(event.target.value))}
+                          className="w-16 rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+                          aria-label={`${getComponentLabel(component)} quantity`}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
