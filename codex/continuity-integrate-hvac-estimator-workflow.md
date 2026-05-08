@@ -2,7 +2,7 @@
 
 ## Current User Request
 
-Commit and push the HVAC Estimator screen-size, conduit fill, and authored VAV/FCU SVG fixes. Maintain this continuity document at the beginning and end of each prompt so progress is not lost if chat state breaks again.
+Commit and push the HVAC Estimator proposal template/logo fix that uses `C:\Users\TimothyCollins\dev\tcc-templates` as the proposal template source. Maintain this continuity document at the beginning and end of each prompt so progress is not lost if chat state breaks again.
 
 ## Starting State
 
@@ -643,3 +643,57 @@ Staged files:
 - `src/app/estimating/[id]/estimate-detail-client.tsx`
 - `src/app/estimating/[id]/page.tsx`
 - `src/modules/hvac-estimator/components/conduitFill/ConduitFillPage.jsx`
+
+## End-of-Prompt Continuity Update — Proposal Template/Logo Fix
+
+User asked to use `C:\Users\TimothyCollins\dev\tcc-templates` as the proposal template source because the TCC logo and SDVOSB logo did not render.
+
+Implemented:
+
+- Copied shared TCC proposal assets into ProjectHub public assets:
+  - `public/report-assets/proposal-template.html`
+  - `public/report-assets/logo.png`
+  - `public/report-assets/sdvosb.jpg`
+- Replaced the old hand-built proposal HTML generator with a template-driven generator:
+  - fetches `/report-assets/proposal-template.html`
+  - replaces the `{{TOKEN}}` placeholders from the shared template
+  - replaces the template's local `file:///C:/Users/.../logo.png` and `sdvosb.jpg` image paths
+  - embeds both logo images as data URLs in the downloaded proposal HTML
+  - generates scope content from estimator line items/components
+  - keeps the template's section edit buttons/script/style intact
+- Proposal output naming now follows the shared template convention more closely:
+  - `HVAC_Control_Installation_Proposal_[Project]_[YYYY-MM-DD].html`
+
+Validation:
+
+- `npm run build` passes.
+- Existing warning only: Next middleware/proxy deprecation.
+
+Current uncommitted files for this slice:
+
+- `codex/continuity-integrate-hvac-estimator-workflow.md`
+- `src/modules/hvac-estimator/components/estimate/export/generateProposal.js`
+- `public/report-assets/proposal-template.html`
+- `public/report-assets/logo.png`
+- `public/report-assets/sdvosb.jpg`
+
+## End-of-Prompt Continuity Update — Proposal Template Commit/Push
+
+User asked to commit and push the proposal template/logo fix.
+
+Commit scope:
+
+- `public/report-assets/proposal-template.html`
+- `public/report-assets/logo.png`
+- `public/report-assets/sdvosb.jpg`
+- `src/modules/hvac-estimator/components/estimate/export/generateProposal.js`
+- `codex/continuity-integrate-hvac-estimator-workflow.md`
+
+Validation:
+
+- `npm run build` passed before staging.
+
+Intent:
+
+- HVAC Estimator proposal export now uses the shared TCC proposal template copied from `C:\Users\TimothyCollins\dev\tcc-templates`.
+- Exported proposal HTML embeds the TCC and SDVOSB logos as data URLs so they render when the downloaded HTML is opened independently.

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Naming convention: "HVAC Control Installation Proposal - {{PROJECT_NAME}}"
+       Append version suffix for v2+: "HVAC Control Installation Proposal - {{PROJECT_NAME}} v2"
+       Version 1 gets no suffix. -->
+  <title>HVAC Control Installation Proposal - {{PROJECT_NAME}}</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --teal: #017a6f;
+      --teal-light: #eef8f6;
+      --page-bg: #f4f7f6;
+      --card-bg: #ffffff;
+      --text: #111827;
+      --label: #374151;
+      --muted: #4b5563;
+      --quiet: #9ca3af;
+      --border: #d1d5db;
+      --font: Arial, Helvetica, sans-serif;
+    }
+
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    @page {
+      size: letter portrait;
+      margin: 0.9in 0.75in 0.8in 0.75in;
+      @top-left {
+        content: "The Controls Company, LLC";
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 8pt;
+        color: #4b5563;
+        border-bottom: 1pt solid #017a6f;
+        padding-bottom: 4pt;
+        vertical-align: bottom;
+      }
+      @top-right {
+        content: "{{PAGE_HEADER_PROJECT}}";
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 8pt;
+        color: #4b5563;
+        border-bottom: 1pt solid #017a6f;
+        padding-bottom: 4pt;
+        vertical-align: bottom;
+      }
+      @bottom-right {
+        content: counter(page) " of " counter(pages);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 8pt;
+        color: #4b5563;
+      }
+      @bottom-left {
+        content: "thecontrolscompany.com  |  Service Disabled Veteran Owned Small Business";
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 7.5pt;
+        color: #9ca3af;
+      }
+    }
+
+    body {
+      margin: 0;
+      background: var(--page-bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    body, body * { color: var(--text); }
+
+    .page {
+      max-width: 8in;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .print-header,
+    .print-footer {
+      display: none;
+    }
+
+    .print-header {
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 6pt;
+      border-bottom: 1pt solid var(--teal);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 8pt;
+      color: var(--muted);
+    }
+
+    .print-header-right { text-align: right; }
+
+    .print-footer {
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding-top: 6pt;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 7.5pt;
+      color: var(--quiet);
+    }
+
+    .print-footer-right {
+      text-align: right;
+      font-size: 8pt;
+      color: var(--muted);
+    }
+
+    .print-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-bottom: 18px;
+    }
+
+    .print-actions button {
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+
+    .print-actions button:hover {
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+
+    .edit-button {
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--label);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+
+    .edit-button:hover,
+    .edit-button[aria-pressed="true"] {
+      border-color: var(--teal);
+      color: var(--teal);
+      background: var(--teal-light);
+    }
+
+    .editable-active {
+      outline: 2px dashed rgba(1, 122, 111, 0.45);
+      outline-offset: 4px;
+    }
+
+    [contenteditable="true"]:focus {
+      outline: 2px solid rgba(1, 122, 111, 0.55);
+      outline-offset: 3px;
+    }
+
+    .report {
+      background: var(--card-bg);
+      padding: 28px;
+      border: 1px solid var(--border);
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand-logo { width: 160px; height: 160px; object-fit: contain; }
+    .brand-badge { width: 120px; height: 120px; object-fit: contain; }
+    .brand-copy { flex: 1; text-align: center; }
+
+    .brand-copy h1 {
+      margin: 0 0 4px;
+      font-size: 20px;
+      color: var(--teal);
+      letter-spacing: 0.04em;
+    }
+
+    .brand-copy p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 22px 0 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--teal);
+    }
+
+    .section h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--teal);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 8px 14px;
+      font-size: 14px;
+    }
+
+    .meta-label {
+      font-weight: 700;
+      color: var(--label);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      vertical-align: top;
+    }
+
+    thead th {
+      background: var(--teal-light);
+      color: #0f172a;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .cell-number {
+      text-align: right;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .row-bond td {
+      background: #fafafa;
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+
+    .row-bond td:first-child {
+      padding-left: 28px;
+    }
+
+    .row-total td {
+      background: var(--teal);
+      color: #ffffff !important;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .row-total td * { color: #ffffff !important; }
+
+    .callout {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      background: #fafafa;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .callout-bar {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: #eff6ff;
+      border-left: 4px solid #2d5fa3;
+      border-radius: 0 6px 6px 0;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .callout-bar.amber { background: #fffbeb; border-left-color: #d97706; }
+    .callout-bar.green { background: #f0fdf4; border-left-color: #16a34a; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .badge-pending { background: #fef3c7; color: #92400e; }
+
+    .sig-block {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      font-size: 13px;
+      margin-top: 24px;
+    }
+
+    .sig-block > div {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sig-line {
+      border-top: 1px solid var(--quiet);
+      margin-top: auto;
+      padding-top: 6px;
+      color: var(--label);
+    }
+
+    .footer {
+      margin-top: 24px;
+      padding-top: 14px;
+      border-top: 2px solid var(--teal);
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    ul.scope-list {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    ul.scope-list li { margin-bottom: 4px; }
+
+    @media print {
+      body { background: #ffffff; }
+      .no-print { display: none !important; }
+      .page { max-width: none; margin: 0; padding: 0; }
+      .report { border: 0; padding: 0; }
+      .footer { display: none; }
+      .print-header, .print-footer { display: none !important; }
+      .report { margin-top: 18pt; margin-bottom: 18pt; }
+      .editable-active, [contenteditable="true"]:focus { outline: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="print-header" aria-hidden="true">
+      <div>The Controls Company, LLC</div>
+      <div class="print-header-right">{{PAGE_HEADER_PROJECT}}</div>
+    </div>
+
+    <div class="print-footer" aria-hidden="true">
+      <div>thecontrolscompany.com | Service Disabled Veteran Owned Small Business</div>
+      <div class="print-footer-right">Estimate valid 30 days from date of issue</div>
+    </div>
+
+    <div class="print-actions no-print">
+      <button type="button" onclick="window.print()">Print / Save as PDF</button>
+    </div>
+
+    <article class="report">
+      <div class="brand-row">
+        <img src="file:///C:/Users/TimothyCollins/dev/tcc-templates/reports/logo.png" alt="The Controls Company" class="brand-logo" />
+        <div class="brand-copy">
+          <h1>THE CONTROLS COMPANY, LLC</h1>
+          <p>Service Disabled Veteran Owned Small Business</p>
+          <p style="margin-top:4px;">thecontrolscompany.com</p>
+        </div>
+        <img src="file:///C:/Users/TimothyCollins/dev/tcc-templates/reports/sdvosb.jpg" alt="SDVOSB" class="brand-badge" />
+      </div>
+
+      <h2 style="margin:18px 0 0; text-align:center; font-size:22px; font-weight:700; color:var(--text); letter-spacing:0.06em; text-transform:uppercase;">
+        HVAC Controls Estimate
+      </h2>
+      <div style="text-align:center; margin-top:6px;">
+        <span class="badge badge-pending">Pending Approval</span>
+      </div>
+
+      <!-- PROJECT INFORMATION -->
+      <div class="section" style="margin-top:20px;">
+        <h2>Project Information</h2>
+        <button type="button" class="edit-button no-print" data-edit-section aria-pressed="false">Edit</button>
+      </div>
+
+      <div class="meta-grid">
+        <div class="meta-label">Project Name:</div>
+        <div>{{PROJECT_NAME}}</div>
+
+        <div class="meta-label">Customer:</div>
+        <div>{{CUSTOMER_NAME}} — Attn: {{CUSTOMER_CONTACT}}</div>
+
+        <div class="meta-label">Site Address:</div>
+        <div>{{SITE_ADDRESS}}</div>
+
+        <div class="meta-label">Drawing Basis:</div>
+        <div>{{DRAWING_BASIS}}</div>
+
+        <div class="meta-label">Estimate Date:</div>
+        <div>{{ESTIMATE_DATE}}</div>
+      </div>
+
+      <!-- PRICING -->
+      <!-- Bond rate is 4%. Per section: multiply section price × 0.04.
+           Grand total with bond = sum of all section prices × 1.04.
+           Show each section bond as a separate muted row with "add $X,XXX.XX".
+           Show grand total with optional bond as its own total row. -->
+      <div class="section">
+        <h2>Pricing</h2>
+        <button type="button" class="edit-button no-print" data-edit-section aria-pressed="false">Edit</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th class="cell-number" style="width:28%;">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr>
+            <td>{{SECTION_1_LABEL}}</td>
+            <td class="cell-number">{{SECTION_1_PRICE}}</td>
+          </tr>
+          <tr class="row-bond">
+            <td>Optional performance and payment bond (4%)</td>
+            <td class="cell-number">add {{SECTION_1_BOND}}</td>
+          </tr>
+
+          <!-- Add or remove section rows as needed. Example additional section:
+          <tr>
+            <td>{{SECTION_2_LABEL}}</td>
+            <td class="cell-number">{{SECTION_2_PRICE}}</td>
+          </tr>
+          <tr class="row-bond">
+            <td>Optional performance and payment bond (4%)</td>
+            <td class="cell-number">add {{SECTION_2_BOND}}</td>
+          </tr>
+          -->
+
+          <tr class="row-total">
+            <td><strong>TOTAL INSTALLED PRICE</strong></td>
+            <td class="cell-number"><strong>{{GRAND_TOTAL}}</strong></td>
+          </tr>
+          <tr class="row-total">
+            <td><strong>TOTAL WITH OPTIONAL BOND</strong></td>
+            <td class="cell-number"><strong>{{GRAND_TOTAL_WITH_BOND}}</strong></td>
+          </tr>
+
+        </tbody>
+      </table>
+
+      <!-- SCOPE OF WORK -->
+      <!-- RULES:
+           - TCC furnishes labor, conduit, wiring, and incidental installation material ONLY.
+           - All field devices (controllers, sensors, valves, actuators, panels, etc.) are furnished by others.
+           - Use "Install [device] provided by others" — never "Furnish and install [device]."
+           - TCC may "furnish and install" conduit, wire, and incidental installation material.
+           - Do NOT include programming, graphics, operator training, startup, or commissioning in scope.
+      -->
+      <div class="section">
+        <h2>Scope Of Work</h2>
+        <button type="button" class="edit-button no-print" data-edit-section aria-pressed="false">Edit</button>
+      </div>
+
+      <p style="margin:0 0 10px; font-size:13px;">
+        The Controls Company, LLC shall furnish labor, conduit, wiring, and incidental installation material required to complete the HVAC controls installation for {{SCOPE_INTRO}}. All control devices, equipment, valves, sensors, and field devices are furnished by others unless specifically noted.
+      </p>
+
+      <!-- SCOPE SECTION 1 — replace label and bullets with project-specific content -->
+      <p style="margin: 14px 0 6px; font-size: 14px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: 0.06em;">
+        {{SECTION_1_LABEL}}
+      </p>
+
+      <ul class="scope-list">
+        <li><strong>[Equipment Group 1 — e.g., Two (2) Rooftop Units]</strong>
+          <ul style="margin-top:4px; padding-left:18px; line-height:1.7;">
+            <li>Install [device] provided by others.</li>
+            <li>Install [device] provided by others; furnish and install associated control wiring.</li>
+            <li>Furnish and install [conduit / wire run] between [A] and [B].</li>
+            <li>Demolish and remove existing controls; return all removed equipment to owner's stock.</li>
+          </ul>
+        </li>
+        <li style="margin-top:10px;"><strong>[Equipment Group 2 — e.g., VAV Terminal Units]</strong>
+          <ul style="margin-top:4px; padding-left:18px; line-height:1.7;">
+            <li>Install [device] provided by others at each unit location.</li>
+            <li>Install BACnet MS/TP communications network between terminal units using plenum-rated cable.</li>
+            <li>Demolish and remove existing controls; return all removed equipment to owner's stock.</li>
+          </ul>
+        </li>
+        <li style="margin-top:10px;"><strong>BAS Network Infrastructure — [Section 1 Portion]</strong>
+          <ul style="margin-top:4px; padding-left:18px; line-height:1.7;">
+            <li>Install BAS supervisory network panels and Ethernet switches provided by others; furnish and install associated conduit, cabling, and infrastructure.</li>
+          </ul>
+        </li>
+      </ul>
+
+      <!-- Add additional scope sections as needed using the same pattern -->
+
+      <!-- CLARIFICATIONS & EXCLUSIONS -->
+      <div class="section">
+        <h2>Clarifications &amp; Exclusions</h2>
+        <button type="button" class="edit-button no-print" data-edit-section aria-pressed="false">Edit</button>
+      </div>
+
+      <div class="callout-bar green">
+        <strong>Included:</strong> Installation labor for controls devices furnished by others; conduit, control and communication wiring, and incidental installation material; device mounting and terminations; and normal field coordination required to complete the physical controls installation scope.
+      </div>
+
+      <div class="callout-bar amber">
+        <strong>Excluded / Clarifications:</strong>
+        <ul style="margin: 6px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.7;">
+          <li>All HVAC equipment, VFDs, motor starters, and disconnects not specifically listed in the scope above are by others.</li>
+          <li>120VAC power wiring to all DDC panels is by the electrical contractor.</li>
+          <li>All field devices — control valves, flow meters, sensors, immersion wells, and airflow measuring stations — are furnished by others; installation is by others unless specifically listed in scope.</li>
+          <li>All controls devices, supervisory hardware, enclosure components, and software licenses are by others.</li>
+          <li>Programming, graphics, as-built drawings, operator training, startup, commissioning, and TAB support are by others.</li>
+          <li>Smoke detectors, smoke dampers, combination fire/smoke dampers, and fire dampers and associated actuators and wiring are by others.</li>
+          <li>Operator workstation hardware and software are excluded.</li>
+          <li>Performance and payment bond is optional at 4% — see pricing table above.</li>
+          <li>Additional LEED documentation or third-party commissioning hours incur additional cost.</li>
+        </ul>
+      </div>
+
+      <!-- WARRANTY -->
+      <div class="section">
+        <h2>Warranty</h2>
+        <button type="button" class="edit-button no-print" data-edit-section aria-pressed="false">Edit</button>
+      </div>
+
+      <div class="callout">
+        <strong>WARRANTY</strong>
+        <ul style="margin: 6px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.7;">
+          <li>Includes warranty for one (1) year from date of owner's acceptance of a certificate of substantial completion.</li>
+        </ul>
+      </div>
+
+      <!-- CLARIFICATIONS -->
+      <div class="section">
+        <h2>Clarifications</h2>
+        <button type="button" class="edit-button no-print" data-edit-section aria-pressed="false">Edit</button>
+      </div>
+
+      <div class="callout">
+        <strong>CLARIFICATIONS:</strong>
+        <ul style="margin: 6px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.7;">
+          <li>This proposal shall be incorporated into any final contract terms and conditions.</li>
+          <li>Pricing is based on normal working hours (Monday through Friday). No overtime labor is included in the pricing above.</li>
+          <li>Overtime policy:
+            <ul style="margin-top:4px; padding-left:18px; line-height:1.7;">
+              <li>If an accurate construction schedule is provided at contract execution, TCC will absorb any required overtime to meet contractual milestones.</li>
+              <li>If no accurate schedule is provided, overtime will be billed at 1.5× the burdened labor rate and shall be executed only with an approved change order.</li>
+            </ul>
+          </li>
+          <li>All concealed but accessible wiring shall be installed using plenum-rated cable, following proper installation techniques in a neat and workmanlike manner.</li>
+          <li>All exposed or inaccessible wiring shall be installed in EMT conduit.</li>
+          <li>Communication wiring between units may be installed using metallic-armored cable (MC) where permitted by the project specifications.</li>
+          <li>The Controls Company reserves the right to withdraw or revise this proposal in the event of a substantial change in scope.</li>
+          <li>Any controls devices provided by others must be delivered to the site and ready for installation prior to TCC's scheduled mobilization.</li>
+          <li>TCC is not responsible for delays caused by missing, incompatible, or non-functional equipment and reserves the right to issue a change order for additional labor or material required.</li>
+        </ul>
+      </div>
+
+      <!-- EXCLUSIONS -->
+      <div class="section">
+        <h2>Exclusions</h2>
+        <button type="button" class="edit-button no-print" data-edit-section aria-pressed="false">Edit</button>
+      </div>
+
+      <div class="callout">
+        <strong>EXCLUSIONS:</strong>
+        <ul style="margin: 6px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.7;">
+          <li>Furnishing of any control device, valve, sensor, actuator, damper, meter, or field device unless specifically listed in the scope above.</li>
+          <li>Furnishing, installation, and wiring of VFDs, except control signal and communication wiring.</li>
+          <li>Furnishing, installation, and wiring of smoke detectors, smoke dampers, combination fire/smoke dampers, fire dampers, and associated actuators unless noted in the scope above.</li>
+          <li>Installation of dampers, airflow measuring stations, valves, immersion wells, pressure taps, or flow meters unless specifically listed in the scope above.</li>
+          <li>Programming, graphics, startup, commissioning, TAB support, as-built drawings, and operator training.</li>
+          <li>After-hour, weekend, or holiday work.</li>
+          <li>Any 120V power wiring.</li>
+          <li>Network data drops and IT infrastructure unless noted in the scope above.</li>
+          <li>BIM modeling.</li>
+          <li>Demolition not specifically listed in the scope above.</li>
+        </ul>
+      </div>
+
+      <div class="callout">
+        <strong>Validity:</strong> This proposal is valid for 30 days from the proposal date.
+      </div>
+
+      <!-- AUTHORIZATION -->
+      <div class="section">
+        <h2>Authorization</h2>
+        <button type="button" class="edit-button no-print" data-edit-section aria-pressed="false">Edit</button>
+      </div>
+
+      <div class="sig-block">
+        <div>
+          <p style="margin:0 0 4px; font-weight:600;">Submitted By</p>
+          <p style="margin:0 0 2px;">Timothy J. Collins, MBA</p>
+          <p style="margin:0; color:var(--muted); font-size:12px;">President, The Controls Company, LLC</p>
+          <div class="sig-line">Signature &amp; Date</div>
+        </div>
+        <div>
+          <p style="margin:0 0 4px; font-weight:600;">Accepted By</p>
+          <p style="margin:0 0 2px;">&nbsp;</p>
+          <p style="margin:0; font-size:12px; color:var(--muted);">&nbsp;</p>
+          <div class="sig-line">Signature &amp; Date</div>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <div>The Controls Company, LLC | thecontrolscompany.com</div>
+        <div>Service Disabled Veteran Owned Small Business</div>
+      </footer>
+    </article>
+  </main>
+  <script>
+    (function () {
+      function editableNodes(section) {
+        var nodes = [];
+        var node = section.nextElementSibling;
+
+        while (node && !node.classList.contains("section") && !node.matches("footer")) {
+          nodes.push(node);
+          node = node.nextElementSibling;
+        }
+
+        return nodes;
+      }
+
+      function setEditable(nodes, isEditable) {
+        nodes.forEach(function (node) {
+          node.contentEditable = isEditable ? "true" : "false";
+          node.classList.toggle("editable-active", isEditable);
+        });
+      }
+
+      document.querySelectorAll("[data-edit-section]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var section = button.closest(".section");
+          var nodes = editableNodes(section);
+          var isEditing = button.getAttribute("aria-pressed") === "true";
+          var nextState = !isEditing;
+
+          button.setAttribute("aria-pressed", String(nextState));
+          button.textContent = nextState ? "Done" : "Edit";
+          setEditable(nodes, nextState);
+
+          if (nextState && nodes[0]) {
+            nodes[0].focus();
+          }
+        });
+      });
+    }());
+  </script>
+</body>
+</html>
