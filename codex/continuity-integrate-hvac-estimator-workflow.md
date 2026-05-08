@@ -2,7 +2,7 @@
 
 ## Current User Request
 
-Commit and push the current HVAC Estimator SVG/diagram alignment slice. Maintain this continuity document at the beginning and end of each prompt so progress is not lost if chat state breaks again.
+Commit and push the direct legacy HVAC Estimator UI port into ProjectHub, then answer whether saves can support undo or recovery points. Maintain this continuity document at the beginning and end of each prompt so progress is not lost if chat state breaks again.
 
 ## Starting State
 
@@ -481,3 +481,93 @@ Validation before commit:
 
 - `npm run build` passed before this commit/push request.
 - Staged diff intentionally excludes the many unrelated untracked workspace files.
+
+## End-of-Prompt Continuity Update — Architecture Clarification
+
+User asked why the migration does not simply bring the old HVAC Estimator code and old tables directly into ProjectHub.
+
+Clarification given:
+
+- The old UI/code should largely be brought over, especially the mature estimating surfaces, SVG diagrams, system editors, pricing logic, settings panel, exports, and component helpers.
+- The old storage model should not be copied blindly because standalone HVAC Estimator primarily used browser `localStorage` (`tcc_estimates`, price overrides, active estimate, starred items, user/theme/sidebar state) with an optional Supabase adapter pointed at a simple `estimates` table keyed by `owner_id`.
+- ProjectHub already has a platform `estimates` table/API with organization tenancy, module enablement, linked CRM opportunities, linked projects, RLS policies, status, archive state, totals, and platform summary columns.
+- The practical path is to copy/port old UI and estimator behavior, while adapting persistence to ProjectHub’s platform API/tables.
+- If the user wants the fastest UI parity, the next phase should be a more direct port of the old estimator application shell/pages into `/estimating/[id]`, replacing the temporary platform-native editor UI, while keeping ProjectHub API persistence underneath.
+
+No code commit was made for this explanation turn; the continuity document itself is modified and should be committed with the next implementation slice or a documentation commit.
+
+## End-of-Prompt Continuity Update — Direct Legacy UI Port Phase
+
+User said to proceed with the direct legacy UI/code port instead of continuing to hand-rebuild the old estimator UI in small pieces.
+
+Implemented:
+
+- Copied the old standalone estimator detail/table shell into ProjectHub:
+  - `src/modules/hvac-estimator/components/estimate/EstimateDetail.jsx`
+- Copied the old full system editor pages into ProjectHub:
+  - AHU, VAV, RTU, DX/HP, VRF, FCU, UH schematic/editor pages.
+- Copied old shared editor dependencies:
+  - `UnitEditorPage.jsx`
+  - `AddToEstimateBtn.jsx`
+  - `SidebarLayout.jsx`
+  - `SchematicTabs.jsx`
+  - `AssemblyPickerModal.jsx`
+  - `DiagramViewer.jsx`
+  - `TemplateSvgDiagram.jsx`
+  - `PointsList.jsx`
+  - `assemblyPicker.js`
+  - `conduitFill.js`
+  - `useIsMobile.js`
+  - `useSidebarWidth.js`
+  - `currentUser.js`
+- Copied old proposal/internal export generators.
+- Added a ProjectHub-specific estimator context adapter:
+  - `src/modules/hvac-estimator/shared/EstimateContext.jsx`
+  - It mimics the old `useEstimate()` API for a single ProjectHub estimate.
+  - It updates ProjectHub estimate body state instead of writing to localStorage.
+  - It preserves old `addItem`, `updateItem`, `setSubPage`, `editingItem`, `applyDefaultInstallType`, and price snapshot behavior.
+- Updated `/estimating/[id]` to render the old estimator workspace by default:
+  - legacy header/table/details UI
+  - old add-equipment buttons
+  - old full schematic editors through `setSubPage`
+  - slim ProjectHub save/status bar above the legacy estimator workspace
+  - save still writes through `/api/estimates/[id]`
+
+Validation:
+
+- `npm run build` passes.
+- Existing warning only: Next middleware/proxy deprecation.
+
+Important current state:
+
+- This direct port is not committed yet.
+- The copied legacy UI now has much higher parity, but the user still needs to click the ProjectHub `Save` button after using old editor actions to persist changes to Supabase.
+- Next cleanup should remove or retire the older temporary platform-native editor fallback code from `estimate-detail-client.tsx`, now that legacy UI is the preferred path.
+- Next functional polish should test add/edit flows in browser and make save behavior autosave or clearly signal unsaved changes after old editor actions.
+
+## End-of-Prompt Continuity Update — Direct Port Commit/Push
+
+User asked to commit and push the direct legacy UI port, and asked whether saves can support undo or recovery points.
+
+Commit/push scope:
+
+- Direct legacy estimator detail UI port.
+- Full old system editor pages for AHU, VAV, RTU, DX/HP, VRF, FCU, and UH.
+- Old shared editor dependencies and export generators.
+- ProjectHub `useEstimate()` adapter that keeps legacy editor behavior while updating ProjectHub estimate state.
+- `/estimating/[id]` legacy workspace routing.
+- Continuity document updates.
+
+Validation before commit:
+
+- `npm run build` passed after the direct UI port.
+
+Recovery/undo answer to carry forward:
+
+- Yes, saves can support undo/recovery points.
+- Recommended design:
+  1. Short-term client undo stack for unsaved edits in `/estimating/[id]`.
+  2. Server-side `estimate_versions` or `estimate_snapshots` table for every explicit save/autosave checkpoint.
+  3. UI actions: `Undo`, `Redo`, `Save checkpoint`, `Restore previous version`, and optional diff/preview.
+  4. Store snapshot metadata: estimate id, organization id, user id, label, reason/autosave/manual, body jsonb, summary totals, created_at.
+- Best next implementation is server-side snapshots around `PUT /api/estimates/[id]`, because it protects against browser crashes, bad saves, and accidental destructive edits.

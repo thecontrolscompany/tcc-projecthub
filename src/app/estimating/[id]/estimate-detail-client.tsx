@@ -4,8 +4,16 @@ import Link from "next/link";
 import { Fragment, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { calcEstimate, calcItem, COMPS_MAP, TYPE_META } from "@/modules/hvac-estimator/components/estimate/estimateCalc";
 import { AddEquipButtons } from "@/modules/hvac-estimator/components/estimate/AddEquipButtons";
+import { EstimateDetail } from "@/modules/hvac-estimator/components/estimate/EstimateDetail";
 import { ProjectSettingsPanel } from "@/modules/hvac-estimator/components/estimate/ProjectSettingsPanel";
 import { computeCosts, DEFAULT_SETTINGS } from "@/modules/hvac-estimator/components/estimate/projectSettings";
+import AHUSchematic from "@/modules/hvac-estimator/components/ahu/AHUSchematic";
+import DXSchematic from "@/modules/hvac-estimator/components/dx/DXSchematic";
+import FCUSchematic from "@/modules/hvac-estimator/components/fcu/FCUSchematic";
+import RTUSchematic from "@/modules/hvac-estimator/components/rtu/RTUSchematic";
+import UHSchematic from "@/modules/hvac-estimator/components/uh/UHSchematic";
+import VAVSchematic from "@/modules/hvac-estimator/components/vav/VAVSchematic";
+import VRFSchematic from "@/modules/hvac-estimator/components/vrf/VRFSchematic";
 import { applyAhuDefaultSelections, getVisibleAhuComponents, normalizeAhuCfg } from "@/modules/hvac-estimator/components/ahu/ahuData";
 import { applyDxDefaultSelections, getVisibleDxComponents, normalizeDxCfg } from "@/modules/hvac-estimator/components/dx/dxData";
 import { applyFcuDefaultSelections, getVisibleFcuComponents, normalizeFcuCfg } from "@/modules/hvac-estimator/components/fcu/fcuData";
@@ -14,6 +22,7 @@ import { applyUhDefaultSelections, getVisibleUhComponents, normalizeUhCfg } from
 import { applyVavDefaultSelections, getVisibleVavComponents, normalizeVavCfg } from "@/modules/hvac-estimator/components/vav/vavData";
 import { buildDefaultVrfSelected, getVisibleVrfComponents, normalizeVrfCfg } from "@/modules/hvac-estimator/components/vrf/vrfData";
 import { summarizeHvacEstimate, type HvacEstimateBody } from "@/modules/hvac-estimator/platform-adapter";
+import { ProjectHubEstimateProvider, useEstimate } from "@/modules/hvac-estimator/shared/EstimateContext";
 import { UnitaryFlowDiagram } from "@/modules/hvac-estimator/shared/UnitaryFlowDiagram";
 import type { EstimateRecord, EstimateStatus } from "@/types/database";
 
@@ -440,6 +449,66 @@ export function EstimateDetailClient({ estimate }: Props) {
     } finally {
       setSaving(false);
     }
+  }
+
+  const useLegacyUi = true;
+  if (useLegacyUi) {
+    return (
+      <ProjectHubEstimateProvider estimate={body} onChange={updateBody}>
+        <div
+          className="overflow-hidden rounded-2xl border border-border-default bg-surface-raised"
+          style={legacyDiagramTheme}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-default bg-surface-overlay px-4 py-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <Link href="/estimating" className="text-sm font-semibold text-text-secondary hover:text-text-primary">
+                Back to Estimating
+              </Link>
+              <span className="text-xs text-text-tertiary">
+                {body.number || estimate.id}
+                {body.customer ? ` · ${body.customer}` : ""}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {(message || error) && (
+                <span className={`text-sm ${error ? "text-status-danger" : "text-status-success"}`}>
+                  {error ?? message}
+                </span>
+              )}
+              <select
+                value={status}
+                onChange={(event) => {
+                  setStatus(event.target.value as EstimateStatus);
+                  setDirty(true);
+                }}
+                className="rounded-lg border border-border-default bg-surface-raised px-2 py-1 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+              >
+                {statusOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option.replace(/_/g, " ")}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                className="rounded-lg bg-brand-primary px-3 py-1.5 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {saving ? "Saving..." : dirty ? "Save Changes" : "Save"}
+              </button>
+            </div>
+          </div>
+          <LegacyEstimatorWorkspace
+            estimate={body}
+            onUpdate={updateBody}
+            onBack={() => {
+              window.location.href = "/estimating";
+            }}
+          />
+        </div>
+      </ProjectHubEstimateProvider>
+    );
   }
 
   return (
@@ -907,6 +976,41 @@ function LegacyDiagramPanel({
       {children}
     </div>
   );
+}
+
+function LegacyEstimatorWorkspace({
+  estimate,
+  onUpdate,
+  onBack,
+}: {
+  estimate: EstimateBody;
+  onUpdate: (patch: Partial<EstimateBody>) => void;
+  onBack: () => void;
+}) {
+  const { subPage } = useEstimate() as unknown as { subPage?: { type?: string } | null };
+
+  if (subPage?.type) {
+    switch (subPage.type) {
+      case "ahu":
+        return <AHUSchematic />;
+      case "vav":
+        return <VAVSchematic />;
+      case "rtu":
+        return <RTUSchematic />;
+      case "dx":
+        return <DXSchematic />;
+      case "vrf":
+        return <VRFSchematic />;
+      case "fcu":
+        return <FCUSchematic />;
+      case "uh":
+        return <UHSchematic />;
+      default:
+        return <EstimateDetail estimate={estimate} onBack={onBack} onUpdate={onUpdate} />;
+    }
+  }
+
+  return <EstimateDetail estimate={estimate} onBack={onBack} onUpdate={onUpdate} />;
 }
 
 function SummaryMetric({ label, value, emphasized = false }: { label: string; value: string; emphasized?: boolean }) {
