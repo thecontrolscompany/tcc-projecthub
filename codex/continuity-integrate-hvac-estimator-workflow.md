@@ -2,7 +2,7 @@
 
 ## Current User Request
 
-Continue the HVAC Estimator migration after committing the first old-UI alignment slice. Next focus: make the ProjectHub editor behave more like the old standalone estimator rather than a manual component picker. Maintain this continuity document at the beginning and end of each prompt so progress is not lost if chat state breaks again.
+Commit and push the current HVAC Estimator SVG/diagram alignment slice. Maintain this continuity document at the beginning and end of each prompt so progress is not lost if chat state breaks again.
 
 ## Starting State
 
@@ -412,3 +412,72 @@ Recommended next phase:
 1. Add compact system-specific config controls for RTU and VAV in the add/edit form.
 2. Reconcile selected components when config changes, using the imported `reconcile*Selected` helpers.
 3. Then port one old full system editor surface.
+
+## End-of-Prompt Continuity Update — SVG Diagram Alignment Phase
+
+User asked to keep going because the migrated UI still did not fully include the old SVG graphics.
+
+Implemented this phase:
+
+- Copied the old standalone estimator diagram layer into ProjectHub:
+  - `src/modules/hvac-estimator/shared/UnitaryFlowDiagram.jsx`
+  - `src/modules/hvac-estimator/shared/diagramUtils.jsx`
+  - `src/modules/hvac-estimator/shared/diagramUtils.js`
+  - `src/modules/hvac-estimator/shared/DiagramTooltip.jsx`
+  - `src/modules/hvac-estimator/shared/useDiagramTooltip.js`
+- Added the legacy draggable SVG flow diagram to `/estimating/[id]` for supported unitary system types:
+  - RTU
+  - DX/HP
+  - VRF
+  - UH
+- The diagram now appears in the add-equipment editor and reflects/toggles selected components.
+- The diagram also appears when editing existing line-item components and writes back through the platform-native estimate state.
+- Added a local legacy theme token bridge so copied SVG/tooltip styling renders correctly inside ProjectHub without making the old estimator CSS global.
+- Existing line-item component lists now use the system-specific visible component helpers rather than the raw component map, keeping editor behavior closer to the old estimator config model.
+
+Validation:
+
+- `npm run build` passes.
+- Existing Next warning only: middleware/proxy deprecation.
+
+Current changed files for this phase:
+
+- `codex/continuity-integrate-hvac-estimator-workflow.md`
+- `src/app/estimating/[id]/estimate-detail-client.tsx`
+- `src/modules/hvac-estimator/shared/UnitaryFlowDiagram.jsx`
+- `src/modules/hvac-estimator/shared/diagramUtils.jsx`
+- `src/modules/hvac-estimator/shared/diagramUtils.js`
+- `src/modules/hvac-estimator/shared/DiagramTooltip.jsx`
+- `src/modules/hvac-estimator/shared/useDiagramTooltip.js`
+
+Recommended next phase:
+
+1. Port the old full system editor shell for one supported system, likely RTU first, so the diagram is paired with the richer legacy config controls.
+2. Add AHU/VAV/FCU-specific visual editor coverage, since the copied `UnitaryFlowDiagram` only handles RTU, DX/HP, VRF, and UH.
+3. Reconcile selected components when config options change, using the standalone estimator reconcile helpers.
+4. After the editor surfaces align, port exports/proposals and opportunity writeback.
+
+## End-of-Prompt Continuity Update — Commit/Push Requested
+
+User asked to commit and push the SVG diagram alignment slice.
+
+Commit scope prepared:
+
+- Continuity document update.
+- `/estimating/[id]` detail editor diagram integration.
+- Copied legacy diagram rendering/tooltip utilities under `src/modules/hvac-estimator/shared/`.
+
+Staged files:
+
+- `codex/continuity-integrate-hvac-estimator-workflow.md`
+- `src/app/estimating/[id]/estimate-detail-client.tsx`
+- `src/modules/hvac-estimator/shared/DiagramTooltip.jsx`
+- `src/modules/hvac-estimator/shared/UnitaryFlowDiagram.jsx`
+- `src/modules/hvac-estimator/shared/diagramUtils.js`
+- `src/modules/hvac-estimator/shared/diagramUtils.jsx`
+- `src/modules/hvac-estimator/shared/useDiagramTooltip.js`
+
+Validation before commit:
+
+- `npm run build` passed before this commit/push request.
+- Staged diff intentionally excludes the many unrelated untracked workspace files.

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { calcEstimate, calcItem, COMPS_MAP, TYPE_META } from "@/modules/hvac-estimator/components/estimate/estimateCalc";
 import { AddEquipButtons } from "@/modules/hvac-estimator/components/estimate/AddEquipButtons";
 import { ProjectSettingsPanel } from "@/modules/hvac-estimator/components/estimate/ProjectSettingsPanel";
@@ -14,6 +14,7 @@ import { applyUhDefaultSelections, getVisibleUhComponents, normalizeUhCfg } from
 import { applyVavDefaultSelections, getVisibleVavComponents, normalizeVavCfg } from "@/modules/hvac-estimator/components/vav/vavData";
 import { buildDefaultVrfSelected, getVisibleVrfComponents, normalizeVrfCfg } from "@/modules/hvac-estimator/components/vrf/vrfData";
 import { summarizeHvacEstimate, type HvacEstimateBody } from "@/modules/hvac-estimator/platform-adapter";
+import { UnitaryFlowDiagram } from "@/modules/hvac-estimator/shared/UnitaryFlowDiagram";
 import type { EstimateRecord, EstimateStatus } from "@/types/database";
 
 type Props = {
@@ -65,11 +66,37 @@ const statusOptions: EstimateStatus[] = [
 ];
 
 const supportedEquipmentTypes = ["ahu", "vav", "rtu", "dx", "vrf", "fcu", "uh", "network"];
+const diagramSupportedEquipmentTypes = new Set(["rtu", "dx", "vrf", "uh"]);
 
 const inputClassName =
   "w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none";
 
 const labelClassName = "mb-1 block text-xs font-medium uppercase tracking-wide text-text-tertiary";
+
+const legacyDiagramTheme = {
+  "--t-bg": "#F8FAFC",
+  "--t-surface": "#FFFFFF",
+  "--t-panel": "#F1F5F9",
+  "--t-border": "#CBD5E1",
+  "--t-border2": "#94A3B8",
+  "--t-text": "#0F172A",
+  "--t-muted": "#64748B",
+  "--t-dim": "#94A3B8",
+  "--t-faint": "#E2E8F0",
+  "--t-blue": "#2563EB",
+  "--t-blue-l": "#60A5FA",
+  "--t-blue-faint": "#EFF6FF",
+  "--t-blue-mid": "#93C5FD",
+  "--t-blue-mid-a60": "rgba(147, 197, 253, 0.6)",
+  "--t-blue-a18": "rgba(37, 99, 235, 0.18)",
+  "--t-steel": "#475569",
+  "--t-green": "#16A34A",
+  "--t-amber": "#D97706",
+  "--t-purple": "#7C3AED",
+  "--t-teal": "#0D9488",
+  "--t-rose": "#E11D48",
+  "--t-cyan": "#0891B2",
+} as CSSProperties;
 
 function formatCurrency(value: number | null | undefined) {
   if (value === null || value === undefined) return "-";
@@ -586,6 +613,16 @@ export function EstimateDetailClient({ estimate }: Props) {
               </label>
             </div>
 
+            {diagramSupportedEquipmentTypes.has(addForm.type) && (
+              <LegacyDiagramPanel className="mt-4">
+                <UnitaryFlowDiagram
+                  kind={addForm.type}
+                  selected={addForm.selected}
+                  onToggle={toggleSelectedComponent}
+                />
+              </LegacyDiagramPanel>
+            )}
+
             <div className="mt-4 rounded-xl border border-border-default bg-surface-overlay p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div className="text-sm font-medium text-text-primary">Components</div>
@@ -664,7 +701,7 @@ export function EstimateDetailClient({ estimate }: Props) {
                   {body.items.map((item) => {
                     const meta = getTypeMeta(item.type);
                     const itemCost = calcItem(item) as { totalMtl: number; totalLbr: number };
-                    const itemComponents = getComponents(item.type);
+                    const itemComponents = getVisibleComponentsForType(item.type, item.cfg ?? {});
                     const selectedById = new Map(item.selected.map((component) => [component.id, component.qty]));
                     const editingThisItem = editingComponentsFor === item.id;
                     return (
@@ -731,6 +768,15 @@ export function EstimateDetailClient({ estimate }: Props) {
                         {editingThisItem && (
                           <tr>
                             <td colSpan={6} className="border-t border-border-default bg-surface-overlay/50 px-4 py-4">
+                              {diagramSupportedEquipmentTypes.has(item.type) && (
+                                <LegacyDiagramPanel className="mb-4">
+                                  <UnitaryFlowDiagram
+                                    kind={item.type}
+                                    selected={item.selected}
+                                    onToggle={(componentId: string) => toggleItemComponent(item.id, componentId)}
+                                  />
+                                </LegacyDiagramPanel>
+                              )}
                               <div className="grid gap-2 md:grid-cols-2">
                                 {itemComponents.map((component) => {
                                   const selectedQty = selectedById.get(component.id);
@@ -842,6 +888,23 @@ export function EstimateDetailClient({ estimate }: Props) {
           </section>
         </aside>
       </div>
+    </div>
+  );
+}
+
+function LegacyDiagramPanel({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`h-[360px] overflow-hidden rounded-xl border border-border-default bg-white ${className}`}
+      style={legacyDiagramTheme}
+    >
+      {children}
     </div>
   );
 }
