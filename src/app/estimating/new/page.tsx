@@ -19,6 +19,35 @@ function buildNextEstimateNumber(existingNumbers: Array<string | null>, year = n
   return `${prefix}${String(max + 1).padStart(3, "0")}`;
 }
 
+async function resolveDefaultOrganizationId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string | null,
+) {
+  const { data: defaultOrgId } = await supabase.rpc("current_user_default_organization_id");
+  if (typeof defaultOrgId === "string") return defaultOrgId;
+
+  if (userId) {
+    const { data: membership } = await supabase
+      .from("organization_memberships")
+      .select("organization_id")
+      .eq("profile_id", userId)
+      .order("is_default", { ascending: false })
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (membership?.organization_id) return membership.organization_id as string;
+  }
+
+  const { data: tccOrganization } = await supabase
+    .from("organizations")
+    .select("id")
+    .eq("slug", "tcc")
+    .maybeSingle();
+
+  return typeof tccOrganization?.id === "string" ? tccOrganization.id : null;
+}
+
 export default async function NewEstimatePage({
   searchParams,
 }: {
@@ -27,9 +56,11 @@ export default async function NewEstimatePage({
   const params = await searchParams;
   const opportunityId = params.opportunityId ?? params.opportunity_id ?? null;
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const { data: organizationId } = await supabase.rpc("current_user_default_organization_id");
-  const currentOrganizationId = typeof organizationId === "string" ? organizationId : null;
+  const currentOrganizationId = await resolveDefaultOrganizationId(supabase, user?.id ?? null);
 
   let estimateNumberQuery = supabase
     .from("estimates")

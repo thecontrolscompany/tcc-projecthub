@@ -9,9 +9,47 @@ import {
   estimateCreateSchema,
 } from "@/lib/estimates/api";
 
-async function getDefaultOrganizationId(supabase: Awaited<ReturnType<typeof createClient>>) {
-  const { data } = await supabase.rpc("current_user_default_organization_id");
-  return typeof data === "string" ? data : null;
+async function resolveOrganizationId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  options: {
+    explicitOrganizationId?: string | null;
+    linkedOpportunityId?: string | null;
+    userId: string;
+  },
+) {
+  if (options.explicitOrganizationId) return options.explicitOrganizationId;
+
+  if (options.linkedOpportunityId) {
+    const { data: opportunity } = await supabase
+      .from("crm_opportunities")
+      .select("organization_id")
+      .eq("id", options.linkedOpportunityId)
+      .maybeSingle();
+
+    if (opportunity?.organization_id) return opportunity.organization_id as string;
+  }
+
+  const { data: defaultOrgId } = await supabase.rpc("current_user_default_organization_id");
+  if (typeof defaultOrgId === "string") return defaultOrgId;
+
+  const { data: membership } = await supabase
+    .from("organization_memberships")
+    .select("organization_id")
+    .eq("profile_id", options.userId)
+    .order("is_default", { ascending: false })
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (membership?.organization_id) return membership.organization_id as string;
+
+  const { data: tccOrganization } = await supabase
+    .from("organizations")
+    .select("id")
+    .eq("slug", "tcc")
+    .maybeSingle();
+
+  return typeof tccOrganization?.id === "string" ? tccOrganization.id : null;
 }
 
 export async function GET(request: Request) {
@@ -28,7 +66,11 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const organizationId = searchParams.get("organization_id") || (await getDefaultOrganizationId(supabase));
+  const organizationId = await resolveOrganizationId(supabase, {
+    explicitOrganizationId: searchParams.get("organization_id"),
+    linkedOpportunityId: searchParams.get("opportunity_id"),
+    userId: user.id,
+  });
   if (!organizationId) return NextResponse.json({ error: "No organization selected." }, { status: 400 });
 
   let query = supabase
@@ -72,7 +114,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const organizationId = parsed.data.organization_id || (await getDefaultOrganizationId(supabase));
+  const organizationId = await resolveOrganizationId(supabase, {
+    explicitOrganizationId: parsed.data.organization_id,
+    linkedOpportunityId: parsed.data.linked_opportunity_id,
+    userId: user.id,
+  });
   if (!organizationId) return NextResponse.json({ error: "No organization selected." }, { status: 400 });
 
   const estimateId = parsed.data.id ?? crypto.randomUUID();
