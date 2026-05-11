@@ -16,6 +16,8 @@ export type HvacEstimateBody = {
   version: string;
   notes: string;
   settings: Record<string, unknown>;
+  sharepointFolder?: string | null;
+  sharepointItemId?: string | null;
   createdAt: string;
   updatedAt: string;
   createdBy?: Record<string, unknown> | null;

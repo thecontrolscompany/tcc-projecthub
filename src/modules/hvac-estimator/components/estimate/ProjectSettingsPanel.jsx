@@ -257,7 +257,6 @@ export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, ite
             Used in the exported customer proposal.
           </div>
           {textField("customerContact", "Customer Contact", "Attn line for proposal")}
-          {textField("drawingBasis", "Drawing Basis", "Estimate scope and project documents provided")}
           {dateField("estimateDate", "Estimate Date")}
         </>)}
 
