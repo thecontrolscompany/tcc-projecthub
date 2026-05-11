@@ -324,7 +324,7 @@
     .sig-block > div {
       display: flex;
       flex-direction: column;
-      min-height: 235px;
+      min-height: 220px;
     }
 
     .sig-image {
@@ -574,12 +574,13 @@
           <p style="margin:0; color:var(--muted); font-size:12px;">President, The Controls Company, LLC</p>
           <img class="sig-image" src="/report-assets/signature-blue.png" alt="Timothy J. Collins signature" />
           <p class="sig-date">Date: {{ESTIMATE_DATE}}</p>
-          <div class="sig-line">Signature &amp; Date</div>
+          <div class="sig-line">Signature</div>
         </div>
         <div>
           <p style="margin:0 0 4px; font-weight:600;">Accepted By</p>
           <div style="flex:1 1 auto;"></div>
-          <div class="sig-line">Signature &amp; Date</div>
+          <p class="sig-date" style="visibility:hidden;">Date: {{ESTIMATE_DATE}}</p>
+          <div class="sig-line">Signature</div>
         </div>
       </div>
 
