@@ -33,6 +33,7 @@ export function AccountDetailClient({ account, activities: initialActivities, ta
   const [tasks, setTasks] = useState(initialTasks);
   const [contacts, setContacts] = useState<CrmContact[]>(account.contacts ?? []);
   const [editingContact, setEditingContact] = useState<CrmContact | null>(null);
+  const [addingContact, setAddingContact] = useState(false);
   const [loadingContactId, setLoadingContactId] = useState<string | null>(null);
   const isWriteRole = role === "admin" || role === "ops_manager";
   const opportunities = account.opportunities ?? [];
@@ -49,10 +50,14 @@ export function AccountDetailClient({ account, activities: initialActivities, ta
   }
 
   function handleContactSaved(updated: CrmContact) {
-    setContacts((prev) =>
-      prev.map((c) => c.id === updated.id ? { ...c, ...updated } : c)
-    );
+    setContacts((prev) => {
+      const exists = prev.some((c) => c.id === updated.id);
+      return exists
+        ? prev.map((c) => c.id === updated.id ? { ...c, ...updated } : c)
+        : [...prev, updated];
+    });
     setEditingContact(null);
+    setAddingContact(false);
   }
 
   const daysSinceContact = daysSince(account.last_meaningful_contact_date);
@@ -102,12 +107,21 @@ export function AccountDetailClient({ account, activities: initialActivities, ta
           </div>
         </div>
         {isWriteRole && (
-          <Link
-            href={`/crm/accounts/${account.id}/edit`}
-            className="rounded-xl border border-border-default px-4 py-2 text-sm text-text-secondary transition hover:bg-surface-overlay"
-          >
-            Edit Account
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setAddingContact(true)}
+              className="rounded-xl border border-border-default px-4 py-2 text-sm text-text-secondary transition hover:bg-surface-overlay"
+            >
+              + Add Contact
+            </button>
+            <Link
+              href={`/crm/accounts/${account.id}/edit`}
+              className="rounded-xl border border-border-default px-4 py-2 text-sm text-text-secondary transition hover:bg-surface-overlay"
+            >
+              Edit Account
+            </Link>
+          </div>
         )}
       </div>
 
@@ -245,7 +259,14 @@ export function AccountDetailClient({ account, activities: initialActivities, ta
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-text-primary">{contacts.length} Contacts</h2>
-        {/* + Add Contact page coming soon */}
+            {isWriteRole && (
+              <button
+                onClick={() => setAddingContact(true)}
+                className="rounded-xl border border-border-default px-3 py-1.5 text-xs text-text-secondary hover:bg-surface-overlay"
+              >
+                + Add Contact
+              </button>
+            )}
           </div>
           {contacts.length === 0 ? (
             <p className="py-8 text-center text-sm text-text-tertiary">No contacts yet for this account.</p>
@@ -357,6 +378,14 @@ export function AccountDetailClient({ account, activities: initialActivities, ta
             setEditingContact(null);
           }}
           onClose={() => setEditingContact(null)}
+        />
+      )}
+      {addingContact && (
+        <ContactEditModal
+          accountId={account.id}
+          accountName={account.company_name}
+          onSaved={(created) => handleContactSaved(created as CrmContact)}
+          onClose={() => setAddingContact(false)}
         />
       )}
     </div>

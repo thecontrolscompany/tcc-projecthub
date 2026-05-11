@@ -15,7 +15,8 @@ type EditableContact = Pick<
 >;
 
 type ContactEditModalProps = {
-  contact: EditableContact;
+  contact?: Partial<EditableContact>;
+  accountId?: string;
   accountName?: string;
   onSaved: (updated: EditableContact) => void;
   onDeleted?: (id: string) => void;
@@ -81,25 +82,27 @@ function CheckRow({ label, checked, onChange }: { label: string; checked: boolea
   );
 }
 
-export function ContactEditModal({ contact, accountName, onSaved, onDeleted, onClose }: ContactEditModalProps) {
-  const [firstName,        setFirstName]        = useState(contact.first_name ?? "");
-  const [lastName,         setLastName]          = useState(contact.last_name ?? "");
-  const [displayName,      setDisplayName]       = useState(contact.display_name);
-  const [roleType,         setRoleType]          = useState<CrmContactRoleType>(contact.role_type);
-  const [title,            setTitle]             = useState(contact.title ?? "");
-  const [email,            setEmail]             = useState(contact.email ?? "");
-  const [phone,            setPhone]             = useState(contact.phone ?? "");
-  const [mobile,           setMobile]            = useState(contact.mobile ?? "");
-  const [location,         setLocation]          = useState(contact.location ?? "");
-  const [preferredMethod,  setPreferredMethod]   = useState<CrmContactMethod>(contact.preferred_contact_method);
-  const [influenceLevel,   setInfluenceLevel]    = useState<CrmInfluenceLevel>(contact.influence_level);
-  const [buyingRole,       setBuyingRole]        = useState<CrmBuyingRole>(contact.buying_role);
-  const [confidenceLevel,  setConfidenceLevel]   = useState<CrmConfidenceLevel>(contact.confidence_level);
-  const [notes,            setNotes]             = useState(contact.notes ?? "");
-  const [isActive,         setIsActive]          = useState(contact.is_active);
-  const [issuesPo,         setIssuesPo]          = useState(contact.issues_purchase_orders);
-  const [involvedEst,      setInvolvedEst]       = useState(contact.involved_in_estimating);
-  const [involvedExec,     setInvolvedExec]      = useState(contact.involved_in_project_execution);
+export function ContactEditModal({ contact, accountId, accountName, onSaved, onDeleted, onClose }: ContactEditModalProps) {
+  const isCreate = !contact?.id;
+
+  const [firstName,        setFirstName]        = useState(contact?.first_name ?? "");
+  const [lastName,         setLastName]          = useState(contact?.last_name ?? "");
+  const [displayName,      setDisplayName]       = useState(contact?.display_name ?? "");
+  const [roleType,         setRoleType]          = useState<CrmContactRoleType>(contact?.role_type ?? "unknown");
+  const [title,            setTitle]             = useState(contact?.title ?? "");
+  const [email,            setEmail]             = useState(contact?.email ?? "");
+  const [phone,            setPhone]             = useState(contact?.phone ?? "");
+  const [mobile,           setMobile]            = useState(contact?.mobile ?? "");
+  const [location,         setLocation]          = useState(contact?.location ?? "");
+  const [preferredMethod,  setPreferredMethod]   = useState<CrmContactMethod>(contact?.preferred_contact_method ?? "email");
+  const [influenceLevel,   setInfluenceLevel]    = useState<CrmInfluenceLevel>(contact?.influence_level ?? "unknown");
+  const [buyingRole,       setBuyingRole]        = useState<CrmBuyingRole>(contact?.buying_role ?? "unknown");
+  const [confidenceLevel,  setConfidenceLevel]   = useState<CrmConfidenceLevel>(contact?.confidence_level ?? "needs_verification");
+  const [notes,            setNotes]             = useState(contact?.notes ?? "");
+  const [isActive,         setIsActive]          = useState(contact?.is_active ?? true);
+  const [issuesPo,         setIssuesPo]          = useState(contact?.issues_purchase_orders ?? false);
+  const [involvedEst,      setInvolvedEst]       = useState(contact?.involved_in_estimating ?? false);
+  const [involvedExec,     setInvolvedExec]      = useState(contact?.involved_in_project_execution ?? false);
 
   const [saving,    setSaving]    = useState(false);
   const [deleting,  setDeleting]  = useState(false);
@@ -111,7 +114,7 @@ export function ContactEditModal({ contact, accountName, onSaved, onDeleted, onC
   // Auto-build display name when first/last change, only if it looks auto-generated
   useEffect(() => {
     const auto = [firstName, lastName].filter(Boolean).join(" ");
-    if (auto && (displayName === contact.display_name || displayName === [contact.first_name, contact.last_name].filter(Boolean).join(" "))) {
+    if (auto && (displayName === (contact?.display_name ?? "") || displayName === [contact?.first_name, contact?.last_name].filter(Boolean).join(" "))) {
       setDisplayName(auto);
     }
   }, [firstName, lastName]);
@@ -123,34 +126,41 @@ export function ContactEditModal({ contact, accountName, onSaved, onDeleted, onC
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!displayName.trim()) { setError("Display name is required."); return; }
+    if (isCreate && !accountId) { setError("Account ID is required."); return; }
     setError(null);
     setSaving(true);
 
+    const payload = {
+      first_name:                   firstName  || null,
+      last_name:                    lastName   || null,
+      display_name:                 displayName.trim(),
+      role_type:                    roleType,
+      title:                        title      || null,
+      email:                        email      || null,
+      phone:                        phone      || null,
+      mobile:                       mobile     || null,
+      location:                     location   || null,
+      preferred_contact_method:     preferredMethod,
+      influence_level:              influenceLevel,
+      buying_role:                  buyingRole,
+      confidence_level:             confidenceLevel,
+      notes:                        notes      || null,
+      is_active:                    isActive,
+      issues_purchase_orders:       issuesPo,
+      involved_in_estimating:       involvedEst,
+      involved_in_project_execution: involvedExec,
+      ...(isCreate ? { account_id: accountId } : {}),
+    };
+
     try {
-      const res = await fetch(`/api/crm/contacts/${contact.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          first_name:                   firstName  || null,
-          last_name:                    lastName   || null,
-          display_name:                 displayName.trim(),
-          role_type:                    roleType,
-          title:                        title      || null,
-          email:                        email      || null,
-          phone:                        phone      || null,
-          mobile:                       mobile     || null,
-          location:                     location   || null,
-          preferred_contact_method:     preferredMethod,
-          influence_level:              influenceLevel,
-          buying_role:                  buyingRole,
-          confidence_level:             confidenceLevel,
-          notes:                        notes      || null,
-          is_active:                    isActive,
-          issues_purchase_orders:       issuesPo,
-          involved_in_estimating:       involvedEst,
-          involved_in_project_execution: involvedExec,
-        }),
-      });
+      const res = await fetch(
+        isCreate ? "/api/crm/contacts" : `/api/crm/contacts/${contact!.id}`,
+        {
+          method: isCreate ? "POST" : "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Save failed");
@@ -172,7 +182,7 @@ export function ContactEditModal({ contact, accountName, onSaved, onDeleted, onC
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border-default bg-surface-raised px-6 py-4">
           <div>
-            <h2 className="font-semibold text-text-primary">Edit Contact</h2>
+            <h2 className="font-semibold text-text-primary">{isCreate ? "Add Contact" : "Edit Contact"}</h2>
             {accountName && <p className="text-xs text-text-tertiary">{accountName}</p>}
           </div>
           <button
@@ -301,7 +311,7 @@ export function ContactEditModal({ contact, accountName, onSaved, onDeleted, onC
           <div className="flex items-center justify-between gap-3 border-t border-border-default pt-4">
             {/* Delete — left side */}
             <div>
-              {!confirmDelete ? (
+              {!isCreate && !confirmDelete ? (
                 <button
                   type="button"
                   onClick={() => setConfirmDelete(true)}
@@ -309,7 +319,7 @@ export function ContactEditModal({ contact, accountName, onSaved, onDeleted, onC
                 >
                   Delete contact
                 </button>
-              ) : (
+              ) : !isCreate && confirmDelete ? (
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-status-danger font-medium">Delete permanently?</span>
                   <button
@@ -318,9 +328,9 @@ export function ContactEditModal({ contact, accountName, onSaved, onDeleted, onC
                     onClick={async () => {
                       setDeleting(true);
                       try {
-                        const res = await fetch(`/api/crm/contacts/${contact.id}`, { method: "DELETE" });
+                        const res = await fetch(`/api/crm/contacts/${contact!.id}`, { method: "DELETE" });
                         if (res.ok) {
-                          onDeleted?.(contact.id);
+                          onDeleted?.(contact!.id!);
                           onClose();
                         } else {
                           const json = await res.json();
@@ -343,7 +353,7 @@ export function ContactEditModal({ contact, accountName, onSaved, onDeleted, onC
                     Cancel
                   </button>
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* Save / Close — right side */}
@@ -360,7 +370,7 @@ export function ContactEditModal({ contact, accountName, onSaved, onDeleted, onC
                 disabled={saving || !displayName.trim()}
                 className="rounded-xl bg-brand-primary px-5 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:opacity-60"
               >
-                {saving ? "Saving…" : "Save Contact"}
+                {saving ? "Saving…" : isCreate ? "Add Contact" : "Save Contact"}
               </button>
             </div>
           </div>
