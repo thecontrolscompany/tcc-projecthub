@@ -336,6 +336,33 @@
       object-fit: contain;
     }
 
+    .sig-meta {
+      display: grid;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .sig-field {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      min-height: 20px;
+    }
+
+    .sig-field-label {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+      min-width: 78px;
+    }
+
+    .sig-field-value {
+      flex: 1;
+      border-bottom: 1px solid var(--quiet);
+      min-height: 16px;
+      padding-bottom: 2px;
+    }
+
     .sig-mark {
       min-height: 155px;
       display: flex;
@@ -580,8 +607,16 @@
       <div class="sig-block">
         <div>
           <p style="margin:0 0 4px; font-weight:600;">Submitted By</p>
-          <p style="margin:0 0 2px;">Timothy J. Collins, MBA</p>
-          <p style="margin:0; color:var(--muted); font-size:12px;">President, The Controls Company, LLC</p>
+          <div class="sig-meta">
+            <div class="sig-field">
+              <span class="sig-field-label">Printed Name</span>
+              <span class="sig-field-value">Timothy J. Collins, MBA</span>
+            </div>
+            <div class="sig-field">
+              <span class="sig-field-label">Title</span>
+              <span class="sig-field-value">President, The Controls Company, LLC</span>
+            </div>
+          </div>
           <div class="sig-mark">
             <img class="sig-image" src="/report-assets/signature-blue.png" alt="Timothy J. Collins signature" />
           </div>
@@ -590,8 +625,16 @@
         </div>
         <div>
           <p style="margin:0 0 4px; font-weight:600;">Accepted By</p>
-          <p style="margin:0 0 2px; color:var(--muted); font-size:12px;">&nbsp;</p>
-          <p style="margin:0; color:var(--muted); font-size:12px;">&nbsp;</p>
+          <div class="sig-meta">
+            <div class="sig-field">
+              <span class="sig-field-label">Printed Name</span>
+              <span class="sig-field-value">&nbsp;</span>
+            </div>
+            <div class="sig-field">
+              <span class="sig-field-label">Title</span>
+              <span class="sig-field-value">&nbsp;</span>
+            </div>
+          </div>
           <div class="sig-mark sig-mark-empty" aria-hidden="true"></div>
           <p class="sig-date">Date: ____________________</p>
           <div class="sig-line">Signature</div>
