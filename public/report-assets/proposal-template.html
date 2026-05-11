@@ -336,6 +336,16 @@
       object-fit: contain;
     }
 
+    .sig-mark {
+      min-height: 155px;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .sig-mark.sig-mark-empty {
+      min-height: 155px;
+    }
+
     .sig-line {
       border-top: 1px solid var(--quiet);
       margin-top: auto;
@@ -572,14 +582,18 @@
           <p style="margin:0 0 4px; font-weight:600;">Submitted By</p>
           <p style="margin:0 0 2px;">Timothy J. Collins, MBA</p>
           <p style="margin:0; color:var(--muted); font-size:12px;">President, The Controls Company, LLC</p>
-          <img class="sig-image" src="/report-assets/signature-blue.png" alt="Timothy J. Collins signature" />
+          <div class="sig-mark">
+            <img class="sig-image" src="/report-assets/signature-blue.png" alt="Timothy J. Collins signature" />
+          </div>
           <p class="sig-date">Date: {{ESTIMATE_DATE}}</p>
           <div class="sig-line">Signature</div>
         </div>
         <div>
           <p style="margin:0 0 4px; font-weight:600;">Accepted By</p>
-          <div style="flex:1 1 auto;"></div>
-          <p class="sig-date" style="visibility:hidden;">Date: {{ESTIMATE_DATE}}</p>
+          <p style="margin:0 0 2px; color:var(--muted); font-size:12px;">&nbsp;</p>
+          <p style="margin:0; color:var(--muted); font-size:12px;">&nbsp;</p>
+          <div class="sig-mark sig-mark-empty" aria-hidden="true"></div>
+          <p class="sig-date">Date: ____________________</p>
           <div class="sig-line">Signature</div>
         </div>
       </div>
