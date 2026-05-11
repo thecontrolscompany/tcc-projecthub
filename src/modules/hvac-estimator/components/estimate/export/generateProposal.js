@@ -11,6 +11,7 @@ import { computeCosts } from "../projectSettings.js";
 const TEMPLATE_PATH = "/report-assets/proposal-template.html";
 const LOGO_PATH = "/report-assets/logo.png";
 const SDVOSB_PATH = "/report-assets/sdvosb.jpg";
+const SIGNATURE_PATH = "/report-assets/signature-blue.png";
 const BOND_RATE = 0.04;
 
 const esc = value =>
@@ -60,12 +61,13 @@ async function fetchDataUrl(path) {
 }
 
 async function loadProposalAssets() {
-  const [template, logo, badge] = await Promise.all([
+  const [template, logo, badge, signature] = await Promise.all([
     fetchText(TEMPLATE_PATH),
     fetchDataUrl(LOGO_PATH),
     fetchDataUrl(SDVOSB_PATH),
+    fetchDataUrl(SIGNATURE_PATH),
   ]);
-  return { template, logo, badge };
+  return { template, logo, badge, signature };
 }
 
 function getVersionSuffix(estimate) {
@@ -247,7 +249,7 @@ function renderPricingTable(baseScopeName, grandTotal, totalBond) {
             <td class="cell-number">${fmtMoney(grandTotal)}</td>
           </tr>
           <tr class="row-bond">
-            <td><strong>Optional performance and payment bond (4%)</strong></td>
+            <td><strong>Optional performance and payment bond</strong></td>
             <td class="cell-number">add ${fmtMoney(totalBond || 0)}</td>
           </tr>
           <tr class="row-total">
@@ -395,10 +397,13 @@ function embedTemplateImages(template, assets) {
   return template
     .replace(/file:\/\/\/C:\/Users\/TimothyCollins\/dev\/tcc-templates\/reports\/logo\.png/g, assets.logo)
     .replace(/file:\/\/\/C:\/Users\/TimothyCollins\/dev\/tcc-templates\/reports\/sdvosb\.jpg/g, assets.badge)
+    .replace(/file:\/\/\/C:\/Users\/TimothyCollins\/OneDrive - The Controls Company, LLC\/Pictures\/Signature_Blue\.png/g, assets.signature)
     .replace(/src="[^"]*reports\/logo\.png"/g, `src="${assets.logo}"`)
     .replace(/src="[^"]*reports\/sdvosb\.jpg"/g, `src="${assets.badge}"`)
+    .replace(/src="[^"]*Signature_Blue\.png"/g, `src="${assets.signature}"`)
     .replace(/src="\/report-assets\/logo\.png"/g, `src="${assets.logo}"`)
-    .replace(/src="\/report-assets\/sdvosb\.jpg"/g, `src="${assets.badge}"`);
+    .replace(/src="\/report-assets\/sdvosb\.jpg"/g, `src="${assets.badge}"`)
+    .replace(/src="\/report-assets\/signature-blue\.png"/g, `src="${assets.signature}"`);
 }
 
 export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps, grandTotal, bondAmount, assets) {

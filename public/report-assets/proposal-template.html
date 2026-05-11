@@ -314,21 +314,32 @@
 
     .sig-block {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      gap: 40px;
       font-size: 13px;
-      margin-top: 24px;
+      margin-top: 30px;
+      align-items: end;
     }
 
     .sig-block > div {
       display: flex;
       flex-direction: column;
+      min-height: 180px;
+    }
+
+    .sig-image {
+      display: block;
+      max-width: 280px;
+      width: 100%;
+      height: auto;
+      margin: 4px 0 20px;
+      object-fit: contain;
     }
 
     .sig-line {
       border-top: 1px solid var(--quiet);
       margin-top: auto;
-      padding-top: 6px;
+      padding-top: 8px;
       color: var(--label);
     }
 
@@ -584,12 +595,12 @@
           <p style="margin:0 0 4px; font-weight:600;">Submitted By</p>
           <p style="margin:0 0 2px;">Timothy J. Collins, MBA</p>
           <p style="margin:0; color:var(--muted); font-size:12px;">President, The Controls Company, LLC</p>
+          <img class="sig-image" src="/report-assets/signature-blue.png" alt="Timothy J. Collins signature" />
           <div class="sig-line">Signature &amp; Date</div>
         </div>
         <div>
           <p style="margin:0 0 4px; font-weight:600;">Accepted By</p>
-          <p style="margin:0 0 2px;">&nbsp;</p>
-          <p style="margin:0; font-size:12px; color:var(--muted);">&nbsp;</p>
+          <div style="height: 122px;"></div>
           <div class="sig-line">Signature &amp; Date</div>
         </div>
       </div>
