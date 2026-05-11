@@ -102,34 +102,6 @@ export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, ite
     </label>
   );
 
-  const dateField = (key, label) => (
-    <label style={{ display:"flex", flexDirection:"column", gap:2 }}>
-      <span style={{ fontSize:9, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1 }}>{label}</span>
-      <input
-        type="date"
-        value={S[key] || ""}
-        onChange={e => onChange({ [key]: e.target.value })}
-        style={{ padding:"5px 8px", border:"1px solid "+T.border2, borderRadius:4,
-          fontSize:12, background:T.bg, color:T.text, outline:"none", fontFamily:T.mono }}
-      />
-    </label>
-  );
-
-  const textAreaField = (key, label, placeholder="", rows=6) => (
-    <label style={{ display:"flex", flexDirection:"column", gap:2 }}>
-      <span style={{ fontSize:9, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1 }}>{label}</span>
-      <textarea
-        value={S[key] || ""}
-        placeholder={placeholder}
-        rows={rows}
-        onChange={e => onChange({ [key]: e.target.value })}
-        style={{ padding:"8px 10px", border:"1px solid "+T.border2, borderRadius:4,
-          fontSize:12, background:T.bg, color:T.text, outline:"none", fontFamily:T.mono,
-          resize:"vertical", lineHeight:1.5 }}
-      />
-    </label>
-  );
-
   const selectField = (key, label, options, note="") => (
     <label style={{ display:"flex", flexDirection:"column", gap:2 }}>
       <span style={{ fontSize:9, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1 }}>{label}</span>
@@ -281,30 +253,6 @@ export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, ite
               · {fmtHr(rawLbrHrs)} ÷ 20 hrs/trip = {Math.max(1,Math.ceil(rawLbrHrs/20))} trip{Math.max(1,Math.ceil(rawLbrHrs/20))!==1?"s":""}
             </span>}
           </div>
-        </>)}
-
-        {/* Proposal details */}
-        {section("Proposal Details", "#0F766E", <>
-          <div style={{ fontSize:10, color:T.muted }}>
-            Used in the exported customer proposal.
-          </div>
-          {selectField("proposalScopeMode", "Proposal Scope", [
-            { value:"brief", label:"Brief" },
-            { value:"detailed", label:"Detailed" },
-          ], "Brief shows tags and quantities only. Detailed includes the selected components for each system.")}
-          {textField("baseScopeName", "Base Scope Name", "Scope") }
-          <label style={{ display:"flex", alignItems:"center", gap:8, cursor:"pointer", userSelect:"none" }}>
-            <input
-              type="checkbox"
-              checked={!!S.useCustomerScope}
-              onChange={e => onChange({ useCustomerScope: e.target.checked })}
-              style={{ width:16, height:16, accentColor:T.blue, cursor:"pointer" }}
-            />
-            <span style={{ fontSize:12, color:T.text, fontFamily:T.mono }}>Use customer scope</span>
-          </label>
-          {S.useCustomerScope && textAreaField("customerScope", "Customer Scope", "Paste the customer-provided scope here. Each line will be formatted into the proposal.", 8)}
-          {textField("customerContact", "Customer Contact", "Attn line for proposal")}
-          {dateField("estimateDate", "Estimate Date")}
         </>)}
 
         {/* Labor adjustments */}

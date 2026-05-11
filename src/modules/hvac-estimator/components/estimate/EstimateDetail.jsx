@@ -10,6 +10,7 @@ import { getCurrentUser } from "../../shared/currentUser.js";
 import { AHU_TYPES } from "../ahu/ahuData.js";
 import { AddEquipButtons } from "./AddEquipButtons.jsx";
 import { ProjectSettingsPanel } from "./ProjectSettingsPanel.jsx";
+import { ProposalDetailsPanel } from "./ProposalDetailsPanel.jsx";
 import {
   TYPE_META,
   buildItemsWithComps,
@@ -24,6 +25,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
   const [editHeader, setEditHeader] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
   const [showSettings, setShowSettings] = useState(false);
+  const [showProposalDetails, setShowProposalDetails] = useState(false);
   const [name,setName]         = useState(estimate.name);
   const [number,setNumber]     = useState(estimate.number||"");
   const [customer,setCustomer] = useState(estimate.customer||"");
@@ -248,6 +250,14 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                       fontFamily:T.mono, fontWeight:600 }}>
                     System Wizard
                   </button>
+                  <button onClick={()=>setShowProposalDetails(s=>!s)}
+                    title="Proposal details"
+                    style={{ padding:"7px 10px", border:"1px solid "+(showProposalDetails?T.blue:T.border2),
+                      borderRadius:5, background:showProposalDetails?T.blueFaint:"none",
+                      color:showProposalDetails?T.blue:T.muted, cursor:"pointer", fontSize:12,
+                      fontFamily:T.mono, fontWeight:600 }}>
+                    Proposal Details
+                  </button>
                   {showProjectSettings && (
                     <button onClick={()=>setShowSettings(s=>!s)}
                       title="Project settings"
@@ -301,13 +311,6 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                 <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Bid Alternates</div>
                 <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>Add deducts, adder packages, or separate options without mixing them into the base bid.</div>
               </div>
-              <button onClick={createBidAlternate}
-                style={{ padding:"7px 10px", border:"1px solid "+T.green,
-                  borderRadius:5, background:T.greenFaint || "#F0FDF4",
-                  color:T.green, cursor:"pointer", fontSize:12,
-                  fontFamily:T.mono, fontWeight:600 }}>
-                + Bid Alternate
-              </button>
             </div>
             <div style={{ padding:"12px 14px", display:"grid", gap:10 }}>
               {alternates.length ? alternates.map((alternate) => (
@@ -348,6 +351,10 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
         <ProjectSettingsPanel settings={settings} onChange={updateSettings}
           costs={costs} rawLbrHrs={totals.lbrHrs} itemCount={estimate.items?.length || 0}
           estimateId={estimate.id} onApplyDefaultInstallType={applyDefaultInstallType} />
+      )}
+
+      {!customerMode && showProposalDetails && (
+        <ProposalDetailsPanel settings={settings} onChange={updateSettings} />
       )}
 
       {/* ── LINE ITEMS TABLE ── */}

@@ -8,6 +8,7 @@ import { AddEquipButtons } from "@/modules/hvac-estimator/components/estimate/Ad
 import { EstimateDetail } from "@/modules/hvac-estimator/components/estimate/EstimateDetail";
 import ConduitFillPage from "@/modules/hvac-estimator/components/conduitFill/ConduitFillPage";
 import { ProjectSettingsPanel } from "@/modules/hvac-estimator/components/estimate/ProjectSettingsPanel";
+import { ProposalDetailsPanel } from "@/modules/hvac-estimator/components/estimate/ProposalDetailsPanel";
 import { BidAlternateEditor } from "@/modules/hvac-estimator/components/estimate/BidAlternateEditor";
 import { EstimateDocumentsPanel } from "@/modules/hvac-estimator/components/estimate/EstimateDocumentsPanel";
 import { computeCosts, DEFAULT_SETTINGS } from "@/modules/hvac-estimator/components/estimate/projectSettings";
@@ -400,6 +401,7 @@ export function EstimateDetailClient({ estimate }: Props) {
   const [addForm, setAddForm] = useState<AddItemForm>(() => buildAddForm());
   const [showAddEditor, setShowAddEditor] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showProposalDetails, setShowProposalDetails] = useState(false);
   const [editingComponentsFor, setEditingComponentsFor] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -794,13 +796,26 @@ export function EstimateDetailClient({ estimate }: Props) {
                   Old estimator settings panel, now backed by ProjectHub estimate persistence.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowSettings((current) => !current)}
-                className="rounded-xl border border-border-default px-3 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
-              >
-                {showSettings ? "Hide Settings" : "Show Settings"}
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowProposalDetails((current) => !current)}
+                  className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                    showProposalDetails
+                      ? "border-brand-primary bg-brand-subtle text-brand-primary"
+                      : "border-border-default text-text-secondary hover:bg-surface-overlay hover:text-text-primary"
+                  }`}
+                >
+                  {showProposalDetails ? "Hide Proposal Details" : "Proposal Details"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSettings((current) => !current)}
+                  className="rounded-xl border border-border-default px-3 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
+                >
+                  {showSettings ? "Hide Settings" : "Show Settings"}
+                </button>
+              </div>
             </div>
             {showSettings && (
               <ProjectSettingsPanel
@@ -812,6 +827,9 @@ export function EstimateDetailClient({ estimate }: Props) {
                 estimateId={estimate.id}
                 onApplyDefaultInstallType={applyDefaultInstallTypeToItems}
               />
+            )}
+            {showProposalDetails && (
+              <ProposalDetailsPanel settings={body.settings} onChange={updateSettings} />
             )}
           </section>
 

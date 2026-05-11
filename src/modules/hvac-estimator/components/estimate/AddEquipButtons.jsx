@@ -9,6 +9,8 @@ const DEFAULT_BUTTONS = [
     { type:"uh",      label:"UH",      bg:"#DC2626", },
     { type:"plant",   label:"Plant",   bg:"#0369A1", },
     { type:"network", label:"Network", bg:"#059669", },
+    { type:"exhaust-fan", label:"Exhaust Fan", bg:"#B45309", },
+    { type:"custom", label:"Custom", bg:"#6B7280", },
   ];
 
 export function AddEquipButtons({ onAdd, buttons = DEFAULT_BUTTONS }) {
