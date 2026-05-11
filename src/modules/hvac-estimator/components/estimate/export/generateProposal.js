@@ -138,9 +138,47 @@ function renderCustomerScope(text) {
 
   if (!lines.length) return "";
 
+  const topLevelPattern = /^\s*(?:\(\d+\)|\d+[.)]?)\s+/;
+  const headingPattern = /^[A-Z0-9][A-Za-z0-9/&'().-]*(?:\s+[A-Z0-9][A-Za-z0-9/&'().-]*){0,6}$/;
+  const items = [];
+  let current = null;
+
+  function isHeadingLine(line) {
+    const trimmed = String(line || "").trim();
+    if (!trimmed || topLevelPattern.test(trimmed)) return false;
+    if (/[.!?]$/.test(trimmed)) return false;
+    if (/\b(?:install|wire|factory|bacnet|controller|sensor|wiring|controlled|mount|startup|commissioning|demolish|furnish)\b/i.test(trimmed)) {
+      return false;
+    }
+    return headingPattern.test(trimmed);
+  }
+
+  for (const rawLine of lines) {
+    const line = rawLine.replace(/^[-*•]\s*/, "");
+    const isTopLevel = topLevelPattern.test(line);
+
+    if (isTopLevel || isHeadingLine(line) || !current) {
+      const title = line.replace(/^\s*(?:\(\d+\)|\d+[.)]?)\s*/, "").trim();
+      current = { title, children: [] };
+      items.push(current);
+      continue;
+    }
+
+    if (!current) {
+      current = { title: line, children: [] };
+      items.push(current);
+      continue;
+    }
+
+    current.children.push(line);
+  }
+
   return `
       <ul class="scope-list">
-${lines.map(line => `<li>${esc(line.replace(/^[-*•\d.)]+\s*/, ""))}</li>`).join("\n")}
+${items.map((item) => `
+        <li><strong>${esc(item.title)}</strong>
+          ${item.children.length ? `<ul style="margin-top:4px; padding-left:18px; line-height:1.7;">${item.children.map(child => `<li>${esc(child)}</li>`).join("")}</ul>` : ""}
+        </li>`).join("\n")}
       </ul>`;
 }
 
