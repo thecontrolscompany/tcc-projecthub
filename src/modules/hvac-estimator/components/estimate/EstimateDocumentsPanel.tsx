@@ -73,6 +73,31 @@ export function EstimateDocumentsPanel({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [batchNote, setBatchNote] = useState("");
 
+  async function readErrorMessage(res: Response, fallback: string) {
+    const text = await res.text().catch(() => "");
+    if (text) {
+      try {
+        const parsed = JSON.parse(text);
+        if (typeof parsed?.error === "string" && parsed.error.trim()) {
+          return parsed.error;
+        }
+      } catch {
+        return text.slice(0, 500);
+      }
+    }
+
+    try {
+      const json = JSON.parse(text || "{}");
+      if (typeof json?.error === "string" && json.error.trim()) {
+        return json.error;
+      }
+    } catch {
+      // Ignore parse failures and use the fallback below.
+    }
+
+    return fallback;
+  }
+
   const sharepointLink = useMemo(
     () => (sharepointFolder ? sharePointUrl(sharepointFolder) : null),
     [sharepointFolder],
@@ -130,9 +155,8 @@ export function EstimateDocumentsPanel({
           body: formData,
         });
 
-        const json = await res.json().catch(() => null);
         if (!res.ok) {
-          throw new Error(typeof json?.error === "string" ? json.error : `Upload failed for ${file.name}.`);
+          throw new Error(await readErrorMessage(res, `Upload failed for ${file.name}.`));
         }
       }
 
