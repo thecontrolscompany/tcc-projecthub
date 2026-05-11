@@ -147,7 +147,7 @@ const TYPE_SCOPE_LABELS = {
 function getSectionDef(type) {
   return SECTION_DEFS.find(section => section.types.has(type)) || {
     id: "misc",
-    label: "Additional HVAC Controls Scope",
+    label: "Scope",
     types: new Set(),
   };
 }
@@ -321,7 +321,7 @@ function summarizeComponents(entries) {
   return Array.from(names);
 }
 
-function renderGeneratedScope(itemsWithComps = []) {
+function renderGeneratedScope(itemsWithComps = [], mode = "brief") {
   if (!itemsWithComps.length) {
     return `
       <ul class="scope-list">
@@ -332,22 +332,25 @@ function renderGeneratedScope(itemsWithComps = []) {
           </ul>
         </li>
       </ul>
-`;
+`; 
   }
 
-  const sections = buildSections(itemsWithComps, 0);
-  const rows = sections.map(section => {
-    const typeGroups = groupEntriesByType(section.entries).map(([type, entries]) => {
-      const label = TYPE_SCOPE_LABELS[type] || "HVAC Controls Systems";
-      const totalQty = entries.reduce((sum, entry) => sum + (Number(entry.item?.qty) || 1), 0);
-      const tags = entries.map(entry => entry.item?.tag).filter(Boolean).slice(0, 8);
-      const locations = entries.map(entry => entry.item?.location).filter(Boolean).slice(0, 4);
-      const components = summarizeComponents(entries);
+  const rows = itemsWithComps.map(entry => {
+    const item = entry.item || {};
+    const qty = Math.max(1, Number(item.qty) || 1);
+    const tag = String(item.tag || "").trim();
+    const typeLabel = TYPE_SCOPE_LABELS[item.type] || "HVAC Controls System";
+    const locations = [item.location].filter(Boolean);
+    const components = summarizeComponents([entry]);
 
-      return `
-        <li><strong>${esc(`${totalQty} ${label}${tags.length ? ` (${tags.join(", ")})` : ""}`)}</strong>
+    if (mode !== "detailed") {
+      return `<li><strong>Qty ${qty} ${esc(tag || typeLabel)}</strong></li>`;
+    }
+
+    return `
+        <li><strong>Qty ${qty} ${esc(tag || typeLabel)}</strong>
           <ul style="margin-top:4px; padding-left:18px; line-height:1.7;">
-            ${locations.length ? `<li>Work areas include ${esc(locations.join(", "))}.</li>` : ""}
+            ${locations.length ? `<li>Work area${locations.length > 1 ? "s" : ""} include ${esc(locations.join(", "))}.</li>` : ""}
             ${components.length ? components.map(name => {
               const normalized = normalizeCompName(name);
               if (/conduit|wire|cable|raceway/i.test(normalized)) {
@@ -358,18 +361,12 @@ function renderGeneratedScope(itemsWithComps = []) {
             <li>Demolish and remove existing controls associated with this equipment where required; return removed equipment to owner's stock.</li>
           </ul>
         </li>`;
-    }).join("\n");
-
-    return `
-      <p style="margin: 14px 0 6px; font-size: 14px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: 0.06em;">
-        ${esc(section.label)}
-      </p>
-      <ul class="scope-list">
-${typeGroups}
-      </ul>`;
   }).join("\n");
 
-  return rows;
+  return `
+      <ul class="scope-list">
+${rows}
+      </ul>`;
 }
 
 function replaceScopeSection(template, scopeHtml) {
@@ -405,7 +402,8 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   const installedTotal = grandTotal || 0;
   const totalBond = bondAmount || installedTotal * BOND_RATE;
   const sections = buildSections(itemsWithComps, installedTotal);
-  const scopeHtml = renderGeneratedScope(itemsWithComps);
+  const scopeMode = settings.proposalScopeMode === "detailed" ? "detailed" : "brief";
+  const scopeHtml = renderGeneratedScope(itemsWithComps, scopeMode);
   const pricingHtml = `${renderPricingTable(sections, installedTotal, totalBond)}${renderAlternateBids(normalizeAlternates(estimate))}`;
 
   const tokens = {

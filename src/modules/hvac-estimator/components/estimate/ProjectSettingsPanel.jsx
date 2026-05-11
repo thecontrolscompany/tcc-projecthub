@@ -115,6 +115,23 @@ export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, ite
     </label>
   );
 
+  const selectField = (key, label, options, note="") => (
+    <label style={{ display:"flex", flexDirection:"column", gap:2 }}>
+      <span style={{ fontSize:9, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1 }}>{label}</span>
+      <select
+        value={S[key] || options[0]?.value || ""}
+        onChange={e => onChange({ [key]: e.target.value })}
+        style={{ padding:"5px 8px", border:"1px solid "+T.border2, borderRadius:4,
+          fontSize:12, background:T.bg, color:T.text, outline:"none", fontFamily:T.mono }}
+      >
+        {options.map(option => (
+          <option key={option.value} value={option.value}>{option.label}</option>
+        ))}
+      </select>
+      {note && <div style={{ fontSize:10, color:T.dim }}>{note}</div>}
+    </label>
+  );
+
   const section = (title, color, children) => (
     <div style={{ background:T.surface, border:"1px solid "+T.border, borderRadius:8,
       overflow:"hidden", flex:"1 1 280px", minWidth:260 }}>
@@ -256,6 +273,10 @@ export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, ite
           <div style={{ fontSize:10, color:T.muted }}>
             Used in the exported customer proposal.
           </div>
+          {selectField("proposalScopeMode", "Proposal Scope", [
+            { value:"brief", label:"Brief" },
+            { value:"detailed", label:"Detailed" },
+          ], "Brief shows tags and quantities only. Detailed includes the selected components for each system.")}
           {textField("customerContact", "Customer Contact", "Attn line for proposal")}
           {dateField("estimateDate", "Estimate Date")}
         </>)}

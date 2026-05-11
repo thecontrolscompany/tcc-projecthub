@@ -159,7 +159,7 @@ export function buildItemsWithComps(estimate) {
         : "")
       : item.type;
     return {
-      item: { qty: item.qty, tag: item.tag || "", label },
+      item: { qty: item.qty, tag: item.tag || "", label, location: item.location || "" },
       compNames: compNames.length > 0 ? compNames : ["Installation per project specifications"],
     };
   });
