@@ -16,149 +16,96 @@ export function ProposalDetailsModal({
   const [activeTab, setActiveTab] = useState("details");
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) return undefined;
+
     setActiveTab("details");
+
     const onKeyDown = (event) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        onClose();
+      }
     };
+
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
 
   if (!open) return null;
 
-  const hasDocumentsTab = Boolean(estimateId);
-
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Proposal Details"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-8"
       onClick={onClose}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 80,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 16,
-        background: "rgba(15, 23, 42, 0.58)",
-        backdropFilter: "blur(8px)",
-      }}
     >
       <div
+        className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
         onClick={(event) => event.stopPropagation()}
-        style={{
-          width: "min(96vw, 1320px)",
-          maxHeight: "92vh",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-          borderRadius: 16,
-          border: "1px solid " + T.border,
-          background: T.bg,
-          boxShadow: "0 28px 80px rgba(15,23,42,0.45)",
-        }}
       >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
-            padding: "16px 20px",
-            borderBottom: "1px solid " + T.border,
-            background: T.surface,
-            flexShrink: 0,
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontSize: 10,
-                color: T.muted,
-                fontFamily: T.mono,
-                textTransform: "uppercase",
-                letterSpacing: 1.4,
-              }}
+        <div className="flex flex-col gap-4 border-b border-slate-200 px-6 py-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                {T("Proposal Details")}
+              </div>
+              <div className="mt-1 text-lg font-semibold text-slate-900">
+                {T("Edit proposal information and supporting documents")}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
             >
-              Proposal Details
-            </div>
-            <div style={{ marginTop: 4, fontSize: 13, color: T.dim }}>
-              Expanded workspace for proposal fields and future proposal tools.
-            </div>
+              Close
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              padding: "7px 12px",
-              border: "1px solid " + T.border2,
-              borderRadius: 8,
-              background: "none",
-              color: T.muted,
-              cursor: "pointer",
-              fontSize: 12,
-              fontFamily: T.mono,
-              fontWeight: 600,
-            }}
-          >
-            Close
-          </button>
-        </div>
 
-        <div style={{ borderBottom: "1px solid " + T.border, background: T.bg, padding: "0 20px" }}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "10px 0" }}>
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setActiveTab("details")}
-              style={{
-                padding: "7px 12px",
-                border: "1px solid " + (activeTab === "details" ? T.blue : T.border2),
-                borderRadius: 999,
-                background: activeTab === "details" ? T.blueFaint : "none",
-                color: activeTab === "details" ? T.blue : T.muted,
-                cursor: "pointer",
-                fontSize: 12,
-                fontFamily: T.mono,
-                fontWeight: 600,
-              }}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                activeTab === "details"
+                  ? "bg-[#1f3c5a] text-white shadow"
+                  : "bg-white text-slate-700 hover:bg-slate-100"
+              }`}
             >
               Details
             </button>
-            {hasDocumentsTab && (
-              <button
-                type="button"
-                onClick={() => setActiveTab("documents")}
-                style={{
-                  padding: "7px 12px",
-                  border: "1px solid " + (activeTab === "documents" ? T.blue : T.border2),
-                  borderRadius: 999,
-                  background: activeTab === "documents" ? T.blueFaint : "none",
-                  color: activeTab === "documents" ? T.blue : T.muted,
-                  cursor: "pointer",
-                  fontSize: 12,
-                  fontFamily: T.mono,
-                  fontWeight: 600,
-                }}
-              >
-                Documents
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setActiveTab("documents")}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                activeTab === "documents"
+                  ? "bg-[#1f3c5a] text-white shadow"
+                  : "bg-white text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              Documents
+            </button>
           </div>
         </div>
 
-        <div style={{ overflow: "auto", padding: 20 }}>
-          {activeTab === "documents" && hasDocumentsTab ? (
-            <EstimateDocumentsPanel
-              embedded
-              estimateId={estimateId}
-              sharepointFolder={sharepointFolder}
-              drawingBasis={drawingBasis || ""}
-              onChangeDrawingBasis={onChangeDrawingBasis || (() => {})}
-            />
+        <div className="min-h-0 flex-1 overflow-y-auto p-6">
+          {activeTab === "documents" ? (
+            estimateId ? (
+              <EstimateDocumentsPanel
+                embedded
+                estimateId={estimateId}
+                sharepointFolder={sharepointFolder}
+                drawingBasis={drawingBasis}
+                onChangeDrawingBasis={onChangeDrawingBasis}
+              />
+            ) : (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
+                Documents will appear here once this estimate is loaded.
+              </div>
+            )
           ) : (
-            <ProposalDetailsPanel settings={settings} onChange={onChange} />
+            <ProposalDetailsPanel
+              settings={settings}
+              onChange={onChange}
+            />
           )}
         </div>
       </div>
