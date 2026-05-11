@@ -364,6 +364,8 @@ function normalizeBody(record: EstimateRecord): EstimateBody {
     platformContext: body.platformContext ?? null,
     name: asString(body.name) || record.name || "Untitled Estimate",
     number: asString(body.number) || record.number || "",
+    sharepointFolder: asString(body.sharepointFolder) || null,
+    sharepointItemId: asString(body.sharepointItemId) || null,
     customerAccountId: asString(body.customerAccountId) || null,
     customer: asString(body.customer),
     version: asString(body.version) || "1.0",
