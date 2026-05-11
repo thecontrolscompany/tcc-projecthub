@@ -19,7 +19,7 @@ import {
   getItemDetails,
 } from "./estimateCalc.js";
 export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = false, showProjectSettings = true, showBidAlternates = true }) {
-  const { setSubPage, applyDefaultInstallType } = useEstimate();
+  const { subPage, setSubPage, applyDefaultInstallType } = useEstimate();
   const isMobile = useIsMobile();
   const [editHeader, setEditHeader] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
