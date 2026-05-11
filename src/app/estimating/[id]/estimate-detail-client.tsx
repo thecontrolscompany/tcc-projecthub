@@ -30,6 +30,7 @@ import { buildDefaultVrfSelected, getVisibleVrfComponents, normalizeVrfCfg } fro
 import { summarizeHvacEstimate, type HvacEstimateBody } from "@/modules/hvac-estimator/platform-adapter";
 import { ProjectHubEstimateProvider, useEstimate } from "@/modules/hvac-estimator/shared/EstimateContext";
 import { CONDUIT_FILL_RESTORE_KEY } from "@/modules/hvac-estimator/shared/conduitFill";
+import { getCustomComponentOptions } from "@/modules/hvac-estimator/shared/componentCatalog";
 import { UnitaryFlowDiagram } from "@/modules/hvac-estimator/shared/UnitaryFlowDiagram";
 import type { EstimateRecord, EstimateStatus } from "@/types/database";
 
@@ -65,11 +66,19 @@ type AddItemForm = {
   selected: Array<{ id: string; qty: number }>;
 };
 
+type LocalDraft = {
+  body: EstimateBody;
+  status: EstimateStatus;
+  savedAt: string;
+};
+
 type HvacComponent = {
   id: string;
   label?: string;
   name?: string;
   groupId?: string;
+  sourceType?: string;
+  sourceLabel?: string;
 };
 
 const statusOptions: EstimateStatus[] = [
@@ -81,8 +90,24 @@ const statusOptions: EstimateStatus[] = [
   "archived",
 ];
 
-const supportedEquipmentTypes = ["ahu", "vav", "rtu", "dx", "vrf", "fcu", "uh", "plant", "network"];
+const equipmentButtons = [
+  { type: "ahu", label: "AHU", bg: "#0D9488" },
+  { type: "vav", label: "VAV", bg: "#2563EB" },
+  { type: "rtu", label: "RTU", bg: "#7C3AED" },
+  { type: "dx", label: "DX/HP", bg: "#4338CA" },
+  { type: "vrf", label: "VRF", bg: "#047857" },
+  { type: "fcu", label: "FCU", bg: "#EA580C" },
+  { type: "uh", label: "UH", bg: "#DC2626" },
+  { type: "plant", label: "Plant", bg: "#0369A1" },
+  { type: "network", label: "Network", bg: "#059669" },
+  { type: "exhaust-fan", label: "Exhaust Fan", bg: "#B45309" },
+  { type: "custom", label: "Custom", bg: "#6B7280" },
+];
+
+const supportedEquipmentTypes = equipmentButtons.map((button) => button.type);
 const diagramSupportedEquipmentTypes = new Set(["rtu", "dx", "vrf", "uh"]);
+const customComponentOptions = getCustomComponentOptions();
+const LOCAL_DRAFT_PREFIX = "hvac-estimate-draft";
 
 const inputClassName =
   "w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none";
@@ -145,6 +170,63 @@ function asNumber(value: unknown, fallback = 1) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function getDraftKey(estimateId: string) {
+  return `${LOCAL_DRAFT_PREFIX}:${estimateId}`;
+}
+
+function readLocalDraft(estimateId: string): LocalDraft | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(getDraftKey(estimateId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<LocalDraft>;
+    if (!parsed || typeof parsed !== "object" || !parsed.body || typeof parsed.body !== "object") return null;
+    if (typeof parsed.status !== "string") return null;
+    if (parsed.body.id && parsed.body.id !== estimateId) return null;
+    return {
+      body: parsed.body as EstimateBody,
+      status: parsed.status as EstimateStatus,
+      savedAt: typeof parsed.savedAt === "string" ? parsed.savedAt : "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalDraft(estimateId: string, body: EstimateBody, status: EstimateStatus) {
+  if (typeof window === "undefined") return;
+  try {
+    const draft: LocalDraft = { body, status, savedAt: new Date().toISOString() };
+    window.localStorage.setItem(getDraftKey(estimateId), JSON.stringify(draft));
+  } catch {
+    // Ignore localStorage failures.
+  }
+}
+
+function clearLocalDraft(estimateId: string) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(getDraftKey(estimateId));
+  } catch {
+    // Ignore localStorage failures.
+  }
+}
+
+function getInitialEstimateState(estimate: EstimateRecord): { body: EstimateBody; status: EstimateStatus; recovered: boolean } {
+  const serverBody = normalizeBody(estimate);
+  const serverStatus = estimate.status;
+  const draft = readLocalDraft(estimate.id);
+  if (!draft) return { body: serverBody, status: serverStatus, recovered: false };
+
+  const draftTime = new Date(draft.body.updatedAt || draft.savedAt || "").getTime();
+  const serverTime = new Date(estimate.updated_at).getTime();
+  if (!Number.isFinite(draftTime) || !Number.isFinite(serverTime) || draftTime <= serverTime) {
+    return { body: serverBody, status: serverStatus, recovered: false };
+  }
+
+  return { body: draft.body, status: draft.status, recovered: true };
+}
+
 function getTypeMeta(type: string) {
   return (TYPE_META as Record<string, { label: string; color: string; bg: string }>)[type] ?? {
     label: type.toUpperCase(),
@@ -160,6 +242,12 @@ function getComponents(type: string) {
 
 function getComponentLabel(component: HvacComponent) {
   return component.label ?? component.name ?? component.id;
+}
+
+function getCustomComponentId(cfg: Record<string, unknown>) {
+  const value = asString(cfg.componentId);
+  if (value) return value;
+  return customComponentOptions[0]?.id ?? "";
 }
 
 function getDefaultCfg(type: string) {
@@ -178,6 +266,8 @@ function getDefaultCfg(type: string) {
       return normalizeFcuCfg({});
     case "uh":
       return normalizeUhCfg({});
+    case "custom":
+      return { componentId: customComponentOptions[0]?.id ?? "" };
     default:
       return {};
   }
@@ -199,6 +289,13 @@ function getVisibleComponentsForType(type: string, cfg: Record<string, unknown>)
       return getVisibleFcuComponents(cfg);
     case "uh":
       return getVisibleUhComponents(cfg);
+    case "custom": {
+      return customComponentOptions.map((component) => ({
+        ...component.component,
+        sourceType: component.type,
+        sourceLabel: component.typeLabel,
+      }));
+    }
     default:
       return getComponents(type);
   }
@@ -220,6 +317,10 @@ function getDefaultSelectedForType(type: string, cfg: Record<string, unknown>) {
       return applyFcuDefaultSelections([], cfg);
     case "uh":
       return applyUhDefaultSelections([], cfg);
+    case "custom": {
+      const componentId = getCustomComponentId(cfg);
+      return componentId ? [{ id: componentId, qty: 1 }] : [];
+    }
     default:
       return getComponents(type)
         .filter((component) => Boolean((component as HvacComponent & { def?: boolean }).def))
@@ -287,16 +388,17 @@ function buildItemFromForm(form: AddItemForm): EstimateItem {
 
 export function EstimateDetailClient({ estimate }: Props) {
   const router = useRouter();
-  const [body, setBody] = useState<EstimateBody>(() => normalizeBody(estimate));
-  const [status, setStatus] = useState<EstimateStatus>(estimate.status);
+  const initialEstimateState = getInitialEstimateState(estimate);
+  const [body, setBody] = useState<EstimateBody>(() => initialEstimateState.body);
+  const [status, setStatus] = useState<EstimateStatus>(() => initialEstimateState.status);
   const [addForm, setAddForm] = useState<AddItemForm>(() => buildAddForm());
   const [showAddEditor, setShowAddEditor] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [editingComponentsFor, setEditingComponentsFor] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [dirty, setDirty] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(() => initialEstimateState.recovered);
+  const [message, setMessage] = useState<string | null>(() => (initialEstimateState.recovered ? "Recovered unsaved local draft." : null));
   const [error, setError] = useState<string | null>(null);
 
   const opportunityNumber = asString(body.platformContext?.opportunityNumber);
@@ -346,6 +448,15 @@ export function EstimateDetailClient({ estimate }: Props) {
     });
   }
 
+  function setCustomComponent(componentId: string) {
+    const selectedId = componentId || customComponentOptions[0]?.id || "";
+    setAddForm((current) => ({
+      ...current,
+      cfg: { ...current.cfg, componentId: selectedId },
+      selected: selectedId ? [{ id: selectedId, qty: 1 }] : [],
+    }));
+  }
+
   function updateSelectedComponentQty(componentId: string, qty: number) {
     setAddForm((current) => ({
       ...current,
@@ -368,6 +479,15 @@ export function EstimateDetailClient({ estimate }: Props) {
   function updateItem(itemId: string, patch: Partial<EstimateItem>) {
     updateBody({
       items: body.items.map((item) => (item.id === itemId ? { ...item, ...patch } : item)),
+    });
+  }
+
+  function setItemCustomComponent(itemId: string, componentId: string) {
+    const selectedId = componentId || customComponentOptions[0]?.id || "";
+    const currentItem = body.items.find((item) => item.id === itemId);
+    updateItem(itemId, {
+      cfg: { ...(currentItem?.cfg ?? {}), componentId: selectedId },
+      selected: selectedId ? [{ id: selectedId, qty: 1 }] : [],
     });
   }
 
@@ -421,6 +541,44 @@ export function EstimateDetailClient({ estimate }: Props) {
     updateBody({ items: body.items.filter((item) => item.id !== itemId) });
   }
 
+  useEffect(() => {
+    if (!dirty) return;
+    writeLocalDraft(estimate.id, body, status);
+  }, [dirty, body, status, estimate.id]);
+
+  async function persistEstimate(nextBody: EstimateBody, options: { showSuccessMessage?: boolean } = {}) {
+    const { showSuccessMessage = true } = options;
+
+    const summary = summarizeHvacEstimate(nextBody);
+
+    const res = await fetch(`/api/estimates/${estimate.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        status,
+        archived: status === "archived",
+        body: nextBody,
+        total_amount: summary.totalAmount,
+        gross_margin_amount: summary.grossMarginAmount,
+        gross_margin_pct: summary.grossMarginPct,
+      }),
+    });
+    const json = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      throw new Error(typeof json?.error === "string" ? json.error : "Unable to save estimate.");
+    }
+
+    setBody(nextBody);
+    setDirty(false);
+    clearLocalDraft(estimate.id);
+    if (showSuccessMessage) {
+      setMessage("Estimate saved.");
+    } else {
+      setMessage(null);
+    }
+  }
+
   async function handleSave() {
     setSaving(true);
     setMessage(null);
@@ -430,33 +588,23 @@ export function EstimateDetailClient({ estimate }: Props) {
       ...body,
       updatedAt: new Date().toISOString(),
     };
-    const summary = summarizeHvacEstimate(nextBody);
 
     try {
-      const res = await fetch(`/api/estimates/${estimate.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status,
-          archived: status === "archived",
-          body: nextBody,
-          total_amount: summary.totalAmount,
-          gross_margin_amount: summary.grossMarginAmount,
-          gross_margin_pct: summary.grossMarginPct,
-        }),
-      });
-      const json = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        setError(typeof json?.error === "string" ? json.error : "Unable to save estimate.");
-        return;
-      }
-
-      setBody(nextBody);
-      setDirty(false);
-      setMessage("Estimate saved.");
+      await persistEstimate(nextBody, { showSuccessMessage: true });
+      setError(null);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Unable to save estimate.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleAutosave(nextBody: EstimateBody) {
+    try {
+      await persistEstimate(nextBody, { showSuccessMessage: false });
+      setError(null);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Unable to save estimate.");
     }
   }
 
@@ -471,6 +619,7 @@ export function EstimateDetailClient({ estimate }: Props) {
     setError(null);
 
     try {
+      clearLocalDraft(estimate.id);
       const res = await fetch(`/api/estimates/${estimate.id}`, { method: "DELETE" });
       const json = await res.json().catch(() => null);
 
@@ -489,7 +638,7 @@ export function EstimateDetailClient({ estimate }: Props) {
   const useLegacyUi = true;
   if (useLegacyUi) {
     return (
-      <ProjectHubEstimateProvider estimate={body} onChange={updateBody}>
+      <ProjectHubEstimateProvider estimate={body} onChange={updateBody} onAutosave={handleAutosave}>
         <div
           className="min-h-[calc(100vh-7.5rem)] overflow-hidden rounded-xl border border-border-default bg-surface-raised"
           style={legacyDiagramTheme}
@@ -672,6 +821,7 @@ export function EstimateDetailClient({ estimate }: Props) {
             </div>
 
             <AddEquipButtons
+              buttons={equipmentButtons}
               onAdd={(type: string) => {
                 setAddType(type);
                 setShowAddEditor(true);
@@ -693,12 +843,26 @@ export function EstimateDetailClient({ estimate }: Props) {
                 </select>
               </label>
               <label>
-                <span className={labelClassName}>Tag</span>
-                <input
-                  value={addForm.tag}
-                  onChange={(event) => setAddForm((current) => ({ ...current, tag: event.target.value }))}
-                  className={inputClassName}
-                />
+                <span className={labelClassName}>{addForm.type === "custom" ? "Component" : "Tag"}</span>
+                {addForm.type === "custom" ? (
+                  <select
+                    value={asString(addForm.cfg.componentId) || customComponentOptions[0]?.id || ""}
+                    onChange={(event) => setCustomComponent(event.target.value)}
+                    className={inputClassName}
+                  >
+                    {customComponentOptions.map((component) => (
+                      <option key={component.id} value={component.id}>
+                        {component.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    value={addForm.tag}
+                    onChange={(event) => setAddForm((current) => ({ ...current, tag: event.target.value }))}
+                    className={inputClassName}
+                  />
+                )}
               </label>
               <label>
                 <span className={labelClassName}>Location</span>
@@ -743,46 +907,63 @@ export function EstimateDetailClient({ estimate }: Props) {
               </LegacyDiagramPanel>
             )}
 
-            <div className="mt-4 rounded-xl border border-border-default bg-surface-overlay p-4">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div className="text-sm font-medium text-text-primary">Components</div>
-                <div className="text-xs text-text-tertiary">{addForm.selected.length} selected by default</div>
+            {addForm.type === "custom" ? (
+              <div className="mt-4 rounded-xl border border-border-default bg-surface-overlay p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="text-sm font-medium text-text-primary">Custom Component</div>
+                  <div className="text-xs text-text-tertiary">Choose any equipment component</div>
+                </div>
+                <div className="text-sm text-text-secondary">
+                  This line item uses the selected component from the full equipment catalog.
+                </div>
               </div>
-              <div className="grid max-h-64 gap-2 overflow-auto pr-1 md:grid-cols-2">
-                {addFormComponents.map((component) => {
-                  const selectedQty = addForm.selected.find((entry) => entry.id === component.id)?.qty;
-                  return (
-                    <div
-                      key={component.id}
-                      className="flex items-start justify-between gap-3 rounded-lg border border-border-default bg-surface-raised px-3 py-2 text-sm text-text-secondary"
-                    >
-                      <label className="flex min-w-0 flex-1 items-start gap-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedQty !== undefined}
-                          onChange={() => toggleSelectedComponent(component.id)}
-                          className="mt-1"
-                        />
-                        <span className="min-w-0">
-                          <span className="block text-text-primary">{getComponentLabel(component)}</span>
-                          {component.groupId && <span className="text-xs text-text-tertiary">{component.groupId}</span>}
-                        </span>
-                      </label>
-                      {selectedQty !== undefined && (
-                        <input
-                          type="number"
-                          min="1"
-                          value={selectedQty}
-                          onChange={(event) => updateSelectedComponentQty(component.id, asNumber(event.target.value))}
-                          className="w-16 rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
-                          aria-label={`${getComponentLabel(component)} quantity`}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
+            ) : (
+              <div className="mt-4 rounded-xl border border-border-default bg-surface-overlay p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="text-sm font-medium text-text-primary">Components</div>
+                  <div className="text-xs text-text-tertiary">{addForm.selected.length} selected by default</div>
+                </div>
+                <div className="grid max-h-64 gap-2 overflow-auto pr-1 md:grid-cols-2">
+                  {addFormComponents.map((component) => {
+                    const selectedQty = addForm.selected.find((entry) => entry.id === component.id)?.qty;
+                    return (
+                      <div
+                        key={component.id}
+                        className="flex items-start justify-between gap-3 rounded-lg border border-border-default bg-surface-raised px-3 py-2 text-sm text-text-secondary"
+                      >
+                        <label className="flex min-w-0 flex-1 items-start gap-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedQty !== undefined}
+                            onChange={() => toggleSelectedComponent(component.id)}
+                            className="mt-1"
+                          />
+                          <span className="min-w-0">
+                            <span className="block text-text-primary">{getComponentLabel(component)}</span>
+                            {component.sourceLabel && (
+                              <span className="text-xs text-text-tertiary">{component.sourceLabel}</span>
+                            )}
+                            {!component.sourceLabel && component.groupId && (
+                              <span className="text-xs text-text-tertiary">{component.groupId}</span>
+                            )}
+                          </span>
+                        </label>
+                        {selectedQty !== undefined && (
+                          <input
+                            type="number"
+                            min="1"
+                            value={selectedQty}
+                            onChange={(event) => updateSelectedComponentQty(component.id, asNumber(event.target.value))}
+                            className="w-16 rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+                            aria-label={`${getComponentLabel(component)} quantity`}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="mt-4 flex justify-end">
               <button
@@ -897,42 +1078,68 @@ export function EstimateDetailClient({ estimate }: Props) {
                                   />
                                 </LegacyDiagramPanel>
                               )}
-                              <div className="grid gap-2 md:grid-cols-2">
-                                {itemComponents.map((component) => {
-                                  const selectedQty = selectedById.get(component.id);
-                                  return (
-                                    <div
-                                      key={component.id}
-                                      className="flex items-start justify-between gap-3 rounded-lg border border-border-default bg-surface-raised px-3 py-2 text-sm"
+                              {item.type === "custom" ? (
+                                <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
+                                  <label>
+                                    <span className={labelClassName}>Component</span>
+                                    <select
+                                      value={asString(item.cfg?.componentId) || item.selected[0]?.id || customComponentOptions[0]?.id || ""}
+                                      onChange={(event) => setItemCustomComponent(item.id, event.target.value)}
+                                      className={inputClassName}
                                     >
-                                      <label className="flex min-w-0 flex-1 items-start gap-2 text-text-secondary">
-                                        <input
-                                          type="checkbox"
-                                          checked={selectedQty !== undefined}
-                                          onChange={() => toggleItemComponent(item.id, component.id)}
-                                          className="mt-1"
-                                        />
-                                        <span className="min-w-0">
-                                          <span className="block text-text-primary">{getComponentLabel(component)}</span>
-                                          {component.groupId && <span className="text-xs text-text-tertiary">{component.groupId}</span>}
-                                        </span>
-                                      </label>
-                                      {selectedQty !== undefined && (
-                                        <input
-                                          type="number"
-                                          min="1"
-                                          value={selectedQty}
-                                          onChange={(event) =>
-                                            updateItemComponentQty(item.id, component.id, Math.max(1, asNumber(event.target.value)))
-                                          }
-                                          className="w-16 rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
-                                          aria-label={`${getComponentLabel(component)} quantity`}
-                                        />
-                                      )}
+                                      {customComponentOptions.map((component) => (
+                                        <option key={component.id} value={component.id}>
+                                          {component.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </label>
+                                  <div className="rounded-xl border border-border-default bg-surface-raised px-3 py-2 text-sm text-text-secondary">
+                                    <div className="text-xs uppercase tracking-wide text-text-tertiary">Selected Component</div>
+                                    <div className="mt-1 font-medium text-text-primary">
+                                      {customComponentOptions.find((component) => component.id === (asString(item.cfg?.componentId) || item.selected[0]?.id))?.label || "Custom"}
                                     </div>
-                                  );
-                                })}
-                              </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="grid gap-2 md:grid-cols-2">
+                                  {itemComponents.map((component) => {
+                                    const selectedQty = selectedById.get(component.id);
+                                    return (
+                                      <div
+                                        key={component.id}
+                                        className="flex items-start justify-between gap-3 rounded-lg border border-border-default bg-surface-raised px-3 py-2 text-sm"
+                                      >
+                                        <label className="flex min-w-0 flex-1 items-start gap-2 text-text-secondary">
+                                          <input
+                                            type="checkbox"
+                                            checked={selectedQty !== undefined}
+                                            onChange={() => toggleItemComponent(item.id, component.id)}
+                                            className="mt-1"
+                                          />
+                                          <span className="min-w-0">
+                                            <span className="block text-text-primary">{getComponentLabel(component)}</span>
+                                            {component.sourceLabel && <span className="text-xs text-text-tertiary">{component.sourceLabel}</span>}
+                                            {!component.sourceLabel && component.groupId && <span className="text-xs text-text-tertiary">{component.groupId}</span>}
+                                          </span>
+                                        </label>
+                                        {selectedQty !== undefined && (
+                                          <input
+                                            type="number"
+                                            min="1"
+                                            value={selectedQty}
+                                            onChange={(event) =>
+                                              updateItemComponentQty(item.id, component.id, Math.max(1, asNumber(event.target.value)))
+                                            }
+                                            className="w-16 rounded-lg border border-border-default bg-surface-overlay px-2 py-1 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+                                            aria-label={`${getComponentLabel(component)} quantity`}
+                                          />
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </td>
                           </tr>
                         )}

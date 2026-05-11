@@ -76,6 +76,10 @@ export default function PlantSchematic() {
   const quoteDefault = activeEstimate?.settings?.defaultInstallType ?? "EMT";
 
   useEffect(() => {
+    setPlantType(editPlantType);
+  }, [editingItem?.id]);
+
+  useEffect(() => {
     const nextPlantType = subPage?.type === "plant" ? subPage?.conduitFillDraft?.cfg?.plantType : null;
     if (!nextPlantType) return;
     setPlantType(PLANT_TYPES.find(type => type.id === nextPlantType) || null);

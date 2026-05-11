@@ -1,6 +1,5 @@
 import { T } from "../../shared/tokens.js";
-export function AddEquipButtons({ onAdd }) {
-  const buttons = [
+const DEFAULT_BUTTONS = [
     { type:"ahu",     label:"AHU",     bg:"#0D9488", },
     { type:"vav",     label:"VAV",     bg:T.blue,    },
     { type:"rtu",     label:"RTU",     bg:"#7C3AED", },
@@ -11,6 +10,8 @@ export function AddEquipButtons({ onAdd }) {
     { type:"plant",   label:"Plant",   bg:"#0369A1", },
     { type:"network", label:"Network", bg:"#059669", },
   ];
+
+export function AddEquipButtons({ onAdd, buttons = DEFAULT_BUTTONS }) {
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:8, flexShrink:0 }}>
       <div style={{ display:"flex", gap:5, flexShrink:0, flexWrap:"wrap" }}>

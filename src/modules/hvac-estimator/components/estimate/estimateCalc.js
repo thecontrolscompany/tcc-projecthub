@@ -9,7 +9,11 @@ import { FCU_COMPS } from "../fcu/fcuData.js";
 import { UH_COMPS } from "../uh/uhData.js";
 import { PLANT_COMPS } from "../plant/plantData.js";
 import { NETWORK_COMPS } from "../network/networkData.js";
+import { EXHAUST_FAN_COMPS } from "../exhaustFan/exhaustFanData.js";
+import { getAllEquipmentComponents } from "../../shared/componentCatalog.js";
 import { calcAssembly } from "../../shared/assemblyData.js";
+
+const CUSTOM_COMPS = getAllEquipmentComponents();
 
 export const COMPS_MAP = {
   vav: VAV_COMPS,
@@ -20,6 +24,8 @@ export const COMPS_MAP = {
   fcu: FCU_COMPS,
   uh: UH_COMPS,
   network: NETWORK_COMPS,
+  "exhaust-fan": EXHAUST_FAN_COMPS,
+  custom: CUSTOM_COMPS,
 };
 
 export const TYPE_META = {
@@ -32,6 +38,8 @@ export const TYPE_META = {
   uh: { label: "UH", color: "#DC2626", bg: "#FEF2F2" },
   plant: { label: "PLANT", color: "#0369A1", bg: "#F0F9FF" },
   network: { label: "NET", color: "#059669", bg: "#ECFDF5" },
+  "exhaust-fan": { label: "EF", color: "#B45309", bg: "#FFFBEB" },
+  custom: { label: "CUST", color: "#6B7280", bg: "#F3F4F6" },
 };
 
 export const shouldIncludeProposalComp = (comp) => {
@@ -43,6 +51,9 @@ function resolveItemComps(item) {
   let comps = COMPS_MAP[item.type] || [];
   if (item.type === "plant" && item.cfg?.plantType) {
     comps = PLANT_COMPS[item.cfg.plantType] || [];
+  } else if (item.type === "custom" && item.cfg?.componentId) {
+    const selected = comps.find((component) => component.id === item.cfg.componentId);
+    comps = selected ? [selected] : comps;
   }
   return comps;
 }

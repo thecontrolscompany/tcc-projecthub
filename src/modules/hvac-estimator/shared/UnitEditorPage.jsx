@@ -52,6 +52,7 @@ export function UnitEditorPage({
 }) {
   const { editingItem, subPage, setSubPage } = useEstimate();
   const isEditing = !!editingItem;
+  const editingItemId = editingItem?.id || null;
 
   const [selected, setSel] = useState(() => {
     if (isEditing) return normalizeSelected(editingItem.selected, comps, cfg);
@@ -67,6 +68,16 @@ export function UnitEditorPage({
   const [search, setSrch] = useState("");
   const [expanded, setExp] = useState(null);
   const [showModal, setModal] = useState(false);
+
+  useEffect(() => {
+    if (!isEditing) return;
+    setSel(normalizeSelected(editingItem.selected, comps, cfg));
+    setCustom(editingItem.custom || []);
+    setIT(editingItem.installType || defaultInstallType);
+    setQty(editingItem.qty || 1);
+    setTag(editingItem.tag || defaultTag);
+    setLoc(editingItem.location || defaultLocation);
+  }, [editingItemId]);
 
   useEffect(() => {
     const draft = subPage?.conduitFillDraft;

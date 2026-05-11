@@ -6,7 +6,11 @@ import { FCU_COMPS } from "../../fcu/fcuData.js";
 import { UH_COMPS } from "../../uh/uhData.js";
 import { PLANT_COMPS, PLANT_TYPES } from "../../plant/plantData.js";
 import { NETWORK_COMPS } from "../../network/networkData.js";
+import { EXHAUST_FAN_COMPS } from "../../exhaustFan/exhaustFanData.js";
+import { getAllEquipmentComponents } from "../../../shared/componentCatalog.js";
 import { calcAssembly } from "../../../shared/assemblyData.js";
+
+const CUSTOM_COMPS = getAllEquipmentComponents();
 
 const COMPS_MAP = {
   vav: VAV_COMPS,
@@ -15,6 +19,8 @@ const COMPS_MAP = {
   fcu: FCU_COMPS,
   uh: UH_COMPS,
   network: NETWORK_COMPS,
+  "exhaust-fan": EXHAUST_FAN_COMPS,
+  custom: CUSTOM_COMPS,
 };
 
 const TYPE_LABELS = {
@@ -25,6 +31,8 @@ const TYPE_LABELS = {
   uh: "UH",
   plant: "PLANT",
   network: "NET",
+  "exhaust-fan": "EF",
+  custom: "CUST",
 };
 
 const fmtMoney = value =>
@@ -50,6 +58,11 @@ const esc = value =>
 function getComponentsForItem(item) {
   if (item.type === "plant" && item.cfg?.plantType) {
     return PLANT_COMPS[item.cfg.plantType] || [];
+  }
+  if (item.type === "custom" && item.cfg?.componentId) {
+    const custom = COMPS_MAP.custom || [];
+    const selected = custom.find(entry => entry.id === item.cfg.componentId);
+    return selected ? [selected] : custom;
   }
   return COMPS_MAP[item.type] || [];
 }
@@ -107,6 +120,11 @@ function getTypeDetail(item) {
   }
   if (item.type === "plant" && item.cfg?.plantType) {
     return PLANT_TYPES.find(type => type.id === item.cfg.plantType)?.label || "";
+  }
+  if (item.type === "custom" && item.cfg?.componentId) {
+    return (COMPS_MAP.custom || []).find(entry => entry.id === item.cfg.componentId)?.name
+      || (COMPS_MAP.custom || []).find(entry => entry.id === item.cfg.componentId)?.label
+      || "";
   }
   return "";
 }

@@ -103,7 +103,7 @@ const SECTION_DEFS = [
   {
     id: "airside",
     label: "Section 1 - Airside Systems",
-    types: new Set(["ahu", "rtu", "vav", "dx", "vrf", "fcu", "uh"]),
+    types: new Set(["ahu", "rtu", "vav", "dx", "vrf", "fcu", "uh", "exhaust-fan"]),
   },
   {
     id: "waterside",
@@ -125,8 +125,10 @@ const TYPE_SCOPE_LABELS = {
   vrf: "VRF Systems",
   fcu: "Fan Coil Units",
   uh: "Unit Heaters",
+  "exhaust-fan": "Exhaust Fan Systems",
   plant: "Central Plant Equipment",
   network: "BAS Network Infrastructure",
+  custom: "Custom HVAC Controls Scope",
 };
 
 function getSectionDef(type) {

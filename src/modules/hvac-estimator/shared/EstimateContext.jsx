@@ -11,8 +11,12 @@ import { FCU_COMPS } from "../components/fcu/fcuData.js";
 import { UH_COMPS } from "../components/uh/uhData.js";
 import { PLANT_COMPS } from "../components/plant/plantData.js";
 import { NETWORK_COMPS } from "../components/network/networkData.js";
+import { EXHAUST_FAN_COMPS } from "../components/exhaustFan/exhaustFanData.js";
+import { getAllEquipmentComponents } from "./componentCatalog.js";
 
 const Ctx = createContext(null);
+
+const CUSTOM_COMPS = getAllEquipmentComponents();
 
 const COMPS_MAP = {
   vav: VAV_COMPS,
@@ -23,6 +27,8 @@ const COMPS_MAP = {
   fcu: FCU_COMPS,
   uh: UH_COMPS,
   network: NETWORK_COMPS,
+  "exhaust-fan": EXHAUST_FAN_COMPS,
+  custom: CUSTOM_COMPS,
 };
 
 function uid() {
@@ -32,6 +38,11 @@ function uid() {
 
 function getComponentsForItem(type, cfg) {
   if (type === "plant" && cfg?.plantType) return PLANT_COMPS[cfg.plantType] || [];
+  if (type === "custom" && cfg?.componentId) {
+    const custom = COMPS_MAP.custom || [];
+    const selected = custom.find(entry => entry.id === cfg.componentId);
+    return selected ? [selected] : custom;
+  }
   return COMPS_MAP[type] || [];
 }
 
@@ -65,7 +76,7 @@ function stamp(estimate, patch = {}) {
   };
 }
 
-export function ProjectHubEstimateProvider({ estimate, onChange, children }) {
+export function ProjectHubEstimateProvider({ estimate, onChange, onAutosave, children }) {
   const [subPage, setSubPage] = useState(null);
   const activeId = estimate?.id || null;
   const editingItem = subPage?.editItemId
@@ -74,6 +85,11 @@ export function ProjectHubEstimateProvider({ estimate, onChange, children }) {
 
   const persist = nextEstimate => {
     onChange(nextEstimate);
+  };
+
+  const autosave = nextEstimate => {
+    if (typeof onAutosave !== "function") return;
+    void onAutosave(nextEstimate);
   };
 
   const addItem = (type, tag, location, cfg, selected, custom, qty, installType) => {
@@ -96,7 +112,9 @@ export function ProjectHubEstimateProvider({ estimate, onChange, children }) {
       pricesLockedAt: updatedAt,
     };
 
-    persist(stamp(estimate, { items: [...(estimate.items || []), item] }));
+    const nextEstimate = stamp(estimate, { items: [...(estimate.items || []), item] });
+    persist(nextEstimate);
+    autosave(nextEstimate);
     setSubPage(null);
     return true;
   };
@@ -106,7 +124,7 @@ export function ProjectHubEstimateProvider({ estimate, onChange, children }) {
 
     const updatedAt = new Date().toISOString();
     const priceSnap = buildPriceSnapshot(type, cfg, selected, installType, loadUnitPrices());
-    persist(stamp(estimate, {
+    const nextEstimate = stamp(estimate, {
       items: (estimate.items || []).map(item =>
         item.id === itemId
           ? {
@@ -124,7 +142,9 @@ export function ProjectHubEstimateProvider({ estimate, onChange, children }) {
             }
           : item,
       ),
-    }));
+    });
+    persist(nextEstimate);
+    autosave(nextEstimate);
     setSubPage(null);
     return true;
   };
@@ -132,7 +152,7 @@ export function ProjectHubEstimateProvider({ estimate, onChange, children }) {
   const refreshItemPrices = (estimateId, itemId) => {
     if (estimateId !== activeId) return false;
     const overrides = loadUnitPrices();
-    persist(stamp(estimate, {
+    const nextEstimate = stamp(estimate, {
       items: (estimate.items || []).map(item => {
         if (item.id !== itemId) return item;
         return {
@@ -141,20 +161,24 @@ export function ProjectHubEstimateProvider({ estimate, onChange, children }) {
           pricesLockedAt: new Date().toISOString(),
         };
       }),
-    }));
+    });
+    persist(nextEstimate);
+    autosave(nextEstimate);
     return true;
   };
 
   const refreshAllPrices = estimateId => {
     if (estimateId !== activeId) return false;
     const overrides = loadUnitPrices();
-    persist(stamp(estimate, {
+    const nextEstimate = stamp(estimate, {
       items: (estimate.items || []).map(item => ({
         ...item,
         priceSnap: buildPriceSnapshot(item.type, item.cfg, item.selected, item.installType, overrides),
         pricesLockedAt: new Date().toISOString(),
       })),
-    }));
+    });
+    persist(nextEstimate);
+    autosave(nextEstimate);
     return true;
   };
 
@@ -162,14 +186,16 @@ export function ProjectHubEstimateProvider({ estimate, onChange, children }) {
     if (estimateId !== activeId) return false;
     const installType = estimate.settings?.defaultInstallType || "EMT";
     const overrides = loadUnitPrices();
-    persist(stamp(estimate, {
+    const nextEstimate = stamp(estimate, {
       items: (estimate.items || []).map(item => ({
         ...item,
         installType,
         priceSnap: buildPriceSnapshot(item.type, item.cfg, item.selected, installType, overrides),
         pricesLockedAt: new Date().toISOString(),
       })),
-    }));
+    });
+    persist(nextEstimate);
+    autosave(nextEstimate);
     return true;
   };
 
