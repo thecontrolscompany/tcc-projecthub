@@ -204,21 +204,41 @@ function buildSections(itemsWithComps = [], grandTotal = 0) {
   }));
 }
 
-function renderPricingTable(sections, grandTotal, totalBond) {
+function normalizeAlternates(estimate) {
+  const source = Array.isArray(estimate?.alternates) ? estimate.alternates : [];
+  return source
+    .map((alternate, index) => {
+      if (!alternate || typeof alternate !== "object") return null;
+
+      const alt = alternate;
+      const label = String(alt.label || alt.name || alt.title || `Alternate ${index + 1}`).trim();
+      const description = String(alt.description || alt.scope || alt.notes || "").trim();
+      const amountValue = Number(alt.amount ?? alt.price ?? alt.value ?? 0);
+
+      if (!label) return null;
+
+      return {
+        label,
+        description,
+        amount: Number.isFinite(amountValue) ? amountValue : 0,
+      };
+    })
+    .filter(Boolean);
+}
+
+function renderPricingTable(sections, grandTotal) {
   const rows = sections.map(section => `
           <tr>
             <td>${esc(section.label)}</td>
             <td class="cell-number">${fmtMoney(section.price)}</td>
-            <td class="cell-number" style="color:var(--muted);">add ${fmtMoney(section.price * BOND_RATE)}</td>
           </tr>`).join("");
 
   return `
       <table>
         <thead>
           <tr>
-            <th style="width:55%;">Description</th>
-            <th class="cell-number" style="width:22%;">Base Price</th>
-            <th class="cell-number" style="width:23%;">Opt. Bond (4%)</th>
+            <th style="width:72%;">Description</th>
+            <th class="cell-number" style="width:28%;">Price</th>
           </tr>
         </thead>
         <tbody>
@@ -226,8 +246,58 @@ ${rows}
           <tr class="row-total">
             <td><strong>TOTAL INSTALLED PRICE</strong></td>
             <td class="cell-number"><strong>${fmtMoney(grandTotal)}</strong></td>
-            <td class="cell-number"><strong>${fmtMoney((grandTotal || 0) + (totalBond || 0))}</strong></td>
           </tr>
+        </tbody>
+      </table>
+`;
+}
+
+function renderBondSummary(grandTotal, totalBond) {
+  return `
+      <div class="callout-bar" style="margin-top:14px;">
+        <div style="display:flex; justify-content:space-between; gap:16px; align-items:flex-start; flex-wrap:wrap;">
+          <div>
+            <strong>Optional performance and payment bond (4%)</strong>
+            <div style="margin-top:4px; color:var(--muted); font-size:12px;">
+              Add ${fmtMoney(totalBond || 0)} if the bond is requested.
+            </div>
+          </div>
+          <div style="font-size:14px; font-weight:700; color:var(--teal);">
+            Total with bond: ${fmtMoney((grandTotal || 0) + (totalBond || 0))}
+          </div>
+        </div>
+      </div>
+`;
+}
+
+function renderAlternateBids(alternates) {
+  if (!alternates.length) return "";
+
+  const rows = alternates.map((alternate) => `
+          <tr>
+            <td>
+              <strong>${esc(alternate.label)}</strong>
+              ${alternate.description ? `<div style="margin-top:4px; color:var(--muted); font-size:12px;">${esc(alternate.description)}</div>` : ""}
+            </td>
+            <td class="cell-number">${fmtMoney(alternate.amount)}</td>
+          </tr>`).join("");
+
+  return `
+      <div class="section" style="margin-top:20px;">
+        <h2>Alternates</h2>
+      </div>
+      <p style="margin:0 0 10px; font-size:13px;">
+        Alternate bids can be added below the base proposal so they stay separate from the main scope and pricing.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:72%;">Alternate Scope</th>
+            <th class="cell-number" style="width:28%;">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+${rows}
         </tbody>
       </table>
 `;
@@ -347,7 +417,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   const totalBond = bondAmount || installedTotal * BOND_RATE;
   const sections = buildSections(itemsWithComps, installedTotal);
   const scopeHtml = renderGeneratedScope(itemsWithComps);
-  const pricingHtml = renderPricingTable(sections, installedTotal, totalBond);
+  const pricingHtml = `${renderPricingTable(sections, installedTotal)}${renderBondSummary(installedTotal, totalBond)}${renderAlternateBids(normalizeAlternates(estimate))}`;
 
   const tokens = {
     PAGE_HEADER_PROJECT: `${projectName} | HVAC Controls Estimate`,

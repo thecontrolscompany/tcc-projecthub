@@ -442,19 +442,11 @@
             <td>{{SECTION_1_LABEL}}</td>
             <td class="cell-number">{{SECTION_1_PRICE}}</td>
           </tr>
-          <tr class="row-bond">
-            <td>Optional performance and payment bond (4%)</td>
-            <td class="cell-number">add {{SECTION_1_BOND}}</td>
-          </tr>
 
           <!-- Add or remove section rows as needed. Example additional section:
           <tr>
             <td>{{SECTION_2_LABEL}}</td>
             <td class="cell-number">{{SECTION_2_PRICE}}</td>
-          </tr>
-          <tr class="row-bond">
-            <td>Optional performance and payment bond (4%)</td>
-            <td class="cell-number">add {{SECTION_2_BOND}}</td>
           </tr>
           -->
 
@@ -462,13 +454,15 @@
             <td><strong>TOTAL INSTALLED PRICE</strong></td>
             <td class="cell-number"><strong>{{GRAND_TOTAL}}</strong></td>
           </tr>
-          <tr class="row-total">
-            <td><strong>TOTAL WITH OPTIONAL BOND</strong></td>
-            <td class="cell-number"><strong>{{GRAND_TOTAL_WITH_BOND}}</strong></td>
-          </tr>
 
         </tbody>
       </table>
+
+      <div class="callout-bar" style="margin-top:14px;">
+        <strong>Optional performance and payment bond (4%)</strong>
+        <div style="margin-top:4px;">Add {{SECTION_1_BOND}} if the bond is requested.</div>
+        <div style="margin-top:6px; font-weight:700; color:var(--teal);">Total with bond: {{GRAND_TOTAL_WITH_BOND}}</div>
+      </div>
 
       <!-- SCOPE OF WORK -->
       <!-- RULES:
