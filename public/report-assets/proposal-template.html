@@ -318,21 +318,21 @@
       gap: 40px;
       font-size: 13px;
       margin-top: 30px;
-      align-items: end;
+      align-items: start;
     }
 
     .sig-block > div {
       display: flex;
       flex-direction: column;
-      min-height: 180px;
+      min-height: 235px;
     }
 
     .sig-image {
       display: block;
-      max-width: 280px;
+      max-width: 260px;
       width: 100%;
       height: auto;
-      margin: 4px 0 20px;
+      margin: 10px 0 16px;
       object-fit: contain;
     }
 
@@ -341,6 +341,12 @@
       margin-top: auto;
       padding-top: 8px;
       color: var(--label);
+    }
+
+    .sig-date {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 12px;
     }
 
     .footer {
@@ -596,11 +602,12 @@
           <p style="margin:0 0 2px;">Timothy J. Collins, MBA</p>
           <p style="margin:0; color:var(--muted); font-size:12px;">President, The Controls Company, LLC</p>
           <img class="sig-image" src="/report-assets/signature-blue.png" alt="Timothy J. Collins signature" />
+          <p class="sig-date">Date: {{ESTIMATE_DATE}}</p>
           <div class="sig-line">Signature &amp; Date</div>
         </div>
         <div>
           <p style="margin:0 0 4px; font-weight:600;">Accepted By</p>
-          <div style="height: 122px;"></div>
+          <div style="flex:1 1 auto;"></div>
           <div class="sig-line">Signature &amp; Date</div>
         </div>
       </div>
