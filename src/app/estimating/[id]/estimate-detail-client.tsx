@@ -8,7 +8,7 @@ import { AddEquipButtons } from "@/modules/hvac-estimator/components/estimate/Ad
 import { EstimateDetail } from "@/modules/hvac-estimator/components/estimate/EstimateDetail";
 import ConduitFillPage from "@/modules/hvac-estimator/components/conduitFill/ConduitFillPage";
 import { ProjectSettingsPanel } from "@/modules/hvac-estimator/components/estimate/ProjectSettingsPanel";
-import { ProposalDetailsPanel } from "@/modules/hvac-estimator/components/estimate/ProposalDetailsPanel";
+import { ProposalDetailsModal } from "@/modules/hvac-estimator/components/estimate/ProposalDetailsModal";
 import { BidAlternateEditor } from "@/modules/hvac-estimator/components/estimate/BidAlternateEditor";
 import { EstimateDocumentsPanel } from "@/modules/hvac-estimator/components/estimate/EstimateDocumentsPanel";
 import { computeCosts, DEFAULT_SETTINGS } from "@/modules/hvac-estimator/components/estimate/projectSettings";
@@ -828,9 +828,12 @@ export function EstimateDetailClient({ estimate }: Props) {
                 onApplyDefaultInstallType={applyDefaultInstallTypeToItems}
               />
             )}
-            {showProposalDetails && (
-              <ProposalDetailsPanel settings={body.settings} onChange={updateSettings} />
-            )}
+            <ProposalDetailsModal
+              open={showProposalDetails}
+              settings={body.settings}
+              onChange={updateSettings}
+              onClose={() => setShowProposalDetails(false)}
+            />
           </section>
 
           <EstimateDocumentsPanel

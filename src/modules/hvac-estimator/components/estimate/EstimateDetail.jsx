@@ -10,7 +10,7 @@ import { getCurrentUser } from "../../shared/currentUser.js";
 import { AHU_TYPES } from "../ahu/ahuData.js";
 import { AddEquipButtons } from "./AddEquipButtons.jsx";
 import { ProjectSettingsPanel } from "./ProjectSettingsPanel.jsx";
-import { ProposalDetailsPanel } from "./ProposalDetailsPanel.jsx";
+import { ProposalDetailsModal } from "./ProposalDetailsModal.jsx";
 import {
   TYPE_META,
   buildItemsWithComps,
@@ -353,8 +353,13 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
           estimateId={estimate.id} onApplyDefaultInstallType={applyDefaultInstallType} />
       )}
 
-      {!customerMode && showProposalDetails && (
-        <ProposalDetailsPanel settings={settings} onChange={updateSettings} />
+      {!customerMode && (
+        <ProposalDetailsModal
+          open={showProposalDetails}
+          settings={settings}
+          onChange={updateSettings}
+          onClose={() => setShowProposalDetails(false)}
+        />
       )}
 
       {/* ── LINE ITEMS TABLE ── */}
