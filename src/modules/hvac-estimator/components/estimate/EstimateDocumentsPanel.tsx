@@ -98,6 +98,91 @@ export function EstimateDocumentsPanel({
     return fallback;
   }
 
+  async function requestUploadSession(file: File) {
+    const res = await fetch(`/api/estimates/${estimateId}/documents`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "prepare",
+        documentRole: selectedRole,
+        fileName: file.name,
+        contentType: file.type || null,
+        notes: batchNote.trim(),
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(await readErrorMessage(res, `Unable to prepare upload for ${file.name}.`));
+    }
+
+    const json = await res.json().catch(() => null);
+    const uploadUrl = typeof json?.uploadUrl === "string" ? json.uploadUrl : "";
+    const storagePath = typeof json?.storagePath === "string" ? json.storagePath : "";
+
+    if (!uploadUrl || !storagePath) {
+      throw new Error("Upload session did not return a valid destination.");
+    }
+
+    return { uploadUrl, storagePath };
+  }
+
+  async function uploadFileDirectly(uploadUrl: string, file: File) {
+    const buffer = await file.arrayBuffer();
+    const chunkSize = 10 * 1024 * 1024;
+    let response: Response | null = null;
+
+    for (let start = 0; start < buffer.byteLength; start += chunkSize) {
+      const end = Math.min(start + chunkSize, buffer.byteLength);
+      const chunk = buffer.slice(start, end);
+      response = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type || "application/octet-stream",
+          "Content-Length": String(chunk.byteLength),
+          "Content-Range": `bytes ${start}-${end - 1}/${buffer.byteLength}`,
+        },
+        body: chunk,
+      });
+
+      if (![200, 201, 202].includes(response.status)) {
+        throw new Error(await readErrorMessage(response, `SharePoint upload failed for ${file.name}.`));
+      }
+    }
+
+    const finalData = response ? await response.json().catch(() => null) : null;
+    return {
+      id: typeof finalData?.id === "string" ? finalData.id : "",
+      webUrl: typeof finalData?.webUrl === "string" ? finalData.webUrl : null,
+    };
+  }
+
+  async function commitUpload(file: File, storagePath: string, storageItemId: string, storageWebUrl: string | null) {
+    const res = await fetch(`/api/estimates/${estimateId}/documents`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "commit",
+        documentRole: selectedRole,
+        fileName: file.name,
+        fileExt: file.name.includes(".") ? `.${file.name.split(".").pop() ?? ""}`.toLowerCase() : null,
+        contentType: file.type || null,
+        fileSizeBytes: file.size,
+        storageItemId,
+        storageWebUrl,
+        storagePath,
+        notes: batchNote.trim(),
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(await readErrorMessage(res, `Unable to save metadata for ${file.name}.`));
+    }
+  }
+
   const sharepointLink = useMemo(
     () => (sharepointFolder ? sharePointUrl(sharepointFolder) : null),
     [sharepointFolder],
@@ -145,19 +230,12 @@ export function EstimateDocumentsPanel({
 
     try {
       for (const file of selectedFiles) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("documentRole", selectedRole);
-        if (batchNote.trim()) formData.append("notes", batchNote.trim());
-
-        const res = await fetch(`/api/estimates/${estimateId}/documents`, {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!res.ok) {
-          throw new Error(await readErrorMessage(res, `Upload failed for ${file.name}.`));
+        const session = await requestUploadSession(file);
+        const uploaded = await uploadFileDirectly(session.uploadUrl, file);
+        if (!uploaded.id) {
+          throw new Error(`SharePoint did not return an item ID for ${file.name}.`);
         }
+        await commitUpload(file, session.storagePath, uploaded.id, uploaded.webUrl);
       }
 
       setMessage(`Uploaded ${selectedFiles.length} file${selectedFiles.length === 1 ? "" : "s"}.`);

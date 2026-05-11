@@ -15,6 +15,19 @@ import {
 } from "@/lib/graph/client";
 
 type EstimateDocumentRole = "supporting_scope" | "customer_upload" | "addendum";
+type EstimateDocumentStorage = {
+  storagePath: string;
+  storageItemId: string;
+  storageWebUrl: string | null;
+};
+type EstimateDocumentBase = {
+  documentRole: EstimateDocumentRole;
+  fileName: string;
+  fileExt: string | null;
+  contentType: string | null;
+  fileSizeBytes: number;
+  notes: string;
+};
 type EstimateAuth = {
   supabase: Awaited<ReturnType<typeof createClient>>;
   user: { id: string };
@@ -107,6 +120,82 @@ async function resolveEstimateRecord(supabase: Awaited<ReturnType<typeof createC
     body: Record<string, unknown>;
     linked_project_id: string | null;
   };
+}
+
+async function createDocumentUploadSession(
+  providerToken: string,
+  estimate: { id: string; number: string | null; name: string; body: Record<string, unknown> },
+  documentRole: EstimateDocumentRole,
+  fileName: string,
+) {
+  const { driveId, folderPath } = await resolveSharePointContext(providerToken, estimate);
+  const destinationFolder = `${folderPath}/${DOCUMENT_ROLE_FOLDERS[documentRole]}`;
+  const encodedPath = encodeGraphPath(destinationFolder, fileName);
+  const sessionRes = await graphFetch(`/drives/${driveId}/root:/${encodedPath}:/createUploadSession`, providerToken, {
+    method: "POST",
+    body: JSON.stringify({
+      item: {
+        "@microsoft.graph.conflictBehavior": "replace",
+        name: fileName,
+      },
+    }),
+  });
+
+  if (!sessionRes.ok) {
+    const message = await sessionRes.text();
+    throw new Error(message || "Unable to create upload session.");
+  }
+
+  const session = await sessionRes.json();
+  const uploadUrl = session?.uploadUrl as string | undefined;
+  if (!uploadUrl) {
+    throw new Error("Upload session did not return an upload URL.");
+  }
+
+  return {
+    uploadUrl,
+    storagePath: `${destinationFolder}/${fileName}`,
+  };
+}
+
+async function saveDocumentMetadata(
+  auth: EstimateAuth,
+  estimate: { id: string; linked_project_id: string | null },
+  base: EstimateDocumentBase,
+  storage: EstimateDocumentStorage,
+) {
+  const { data: inserted, error } = await auth.supabase
+    .from("opportunity_documents")
+    .insert({
+      estimate_id: estimate.id,
+      project_id: estimate.linked_project_id,
+      document_role: base.documentRole,
+      file_name: base.fileName,
+      file_ext: base.fileExt,
+      content_type: base.contentType,
+      file_size_bytes: base.fileSizeBytes,
+      storage_provider: "sharepoint",
+      storage_path: storage.storagePath,
+      storage_item_id: storage.storageItemId,
+      storage_web_url: storage.storageWebUrl,
+      uploaded_by: auth.user.id,
+      archived_for_customer: base.documentRole !== "customer_upload",
+      is_primary_source: base.documentRole !== "addendum",
+      extraction_status: "pending",
+      extraction_version: null,
+      extracted_at: null,
+      extracted_by: null,
+      extraction_notes: base.notes || null,
+      extracted_json: null,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return inserted;
 }
 
 async function ensureSharePointFolderPath(
@@ -301,6 +390,91 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const auth = authResult;
 
   const { id } = await params;
+  const estimate = await resolveEstimateRecord(auth.supabase, id);
+
+  const contentType = request.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    const payload = await request.json().catch(() => null);
+    if (!payload || typeof payload !== "object") {
+      return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+    }
+
+    const action = String((payload as { action?: unknown }).action || "");
+    const documentRole = String((payload as { documentRole?: unknown }).documentRole || "supporting_scope") as EstimateDocumentRole;
+
+    if (!(documentRole in DOCUMENT_ROLE_FOLDERS)) {
+      return NextResponse.json({ error: "Invalid document role." }, { status: 400 });
+    }
+
+    if (action === "prepare") {
+      const fileName = String((payload as { fileName?: unknown }).fileName || "").trim();
+      if (!fileName) {
+        return NextResponse.json({ error: "A file name is required." }, { status: 400 });
+      }
+
+      try {
+        const providerToken = (await auth.supabase.auth.getSession()).data.session?.provider_token;
+        if (!providerToken) {
+          return NextResponse.json({ error: "Microsoft access token not available." }, { status: 401 });
+        }
+
+        const session = await createDocumentUploadSession(providerToken, estimate, documentRole, fileName);
+        return NextResponse.json({
+          uploadUrl: session.uploadUrl,
+          storagePath: session.storagePath,
+        });
+      } catch (error) {
+        return NextResponse.json(
+          { error: error instanceof Error ? error.message : "Unable to prepare document upload." },
+          { status: 500 },
+        );
+      }
+    }
+
+    if (action === "commit") {
+      const fileName = String((payload as { fileName?: unknown }).fileName || "").trim();
+      const storageItemId = String((payload as { storageItemId?: unknown }).storageItemId || "").trim();
+      const storageWebUrl = String((payload as { storageWebUrl?: unknown }).storageWebUrl || "").trim() || null;
+      const storagePath = String((payload as { storagePath?: unknown }).storagePath || "").trim();
+      const fileExt = (payload as { fileExt?: unknown }).fileExt;
+      const contentTypeValue = String((payload as { contentType?: unknown }).contentType || "").trim() || null;
+      const fileSizeBytes = Number((payload as { fileSizeBytes?: unknown }).fileSizeBytes);
+      const notes = String((payload as { notes?: unknown }).notes || "").trim();
+
+      if (!fileName || !storageItemId || !storagePath || !Number.isFinite(fileSizeBytes)) {
+        return NextResponse.json({ error: "Missing upload metadata." }, { status: 400 });
+      }
+
+      try {
+        const inserted = await saveDocumentMetadata(
+          auth,
+          estimate,
+          {
+            documentRole,
+            fileName,
+            fileExt: typeof fileExt === "string" ? fileExt : null,
+            contentType: contentTypeValue,
+            fileSizeBytes,
+            notes,
+          },
+          {
+            storagePath,
+            storageItemId,
+            storageWebUrl,
+          }
+        );
+
+        return NextResponse.json({ document: inserted }, { status: 201 });
+      } catch (error) {
+        return NextResponse.json(
+          { error: error instanceof Error ? error.message : "Unable to save document metadata." },
+          { status: 500 },
+        );
+      }
+    }
+
+    return NextResponse.json({ error: "Unsupported document action." }, { status: 400 });
+  }
 
   const formData = await request.formData().catch(() => null);
   if (!formData) {
@@ -320,7 +494,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   try {
-    const estimate = await resolveEstimateRecord(auth.supabase, id);
     const providerToken = (await auth.supabase.auth.getSession()).data.session?.provider_token;
     if (!providerToken) {
       return NextResponse.json({ error: "Microsoft access token not available." }, { status: 401 });
@@ -332,37 +505,26 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const ext = file.name.includes(".") ? `.${file.name.split(".").pop() ?? ""}`.toLowerCase() : null;
 
     const upload = await uploadFile(providerToken, driveId, destinationFolder, file.name, fileBuffer, file.type || null);
-
-    const { data: inserted, error } = await auth.supabase
-      .from("opportunity_documents")
-      .insert({
-        estimate_id: estimate.id,
-        project_id: estimate.linked_project_id,
-        document_role: documentRole,
-        file_name: file.name,
-        file_ext: ext,
-        content_type: file.type || null,
-        file_size_bytes: file.size,
-        storage_provider: "sharepoint",
-        storage_path: `${destinationFolder}/${file.name}`,
-        storage_item_id: upload.id,
-        storage_web_url: upload.webUrl,
-        uploaded_by: auth.user.id,
-        archived_for_customer: documentRole !== "customer_upload",
-        is_primary_source: documentRole !== "addendum",
-        extraction_status: "pending",
-        extraction_version: null,
-        extracted_at: null,
-        extracted_by: null,
-        extraction_notes: notes || null,
-        extracted_json: null,
-      })
-      .select("*")
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!upload.id) {
+      return NextResponse.json({ error: "SharePoint upload did not return an item ID." }, { status: 500 });
     }
+    const inserted = await saveDocumentMetadata(
+      auth,
+      estimate,
+      {
+        documentRole,
+        fileName: file.name,
+        fileExt: ext,
+        contentType: file.type || null,
+        fileSizeBytes: file.size,
+        notes,
+      },
+      {
+        storagePath: `${destinationFolder}/${file.name}`,
+        storageItemId: upload.id,
+        storageWebUrl: upload.webUrl,
+      }
+    );
 
     return NextResponse.json({ document: inserted }, { status: 201 });
   } catch (error) {
