@@ -31,6 +31,13 @@ export function ProposalDetailsModal({
 
   if (!open) return null;
 
+  const tabButtonStyle = (isActive) => ({
+    backgroundColor: isActive ? "#1f3c5a" : "#ffffff",
+    color: isActive ? "#ffffff" : "#334155",
+    border: `1px solid ${isActive ? "#1f3c5a" : "#cbd5e1"}`,
+    boxShadow: isActive ? "0 10px 24px rgba(31, 60, 90, 0.22)" : "none",
+  });
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-8"
@@ -63,22 +70,16 @@ export function ProposalDetailsModal({
             <button
               type="button"
               onClick={() => setActiveTab("details")}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                activeTab === "details"
-                  ? "bg-[#1f3c5a] text-white shadow"
-                  : "bg-white text-slate-700 hover:bg-slate-100"
-              }`}
+              style={tabButtonStyle(activeTab === "details")}
+              className="rounded-full px-4 py-2 text-sm font-semibold transition hover:bg-slate-50"
             >
               Details
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("documents")}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                activeTab === "documents"
-                  ? "bg-[#1f3c5a] text-white shadow"
-                  : "bg-white text-slate-700 hover:bg-slate-100"
-              }`}
+              style={tabButtonStyle(activeTab === "documents")}
+              className="rounded-full px-4 py-2 text-sm font-semibold transition hover:bg-slate-50"
             >
               Documents
             </button>

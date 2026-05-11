@@ -40,6 +40,8 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     const stored = estimate.settings || {};
     return { ...DEFAULT_SETTINGS, ...stored };
   }, [estimate.settings]);
+  const drawingBasis = settings.drawingBasis || settings.proposalBasis || settings.bidBasis || "";
+  const sharepointFolder = estimate.sharepointFolder || estimate.sharepoint_folder || estimate.body?.sharepointFolder || estimate.body?.sharepoint_folder || null;
   const alternates = useMemo(() => Array.isArray(estimate.alternates) ? estimate.alternates : [], [estimate.alternates]);
   const updateSettings = useCallback((patch) => {
     onUpdate({ ...estimate, updatedAt: new Date().toISOString(),
@@ -359,6 +361,10 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
           settings={settings}
           onChange={updateSettings}
           onClose={() => setShowProposalDetails(false)}
+          estimateId={estimate.id}
+          sharepointFolder={sharepointFolder}
+          drawingBasis={drawingBasis}
+          onChangeDrawingBasis={(value) => updateSettings({ drawingBasis: value })}
         />
       )}
 
