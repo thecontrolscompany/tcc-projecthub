@@ -56,6 +56,12 @@ async function provisionEstimateFolder(
   const folderName = buildEstimateFolderName(estimate, estimate.id);
   const folderPath = `Bids/${folderName}`;
 
+  try {
+    await getSharePointFolderIdByPath(providerToken, driveId, "Bids");
+  } catch {
+    await createSharePointFolder(providerToken, driveId, "", "Bids");
+  }
+
   let folderItemId = "";
   try {
     folderItemId = await createSharePointFolder(providerToken, driveId, "Bids", folderName);
