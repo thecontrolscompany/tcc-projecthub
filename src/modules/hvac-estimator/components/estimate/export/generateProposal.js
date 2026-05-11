@@ -181,6 +181,9 @@ function buildSections(itemsWithComps = [], grandTotal = 0) {
   }
 
   const result = Array.from(sections.values());
+  if (result.length === 1 && result[0].id === "misc") {
+    result[0] = { ...result[0], label: "Scope" };
+  }
   const totalWeight = result.reduce((sum, section) => sum + section.weight, 0);
 
   if (result.length === 0) {
@@ -226,7 +229,7 @@ function normalizeAlternates(estimate) {
     .filter(Boolean);
 }
 
-function renderPricingTable(sections, grandTotal) {
+function renderPricingTable(sections, grandTotal, totalBond) {
   const rows = sections.map(section => `
           <tr>
             <td>${esc(section.label)}</td>
@@ -243,30 +246,16 @@ function renderPricingTable(sections, grandTotal) {
         </thead>
         <tbody>
 ${rows}
+          <tr class="row-bond">
+            <td><strong>Optional performance and payment bond (4%)</strong></td>
+            <td class="cell-number">add ${fmtMoney(totalBond || 0)}</td>
+          </tr>
           <tr class="row-total">
             <td><strong>TOTAL INSTALLED PRICE</strong></td>
             <td class="cell-number"><strong>${fmtMoney(grandTotal)}</strong></td>
           </tr>
         </tbody>
       </table>
-`;
-}
-
-function renderBondSummary(grandTotal, totalBond) {
-  return `
-      <div class="callout-bar" style="margin-top:14px;">
-        <div style="display:flex; justify-content:space-between; gap:16px; align-items:flex-start; flex-wrap:wrap;">
-          <div>
-            <strong>Optional performance and payment bond (4%)</strong>
-            <div style="margin-top:4px; color:var(--muted); font-size:12px;">
-              Add ${fmtMoney(totalBond || 0)} if the bond is requested.
-            </div>
-          </div>
-          <div style="font-size:14px; font-weight:700; color:var(--teal);">
-            Total with bond: ${fmtMoney((grandTotal || 0) + (totalBond || 0))}
-          </div>
-        </div>
-      </div>
 `;
 }
 
@@ -417,7 +406,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   const totalBond = bondAmount || installedTotal * BOND_RATE;
   const sections = buildSections(itemsWithComps, installedTotal);
   const scopeHtml = renderGeneratedScope(itemsWithComps);
-  const pricingHtml = `${renderPricingTable(sections, installedTotal)}${renderBondSummary(installedTotal, totalBond)}${renderAlternateBids(normalizeAlternates(estimate))}`;
+  const pricingHtml = `${renderPricingTable(sections, installedTotal, totalBond)}${renderAlternateBids(normalizeAlternates(estimate))}`;
 
   const tokens = {
     PAGE_HEADER_PROJECT: `${projectName} | HVAC Controls Estimate`,
