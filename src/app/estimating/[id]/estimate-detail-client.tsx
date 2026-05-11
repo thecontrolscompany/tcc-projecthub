@@ -200,6 +200,25 @@ function readLocalDraft(estimateId: string): LocalDraft | null {
   }
 }
 
+function mergeRecoveredBodies(serverBody: EstimateBody, draftBody: EstimateBody): EstimateBody {
+  return {
+    ...serverBody,
+    ...draftBody,
+    settings: {
+      ...serverBody.settings,
+      ...(draftBody.settings ?? {}),
+    },
+    sharepointFolder:
+      typeof draftBody.sharepointFolder === "string" && draftBody.sharepointFolder
+        ? draftBody.sharepointFolder
+        : serverBody.sharepointFolder,
+    sharepointItemId:
+      typeof draftBody.sharepointItemId === "string" && draftBody.sharepointItemId
+        ? draftBody.sharepointItemId
+        : serverBody.sharepointItemId,
+  };
+}
+
 function writeLocalDraft(estimateId: string, body: EstimateBody, status: EstimateStatus) {
   if (typeof window === "undefined") return;
   try {
@@ -231,7 +250,7 @@ function getInitialEstimateState(estimate: EstimateRecord): { body: EstimateBody
     return { body: serverBody, status: serverStatus, recovered: false };
   }
 
-  return { body: draft.body, status: draft.status, recovered: true };
+  return { body: mergeRecoveredBodies(serverBody, draft.body), status: draft.status, recovered: true };
 }
 
 function getTypeMeta(type: string) {
