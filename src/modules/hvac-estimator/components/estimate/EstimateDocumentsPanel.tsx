@@ -21,6 +21,7 @@ type Props = {
   sharepointFolder?: string | null;
   drawingBasis: string;
   onChangeDrawingBasis: (value: string) => void;
+  embedded?: boolean;
 };
 
 const ROLE_OPTIONS: Array<{ value: EstimateDocument["document_role"]; label: string; folder: string }> = [
@@ -56,7 +57,13 @@ function formatDate(value: string) {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-export function EstimateDocumentsPanel({ estimateId, sharepointFolder, drawingBasis, onChangeDrawingBasis }: Props) {
+export function EstimateDocumentsPanel({
+  estimateId,
+  sharepointFolder,
+  drawingBasis,
+  onChangeDrawingBasis,
+  embedded = false,
+}: Props) {
   const [documents, setDocuments] = useState<EstimateDocument[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -145,8 +152,8 @@ export function EstimateDocumentsPanel({ estimateId, sharepointFolder, drawingBa
     }
   }
 
-  return (
-    <section className="overflow-hidden rounded-2xl border border-border-default bg-surface-raised">
+  const body = (
+    <>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-default px-5 py-4">
         <div>
           <h2 className="text-lg font-semibold text-text-primary">Documents & References</h2>
@@ -191,7 +198,7 @@ export function EstimateDocumentsPanel({ estimateId, sharepointFolder, drawingBa
               <span className="mb-1 block text-xs font-medium text-text-secondary">File type</span>
               <select
                 value={selectedRole}
-                onChange={(event) => setSelectedRole(event.target.value as EstimateDocument["document_role"])}
+                onChange={(event) => setSelectedRole(event.target.value as EstimateDocument["document_role"]) }
                 className="w-full rounded-xl border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
               >
                 {ROLE_OPTIONS.map((option) => (
@@ -293,6 +300,12 @@ export function EstimateDocumentsPanel({ estimateId, sharepointFolder, drawingBa
           </div>
         )}
       </div>
-    </section>
+    </>
   );
+
+  if (embedded) {
+    return <div className="space-y-4">{body}</div>;
+  }
+
+  return <section className="overflow-hidden rounded-2xl border border-border-default bg-surface-raised">{body}</section>;
 }

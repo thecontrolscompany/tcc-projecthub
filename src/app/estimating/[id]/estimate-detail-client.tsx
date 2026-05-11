@@ -10,7 +10,6 @@ import ConduitFillPage from "@/modules/hvac-estimator/components/conduitFill/Con
 import { ProjectSettingsPanel } from "@/modules/hvac-estimator/components/estimate/ProjectSettingsPanel";
 import { ProposalDetailsModal } from "@/modules/hvac-estimator/components/estimate/ProposalDetailsModal";
 import { BidAlternateEditor } from "@/modules/hvac-estimator/components/estimate/BidAlternateEditor";
-import { EstimateDocumentsPanel } from "@/modules/hvac-estimator/components/estimate/EstimateDocumentsPanel";
 import { computeCosts, DEFAULT_SETTINGS } from "@/modules/hvac-estimator/components/estimate/projectSettings";
 import AHUSchematic from "@/modules/hvac-estimator/components/ahu/AHUSchematic";
 import DXSchematic from "@/modules/hvac-estimator/components/dx/DXSchematic";
@@ -835,15 +834,12 @@ export function EstimateDetailClient({ estimate }: Props) {
               settings={body.settings}
               onChange={updateSettings}
               onClose={() => setShowProposalDetails(false)}
+              estimateId={estimate.id}
+              sharepointFolder={body.sharepointFolder}
+              drawingBasis={asString(body.settings.drawingBasis)}
+              onChangeDrawingBasis={(value: string) => updateSettings({ drawingBasis: value })}
             />
           </section>
-
-          <EstimateDocumentsPanel
-            estimateId={estimate.id}
-            sharepointFolder={body.sharepointFolder}
-            drawingBasis={asString(body.settings.drawingBasis)}
-            onChangeDrawingBasis={(value) => updateSettings({ drawingBasis: value })}
-          />
 
           <section className="rounded-2xl border border-border-default bg-surface-raised p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
