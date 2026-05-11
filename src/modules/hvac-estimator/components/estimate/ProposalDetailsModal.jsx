@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { T } from "../../shared/tokens.js";
 import { EstimateDocumentsPanel } from "./EstimateDocumentsPanel.tsx";
 import { ProposalDetailsPanel } from "./ProposalDetailsPanel.jsx";
 
@@ -45,10 +44,10 @@ export function ProposalDetailsModal({
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                {T("Proposal Details")}
+                Proposal Details
               </div>
               <div className="mt-1 text-lg font-semibold text-slate-900">
-                {T("Edit proposal information and supporting documents")}
+                Edit proposal information and supporting documents
               </div>
             </div>
             <button
