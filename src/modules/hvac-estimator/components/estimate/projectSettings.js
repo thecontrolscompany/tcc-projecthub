@@ -16,6 +16,7 @@ export const DEFAULT_SETTINGS = {
   bondPct:         4,      // % of (labor + material + overhead + profit)
   defaultInstallType: "EMT",
   proposalScopeMode: "brief",
+  baseScopeName:    "Scope",
 
   // ── Project info ────────────────────────────────────────────────────────────
   address:        "",

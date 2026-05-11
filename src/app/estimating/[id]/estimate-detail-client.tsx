@@ -8,6 +8,7 @@ import { AddEquipButtons } from "@/modules/hvac-estimator/components/estimate/Ad
 import { EstimateDetail } from "@/modules/hvac-estimator/components/estimate/EstimateDetail";
 import ConduitFillPage from "@/modules/hvac-estimator/components/conduitFill/ConduitFillPage";
 import { ProjectSettingsPanel } from "@/modules/hvac-estimator/components/estimate/ProjectSettingsPanel";
+import { BidAlternateEditor } from "@/modules/hvac-estimator/components/estimate/BidAlternateEditor";
 import { EstimateDocumentsPanel } from "@/modules/hvac-estimator/components/estimate/EstimateDocumentsPanel";
 import { computeCosts, DEFAULT_SETTINGS } from "@/modules/hvac-estimator/components/estimate/projectSettings";
 import AHUSchematic from "@/modules/hvac-estimator/components/ahu/AHUSchematic";
@@ -54,6 +55,7 @@ type EstimateItem = {
 
 type EstimateBody = Omit<HvacEstimateBody, "items"> & {
   items: EstimateItem[];
+  alternates?: Array<Record<string, unknown>>;
   platformContext?: Record<string, unknown> | null;
   sharepointFolder?: string | null;
   sharepointItemId?: string | null;
@@ -346,6 +348,7 @@ function normalizeBody(record: EstimateRecord): EstimateBody {
     version: asString(body.version) || "1.0",
     notes: asString(body.notes),
     settings: { ...DEFAULT_SETTINGS, ...(body.settings ?? {}) },
+    alternates: Array.isArray(body.alternates) ? body.alternates : [],
     createdAt: asString(body.createdAt) || record.created_at,
     updatedAt: asString(body.updatedAt) || record.updated_at,
     createdBy: body.createdBy ?? null,
@@ -1256,7 +1259,7 @@ function LegacyEstimatorWorkspace({
   onBack: () => void;
 }) {
   const { subPage, setSubPage } = useEstimate() as unknown as {
-    subPage?: { type?: string } | null;
+    subPage?: { type?: string; alternateId?: string } | null;
     setSubPage: (value: Record<string, unknown> | null) => void;
   };
   const [showConduitFill, setShowConduitFill] = useState(false);
@@ -1348,6 +1351,8 @@ function LegacyEstimatorWorkspace({
         return <PlantSchematic />;
       case "network":
         return <NetworkSchematic />;
+      case "alternate":
+        return <BidAlternateEditor estimate={estimate} onBack={() => setSubPage(null)} onUpdate={onUpdate} alternateId={subPage.alternateId} />;
       default:
         return <EstimateDetail estimate={estimate} onBack={onBack} onUpdate={onUpdate} />;
     }

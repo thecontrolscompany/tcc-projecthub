@@ -5,7 +5,8 @@
  * C:\Users\TimothyCollins\dev\tcc-templates\proposal-template.html
  */
 
-import { calcItem } from "../estimateCalc.js";
+import { buildItemsWithComps, calcEstimate, calcItem } from "../estimateCalc.js";
+import { computeCosts } from "../projectSettings.js";
 
 const TEMPLATE_PATH = "/report-assets/proposal-template.html";
 const LOGO_PATH = "/report-assets/logo.png";
@@ -217,6 +218,7 @@ function normalizeAlternates(estimate) {
       const label = String(alt.label || alt.name || alt.title || `Alternate ${index + 1}`).trim();
       const description = String(alt.description || alt.scope || alt.notes || "").trim();
       const amountValue = Number(alt.amount ?? alt.price ?? alt.value ?? 0);
+      const items = Array.isArray(alt.items) ? alt.items : [];
 
       if (!label) return null;
 
@@ -224,18 +226,13 @@ function normalizeAlternates(estimate) {
         label,
         description,
         amount: Number.isFinite(amountValue) ? amountValue : 0,
+        items,
       };
     })
     .filter(Boolean);
 }
 
-function renderPricingTable(sections, grandTotal, totalBond) {
-  const rows = sections.map(section => `
-          <tr>
-            <td>${esc(section.label)}</td>
-            <td class="cell-number">${fmtMoney(section.price)}</td>
-          </tr>`).join("");
-
+function renderPricingTable(baseScopeName, grandTotal, totalBond) {
   return `
       <table>
         <thead>
@@ -245,7 +242,10 @@ function renderPricingTable(sections, grandTotal, totalBond) {
           </tr>
         </thead>
         <tbody>
-${rows}
+          <tr>
+            <td>${esc(baseScopeName)}</td>
+            <td class="cell-number">${fmtMoney(grandTotal)}</td>
+          </tr>
           <tr class="row-bond">
             <td><strong>Optional performance and payment bond (4%)</strong></td>
             <td class="cell-number">add ${fmtMoney(totalBond || 0)}</td>
@@ -259,36 +259,42 @@ ${rows}
 `;
 }
 
-function renderAlternateBids(alternates) {
+function renderAlternateBids(alternates, scopeMode, settings) {
   if (!alternates.length) return "";
 
-  const rows = alternates.map((alternate) => `
-          <tr>
-            <td>
-              <strong>${esc(alternate.label)}</strong>
-              ${alternate.description ? `<div style="margin-top:4px; color:var(--muted); font-size:12px;">${esc(alternate.description)}</div>` : ""}
-            </td>
-            <td class="cell-number">${fmtMoney(alternate.amount)}</td>
-          </tr>`).join("");
+  const blocks = alternates.map((alternate) => {
+    const alternateEstimate = {
+      items: alternate.items || [],
+      settings,
+    };
+    const raw = calcEstimate(alternateEstimate);
+    const computedTotal = computeCosts(raw.mtl, raw.lbrHrs, settings, alternateEstimate.items || []).total || 0;
+    const displayTotal = computedTotal || alternate.amount || 0;
+    const alternateScope = alternate.items?.length
+      ? renderGeneratedScope(buildItemsWithComps(alternateEstimate), scopeMode)
+      : "";
+
+    return `
+      <div class="callout" style="margin-top:12px;">
+        <div style="display:flex; justify-content:space-between; gap:16px; align-items:flex-start;">
+          <div>
+            <div style="font-weight:700;">${esc(alternate.label)}</div>
+            ${alternate.description ? `<div style="margin-top:4px; color:var(--muted); font-size:12px;">${esc(alternate.description)}</div>` : ""}
+          </div>
+          <div class="cell-number" style="font-weight:700;">${fmtMoney(displayTotal)}</div>
+        </div>
+        ${alternateScope ? `<div style="margin-top:10px;">${alternateScope}</div>` : ""}
+      </div>`;
+  }).join("");
 
   return `
       <div class="section" style="margin-top:20px;">
         <h2>Alternates</h2>
       </div>
       <p style="margin:0 0 10px; font-size:13px;">
-        Alternate bids can be added below the base proposal so they stay separate from the main scope and pricing.
+        Alternate bids stay separate from the base proposal so adders, deducts, or other options can be reviewed independently.
       </p>
-      <table>
-        <thead>
-          <tr>
-            <th style="width:72%;">Alternate Scope</th>
-            <th class="cell-number" style="width:28%;">Price</th>
-          </tr>
-        </thead>
-        <tbody>
-${rows}
-        </tbody>
-      </table>
+${blocks}
 `;
 }
 
@@ -401,10 +407,10 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   const versionSuffix = getVersionSuffix(estimate);
   const installedTotal = grandTotal || 0;
   const totalBond = bondAmount || installedTotal * BOND_RATE;
-  const sections = buildSections(itemsWithComps, installedTotal);
   const scopeMode = settings.proposalScopeMode === "detailed" ? "detailed" : "brief";
+  const baseScopeName = String(settings.baseScopeName || "Scope").trim() || "Scope";
   const scopeHtml = renderGeneratedScope(itemsWithComps, scopeMode);
-  const pricingHtml = `${renderPricingTable(sections, installedTotal, totalBond)}${renderAlternateBids(normalizeAlternates(estimate))}`;
+  const pricingHtml = `${renderPricingTable(baseScopeName, installedTotal, totalBond)}${renderAlternateBids(normalizeAlternates(estimate), scopeMode, settings)}`;
 
   const tokens = {
     PAGE_HEADER_PROJECT: `${projectName} | HVAC Controls Estimate`,
@@ -415,7 +421,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
     DRAWING_BASIS: getDrawingBasis(settings),
     ESTIMATE_DATE: formatEstimateDate(settings.estimateDate),
     SCOPE_INTRO: getScopeIntro(estimate),
-    SECTION_1_LABEL: sections[0]?.label || "Base Bid - HVAC Controls Installation",
+    SECTION_1_LABEL: baseScopeName,
     SECTION_1_PRICE: fmtMoney(installedTotal),
     SECTION_1_BOND: fmtMoney(totalBond),
     GRAND_TOTAL: fmtMoney(installedTotal),

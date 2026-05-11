@@ -277,6 +277,7 @@ export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, ite
             { value:"brief", label:"Brief" },
             { value:"detailed", label:"Detailed" },
           ], "Brief shows tags and quantities only. Detailed includes the selected components for each system.")}
+          {textField("baseScopeName", "Base Scope Name", "Scope") }
           {textField("customerContact", "Customer Contact", "Attn line for proposal")}
           {dateField("estimateDate", "Estimate Date")}
         </>)}

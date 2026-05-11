@@ -18,7 +18,7 @@ import {
   fmtAuditDate,
   getItemDetails,
 } from "./estimateCalc.js";
-export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = false }) {
+export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = false, showProjectSettings = true, showBidAlternates = true }) {
   const { setSubPage, applyDefaultInstallType } = useEstimate();
   const isMobile = useIsMobile();
   const [editHeader, setEditHeader] = useState(false);
@@ -38,6 +38,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     const stored = estimate.settings || {};
     return { ...DEFAULT_SETTINGS, ...stored };
   }, [estimate.settings]);
+  const alternates = useMemo(() => Array.isArray(estimate.alternates) ? estimate.alternates : [], [estimate.alternates]);
   const updateSettings = useCallback((patch) => {
     onUpdate({ ...estimate, updatedAt: new Date().toISOString(),
       settings: { ...settings, ...patch } });
@@ -71,6 +72,44 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
       items,
     });
   };
+
+  const updateAlternates = useCallback((nextAlternates) => {
+    onUpdate({
+      ...estimate,
+      updatedAt: new Date().toISOString(),
+      alternates: nextAlternates,
+    });
+  }, [estimate, onUpdate]);
+
+  const createBidAlternate = useCallback(() => {
+    const defaultName = `Bid Alternate ${alternates.length + 1}`;
+    const entered = window.prompt("Name this bid alternate", defaultName);
+    const name = String(entered || "").trim();
+    if (!name) return;
+
+    const next = {
+      id: crypto.randomUUID(),
+      name,
+      items: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    updateAlternates([...alternates, next]);
+    setSubPage({ type: "alternate", alternateId: next.id });
+  }, [alternates, setSubPage, updateAlternates]);
+
+  const openBidAlternate = useCallback((alternateId) => {
+    setSubPage({ type: "alternate", alternateId });
+  }, [setSubPage]);
+
+  const removeBidAlternate = useCallback((alternateId) => {
+    const next = alternates.filter((alternate) => alternate.id !== alternateId);
+    updateAlternates(next);
+    if (subPage?.type === "alternate" && subPage.alternateId === alternateId) {
+      setSubPage(null);
+    }
+  }, [alternates, setSubPage, subPage, updateAlternates]);
 
   const [exporting, setExporting] = useState(false);
   const exportProposal = useCallback(async () => {
@@ -191,6 +230,16 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                   onAdd={type => setSubPage({type})}
                 />
                 <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
+                  {showBidAlternates && (
+                    <button onClick={createBidAlternate}
+                      title="Create a new bid alternate"
+                      style={{ padding:"7px 10px", border:"1px solid "+T.green,
+                        borderRadius:5, background:T.greenFaint || "#F0FDF4",
+                        color:T.green, cursor:"pointer", fontSize:12,
+                        fontFamily:T.mono, fontWeight:600 }}>
+                      + Bid Alternate
+                    </button>
+                  )}
                   <button onClick={()=>setSubPage({ type:"wizard" })}
                     title="Open system selection wizard"
                     style={{ padding:"7px 10px", border:"1px solid "+T.border2,
@@ -199,14 +248,16 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                       fontFamily:T.mono, fontWeight:600 }}>
                     System Wizard
                   </button>
-                  <button onClick={()=>setShowSettings(s=>!s)}
-                    title="Project settings"
-                    style={{ padding:"7px 10px", border:"1px solid "+(showSettings?T.blue:T.border2),
-                      borderRadius:5, background:showSettings?T.blueFaint:"none",
-                      color:showSettings?T.blue:T.muted, cursor:"pointer", fontSize:12,
-                      fontFamily:T.mono, fontWeight:600 }}>
-                    Settings
-                  </button>
+                  {showProjectSettings && (
+                    <button onClick={()=>setShowSettings(s=>!s)}
+                      title="Project settings"
+                      style={{ padding:"7px 10px", border:"1px solid "+(showSettings?T.blue:T.border2),
+                        borderRadius:5, background:showSettings?T.blueFaint:"none",
+                        color:showSettings?T.blue:T.muted, cursor:"pointer", fontSize:12,
+                        fontFamily:T.mono, fontWeight:600 }}>
+                      Settings
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -242,8 +293,58 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
         )}
       </div>
 
+      {!customerMode && showBidAlternates && (
+        <div style={{ padding:"0 24px 18px" }}>
+          <div style={{ border:"1px solid "+T.border, borderRadius:10, background:T.surface, overflow:"hidden" }}>
+            <div style={{ padding:"10px 14px", borderBottom:"1px solid "+T.border, display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap" }}>
+              <div>
+                <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Bid Alternates</div>
+                <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>Add deducts, adder packages, or separate options without mixing them into the base bid.</div>
+              </div>
+              <button onClick={createBidAlternate}
+                style={{ padding:"7px 10px", border:"1px solid "+T.green,
+                  borderRadius:5, background:T.greenFaint || "#F0FDF4",
+                  color:T.green, cursor:"pointer", fontSize:12,
+                  fontFamily:T.mono, fontWeight:600 }}>
+                + Bid Alternate
+              </button>
+            </div>
+            <div style={{ padding:"12px 14px", display:"grid", gap:10 }}>
+              {alternates.length ? alternates.map((alternate) => (
+                <div key={alternate.id} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap", padding:"10px 12px", border:"1px solid "+T.border, borderRadius:8, background:T.panel }}>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.text }}>{alternate.name || "Bid Alternate"}</div>
+                    <div style={{ fontSize:11, color:T.dim, fontFamily:T.mono, marginTop:3 }}>
+                      {(alternate.items?.length || 0)} item{(alternate.items?.length || 0) === 1 ? "" : "s"}
+                    </div>
+                  </div>
+                  <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                    <button onClick={() => openBidAlternate(alternate.id)}
+                      style={{ padding:"6px 10px", border:"1px solid "+T.blueMid,
+                        borderRadius:5, background:T.blueFaint, color:T.blue,
+                        cursor:"pointer", fontSize:12, fontFamily:T.mono, fontWeight:600 }}>
+                      Edit
+                    </button>
+                    <button onClick={() => removeBidAlternate(alternate.id)}
+                      style={{ padding:"6px 10px", border:"1px solid "+T.border2,
+                        borderRadius:5, background:"none", color:T.muted,
+                        cursor:"pointer", fontSize:12, fontFamily:T.mono, fontWeight:600 }}>
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              )) : (
+                <div style={{ fontSize:12, color:T.muted }}>
+                  No bid alternates yet. Use <strong>+ Bid Alternate</strong> to start one.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── PROJECT SETTINGS PANEL ── */}
-      {!customerMode && showSettings && (
+      {!customerMode && showProjectSettings && showSettings && (
         <ProjectSettingsPanel settings={settings} onChange={updateSettings}
           costs={costs} rawLbrHrs={totals.lbrHrs} itemCount={estimate.items?.length || 0}
           estimateId={estimate.id} onApplyDefaultInstallType={applyDefaultInstallType} />

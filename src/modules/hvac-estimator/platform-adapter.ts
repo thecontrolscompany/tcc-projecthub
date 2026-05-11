@@ -16,6 +16,7 @@ export type HvacEstimateBody = {
   version: string;
   notes: string;
   settings: Record<string, unknown>;
+  alternates?: Array<Record<string, unknown>>;
   sharepointFolder?: string | null;
   sharepointItemId?: string | null;
   createdAt: string;
@@ -61,6 +62,7 @@ export function buildHvacEstimateBody(input: HvacEstimateCreateInput): HvacEstim
     version: "1.0",
     notes: input.notes ?? "",
     settings: { ...DEFAULT_SETTINGS },
+    alternates: [],
     createdAt: now,
     updatedAt: now,
     createdBy: user,
