@@ -22,6 +22,9 @@ export const DEFAULT_SETTINGS = {
   state:          "",
   zip:            "",
   team:           "pensacola",    // pensacola | panama-city
+  customerContact: "",
+  drawingBasis:   "",
+  estimateDate:   "",
 
   // ── Mileage ─────────────────────────────────────────────────────────────────
   milesOneWay:    50,

@@ -88,6 +88,33 @@ export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, ite
     </label>
   );
 
+  const textField = (key, label, placeholder="") => (
+    <label style={{ display:"flex", flexDirection:"column", gap:2 }}>
+      <span style={{ fontSize:9, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1 }}>{label}</span>
+      <input
+        type="text"
+        value={S[key] || ""}
+        placeholder={placeholder}
+        onChange={e => onChange({ [key]: e.target.value })}
+        style={{ padding:"5px 8px", border:"1px solid "+T.border2, borderRadius:4,
+          fontSize:12, background:T.bg, color:T.text, outline:"none" }}
+      />
+    </label>
+  );
+
+  const dateField = (key, label) => (
+    <label style={{ display:"flex", flexDirection:"column", gap:2 }}>
+      <span style={{ fontSize:9, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1 }}>{label}</span>
+      <input
+        type="date"
+        value={S[key] || ""}
+        onChange={e => onChange({ [key]: e.target.value })}
+        style={{ padding:"5px 8px", border:"1px solid "+T.border2, borderRadius:4,
+          fontSize:12, background:T.bg, color:T.text, outline:"none", fontFamily:T.mono }}
+      />
+    </label>
+  );
+
   const section = (title, color, children) => (
     <div style={{ background:T.surface, border:"1px solid "+T.border, borderRadius:8,
       overflow:"hidden", flex:"1 1 280px", minWidth:260 }}>
@@ -222,6 +249,16 @@ export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, ite
               · {fmtHr(rawLbrHrs)} ÷ 20 hrs/trip = {Math.max(1,Math.ceil(rawLbrHrs/20))} trip{Math.max(1,Math.ceil(rawLbrHrs/20))!==1?"s":""}
             </span>}
           </div>
+        </>)}
+
+        {/* Proposal details */}
+        {section("Proposal Details", "#0F766E", <>
+          <div style={{ fontSize:10, color:T.muted }}>
+            Used in the exported customer proposal.
+          </div>
+          {textField("customerContact", "Customer Contact", "Attn line for proposal")}
+          {textField("drawingBasis", "Drawing Basis", "Estimate scope and project documents provided")}
+          {dateField("estimateDate", "Estimate Date")}
         </>)}
 
         {/* Labor adjustments */}

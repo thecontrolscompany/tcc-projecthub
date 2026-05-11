@@ -83,8 +83,21 @@ function getDrawingBasis(settings) {
   return settings.drawingBasis || settings.proposalBasis || settings.bidBasis || "Estimate scope and project documents provided";
 }
 
-function getCustomerContact(estimate) {
-  return estimate.customerContact || estimate.platformContext?.customerContact || "";
+function getCustomerContact(estimate, settings) {
+  return estimate.customerContact || settings.customerContact || estimate.platformContext?.customerContact || "";
+}
+
+function formatEstimateDate(value) {
+  if (!value) return todayStr();
+
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return todayStr();
+
+  return parsed.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 function getScopeIntro(estimate) {
@@ -340,10 +353,10 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
     PAGE_HEADER_PROJECT: `${projectName} | HVAC Controls Estimate`,
     PROJECT_NAME: `${projectName}${versionSuffix}`,
     CUSTOMER_NAME: estimate.customer || "-",
-    CUSTOMER_CONTACT: getCustomerContact(estimate) || "-",
+    CUSTOMER_CONTACT: getCustomerContact(estimate, settings) || "-",
     SITE_ADDRESS: getSiteAddress(settings) || "-",
     DRAWING_BASIS: getDrawingBasis(settings),
-    ESTIMATE_DATE: todayStr(),
+    ESTIMATE_DATE: formatEstimateDate(settings.estimateDate),
     SCOPE_INTRO: getScopeIntro(estimate),
     SECTION_1_LABEL: sections[0]?.label || "Base Bid - HVAC Controls Installation",
     SECTION_1_PRICE: fmtMoney(installedTotal),
