@@ -15,6 +15,8 @@ import { computeCosts, DEFAULT_SETTINGS } from "@/modules/hvac-estimator/compone
 import AHUSchematic from "@/modules/hvac-estimator/components/ahu/AHUSchematic";
 import DXSchematic from "@/modules/hvac-estimator/components/dx/DXSchematic";
 import FCUSchematic from "@/modules/hvac-estimator/components/fcu/FCUSchematic";
+import ExhaustFanSchematic from "@/modules/hvac-estimator/components/exhaustFan/ExhaustFanSchematic";
+import CustomComponentPage from "@/modules/hvac-estimator/components/custom/CustomComponentPage";
 import NetworkSchematic from "@/modules/hvac-estimator/components/network/NetworkSchematic";
 import PlantSchematic from "@/modules/hvac-estimator/components/plant/PlantSchematic";
 import RTUSchematic from "@/modules/hvac-estimator/components/rtu/RTUSchematic";
@@ -1372,6 +1374,10 @@ function LegacyEstimatorWorkspace({
         return <PlantSchematic />;
       case "network":
         return <NetworkSchematic />;
+      case "exhaust-fan":
+        return <ExhaustFanSchematic />;
+      case "custom":
+        return <CustomComponentPage />;
       case "alternate":
         return <BidAlternateEditor estimate={estimate} onBack={() => setSubPage(null)} onUpdate={onUpdate} alternateId={subPage.alternateId} />;
       default:
