@@ -116,24 +116,32 @@ async function resolveSharePointContext(
   const body = estimate.body as Record<string, unknown>;
   const existingFolder = typeof body.sharepointFolder === "string" ? body.sharepointFolder : "";
   const existingItemId = typeof body.sharepointItemId === "string" ? body.sharepointItemId : "";
-
-  if (existingFolder && existingItemId) {
-    const siteId = await getSharePointSiteId(providerToken);
-    const driveId = await getSharePointDriveId(providerToken, siteId);
-    for (const subfolder of SUBFOLDERS) {
-      try {
-        await createSharePointFolder(providerToken, driveId, existingFolder, subfolder);
-      } catch (error) {
-        if (!(error instanceof Error) || !error.message.includes("409")) {
-          throw error;
-        }
-      }
-    }
-    return { siteId, driveId, folderPath: existingFolder, itemId: existingItemId };
-  }
-
   const siteId = await getSharePointSiteId(providerToken);
   const driveId = await getSharePointDriveId(providerToken, siteId);
+
+  if (existingFolder) {
+    let folderItemId = existingItemId;
+    if (!folderItemId) {
+      try {
+        folderItemId = await getSharePointFolderIdByPath(providerToken, driveId, existingFolder);
+      } catch {
+        folderItemId = "";
+      }
+    }
+
+    if (folderItemId) {
+      for (const subfolder of SUBFOLDERS) {
+        try {
+          await createSharePointFolder(providerToken, driveId, existingFolder, subfolder);
+        } catch (error) {
+          if (!(error instanceof Error) || !error.message.includes("409")) {
+            throw error;
+          }
+        }
+      }
+      return { siteId, driveId, folderPath: existingFolder, itemId: folderItemId };
+    }
+  }
   const folderName = getEstimateFolderName(estimate);
   const folderPath = `Bids/${folderName}`;
 
