@@ -109,10 +109,73 @@ function getScopeIntro(estimate) {
     : "the HVAC controls installation";
 }
 
+function isEmtBid(settings) {
+  return String(settings?.defaultInstallType || "EMT").toUpperCase() === "EMT";
+}
+
 function normalizeCompName(name) {
   return String(name || "field device")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function renderBulletBlock(items) {
+  const filtered = (items || []).filter(Boolean);
+  if (!filtered.length) return "";
+
+  return `
+        <ul style="margin: 6px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.7;">
+${filtered.map(item => `<li>${esc(item)}</li>`).join("\n")}
+        </ul>`;
+}
+
+function renderCustomerScope(text) {
+  const lines = String(text || "")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map(line => line.trim())
+    .filter(Boolean);
+
+  if (!lines.length) return "";
+
+  return `
+      <ul class="scope-list">
+${lines.map(line => `<li>${esc(line.replace(/^[-*•\d.)]+\s*/, ""))}</li>`).join("\n")}
+      </ul>`;
+}
+
+function getClarificationItems(settings) {
+  return [
+    "This proposal shall be incorporated into any final contract terms and conditions.",
+    "Pricing is based on normal working hours (Monday through Friday). No overtime labor is included in the pricing above.",
+    "Overtime policy:",
+    "If an accurate construction schedule is provided at contract execution, TCC will absorb any required overtime to meet contractual milestones.",
+    "If no accurate schedule is provided, overtime will be billed at 1.5× the burdened labor rate and will be executed only with an approved change order.",
+    "All concealed but accessible wiring shall be installed using plenum-rated cable, following proper installation techniques in a neat and workmanlike manner.",
+    "All exposed or inaccessible wiring shall be installed in EMT conduit.",
+    "Communication wiring between units may be installed using metallic-armored cable (MC) where permitted by the project specifications.",
+    "The Controls Company reserves the right to withdraw or revise this proposal in the event of a substantial change in scope.",
+    "Any controls devices provided by others must be delivered to the site and ready for installation prior to TCC's scheduled mobilization.",
+    "Installation labor for controls devices furnished by others; conduit, control and communication wiring; incidental installation material; device mounting and terminations; and normal field coordination required to complete the physical controls installation scope.",
+  ].filter(item => !(isEmtBid(settings) && /plenum-rated cable/i.test(item)));
+}
+
+function getExclusionItems() {
+  return [
+    "All HVAC equipment, VFDs, motor starters, and disconnects not specifically listed in the scope above are by others.",
+    "120VAC power wiring to all DDC panels is by the electrical contractor.",
+    "All field devices, including control valves, flow meters, sensors, immersion wells, airflow measuring stations, dampers, and actuators not specifically listed in the scope above, are furnished by others and installed by others unless noted.",
+    "All controls devices, supervisory hardware, enclosure components, and software licenses are by others.",
+    "Programming, graphics, as-built drawings, operator training, startup, commissioning, and TAB support are by others.",
+    "Smoke detectors, smoke dampers, combination fire/smoke dampers, fire dampers, and associated actuators and wiring are by others.",
+    "Operator workstation hardware and software are excluded.",
+    "After-hour, weekend, or holiday work.",
+    "Any 120V power wiring not specifically included above.",
+    "Network data drops and IT infrastructure unless noted in the scope above.",
+    "BIM modeling.",
+    "Demolition not specifically listed in the scope above.",
+    "Additional LEED documentation or third-party commissioning hours incur additional cost.",
+  ];
 }
 
 const SECTION_DEFS = [
@@ -388,7 +451,10 @@ function replaceScopeSection(template, scopeHtml) {
 
 function replaceTemplateTokens(template, tokens) {
   return Object.entries(tokens).reduce(
-    (html, [token, value]) => html.replaceAll(`{{${token}}}`, esc(value)),
+    (html, [token, value]) => html.replaceAll(
+      `{{${token}}}`,
+      token.endsWith("_HTML") ? String(value ?? "") : esc(value),
+    ),
     template,
   );
 }
@@ -414,8 +480,13 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   const totalBond = bondAmount || installedTotal * BOND_RATE;
   const scopeMode = settings.proposalScopeMode === "detailed" ? "detailed" : "brief";
   const baseScopeName = String(settings.baseScopeName || "Scope").trim() || "Scope";
-  const scopeHtml = renderGeneratedScope(itemsWithComps, scopeMode);
+  const useCustomerScope = Boolean(settings.useCustomerScope && String(settings.customerScope || "").trim());
+  const scopeHtml = useCustomerScope
+    ? renderCustomerScope(settings.customerScope)
+    : renderGeneratedScope(itemsWithComps, scopeMode);
   const pricingHtml = `${renderPricingTable(baseScopeName, installedTotal, totalBond)}${renderAlternateBids(normalizeAlternates(estimate), scopeMode, settings)}`;
+  const clarificationHtml = renderBulletBlock(getClarificationItems(settings));
+  const exclusionHtml = renderBulletBlock(getExclusionItems());
 
   const tokens = {
     PAGE_HEADER_PROJECT: `${projectName} | HVAC Controls Estimate`,
@@ -431,6 +502,8 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
     SECTION_1_BOND: fmtMoney(totalBond),
     GRAND_TOTAL: fmtMoney(installedTotal),
     GRAND_TOTAL_WITH_BOND: fmtMoney(installedTotal + totalBond),
+    CLARIFICATIONS_HTML: clarificationHtml,
+    EXCLUSIONS_HTML: exclusionHtml,
   };
 
   return embedTemplateImages(

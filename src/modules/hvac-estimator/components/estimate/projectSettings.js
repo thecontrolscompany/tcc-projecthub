@@ -17,6 +17,8 @@ export const DEFAULT_SETTINGS = {
   defaultInstallType: "EMT",
   proposalScopeMode: "brief",
   baseScopeName:    "Scope",
+  useCustomerScope: false,
+  customerScope: "",
 
   // ── Project info ────────────────────────────────────────────────────────────
   address:        "",
