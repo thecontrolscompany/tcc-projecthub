@@ -38,6 +38,30 @@ function buildEstimateFolderName(estimate: { number: string | null; name: string
   return [estimateLabel, customer, projectName].filter(Boolean).join(" - ");
 }
 
+async function ensureSharePointFolderPath(
+  providerToken: string,
+  driveId: string,
+  folderPath: string,
+) {
+  const segments = folderPath.split("/").filter(Boolean);
+  let parentPath = "";
+  let itemId = "";
+
+  for (const segment of segments) {
+    const currentPath = parentPath ? `${parentPath}/${segment}` : segment;
+
+    try {
+      itemId = await getSharePointFolderIdByPath(providerToken, driveId, currentPath);
+    } catch {
+      itemId = await createSharePointFolder(providerToken, driveId, parentPath, segment);
+    }
+
+    parentPath = currentPath;
+  }
+
+  return itemId;
+}
+
 async function provisionEstimateFolder(
   supabase: Awaited<ReturnType<typeof createClient>>,
   estimate: { id: string; number: string | null; name: string; customer: string },
@@ -56,22 +80,8 @@ async function provisionEstimateFolder(
   const folderName = buildEstimateFolderName(estimate, estimate.id);
   const folderPath = `Bids/${folderName}`;
 
-  try {
-    await getSharePointFolderIdByPath(providerToken, driveId, "Bids");
-  } catch {
-    await createSharePointFolder(providerToken, driveId, "", "Bids");
-  }
-
-  let folderItemId = "";
-  try {
-    folderItemId = await createSharePointFolder(providerToken, driveId, "Bids", folderName);
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("409")) {
-      folderItemId = await getSharePointFolderIdByPath(providerToken, driveId, folderPath);
-    } else {
-      throw error;
-    }
-  }
+  await ensureSharePointFolderPath(providerToken, driveId, "Bids");
+  const folderItemId = await ensureSharePointFolderPath(providerToken, driveId, folderPath);
 
   for (const subfolder of ESTIMATE_SUBFOLDERS) {
     try {

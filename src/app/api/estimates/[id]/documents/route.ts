@@ -109,6 +109,30 @@ async function resolveEstimateRecord(supabase: Awaited<ReturnType<typeof createC
   };
 }
 
+async function ensureSharePointFolderPath(
+  providerToken: string,
+  driveId: string,
+  folderPath: string,
+) {
+  const segments = folderPath.split("/").filter(Boolean);
+  let parentPath = "";
+  let itemId = "";
+
+  for (const segment of segments) {
+    const currentPath = parentPath ? `${parentPath}/${segment}` : segment;
+
+    try {
+      itemId = await getSharePointFolderIdByPath(providerToken, driveId, currentPath);
+    } catch {
+      itemId = await createSharePointFolder(providerToken, driveId, parentPath, segment);
+    }
+
+    parentPath = currentPath;
+  }
+
+  return itemId;
+}
+
 async function resolveSharePointContext(
   providerToken: string,
   estimate: { id: string; number: string | null; name: string; body: Record<string, unknown> },
@@ -119,11 +143,7 @@ async function resolveSharePointContext(
   const siteId = await getSharePointSiteId(providerToken);
   const driveId = await getSharePointDriveId(providerToken, siteId);
 
-  try {
-    await getSharePointFolderIdByPath(providerToken, driveId, "Bids");
-  } catch {
-    await createSharePointFolder(providerToken, driveId, "", "Bids");
-  }
+  await ensureSharePointFolderPath(providerToken, driveId, "Bids");
 
   async function ensureSubfolders(folderPath: string) {
     for (const subfolder of SUBFOLDERS) {
@@ -138,37 +158,14 @@ async function resolveSharePointContext(
   }
 
   if (existingFolder) {
-    let folderItemId = existingItemId;
-    if (!folderItemId) {
-      try {
-        folderItemId = await getSharePointFolderIdByPath(providerToken, driveId, existingFolder);
-      } catch {
-        folderItemId = "";
-      }
-    }
-
-    try {
-      await ensureSubfolders(existingFolder);
-      return { siteId, driveId, folderPath: existingFolder, itemId: folderItemId || existingItemId || null };
-    } catch (error) {
-      if (!(error instanceof Error) || !error.message.includes("404")) {
-        throw error;
-      }
-    }
+    const folderItemId = existingItemId || (await ensureSharePointFolderPath(providerToken, driveId, existingFolder));
+    await ensureSubfolders(existingFolder);
+    return { siteId, driveId, folderPath: existingFolder, itemId: folderItemId || null };
   }
   const folderName = getEstimateFolderName(estimate);
   const folderPath = `Bids/${folderName}`;
 
-  let itemId = "";
-  try {
-    itemId = await createSharePointFolder(providerToken, driveId, "Bids", folderName);
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("409")) {
-      itemId = await getSharePointFolderIdByPath(providerToken, driveId, folderPath);
-    } else {
-      throw error;
-    }
-  }
+  const itemId = await ensureSharePointFolderPath(providerToken, driveId, folderPath);
 
   for (const subfolder of SUBFOLDERS) {
     try {
