@@ -32,10 +32,47 @@ export default async function EstimateDetailPage({
 
   if (error || !estimate) notFound();
 
+  let sourceProject = null;
+  if (estimate.linked_project_id) {
+    const { data: linkedProject } = await supabase
+      .from("projects")
+      .select("id, name, job_number, sharepoint_folder, sharepoint_item_id")
+      .eq("id", estimate.linked_project_id)
+      .maybeSingle();
+    sourceProject = linkedProject ?? null;
+  }
+  if (!sourceProject) {
+    const { data: fallbackProject } = await supabase
+      .from("projects")
+      .select("id, name, job_number, sharepoint_folder, sharepoint_item_id")
+      .eq("source_estimate_id", estimate.id)
+      .maybeSingle();
+    sourceProject = fallbackProject ?? null;
+  }
+
+  const projectRootFolder =
+    typeof sourceProject?.sharepoint_folder === "string" && sourceProject.sharepoint_folder.trim()
+      ? sourceProject.sharepoint_folder.trim()
+      : typeof sourceProject?.name === "string" && sourceProject.name.trim()
+        ? `Active Projects/${sourceProject.name.trim()}`
+        : "";
+  const canonicalEstimateFolder = projectRootFolder ? `${projectRootFolder}/02 Estimate` : null;
+
+  const hydratedEstimate = canonicalEstimateFolder
+    ? {
+        ...estimate,
+        body: {
+          ...(estimate.body as Record<string, unknown>),
+          sharepointFolder: canonicalEstimateFolder,
+          sharepointItemId: (estimate.body as Record<string, unknown>).sharepointItemId ?? null,
+        },
+      }
+    : estimate;
+
   return (
     <div className="mx-auto w-full max-w-none px-2 py-2 md:px-3 md:py-3">
       <OpportunityHubSubnav />
-      <EstimateDetailClient estimate={estimate as EstimateRecord} />
+      <EstimateDetailClient estimate={hydratedEstimate as EstimateRecord} />
     </div>
   );
 }

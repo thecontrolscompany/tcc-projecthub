@@ -15,6 +15,17 @@ import {
   estimateCreateSchema,
 } from "@/lib/estimates/api";
 
+const PROJECT_SUBFOLDERS = [
+  "01 Contract",
+  "02 Estimate",
+  "03 Submittals",
+  "04 Drawings",
+  "05 Change Orders",
+  "06 Closeout",
+  "07 Billing",
+  "99 Archive - Legacy Files",
+];
+
 const ESTIMATE_SUBFOLDERS = [
   "01 Customer Uploads",
   "02 Internal Review",
@@ -62,9 +73,30 @@ async function ensureSharePointFolderPath(
   return itemId;
 }
 
+async function resolveEstimateProject(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  estimate: { id: string; linked_project_id: string | null },
+) {
+  if (estimate.linked_project_id) {
+    const { data: project } = await supabase
+      .from("projects")
+      .select("id, name, job_number, sharepoint_folder, sharepoint_item_id, source_estimate_id")
+      .eq("id", estimate.linked_project_id)
+      .maybeSingle();
+    if (project) return project;
+  }
+
+  const { data: sourceProject } = await supabase
+    .from("projects")
+    .select("id, name, job_number, sharepoint_folder, sharepoint_item_id, source_estimate_id")
+    .eq("source_estimate_id", estimate.id)
+    .maybeSingle();
+  return sourceProject ?? null;
+}
+
 async function provisionEstimateFolder(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  estimate: { id: string; number: string | null; name: string; customer: string },
+  estimate: { id: string; number: string | null; name: string; customer: string; linked_project_id: string | null },
 ) {
   const {
     data: { session },
@@ -77,6 +109,40 @@ async function provisionEstimateFolder(
 
   const siteId = await getSharePointSiteId(providerToken);
   const driveId = await getSharePointDriveId(providerToken, siteId);
+  const project = await resolveEstimateProject(supabase, estimate);
+
+  if (project) {
+    const projectRoot =
+      typeof project.sharepoint_folder === "string" && project.sharepoint_folder.trim()
+        ? project.sharepoint_folder.trim()
+        : `Active Projects/${sanitizeFolderSegment(project.name || "Untitled Project")}`;
+    const estimateRoot = `${projectRoot}/02 Estimate`;
+
+    await ensureSharePointFolderPath(providerToken, driveId, projectRoot);
+    for (const subfolder of PROJECT_SUBFOLDERS) {
+      try {
+        await createSharePointFolder(providerToken, driveId, projectRoot, subfolder);
+      } catch (error) {
+        if (!(error instanceof Error) || !error.message.includes("409")) {
+          throw error;
+        }
+      }
+    }
+
+    const folderItemId = await ensureSharePointFolderPath(providerToken, driveId, estimateRoot);
+    for (const subfolder of ESTIMATE_SUBFOLDERS) {
+      try {
+        await createSharePointFolder(providerToken, driveId, estimateRoot, subfolder);
+      } catch (error) {
+        if (!(error instanceof Error) || !error.message.includes("409")) {
+          throw error;
+        }
+      }
+    }
+
+    return { sharepointFolder: estimateRoot, sharepointItemId: folderItemId, warning: null as string | null };
+  }
+
   const folderName = buildEstimateFolderName(estimate, estimate.id);
   const folderPath = `Bids/${folderName}`;
 
@@ -234,6 +300,7 @@ export async function POST(request: Request) {
       number: data.number,
       name: data.name,
       customer: typeof data.body?.customer === "string" ? data.body.customer : "",
+      linked_project_id: data.linked_project_id ?? null,
     });
 
     if (folderInfo.sharepointFolder) {

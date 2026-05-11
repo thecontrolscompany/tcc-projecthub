@@ -40,7 +40,24 @@ const DOCUMENT_ROLE_FOLDERS: Record<EstimateDocumentRole, string> = {
   addendum: "03 Estimate Working",
 };
 
-const SUBFOLDERS = ["01 Customer Uploads", "02 Internal Review", "03 Estimate Working", "04 Submitted Quote"];
+const PROJECT_SUBFOLDERS = [
+  "01 Contract",
+  "02 Estimate",
+  "03 Submittals",
+  "04 Drawings",
+  "05 Change Orders",
+  "06 Closeout",
+  "07 Billing",
+  "99 Archive - Legacy Files",
+];
+
+const ESTIMATE_SUBFOLDERS = [
+  "01 Customer Uploads",
+  "02 Internal Review",
+  "03 Estimate Working",
+  "04 Submitted Quote",
+  "99 Archive - Legacy Files",
+];
 
 function sanitizeSegment(value: string) {
   return String(value || "")
@@ -122,13 +139,35 @@ async function resolveEstimateRecord(supabase: Awaited<ReturnType<typeof createC
   };
 }
 
+async function resolveEstimateProject(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  estimate: { id: string; linked_project_id: string | null },
+) {
+  if (estimate.linked_project_id) {
+    const { data: project } = await supabase
+      .from("projects")
+      .select("id, name, job_number, sharepoint_folder, sharepoint_item_id, source_estimate_id")
+      .eq("id", estimate.linked_project_id)
+      .maybeSingle();
+    if (project) return project;
+  }
+
+  const { data: sourceProject } = await supabase
+    .from("projects")
+    .select("id, name, job_number, sharepoint_folder, sharepoint_item_id, source_estimate_id")
+    .eq("source_estimate_id", estimate.id)
+    .maybeSingle();
+  return sourceProject ?? null;
+}
+
 async function createDocumentUploadSession(
+  supabase: Awaited<ReturnType<typeof createClient>>,
   providerToken: string,
-  estimate: { id: string; number: string | null; name: string; body: Record<string, unknown> },
+  estimate: { id: string; number: string | null; name: string; body: Record<string, unknown>; linked_project_id: string | null },
   documentRole: EstimateDocumentRole,
   fileName: string,
 ) {
-  const { driveId, folderPath } = await resolveSharePointContext(providerToken, estimate);
+  const { driveId, folderPath } = await resolveSharePointContext(supabase, providerToken, estimate);
   const destinationFolder = `${folderPath}/${DOCUMENT_ROLE_FOLDERS[documentRole]}`;
   const encodedPath = encodeGraphPath(destinationFolder, fileName);
   const sessionRes = await graphFetch(`/drives/${driveId}/root:/${encodedPath}:/createUploadSession`, providerToken, {
@@ -223,19 +262,54 @@ async function ensureSharePointFolderPath(
 }
 
 async function resolveSharePointContext(
+  supabase: Awaited<ReturnType<typeof createClient>>,
   providerToken: string,
-  estimate: { id: string; number: string | null; name: string; body: Record<string, unknown> },
+  estimate: { id: string; number: string | null; name: string; body: Record<string, unknown>; linked_project_id: string | null },
 ) {
   const body = estimate.body as Record<string, unknown>;
-  const existingFolder = typeof body.sharepointFolder === "string" ? body.sharepointFolder : "";
-  const existingItemId = typeof body.sharepointItemId === "string" ? body.sharepointItemId : "";
   const siteId = await getSharePointSiteId(providerToken);
   const driveId = await getSharePointDriveId(providerToken, siteId);
+  const project = await resolveEstimateProject(supabase, estimate);
+
+  if (project) {
+    const projectRoot =
+      typeof project.sharepoint_folder === "string" && project.sharepoint_folder.trim()
+        ? project.sharepoint_folder.trim()
+        : `Active Projects/${sanitizeSegment(project.name || "Untitled Project")}`;
+    const estimateRoot = `${projectRoot}/02 Estimate`;
+
+    await ensureSharePointFolderPath(providerToken, driveId, projectRoot);
+    for (const subfolder of PROJECT_SUBFOLDERS) {
+      try {
+        await createSharePointFolder(providerToken, driveId, projectRoot, subfolder);
+      } catch (error) {
+        if (!(error instanceof Error) || !error.message.includes("409")) {
+          throw error;
+        }
+      }
+    }
+
+    const itemId = await ensureSharePointFolderPath(providerToken, driveId, estimateRoot);
+    for (const subfolder of ESTIMATE_SUBFOLDERS) {
+      try {
+        await createSharePointFolder(providerToken, driveId, estimateRoot, subfolder);
+      } catch (error) {
+        if (!(error instanceof Error) || !error.message.includes("409")) {
+          throw error;
+        }
+      }
+    }
+
+    return { siteId, driveId, folderPath: estimateRoot, itemId };
+  }
+
+  const existingFolder = typeof body.sharepointFolder === "string" ? body.sharepointFolder : "";
+  const existingItemId = typeof body.sharepointItemId === "string" ? body.sharepointItemId : "";
 
   await ensureSharePointFolderPath(providerToken, driveId, "Bids");
 
-  async function ensureSubfolders(folderPath: string) {
-    for (const subfolder of SUBFOLDERS) {
+  async function ensureEstimateSubfolders(folderPath: string) {
+    for (const subfolder of ESTIMATE_SUBFOLDERS) {
       try {
         await createSharePointFolder(providerToken, driveId, folderPath, subfolder);
       } catch (error) {
@@ -248,23 +322,14 @@ async function resolveSharePointContext(
 
   if (existingFolder) {
     const folderItemId = existingItemId || (await ensureSharePointFolderPath(providerToken, driveId, existingFolder));
-    await ensureSubfolders(existingFolder);
+    await ensureEstimateSubfolders(existingFolder);
     return { siteId, driveId, folderPath: existingFolder, itemId: folderItemId || null };
   }
   const folderName = getEstimateFolderName(estimate);
   const folderPath = `Bids/${folderName}`;
 
   const itemId = await ensureSharePointFolderPath(providerToken, driveId, folderPath);
-
-  for (const subfolder of SUBFOLDERS) {
-    try {
-      await createSharePointFolder(providerToken, driveId, folderPath, subfolder);
-    } catch (error) {
-      if (!(error instanceof Error) || !error.message.includes("409")) {
-        throw error;
-      }
-    }
-  }
+  await ensureEstimateSubfolders(folderPath);
 
   return { siteId, driveId, folderPath, itemId };
 }
@@ -418,7 +483,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           return NextResponse.json({ error: "Microsoft access token not available." }, { status: 401 });
         }
 
-        const session = await createDocumentUploadSession(providerToken, estimate, documentRole, fileName);
+        const session = await createDocumentUploadSession(auth.supabase, providerToken, estimate, documentRole, fileName);
         return NextResponse.json({
           uploadUrl: session.uploadUrl,
           storagePath: session.storagePath,
@@ -499,7 +564,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: "Microsoft access token not available." }, { status: 401 });
     }
 
-    const { driveId, folderPath } = await resolveSharePointContext(providerToken, estimate);
+    const { driveId, folderPath } = await resolveSharePointContext(auth.supabase, providerToken, estimate);
     const destinationFolder = `${folderPath}/${DOCUMENT_ROLE_FOLDERS[documentRole]}`;
     const fileBuffer = await file.arrayBuffer();
     const ext = file.name.includes(".") ? `.${file.name.split(".").pop() ?? ""}`.toLowerCase() : null;
