@@ -2,6 +2,30 @@
 
 import { useState, useMemo } from "react";
 
+const RESPONSIVE_CSS = `
+  .tcc-page { max-width: 8in; margin: 0 auto; padding: 0 16px 40px; }
+  .tcc-actions { max-width: 8in; margin: 0 auto; padding: 16px 16px 0; display: flex; justify-content: flex-end; gap: 10px; }
+  .tcc-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .tcc-brand-logo { width: 120px; height: 120px; object-fit: contain; }
+  .tcc-brand-badge { width: 100px; height: 100px; object-fit: contain; }
+  .tcc-filters { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0 16px; }
+  .tcc-filters input, .tcc-filters select { border: 1px solid #d1d5db; border-radius: 8px; padding: 7px 12px; font-size: 13px; font-family: Arial, Helvetica, sans-serif; }
+  .tcc-filters input { min-width: 200px; }
+  /* Desktop: 4-column table */
+  .tcc-contact-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 8px; }
+  .tcc-contact-cards { display: none; }
+  /* Mobile */
+  @media (max-width: 640px) {
+    .tcc-brand-row { flex-direction: column; align-items: center; text-align: center; }
+    .tcc-brand-logo, .tcc-brand-badge { width: 80px; height: 80px; }
+    .tcc-contact-table { display: none; }
+    .tcc-contact-cards { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+    .tcc-contact-card { border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 12px; background: #fff; }
+    .tcc-filters input { min-width: 0; width: 100%; }
+    .tcc-section-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+  }
+`;
+
 type Contact = {
   id: string;
   display_name: string;
@@ -139,25 +163,26 @@ export function DirectoryView({ title, contacts, generatedAt }: Props) {
 
   return (
     <div style={{ fontFamily: "Arial, Helvetica, sans-serif", background: PAGE_BG, minHeight: "100vh", color: TEXT }}>
+      <style dangerouslySetInnerHTML={{ __html: RESPONSIVE_CSS }} />
 
-      {/* Print actions bar — screen only */}
-      <div style={{ maxWidth: "8in", margin: "0 auto", padding: "16px 24px 0", display: "flex", justifyContent: "flex-end", gap: 10 }}>
+      {/* Print actions */}
+      <div className="tcc-actions">
         <button onClick={handleDownload} style={pillBtn}>Download HTML</button>
         <button onClick={() => window.print()} style={pillBtn}>Print / Save PDF</button>
       </div>
 
-      <div style={{ maxWidth: "8in", margin: "0 auto", padding: "0 24px 40px" }}>
-        <article style={{ background: "#fff", border: `1px solid ${BORDER}`, padding: 28, marginTop: 12 }}>
+      <div className="tcc-page">
+        <article style={{ background: "#fff", border: `1px solid ${BORDER}`, padding: "24px 20px", marginTop: 12 }}>
 
           {/* Brand row */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
-            <img src="/logo.png" alt="The Controls Company" style={{ width: 120, height: 120, objectFit: "contain" }} />
+          <div className="tcc-brand-row">
+            <img src="/logo.png" alt="The Controls Company" className="tcc-brand-logo" />
             <div style={{ flex: 1, textAlign: "center" }}>
               <div style={{ fontSize: 20, fontWeight: 700, color: TEAL, letterSpacing: "0.04em" }}>THE CONTROLS COMPANY, LLC</div>
               <div style={{ fontSize: 12, color: MUTED, marginTop: 4 }}>Service Disabled Veteran Owned Small Business</div>
               <div style={{ fontSize: 12, color: MUTED }}>thecontrolscompany.com</div>
             </div>
-            <img src="/sdvosb.jpg" alt="SDVOSB" style={{ width: 100, height: 100, objectFit: "contain" }} />
+            <img src="/sdvosb.jpg" alt="SDVOSB" className="tcc-brand-badge" />
           </div>
 
           {/* Document title */}
@@ -168,15 +193,15 @@ export function DirectoryView({ title, contacts, generatedAt }: Props) {
             {filtered.length} contacts · {grouped.length} companies · as of {generatedDate}
           </p>
 
-          {/* Filters — screen only */}
-          <div style={{ margin: "20px 0 16px", display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+          {/* Filters */}
+          <div className="tcc-filters">
             <input type="text" placeholder="Search name, company, email…" value={search}
-              onChange={(e) => setSearch(e.target.value)} style={{ ...inputStyle, minWidth: 240 }} />
-            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={inputStyle}>
+              onChange={(e) => setSearch(e.target.value)} />
+            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
               <option value="">All Types</option>
               {typeOptions.map((t) => <option key={t} value={t}>{TYPE_LABELS[t] ?? t}</option>)}
             </select>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as "company" | "name")} style={inputStyle}>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as "company" | "name")}>
               <option value="company">Sort by Company</option>
               <option value="name">Sort by Name</option>
             </select>
@@ -189,24 +214,22 @@ export function DirectoryView({ title, contacts, generatedAt }: Props) {
             grouped.map(({ company, contacts: gc }) => (
               <div key={company?.id ?? "__none__"} style={{ marginBottom: 24 }}>
                 {/* Section header */}
-                <div style={{ margin: "22px 0 10px", paddingBottom: 8, borderBottom: `2px solid ${TEAL}` }}>
-                  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-                    <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEAL, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-                      {company?.company_name ?? "Unknown"}
-                    </h3>
-                    <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-                      {company && <span style={{ fontSize: 11, color: MUTED }}>{fmtTypes(company)}</span>}
-                      {company?.territory && <span style={{ fontSize: 11, color: QUIET }}>{company.territory}</span>}
-                      {company?.website && (
-                        <a href={company.website} target="_blank" rel="noopener noreferrer"
-                          style={{ fontSize: 11, color: TEAL }}>{company.website.replace(/^https?:\/\//, "")}</a>
-                      )}
-                    </div>
+                <div className="tcc-section-header" style={{ margin: "22px 0 10px", paddingBottom: 8, borderBottom: `2px solid ${TEAL}`, display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEAL, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                    {company?.company_name ?? "Unknown"}
+                  </h3>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                    {company && <span style={{ fontSize: 11, color: MUTED }}>{fmtTypes(company)}</span>}
+                    {company?.territory && <span style={{ fontSize: 11, color: QUIET }}>{company.territory}</span>}
+                    {company?.website && (
+                      <a href={company.website} target="_blank" rel="noopener noreferrer"
+                        style={{ fontSize: 11, color: TEAL }}>{company.website.replace(/^https?:\/\//, "")}</a>
+                    )}
                   </div>
                 </div>
 
-                {/* Contact table */}
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                {/* Desktop: table */}
+                <table className="tcc-contact-table">
                   <thead>
                     <tr>
                       {["Name / Role", "Email", "Phone", "Mobile"].map((h) => (
@@ -218,7 +241,7 @@ export function DirectoryView({ title, contacts, generatedAt }: Props) {
                     {gc.map((c, i) => (
                       <tr key={c.id} style={{ background: i % 2 === 1 ? "#f8fafc" : "#fff" }}>
                         <td style={{ border: `1px solid ${BORDER}`, padding: "8px 10px", verticalAlign: "top" }}>
-                          <div style={{ fontWeight: 600, color: TEXT }}>{c.display_name}</div>
+                          <div style={{ fontWeight: 600 }}>{c.display_name}</div>
                           {c.title && <div style={{ fontSize: 11, color: MUTED }}>{c.title}</div>}
                           {ROLE_LABELS[c.role_type] && <div style={{ fontSize: 11, color: QUIET }}>{ROLE_LABELS[c.role_type]}</div>}
                         </td>
@@ -235,6 +258,22 @@ export function DirectoryView({ title, contacts, generatedAt }: Props) {
                     ))}
                   </tbody>
                 </table>
+
+                {/* Mobile: cards */}
+                <div className="tcc-contact-cards">
+                  {gc.map((c) => (
+                    <div key={c.id} className="tcc-contact-card">
+                      <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>{c.display_name}</div>
+                      {c.title && <div style={{ fontSize: 12, color: MUTED }}>{c.title}</div>}
+                      {ROLE_LABELS[c.role_type] && <div style={{ fontSize: 11, color: QUIET, marginBottom: 6 }}>{ROLE_LABELS[c.role_type]}</div>}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 6 }}>
+                        {c.email && <a href={`mailto:${c.email}`} style={{ color: TEAL, fontSize: 13 }}>{c.email}</a>}
+                        {c.phone && <a href={`tel:${c.phone}`} style={{ color: TEXT, fontSize: 13, textDecoration: "none" }}>📞 {c.phone}</a>}
+                        {c.mobile && c.mobile !== c.phone && <a href={`tel:${c.mobile}`} style={{ color: TEXT, fontSize: 13, textDecoration: "none" }}>📱 {c.mobile}</a>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))
           )}
