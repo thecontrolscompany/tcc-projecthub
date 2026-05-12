@@ -129,24 +129,7 @@ export function ContactsList({
 
   function handleSaved(updated: CrmContact) {
     setContacts((prev) =>
-      prev.map((c) =>
-        c.id === updated.id
-          ? {
-              ...c,
-              display_name:                 updated.display_name,
-              role_type:                    updated.role_type,
-              title:                        updated.title,
-              email:                        updated.email,
-              phone:                        updated.phone,
-              is_active:                    updated.is_active,
-              confidence_level:             updated.confidence_level,
-              influence_level:              updated.influence_level,
-              issues_purchase_orders:       updated.issues_purchase_orders,
-              involved_in_estimating:       updated.involved_in_estimating,
-              involved_in_project_execution: updated.involved_in_project_execution,
-            }
-          : c
-      )
+      prev.map((c) => c.id === updated.id ? { ...c, ...updated } : c)
     );
     setEditingContact(null);
   }

@@ -55,12 +55,10 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
     );
   }
 
-  // Increment view count (fire-and-forget)
-  supabase
+  void supabase
     .from("crm_shared_exports")
     .update({ view_count: (exported.view_count ?? 0) + 1 })
-    .eq("token", token)
-    .then(() => {});
+    .eq("token", token);
 
   const snapshot = exported.snapshot as { contacts: Contact[]; generated_at: string };
 

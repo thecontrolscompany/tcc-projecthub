@@ -168,7 +168,6 @@ export function DirectoryView({ title, contacts, generatedAt }: Props) {
     <div style={{ fontFamily: "Arial, Helvetica, sans-serif", background: PAGE_BG, minHeight: "100vh", color: TEXT }}>
       <style dangerouslySetInnerHTML={{ __html: RESPONSIVE_CSS }} />
 
-      {/* Print actions */}
       <div className="tcc-actions">
         <button onClick={handleDownload} style={pillBtn}>Download HTML</button>
         <button onClick={() => window.print()} style={pillBtn}>Print / Save PDF</button>
@@ -177,7 +176,6 @@ export function DirectoryView({ title, contacts, generatedAt }: Props) {
       <div className="tcc-page">
         <article style={{ background: "#fff", border: `1px solid ${BORDER}`, padding: "24px 20px", marginTop: 12 }}>
 
-          {/* Brand row */}
           <div className="tcc-brand-row">
             <img src="/logo.png" alt="The Controls Company" className="tcc-brand-logo" />
             <div style={{ flex: 1, textAlign: "center" }}>
@@ -188,7 +186,6 @@ export function DirectoryView({ title, contacts, generatedAt }: Props) {
             <img src="/sdvosb.jpg" alt="SDVOSB" className="tcc-brand-badge" />
           </div>
 
-          {/* Document title */}
           <h2 style={{ margin: "18px 0 0", textAlign: "center", fontSize: 22, fontWeight: 700, color: TEXT, letterSpacing: "0.06em", textTransform: "uppercase" }}>
             {title}
           </h2>
@@ -196,7 +193,6 @@ export function DirectoryView({ title, contacts, generatedAt }: Props) {
             {filtered.length} contacts · {grouped.length} companies · as of {generatedDate}
           </p>
 
-          {/* Filters */}
           <div className="tcc-filters">
             <input type="text" placeholder="Search name, company, email…" value={search}
               onChange={(e) => setSearch(e.target.value)} />
@@ -210,13 +206,11 @@ export function DirectoryView({ title, contacts, generatedAt }: Props) {
             </select>
           </div>
 
-          {/* Directory */}
           {grouped.length === 0 ? (
             <p style={{ textAlign: "center", color: QUIET, padding: "40px 0" }}>No contacts match your filters.</p>
           ) : (
             grouped.map(({ company, contacts: gc }) => (
               <div key={company?.id ?? "__none__"} style={{ marginBottom: 24 }}>
-                {/* Section header */}
                 <div className="tcc-section-header" style={{ margin: "22px 0 10px", paddingBottom: 8, borderBottom: `2px solid ${TEAL}`, display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                   <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEAL, letterSpacing: "0.06em", textTransform: "uppercase" }}>
                     {company?.company_name ?? "Unknown"}
@@ -231,7 +225,6 @@ export function DirectoryView({ title, contacts, generatedAt }: Props) {
                   </div>
                 </div>
 
-                {/* Desktop: table */}
                 <table className="tcc-contact-table">
                   <thead>
                     <tr>
@@ -262,7 +255,6 @@ export function DirectoryView({ title, contacts, generatedAt }: Props) {
                   </tbody>
                 </table>
 
-                {/* Mobile: cards */}
                 <div className="tcc-contact-cards">
                   {gc.map((c) => (
                     <div key={c.id} className="tcc-contact-card">
@@ -281,7 +273,6 @@ export function DirectoryView({ title, contacts, generatedAt }: Props) {
             ))
           )}
 
-          {/* Footer */}
           <footer style={{ marginTop: 28, paddingTop: 14, borderTop: `2px solid ${TEAL}`, textAlign: "center", fontSize: 12, color: MUTED }}>
             <div>The Controls Company, LLC | thecontrolscompany.com</div>
             <div>Service Disabled Veteran Owned Small Business · Confidential · Link expires in 7 days</div>
@@ -454,5 +445,3 @@ render();
 </html>`;
 }
 
-const TYPE_LABELS_JS: Record<string, string> = TYPE_LABELS;
-const ROLE_LABELS_JS: Record<string, string> = ROLE_LABELS;

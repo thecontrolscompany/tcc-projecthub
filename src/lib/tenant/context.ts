@@ -66,8 +66,8 @@ export async function resolveOrgFromRequest(
     slug: data.slug,
     name: data.name,
     status: data.status,
-    logo_url: (data as Record<string, unknown>).logo_url as string | null ?? null,
-    brand_primary: (data as Record<string, unknown>).brand_primary as string | null ?? null,
+    logo_url: (data.logo_url as string | null) ?? null,
+    brand_primary: (data.brand_primary as string | null) ?? null,
     is_demo: data.slug === "demo",
   };
 }
