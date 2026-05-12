@@ -16,7 +16,7 @@ export default async function AccountsPage() {
   const { data: accounts } = await supabase
     .from("crm_accounts")
     .select(`
-      id, company_name, type, territory, status, relationship_health,
+      id, company_name, type, types, territory, status, relationship_health,
       last_meaningful_contact_date, next_scheduled_followup_date,
       relationship_owner_profile_id, tags, notes, created_at, updated_at,
       relationship_owner:profiles!crm_accounts_relationship_owner_profile_id_fkey(id, full_name, email)
