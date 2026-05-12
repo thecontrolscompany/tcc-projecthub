@@ -3,14 +3,17 @@
 import { useState, useMemo } from "react";
 
 const RESPONSIVE_CSS = `
+  :root { color-scheme: light; }
+  body { background: #f4f7f6 !important; color: #111827 !important; }
   .tcc-page { max-width: 8in; margin: 0 auto; padding: 0 16px 40px; }
   .tcc-actions { max-width: 8in; margin: 0 auto; padding: 16px 16px 0; display: flex; justify-content: flex-end; gap: 10px; }
   .tcc-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .tcc-brand-logo { width: 120px; height: 120px; object-fit: contain; }
   .tcc-brand-badge { width: 100px; height: 100px; object-fit: contain; }
   .tcc-filters { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 20px 0 16px; }
-  .tcc-filters input, .tcc-filters select { border: 1px solid #d1d5db; border-radius: 8px; padding: 7px 12px; font-size: 13px; font-family: Arial, Helvetica, sans-serif; }
+  .tcc-filters input, .tcc-filters select { border: 1px solid #d1d5db; border-radius: 8px; padding: 7px 12px; font-size: 13px; font-family: Arial, Helvetica, sans-serif; background: #ffffff !important; color: #111827 !important; -webkit-appearance: auto; appearance: auto; }
   .tcc-filters input { min-width: 200px; }
+  .tcc-filters input::placeholder { color: #9ca3af !important; }
   /* Desktop: 4-column table */
   .tcc-contact-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 8px; }
   .tcc-contact-cards { display: none; }
