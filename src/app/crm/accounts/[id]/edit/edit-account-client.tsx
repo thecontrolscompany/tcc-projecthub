@@ -3,8 +3,9 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { CrmAccount } from "@/types/database";
+import type { CrmAccount, CrmAccountType } from "@/types/database";
 import { CrmSubnav } from "@/components/crm/crm-subnav";
+import { CRM_ACCOUNT_TYPE_OPTIONS } from "@/lib/crm/utils";
 
 type ProfileOption = {
   id: string;
@@ -27,9 +28,11 @@ export function EditAccountClient({ account, profiles, role }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [selectedTypes, setSelectedTypes] = useState<CrmAccountType[]>(
+    account.types?.length ? account.types : account.type ? [account.type] : []
+  );
   const [form, setForm] = useState({
     company_name: account.company_name ?? "",
-    type: account.type ?? "other",
     territory: account.territory ?? "",
     status: account.status ?? "active",
     relationship_health: account.relationship_health ?? "unknown",
@@ -64,7 +67,8 @@ export function EditAccountClient({ account, profiles, role }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           company_name: form.company_name.trim(),
-          type: form.type,
+          type: selectedTypes[0] ?? "other",
+          types: selectedTypes,
           territory: form.territory.trim() || null,
           status: form.status,
           relationship_health: form.relationship_health,
@@ -114,18 +118,33 @@ export function EditAccountClient({ account, profiles, role }: Props) {
               <input required value={form.company_name} onChange={(e) => set("company_name", e.target.value)} className={INPUT} />
             </label>
 
-            <label>
-              <span className={LABEL}>Type</span>
-              <select value={form.type} onChange={(e) => set("type", e.target.value)} className={INPUT}>
-                <option value="general_contractor">General Contractor</option>
-                <option value="mechanical_contractor">Mechanical Contractor</option>
-                <option value="controls_contractor">Controls Contractor</option>
-                <option value="hvac_oem">HVAC OEM</option>
-                <option value="controls_oem">Controls OEM</option>
-                <option value="owner">Owner</option>
-                <option value="other">Other</option>
-              </select>
-            </label>
+            <div>
+              <span className={LABEL}>Type (select all that apply)</span>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {CRM_ACCOUNT_TYPE_OPTIONS.map((opt) => {
+                  const checked = selectedTypes.includes(opt.value);
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() =>
+                        setSelectedTypes((prev) =>
+                          checked ? prev.filter((t) => t !== opt.value) : [...prev, opt.value]
+                        )
+                      }
+                      className={[
+                        "rounded-full border px-3 py-1 text-xs font-medium transition",
+                        checked
+                          ? "border-brand-primary bg-brand-primary/10 text-brand-primary"
+                          : "border-border-default text-text-secondary hover:border-brand-primary/50 hover:text-text-primary",
+                      ].join(" ")}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
             <label>
               <span className={LABEL}>Status</span>

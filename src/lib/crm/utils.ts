@@ -64,12 +64,31 @@ export const CRM_ROLE_TYPE_LABELS: Record<CrmContactRoleType, string> = {
 export const CRM_ACCOUNT_TYPE_LABELS: Record<CrmAccountType, string> = {
   general_contractor:    "General Contractor",
   mechanical_contractor: "Mechanical Contractor",
+  electrical_contractor: "Electrical Contractor",
+  tab_commissioning:     "TAB / Commissioning",
   controls_contractor:   "Controls Contractor",
   hvac_oem:              "HVAC OEM",
   controls_oem:          "Controls OEM",
   owner:                 "Owner",
   other:                 "Other",
 };
+
+export function fmtAccountTypes(account: { type: CrmAccountType; types?: CrmAccountType[] }): string {
+  const all = account.types?.length ? account.types : [account.type];
+  return all.map((t) => CRM_ACCOUNT_TYPE_LABELS[t]).join(" / ");
+}
+
+export const CRM_ACCOUNT_TYPE_OPTIONS: Array<{ value: CrmAccountType; label: string }> = [
+  { value: "general_contractor",    label: "General Contractor" },
+  { value: "mechanical_contractor", label: "Mechanical Contractor" },
+  { value: "electrical_contractor", label: "Electrical Contractor" },
+  { value: "tab_commissioning",     label: "TAB / Commissioning" },
+  { value: "controls_contractor",   label: "Controls Contractor" },
+  { value: "owner",                 label: "Owner" },
+  { value: "hvac_oem",              label: "HVAC OEM" },
+  { value: "controls_oem",          label: "Controls OEM" },
+  { value: "other",                 label: "Other" },
+];
 
 export const CRM_ACTIVITY_TYPE_LABELS: Record<CrmActivityType, string> = {
   meeting:           "Meeting",

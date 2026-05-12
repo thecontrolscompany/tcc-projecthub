@@ -2,13 +2,14 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import type { CrmAccount, CrmRelationshipHealth, CrmAccountStatus } from "@/types/database";
+import type { CrmAccount, CrmAccountType, CrmRelationshipHealth, CrmAccountStatus } from "@/types/database";
 import { AccountCard } from "@/components/crm/account-card";
 import { CrmSubnav } from "@/components/crm/crm-subnav";
+import { CRM_ACCOUNT_TYPE_OPTIONS } from "@/lib/crm/utils";
 
 type AccountListItem = Pick<
   CrmAccount,
-  "id" | "company_name" | "type" | "status" | "relationship_health" |
+  "id" | "company_name" | "type" | "types" | "status" | "relationship_health" |
   "last_meaningful_contact_date" | "next_scheduled_followup_date" |
   "relationship_owner_profile_id"
 > & {
@@ -37,12 +38,18 @@ const STATUS_OPTIONS: Array<{ value: CrmAccountStatus | ""; label: string }> = [
   { value: "inactive", label: "Inactive" },
 ];
 
+const TYPE_OPTIONS: Array<{ value: CrmAccountType | ""; label: string }> = [
+  { value: "", label: "All Types" },
+  ...CRM_ACCOUNT_TYPE_OPTIONS,
+];
+
 const INPUT = "rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none";
 
 export function AccountsList({ accounts, contactCounts, role }: AccountsListProps) {
   const [search, setSearch] = useState("");
   const [healthFilter, setHealthFilter] = useState<CrmRelationshipHealth | "">("");
   const [statusFilter, setStatusFilter] = useState<CrmAccountStatus | "">("");
+  const [typeFilter, setTypeFilter] = useState<CrmAccountType | "">("");
   const isWriteRole = role === "admin" || role === "ops_manager";
 
   const filtered = useMemo(() => {
@@ -50,9 +57,13 @@ export function AccountsList({ accounts, contactCounts, role }: AccountsListProp
       if (search && !a.company_name.toLowerCase().includes(search.toLowerCase())) return false;
       if (healthFilter && a.relationship_health !== healthFilter) return false;
       if (statusFilter && a.status !== statusFilter) return false;
+      if (typeFilter) {
+        const allTypes = a.types?.length ? a.types : [a.type];
+        if (!allTypes.includes(typeFilter)) return false;
+      }
       return true;
     });
-  }, [accounts, search, healthFilter, statusFilter]);
+  }, [accounts, search, healthFilter, statusFilter, typeFilter]);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-6">
@@ -81,6 +92,9 @@ export function AccountsList({ accounts, contactCounts, role }: AccountsListProp
           onChange={(e) => setSearch(e.target.value)}
           className={`${INPUT} w-64`}
         />
+        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as CrmAccountType | "")} className={INPUT}>
+          {TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
         <select value={healthFilter} onChange={(e) => setHealthFilter(e.target.value as CrmRelationshipHealth | "")} className={INPUT}>
           {HEALTH_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>

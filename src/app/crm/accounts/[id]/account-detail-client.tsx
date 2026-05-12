@@ -11,7 +11,7 @@ import { TaskWidget } from "@/components/crm/task-widget";
 import { OpportunityStageBadge } from "@/components/crm/opportunity-stage-badge";
 import { ContactBadge } from "@/components/crm/contact-badge";
 import { ContactEditModal } from "@/components/crm/contact-edit-modal";
-import { CRM_HEALTH_BADGES, CRM_HEALTH_LABELS, CRM_ACCOUNT_TYPE_LABELS, fmtCrmDate, fmtCrmCurrency, daysSince } from "@/lib/crm/utils";
+import { CRM_HEALTH_BADGES, CRM_HEALTH_LABELS, fmtAccountTypes, fmtCrmDate, fmtCrmCurrency, daysSince } from "@/lib/crm/utils";
 
 type Props = {
   account: CrmAccount & {
@@ -95,7 +95,7 @@ export function AccountDetailClient({ account, activities: initialActivities, ta
           </div>
           <h1 className="mt-1 text-2xl font-semibold text-text-primary">{account.company_name}</h1>
           <div className="mt-1 flex flex-wrap items-center gap-3">
-            <span className="text-sm text-text-tertiary">{CRM_ACCOUNT_TYPE_LABELS[account.type]}</span>
+            <span className="text-sm text-text-tertiary">{fmtAccountTypes(account)}</span>
             <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${CRM_HEALTH_BADGES[account.relationship_health]}`}>
               {CRM_HEALTH_LABELS[account.relationship_health]}
             </span>

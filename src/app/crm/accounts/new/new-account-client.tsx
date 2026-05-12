@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CrmSubnav } from "@/components/crm/crm-subnav";
 import type { CrmAccountType } from "@/types/database";
+import { CRM_ACCOUNT_TYPE_OPTIONS } from "@/lib/crm/utils";
 
 type Props = {
   role: string;
@@ -15,23 +16,14 @@ const INPUT =
   "w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none";
 const LABEL = "mb-1 block text-xs font-medium uppercase tracking-wide text-text-tertiary";
 
-const ACCOUNT_TYPES: Array<{ value: CrmAccountType; label: string }> = [
-  { value: "general_contractor", label: "General Contractor" },
-  { value: "mechanical_contractor", label: "Mechanical Contractor" },
-  { value: "controls_contractor", label: "Controls Contractor" },
-  { value: "owner", label: "Owner" },
-  { value: "hvac_oem", label: "HVAC OEM" },
-  { value: "controls_oem", label: "Controls OEM" },
-  { value: "other", label: "Other" },
-];
 
 export function NewAccountClient({ role, returnTo }: Props) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTypes, setSelectedTypes] = useState<CrmAccountType[]>([]);
   const [form, setForm] = useState({
     company_name: "",
-    type: "general_contractor" as CrmAccountType,
     status: "prospect",
     relationship_health: "unknown",
     website: "",
@@ -60,7 +52,8 @@ export function NewAccountClient({ role, returnTo }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           company_name: form.company_name.trim(),
-          type: form.type,
+          type: selectedTypes[0] ?? "other",
+          types: selectedTypes,
           status: form.status,
           relationship_health: form.relationship_health,
           website: form.website.trim() || null,
@@ -110,20 +103,33 @@ export function NewAccountClient({ role, returnTo }: Props) {
             />
           </label>
 
-          <label>
-            <span className={LABEL}>Account type</span>
-            <select
-              value={form.type}
-              onChange={(event) => setField("type", event.target.value)}
-              className={INPUT}
-            >
-              {ACCOUNT_TYPES.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div>
+            <span className={LABEL}>Account type (select all that apply)</span>
+            <div className="mt-1 flex flex-wrap gap-2">
+              {CRM_ACCOUNT_TYPE_OPTIONS.map((opt) => {
+                const checked = selectedTypes.includes(opt.value);
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() =>
+                      setSelectedTypes((prev) =>
+                        checked ? prev.filter((t) => t !== opt.value) : [...prev, opt.value]
+                      )
+                    }
+                    className={[
+                      "rounded-full border px-3 py-1 text-xs font-medium transition",
+                      checked
+                        ? "border-brand-primary bg-brand-primary/10 text-brand-primary"
+                        : "border-border-default text-text-secondary hover:border-brand-primary/50 hover:text-text-primary",
+                    ].join(" ")}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           <label>
             <span className={LABEL}>Territory</span>

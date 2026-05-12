@@ -8,7 +8,8 @@ const CRM_READ_ROLES = ["admin", "ops_manager", "pm", "lead"] as const;
 
 const accountUpdateSchema = z.object({
   company_name: z.string().min(1).optional(),
-  type: z.enum(["general_contractor","mechanical_contractor","controls_contractor","hvac_oem","controls_oem","owner","other"]).optional(),
+  type: z.enum(["general_contractor","mechanical_contractor","electrical_contractor","tab_commissioning","controls_contractor","hvac_oem","controls_oem","owner","other"]).optional(),
+  types: z.array(z.enum(["general_contractor","mechanical_contractor","electrical_contractor","tab_commissioning","controls_contractor","hvac_oem","controls_oem","owner","other"])).optional(),
   territory: z.string().nullish(),
   status: z.enum(["active","inactive","prospect"]).optional(),
   notes: z.string().nullish(),

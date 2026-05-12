@@ -650,6 +650,8 @@ export interface BillingRow {
 export type CrmAccountType =
   | "general_contractor"
   | "mechanical_contractor"
+  | "electrical_contractor"
+  | "tab_commissioning"
   | "controls_contractor"
   | "hvac_oem"
   | "controls_oem"
@@ -723,6 +725,7 @@ export interface CrmAccount {
   organization_id?: string | null;
   company_name: string;
   type: CrmAccountType;
+  types: CrmAccountType[];
   territory: string | null;
   status: CrmAccountStatus;
   notes: string | null;

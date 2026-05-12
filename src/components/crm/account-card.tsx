@@ -1,11 +1,11 @@
 import Link from "next/link";
 import type { CrmAccount } from "@/types/database";
-import { CRM_HEALTH_BADGES, CRM_HEALTH_LABELS, CRM_ACCOUNT_TYPE_LABELS, daysSince, fmtCrmDate } from "@/lib/crm/utils";
+import { CRM_HEALTH_BADGES, CRM_HEALTH_LABELS, fmtAccountTypes, daysSince, fmtCrmDate } from "@/lib/crm/utils";
 
 type AccountCardProps = {
   account: Pick<
     CrmAccount,
-    "id" | "company_name" | "type" | "status" | "relationship_health" |
+    "id" | "company_name" | "type" | "types" | "status" | "relationship_health" |
     "last_meaningful_contact_date" | "next_scheduled_followup_date" |
     "relationship_owner_profile_id"
   > & {
@@ -37,7 +37,7 @@ export function AccountCard({ account, contactCount }: AccountCardProps) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate font-semibold text-text-primary">{account.company_name}</p>
-          <p className="mt-0.5 text-xs text-text-tertiary">{CRM_ACCOUNT_TYPE_LABELS[account.type]}</p>
+          <p className="mt-0.5 text-xs text-text-tertiary">{fmtAccountTypes(account)}</p>
         </div>
         <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${CRM_HEALTH_BADGES[account.relationship_health]}`}>
           {CRM_HEALTH_LABELS[account.relationship_health]}
