@@ -65,8 +65,37 @@ export function ContactsList({
 
   const [editingContact, setEditingContact] = useState<CrmContact | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const isWriteRole = role === "admin" || role === "ops_manager";
+
+  async function handleExport() {
+    setExporting(true);
+    setShareUrl(null);
+    try {
+      const res = await fetch("/api/crm/exports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "Contact Directory" }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Export failed");
+      setShareUrl(json.url);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Export failed");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function copyUrl() {
+    if (!shareUrl) return;
+    await navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   const filtered = useMemo(() => {
     return contacts.filter((c) => {
@@ -136,12 +165,32 @@ export function ContactsList({
           <p className="text-sm text-text-tertiary">{filtered.length} of {contacts.length} people</p>
         </div>
         {isWriteRole && (
-          <Link
-            href={importHref}
-            className="rounded-xl border border-border-default px-4 py-2 text-sm text-text-secondary transition hover:bg-surface-overlay"
-          >
-            Import from Email
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            {shareUrl && (
+              <div className="flex items-center gap-2 rounded-xl border border-border-default bg-surface-overlay px-3 py-1.5">
+                <span className="max-w-xs truncate text-xs text-text-tertiary">{shareUrl}</span>
+                <button
+                  onClick={copyUrl}
+                  className="text-xs font-medium text-brand-primary hover:underline"
+                >
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+            )}
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className="rounded-xl border border-border-default px-4 py-2 text-sm text-text-secondary transition hover:bg-surface-overlay disabled:opacity-50"
+            >
+              {exporting ? "Generating…" : shareUrl ? "Regenerate Link" : "Share Directory"}
+            </button>
+            <Link
+              href={importHref}
+              className="rounded-xl border border-border-default px-4 py-2 text-sm text-text-secondary transition hover:bg-surface-overlay"
+            >
+              Import from Email
+            </Link>
+          </div>
         )}
       </div>
 
