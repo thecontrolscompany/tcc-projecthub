@@ -242,7 +242,7 @@ export function DirectoryView({ title, contacts, generatedAt }: Props) {
           {/* Footer */}
           <footer style={{ marginTop: 28, paddingTop: 14, borderTop: `2px solid ${TEAL}`, textAlign: "center", fontSize: 12, color: MUTED }}>
             <div>The Controls Company, LLC | thecontrolscompany.com</div>
-            <div>Service Disabled Veteran Owned Small Business · Confidential · Link expires in 30 days</div>
+            <div>Service Disabled Veteran Owned Small Business · Confidential · Link expires in 7 days</div>
           </footer>
 
         </article>

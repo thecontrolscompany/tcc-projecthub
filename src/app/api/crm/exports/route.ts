@@ -43,8 +43,8 @@ export async function POST(request: Request) {
 
   const token = generateToken();
 
-  // 30-day expiry
-  const expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  // 7-day expiry
+  const expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
   const { data: exported, error: insertErr } = await supabase
     .from("crm_shared_exports")
