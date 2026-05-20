@@ -113,30 +113,6 @@ function getAlternateProjectTitle(alternate) {
   return String(alternate?.name || alternate?.label || "Alternate").trim() || "Alternate";
 }
 
-function renderProjectDetailsHtml(title, settings, estimate) {
-  return `
-      <div class="section" style="margin-top:20px;">
-        <h2>${esc(title)}</h2>
-      </div>
-      <div class="meta-grid">
-        <div class="meta-label">Project Name:</div>
-        <div>${esc(estimate?.name || title)}</div>
-
-        <div class="meta-label">Customer:</div>
-        <div>${esc(estimate?.customer || "-")}${getCustomerContact(estimate || {}, settings) ? ` — Attn: ${esc(getCustomerContact(estimate || {}, settings))}` : ""}</div>
-
-        <div class="meta-label">Site Address:</div>
-        <div>${esc(getSiteAddress(settings) || "-")}</div>
-
-        <div class="meta-label">Drawing Basis:</div>
-        <div>${esc(getDrawingBasis(settings))}</div>
-
-        <div class="meta-label">Estimate Date:</div>
-        <div>${esc(formatEstimateDate(settings.estimateDate))}</div>
-      </div>
-`;
-}
-
 function isEmtBid(settings) {
   return String(settings?.defaultInstallType || "EMT").toUpperCase() === "EMT";
 }
@@ -419,7 +395,7 @@ ${alternateRows.join("\n")}
 `;
 }
 
-function renderAlternateProjectSections(alternates, scopeMode, baseSettings, baseEstimate) {
+function renderAlternateScopeSections(alternates, scopeMode, baseSettings) {
   if (!alternates.length) return "";
 
   const blocks = alternates.map((alternate) => {
@@ -434,7 +410,6 @@ function renderAlternateProjectSections(alternates, scopeMode, baseSettings, bas
     const raw = calcEstimate(alternateEstimate);
     const computedTotal = computeCosts(raw.mtl, raw.lbrHrs, alternateSettings, alternateEstimate.items || []).total || 0;
     const displayTotal = computedTotal || alternate.amount || 0;
-    const displayBond = displayTotal * BOND_RATE;
     const alternateScopeMode = alternateSettings.proposalScopeMode === "detailed" ? "detailed" : scopeMode;
     const useCustomerScope = Boolean(alternateSettings.useCustomerScope && String(alternateSettings.customerScope || "").trim());
     const alternateScope = useCustomerScope
@@ -446,37 +421,16 @@ function renderAlternateProjectSections(alternates, scopeMode, baseSettings, bas
 
     return `
       <div class="section" style="margin-top:20px;">
-        <h2>${esc(projectTitle)} Project Details</h2>
+        <h2>Scope Of Work - ${esc(projectTitle)}</h2>
       </div>
-      <div class="meta-grid">
-        <div class="meta-label">Project Name:</div>
-        <div>${esc(alternateSettings.projectName || alternateSettings.projectLabel || projectTitle)}</div>
-
-        <div class="meta-label">Customer:</div>
-        <div>${esc(alternate.customer || baseEstimate.customer || "-")}${getCustomerContact({ customerContact: alternateSettings.customerContact || baseEstimate.customerContact || "" }, alternateSettings) ? ` — Attn: ${esc(getCustomerContact({ customerContact: alternateSettings.customerContact || baseEstimate.customerContact || "" }, alternateSettings))}` : ""}</div>
-
-        <div class="meta-label">Site Address:</div>
-        <div>${esc(getSiteAddress(alternateSettings) || getSiteAddress(baseSettings) || "-")}</div>
-
-        <div class="meta-label">Drawing Basis:</div>
-        <div>${esc(getDrawingBasis(alternateSettings))}</div>
-
-        <div class="meta-label">Estimate Date:</div>
-        <div>${esc(formatEstimateDate(alternateSettings.estimateDate || baseSettings.estimateDate))}</div>
-      </div>
-
       <div class="callout" style="margin-top:12px;">
-        <div style="font-weight:700;">${esc(projectTitle)}</div>
-        ${alternate.description ? `<div style="margin-top:4px; color:var(--muted); font-size:12px;">${esc(alternate.description)}</div>` : ""}
-        <p style="margin:10px 0 6px; font-size:13px; font-weight:700; color:var(--teal); text-transform:uppercase; letter-spacing:0.06em;">Scope Of Work</p>
+        ${alternate.description ? `<div style="margin-bottom:6px; color:var(--muted); font-size:12px;">${esc(alternate.description)}</div>` : ""}
         ${alternateScope ? `<div>${alternateScope}</div>` : `<div style="font-size:13px; color:var(--muted);">No alternate scope details were provided.</div>`}
-      </div>`;
+      </div>
+    `;
   }).join("");
 
   return `
-      <p style="margin:0 0 10px; font-size:13px;">
-        Alternate bids stay separate from the base proposal so adders, deducts, or other options can be reviewed independently.
-      </p>
 ${blocks}
 `;
 }
@@ -628,7 +582,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
     };
   });
   const pricingHtml = renderPricingTable(baseScopeName, installedTotal, totalBond, alternates);
-  const alternateScopeHtml = renderAlternateProjectSections(alternates, scopeMode, settings, estimate);
+  const alternateScopeHtml = renderAlternateScopeSections(alternates, scopeMode, settings);
   const clarificationHtml = renderBulletBlock(getClarificationItems(settings));
   const exclusionHtml = renderBulletBlock(getExclusionItems());
 
