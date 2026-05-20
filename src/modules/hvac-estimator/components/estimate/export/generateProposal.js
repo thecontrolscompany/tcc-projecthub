@@ -595,6 +595,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
     DRAWING_BASIS: getDrawingBasis(settings),
     ESTIMATE_DATE: formatEstimateDate(settings.estimateDate),
     SCOPE_INTRO: getScopeIntro(estimate),
+    BASE_SCOPE_TITLE: `Scope Of Work - ${projectName}`,
     SECTION_1_LABEL: baseScopeName,
     SECTION_1_PRICE: fmtMoney(installedTotal),
     SECTION_1_BOND: fmtMoney(totalBond),
