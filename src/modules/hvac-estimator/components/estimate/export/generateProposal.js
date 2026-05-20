@@ -322,6 +322,7 @@ function normalizeAlternates(estimate) {
       const description = String(alt.description || alt.scope || alt.notes || "").trim();
       const amountValue = Number(alt.amount ?? alt.price ?? alt.value ?? 0);
       const items = Array.isArray(alt.items) ? alt.items : [];
+      const settings = alt.settings && typeof alt.settings === "object" ? alt.settings : {};
 
       if (!label) return null;
 
@@ -330,12 +331,46 @@ function normalizeAlternates(estimate) {
         description,
         amount: Number.isFinite(amountValue) ? amountValue : 0,
         items,
+        settings,
       };
     })
     .filter(Boolean);
 }
 
-function renderPricingTable(baseScopeName, grandTotal, totalBond) {
+function renderPricingTable(baseScopeName, grandTotal, totalBond, alternates = []) {
+  const baseRows = [
+    `
+          <tr>
+            <td>${esc(baseScopeName)}</td>
+            <td class="cell-number">${fmtMoney(grandTotal)}</td>
+          </tr>`,
+    `
+          <tr class="row-bond">
+            <td><strong>Optional performance and payment bond</strong></td>
+            <td class="cell-number">add ${fmtMoney(totalBond || 0)}</td>
+          </tr>`,
+  ];
+
+  const alternateRows = alternates.flatMap((alternate) => {
+    const alternateTotal = Number(alternate.total || 0);
+    const alternateBond = Number(alternate.bond || 0);
+    return [
+      `
+          <tr>
+            <td>${esc(alternate.label)}</td>
+            <td class="cell-number">${fmtMoney(alternateTotal)}</td>
+          </tr>`,
+      `
+          <tr class="row-bond">
+            <td><strong>Optional performance and payment bond</strong></td>
+            <td class="cell-number">add ${fmtMoney(alternateBond)}</td>
+          </tr>`,
+    ];
+  });
+
+  const totalPrice = [grandTotal || 0, totalBond || 0, ...alternates.map((alternate) => Number(alternate.total || 0) + Number(alternate.bond || 0))]
+    .reduce((sum, value) => sum + value, 0);
+
   return `
       <table>
         <thead>
@@ -345,48 +380,47 @@ function renderPricingTable(baseScopeName, grandTotal, totalBond) {
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>${esc(baseScopeName)}</td>
-            <td class="cell-number">${fmtMoney(grandTotal)}</td>
-          </tr>
-          <tr class="row-bond">
-            <td><strong>Optional performance and payment bond</strong></td>
-            <td class="cell-number">add ${fmtMoney(totalBond || 0)}</td>
-          </tr>
+${baseRows.join("\n")}
+${alternateRows.join("\n")}
           <tr class="row-total">
-            <td><strong>TOTAL INSTALLED PRICE</strong></td>
-            <td class="cell-number"><strong>${fmtMoney(grandTotal)}</strong></td>
+            <td><strong>TOTAL PRICE</strong></td>
+            <td class="cell-number"><strong>${fmtMoney(totalPrice)}</strong></td>
           </tr>
         </tbody>
       </table>
 `;
 }
 
-function renderAlternateBids(alternates, scopeMode, settings) {
+function renderAlternateBids(alternates, scopeMode, baseSettings) {
   if (!alternates.length) return "";
 
   const blocks = alternates.map((alternate) => {
+    const alternateSettings = {
+      ...baseSettings,
+      ...(alternate.settings || {}),
+    };
     const alternateEstimate = {
       items: alternate.items || [],
-      settings,
+      settings: alternateSettings,
     };
     const raw = calcEstimate(alternateEstimate);
-    const computedTotal = computeCosts(raw.mtl, raw.lbrHrs, settings, alternateEstimate.items || []).total || 0;
+    const computedTotal = computeCosts(raw.mtl, raw.lbrHrs, alternateSettings, alternateEstimate.items || []).total || 0;
     const displayTotal = computedTotal || alternate.amount || 0;
-    const alternateScope = alternate.items?.length
-      ? renderGeneratedScope(buildItemsWithComps(alternateEstimate), scopeMode)
-      : "";
+    const displayBond = displayTotal * BOND_RATE;
+    const alternateScopeMode = alternateSettings.proposalScopeMode === "detailed" ? "detailed" : scopeMode;
+    const useCustomerScope = Boolean(alternateSettings.useCustomerScope && String(alternateSettings.customerScope || "").trim());
+    const alternateScope = useCustomerScope
+      ? renderCustomerScope(alternateSettings.customerScope)
+      : alternate.items?.length
+        ? renderGeneratedScope(buildItemsWithComps(alternateEstimate), alternateScopeMode)
+        : "";
 
     return `
       <div class="callout" style="margin-top:12px;">
-        <div style="display:flex; justify-content:space-between; gap:16px; align-items:flex-start;">
-          <div>
-            <div style="font-weight:700;">${esc(alternate.label)}</div>
-            ${alternate.description ? `<div style="margin-top:4px; color:var(--muted); font-size:12px;">${esc(alternate.description)}</div>` : ""}
-          </div>
-          <div class="cell-number" style="font-weight:700;">${fmtMoney(displayTotal)}</div>
-        </div>
-        ${alternateScope ? `<div style="margin-top:10px;">${alternateScope}</div>` : ""}
+        <div style="font-weight:700;">${esc(alternate.label)}</div>
+        ${alternate.description ? `<div style="margin-top:4px; color:var(--muted); font-size:12px;">${esc(alternate.description)}</div>` : ""}
+        <p style="margin:10px 0 6px; font-size:13px; font-weight:700; color:var(--teal); text-transform:uppercase; letter-spacing:0.06em;">Scope Of Work</p>
+        ${alternateScope ? `<div>${alternateScope}</div>` : `<div style="font-size:13px; color:var(--muted);">No alternate scope details were provided.</div>`}
       </div>`;
   }).join("");
 
@@ -522,7 +556,26 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   const scopeHtml = useCustomerScope
     ? renderCustomerScope(settings.customerScope)
     : renderGeneratedScope(itemsWithComps, scopeMode);
-  const pricingHtml = `${renderPricingTable(baseScopeName, installedTotal, totalBond)}${renderAlternateBids(normalizeAlternates(estimate), scopeMode, settings)}`;
+  const alternates = normalizeAlternates(estimate).map((alternate) => {
+    const alternateSettings = {
+      ...settings,
+      ...(alternate.settings || {}),
+    };
+    const alternateEstimate = {
+      items: alternate.items || [],
+      settings: alternateSettings,
+    };
+    const raw = calcEstimate(alternateEstimate);
+    const computedTotal = computeCosts(raw.mtl, raw.lbrHrs, alternateSettings, alternateEstimate.items || []).total || 0;
+    const displayTotal = computedTotal || alternate.amount || 0;
+    return {
+      ...alternate,
+      total: displayTotal,
+      bond: displayTotal * BOND_RATE,
+    };
+  });
+  const pricingHtml = renderPricingTable(baseScopeName, installedTotal, totalBond, alternates);
+  const alternateScopeHtml = renderAlternateBids(alternates, scopeMode, settings);
   const clarificationHtml = renderBulletBlock(getClarificationItems(settings));
   const exclusionHtml = renderBulletBlock(getExclusionItems());
 
@@ -545,7 +598,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   };
 
   return embedTemplateImages(
-    replaceScopeSection(replacePricingSection(replaceTemplateTokens(template, tokens), pricingHtml), scopeHtml),
+    replaceScopeSection(replacePricingSection(replaceTemplateTokens(template, tokens), pricingHtml), `${scopeHtml}${alternateScopeHtml}`),
     assets,
   );
 }
