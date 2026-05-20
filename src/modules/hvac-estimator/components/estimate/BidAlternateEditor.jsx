@@ -3,6 +3,7 @@ import { ProjectHubEstimateProvider } from "../../shared/EstimateContext.jsx";
 import { EstimateEditorWorkspace } from "./EstimateEditorWorkspace.jsx";
 
 function createAlternateEstimate(parentEstimate, alternate) {
+  const alternateSettings = alternate.settings && typeof alternate.settings === "object" ? alternate.settings : {};
   return {
     ...parentEstimate,
     id: alternate.id,
@@ -11,7 +12,7 @@ function createAlternateEstimate(parentEstimate, alternate) {
     customer: alternate.customer ?? parentEstimate.customer ?? "",
     version: alternate.version ?? parentEstimate.version ?? "1.0",
     notes: alternate.notes ?? "",
-    settings: { ...(parentEstimate.settings || {}) },
+    settings: { ...(parentEstimate.settings || {}), ...alternateSettings },
     items: Array.isArray(alternate.items) ? alternate.items : [],
     createdAt: alternate.createdAt || parentEstimate.createdAt,
     updatedAt: alternate.updatedAt || parentEstimate.updatedAt,
@@ -55,7 +56,10 @@ export function BidAlternateEditor({ estimate, alternateId, onBack, onUpdate }) 
       customer: nextAlternateEstimate.customer || estimate.customer || "",
       version: nextAlternateEstimate.version || estimate.version || "1.0",
       notes: nextAlternateEstimate.notes || "",
-      settings: { ...(estimate.settings || {}) },
+      settings: {
+        ...(estimate.settings || {}),
+        ...(nextAlternateEstimate.settings || {}),
+      },
       items: Array.isArray(nextAlternateEstimate.items) ? nextAlternateEstimate.items : [],
       createdAt: nextAlternateEstimate.createdAt || alternate?.createdAt || estimate.createdAt,
       updatedAt: nextAlternateEstimate.updatedAt || new Date().toISOString(),
