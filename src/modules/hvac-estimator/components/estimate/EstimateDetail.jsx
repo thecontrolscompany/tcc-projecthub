@@ -94,6 +94,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     const next = {
       id: crypto.randomUUID(),
       name,
+      settings: { ...(estimate.settings || {}) },
       items: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

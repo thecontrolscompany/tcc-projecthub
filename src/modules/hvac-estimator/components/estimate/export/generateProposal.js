@@ -6,7 +6,7 @@
  */
 
 import { buildItemsWithComps, calcEstimate, calcItem } from "../estimateCalc.js";
-import { computeCosts } from "../projectSettings.js";
+import { DEFAULT_SETTINGS, computeCosts } from "../projectSettings.js";
 
 const TEMPLATE_PATH = "/report-assets/proposal-template.html";
 const LOGO_PATH = "/report-assets/logo.png";
@@ -400,7 +400,7 @@ function renderAlternateScopeSections(alternates, scopeMode, baseSettings) {
 
   const blocks = alternates.map((alternate) => {
     const alternateSettings = {
-      ...baseSettings,
+      ...DEFAULT_SETTINGS,
       ...(alternate.settings || {}),
     };
     const alternateEstimate = {
@@ -565,7 +565,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
     : renderGeneratedScope(itemsWithComps, scopeMode);
   const alternates = normalizeAlternates(estimate).map((alternate) => {
     const alternateSettings = {
-      ...settings,
+      ...DEFAULT_SETTINGS,
       ...(alternate.settings || {}),
     };
     const alternateEstimate = {
