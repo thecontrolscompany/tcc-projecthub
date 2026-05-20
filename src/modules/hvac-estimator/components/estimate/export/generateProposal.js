@@ -109,6 +109,34 @@ function getScopeIntro(estimate) {
     : "the HVAC controls installation";
 }
 
+function getAlternateProjectTitle(alternate) {
+  return String(alternate?.name || alternate?.label || "Alternate").trim() || "Alternate";
+}
+
+function renderProjectDetailsHtml(title, settings, estimate) {
+  return `
+      <div class="section" style="margin-top:20px;">
+        <h2>${esc(title)}</h2>
+      </div>
+      <div class="meta-grid">
+        <div class="meta-label">Project Name:</div>
+        <div>${esc(estimate?.name || title)}</div>
+
+        <div class="meta-label">Customer:</div>
+        <div>${esc(estimate?.customer || "-")}${getCustomerContact(estimate || {}, settings) ? ` — Attn: ${esc(getCustomerContact(estimate || {}, settings))}` : ""}</div>
+
+        <div class="meta-label">Site Address:</div>
+        <div>${esc(getSiteAddress(settings) || "-")}</div>
+
+        <div class="meta-label">Drawing Basis:</div>
+        <div>${esc(getDrawingBasis(settings))}</div>
+
+        <div class="meta-label">Estimate Date:</div>
+        <div>${esc(formatEstimateDate(settings.estimateDate))}</div>
+      </div>
+`;
+}
+
 function isEmtBid(settings) {
   return String(settings?.defaultInstallType || "EMT").toUpperCase() === "EMT";
 }
@@ -391,7 +419,7 @@ ${alternateRows.join("\n")}
 `;
 }
 
-function renderAlternateBids(alternates, scopeMode, baseSettings) {
+function renderAlternateProjectSections(alternates, scopeMode, baseSettings, baseEstimate) {
   if (!alternates.length) return "";
 
   const blocks = alternates.map((alternate) => {
@@ -414,10 +442,31 @@ function renderAlternateBids(alternates, scopeMode, baseSettings) {
       : alternate.items?.length
         ? renderGeneratedScope(buildItemsWithComps(alternateEstimate), alternateScopeMode)
         : "";
+    const projectTitle = getAlternateProjectTitle(alternate);
 
     return `
+      <div class="section" style="margin-top:20px;">
+        <h2>${esc(projectTitle)} Project Details</h2>
+      </div>
+      <div class="meta-grid">
+        <div class="meta-label">Project Name:</div>
+        <div>${esc(alternateSettings.projectName || alternateSettings.projectLabel || projectTitle)}</div>
+
+        <div class="meta-label">Customer:</div>
+        <div>${esc(alternate.customer || baseEstimate.customer || "-")}${getCustomerContact({ customerContact: alternateSettings.customerContact || baseEstimate.customerContact || "" }, alternateSettings) ? ` — Attn: ${esc(getCustomerContact({ customerContact: alternateSettings.customerContact || baseEstimate.customerContact || "" }, alternateSettings))}` : ""}</div>
+
+        <div class="meta-label">Site Address:</div>
+        <div>${esc(getSiteAddress(alternateSettings) || getSiteAddress(baseSettings) || "-")}</div>
+
+        <div class="meta-label">Drawing Basis:</div>
+        <div>${esc(getDrawingBasis(alternateSettings))}</div>
+
+        <div class="meta-label">Estimate Date:</div>
+        <div>${esc(formatEstimateDate(alternateSettings.estimateDate || baseSettings.estimateDate))}</div>
+      </div>
+
       <div class="callout" style="margin-top:12px;">
-        <div style="font-weight:700;">${esc(alternate.label)}</div>
+        <div style="font-weight:700;">${esc(projectTitle)}</div>
         ${alternate.description ? `<div style="margin-top:4px; color:var(--muted); font-size:12px;">${esc(alternate.description)}</div>` : ""}
         <p style="margin:10px 0 6px; font-size:13px; font-weight:700; color:var(--teal); text-transform:uppercase; letter-spacing:0.06em;">Scope Of Work</p>
         ${alternateScope ? `<div>${alternateScope}</div>` : `<div style="font-size:13px; color:var(--muted);">No alternate scope details were provided.</div>`}
@@ -425,9 +474,6 @@ function renderAlternateBids(alternates, scopeMode, baseSettings) {
   }).join("");
 
   return `
-      <div class="section" style="margin-top:20px;">
-        <h2>Alternates</h2>
-      </div>
       <p style="margin:0 0 10px; font-size:13px;">
         Alternate bids stay separate from the base proposal so adders, deducts, or other options can be reviewed independently.
       </p>
@@ -441,6 +487,13 @@ function replacePricingSection(template, pricingHtml) {
 
   if (start === -1 || end === -1 || end <= start) return template;
   return `${template.slice(0, start)}${pricingHtml}\n${template.slice(end)}`;
+}
+
+function insertAlternateScopeSection(template, alternateHtml) {
+  const marker = "      <!-- CLARIFICATIONS -->";
+  const index = template.indexOf(marker);
+  if (index === -1) return template;
+  return `${template.slice(0, index)}${alternateHtml}\n${template.slice(index)}`;
 }
 
 function groupEntriesByType(entries) {
@@ -575,7 +628,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
     };
   });
   const pricingHtml = renderPricingTable(baseScopeName, installedTotal, totalBond, alternates);
-  const alternateScopeHtml = renderAlternateBids(alternates, scopeMode, settings);
+  const alternateScopeHtml = renderAlternateProjectSections(alternates, scopeMode, settings, estimate);
   const clarificationHtml = renderBulletBlock(getClarificationItems(settings));
   const exclusionHtml = renderBulletBlock(getExclusionItems());
 
@@ -598,7 +651,10 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   };
 
   return embedTemplateImages(
-    replaceScopeSection(replacePricingSection(replaceTemplateTokens(template, tokens), pricingHtml), `${scopeHtml}${alternateScopeHtml}`),
+    insertAlternateScopeSection(
+      replaceScopeSection(replacePricingSection(replaceTemplateTokens(template, tokens), pricingHtml), scopeHtml),
+      alternateScopeHtml,
+    ),
     assets,
   );
 }
