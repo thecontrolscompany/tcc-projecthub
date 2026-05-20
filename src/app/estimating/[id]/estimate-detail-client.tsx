@@ -6,24 +6,12 @@ import { Fragment, useEffect, useMemo, useState, type CSSProperties, type ReactN
 import { calcEstimate, calcItem, COMPS_MAP, TYPE_META } from "@/modules/hvac-estimator/components/estimate/estimateCalc";
 import { AddEquipButtons } from "@/modules/hvac-estimator/components/estimate/AddEquipButtons";
 import { EstimateDetail } from "@/modules/hvac-estimator/components/estimate/EstimateDetail";
+import { EstimateEditorWorkspace } from "@/modules/hvac-estimator/components/estimate/EstimateEditorWorkspace";
 import ConduitFillPage from "@/modules/hvac-estimator/components/conduitFill/ConduitFillPage";
 import { ProjectSettingsPanel } from "@/modules/hvac-estimator/components/estimate/ProjectSettingsPanel";
 import { ProposalDetailsModal } from "@/modules/hvac-estimator/components/estimate/ProposalDetailsModal";
 import { BidAlternateEditor } from "@/modules/hvac-estimator/components/estimate/BidAlternateEditor";
 import { computeCosts, DEFAULT_SETTINGS } from "@/modules/hvac-estimator/components/estimate/projectSettings";
-import AHUSchematic from "@/modules/hvac-estimator/components/ahu/AHUSchematic";
-import DXSchematic from "@/modules/hvac-estimator/components/dx/DXSchematic";
-import FCUSchematic from "@/modules/hvac-estimator/components/fcu/FCUSchematic";
-import ExhaustFanSchematic from "@/modules/hvac-estimator/components/exhaustFan/ExhaustFanSchematic";
-import CustomComponentPage from "@/modules/hvac-estimator/components/custom/CustomComponentPage";
-import NetworkSchematic from "@/modules/hvac-estimator/components/network/NetworkSchematic";
-import PlantSchematic from "@/modules/hvac-estimator/components/plant/PlantSchematic";
-import RTUSchematic from "@/modules/hvac-estimator/components/rtu/RTUSchematic";
-import UHSchematic from "@/modules/hvac-estimator/components/uh/UHSchematic";
-import VAVSchematic from "@/modules/hvac-estimator/components/vav/VAVSchematic";
-import VRFSchematic from "@/modules/hvac-estimator/components/vrf/VRFSchematic";
-import SelectionWizardPage from "@/modules/hvac-estimator/components/selectionWizard";
-import ErrorBoundary from "@/modules/hvac-estimator/shared/ErrorBoundary";
 import { applyAhuDefaultSelections, getVisibleAhuComponents, normalizeAhuCfg } from "@/modules/hvac-estimator/components/ahu/ahuData";
 import { applyDxDefaultSelections, getVisibleDxComponents, normalizeDxCfg } from "@/modules/hvac-estimator/components/dx/dxData";
 import { applyFcuDefaultSelections, getVisibleFcuComponents, normalizeFcuCfg } from "@/modules/hvac-estimator/components/fcu/fcuData";
@@ -1357,106 +1345,16 @@ function LegacyEstimatorWorkspace({
     );
   }
 
-  if (subPage?.type) {
-    if (subPage.type === "wizard") {
-      return (
-        <EditorFrame title="System Wizard" onBack={() => setSubPage(null)}>
-          <SelectionWizardPage
-            hasActiveEstimate={true}
-            onAddToEstimate={(type: string) => {
-              setSubPage({ type });
-            }}
-          />
-        </EditorFrame>
-      );
-    }
-
-    const editor = (() => {
-    switch (subPage.type) {
-      case "ahu":
-        return <AHUSchematic />;
-      case "vav":
-        return <VAVSchematic />;
-      case "rtu":
-        return <RTUSchematic />;
-      case "dx":
-        return <DXSchematic />;
-      case "vrf":
-        return <VRFSchematic />;
-      case "fcu":
-        return <FCUSchematic />;
-      case "uh":
-        return <UHSchematic />;
-      case "plant":
-        return <PlantSchematic />;
-      case "network":
-        return <NetworkSchematic />;
-      case "exhaust-fan":
-        return <ExhaustFanSchematic />;
-      case "custom":
-        return <CustomComponentPage />;
-      case "alternate":
-        return <BidAlternateEditor estimate={estimate} onBack={() => setSubPage(null)} onUpdate={onUpdate} alternateId={subPage.alternateId} />;
-      default:
-        return <EstimateDetail estimate={estimate} onBack={onBack} onUpdate={onUpdate} />;
-    }
-    })();
-
-    return (
-      <ErrorBoundary fallback={<EditorCrashFallback systemType={subPage.type} onBack={() => setSubPage(null)} />}>
-        {editor}
-      </ErrorBoundary>
-    );
-  }
-
-  return <EstimateDetail estimate={estimate} onBack={onBack} onUpdate={onUpdate} />;
-}
-
-function EditorFrame({
-  title,
-  onBack,
-  children,
-}: {
-  title: string;
-  onBack: () => void;
-  children: ReactNode;
-}) {
   return (
-    <div style={{ minHeight: "calc(100vh - 8rem)", overflow: "auto" }}>
-      <div className="flex items-center justify-between border-b border-border-default bg-surface-overlay px-4 py-2">
-        <div className="text-sm font-semibold text-text-primary">{title}</div>
-        <button
-          type="button"
-          onClick={onBack}
-          className="rounded-lg border border-border-default px-3 py-1.5 text-sm font-semibold text-text-secondary transition hover:bg-surface-raised hover:text-text-primary"
-        >
-          Back to Estimate
-        </button>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function EditorCrashFallback({
-  systemType,
-  onBack,
-}: {
-  systemType?: string;
-  onBack: () => void;
-}) {
-  return (
-    <div className="p-8">
-      <h2 className="text-xl font-semibold text-text-primary">{String(systemType || "System").toUpperCase()} editor crashed</h2>
-      <p className="mt-2 text-sm text-text-secondary">Return to the estimate, then reopen this editor or choose another system.</p>
-      <button
-        type="button"
-        onClick={onBack}
-        className="mt-5 rounded-lg border border-border-default px-4 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
-      >
-        Back to Estimate
-      </button>
-    </div>
+    <EstimateEditorWorkspace
+      estimate={estimate}
+      onBack={onBack}
+      onUpdate={onUpdate}
+      allowBidAlternateEditor={true}
+      renderBidAlternateEditor={() => <BidAlternateEditor estimate={estimate} onBack={() => setSubPage(null)} onUpdate={onUpdate} alternateId={subPage?.alternateId} />}
+      showProjectSettings={true}
+      showBidAlternates={true}
+    />
   );
 }
 
