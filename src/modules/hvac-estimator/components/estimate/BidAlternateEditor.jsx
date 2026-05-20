@@ -2,8 +2,20 @@ import { useMemo } from "react";
 import { ProjectHubEstimateProvider } from "../../shared/EstimateContext.jsx";
 import { EstimateEditorWorkspace } from "./EstimateEditorWorkspace.jsx";
 import { DEFAULT_SETTINGS } from "./projectSettings.js";
+import { calcEstimate } from "./estimateCalc.js";
+
+function normalizeAlternateSettings(settings, items) {
+  const raw = calcEstimate({ items: Array.isArray(items) ? items : [] });
+  const trips = raw.lbrHrs > 0 ? Math.max(1, Math.ceil(raw.lbrHrs / 20)) : 1;
+  return {
+    ...DEFAULT_SETTINGS,
+    ...((settings && typeof settings === "object") ? settings : {}),
+    trips,
+  };
+}
 
 function createAlternateEstimate(parentEstimate, alternate) {
+  const settings = normalizeAlternateSettings(alternate.settings, alternate.items);
   return {
     ...parentEstimate,
     id: alternate.id,
@@ -12,7 +24,7 @@ function createAlternateEstimate(parentEstimate, alternate) {
     customer: alternate.customer ?? parentEstimate.customer ?? "",
     version: alternate.version ?? parentEstimate.version ?? "1.0",
     notes: alternate.notes ?? "",
-    settings: { ...DEFAULT_SETTINGS, ...((alternate.settings && typeof alternate.settings === "object") ? alternate.settings : {}) },
+    settings,
     items: Array.isArray(alternate.items) ? alternate.items : [],
     createdAt: alternate.createdAt || parentEstimate.createdAt,
     updatedAt: alternate.updatedAt || parentEstimate.updatedAt,
@@ -49,6 +61,7 @@ export function BidAlternateEditor({ estimate, alternateId, onBack, onUpdate }) 
 
   const handleUpdate = (nextAlternateEstimate) => {
     if (!nextAlternateEstimate) return;
+    const settings = normalizeAlternateSettings(nextAlternateEstimate.settings, nextAlternateEstimate.items);
     const nextAlternate = {
       id: nextAlternateEstimate.id || alternateId,
       name: nextAlternateEstimate.name || alternate?.name || "Bid Alternate",
@@ -56,7 +69,7 @@ export function BidAlternateEditor({ estimate, alternateId, onBack, onUpdate }) 
       customer: nextAlternateEstimate.customer || estimate.customer || "",
       version: nextAlternateEstimate.version || estimate.version || "1.0",
       notes: nextAlternateEstimate.notes || "",
-      settings: { ...DEFAULT_SETTINGS, ...(nextAlternateEstimate.settings || {}) },
+      settings,
       items: Array.isArray(nextAlternateEstimate.items) ? nextAlternateEstimate.items : [],
       createdAt: nextAlternateEstimate.createdAt || alternate?.createdAt || estimate.createdAt,
       updatedAt: nextAlternateEstimate.updatedAt || new Date().toISOString(),

@@ -399,15 +399,16 @@ function renderAlternateScopeSections(alternates, scopeMode, baseSettings) {
   if (!alternates.length) return "";
 
   const blocks = alternates.map((alternate) => {
+    const raw = calcEstimate({ items: alternate.items || [] });
     const alternateSettings = {
       ...DEFAULT_SETTINGS,
       ...(alternate.settings || {}),
+      trips: raw.lbrHrs > 0 ? Math.max(1, Math.ceil(raw.lbrHrs / 20)) : 1,
     };
     const alternateEstimate = {
       items: alternate.items || [],
       settings: alternateSettings,
     };
-    const raw = calcEstimate(alternateEstimate);
     const computedTotal = computeCosts(raw.mtl, raw.lbrHrs, alternateSettings, alternateEstimate.items || []).total || 0;
     const displayTotal = computedTotal || alternate.amount || 0;
     const alternateScopeMode = alternateSettings.proposalScopeMode === "detailed" ? "detailed" : scopeMode;
@@ -564,15 +565,16 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
     ? renderCustomerScope(settings.customerScope)
     : renderGeneratedScope(itemsWithComps, scopeMode);
   const alternates = normalizeAlternates(estimate).map((alternate) => {
+    const raw = calcEstimate({ items: alternate.items || [] });
     const alternateSettings = {
       ...DEFAULT_SETTINGS,
       ...(alternate.settings || {}),
+      trips: raw.lbrHrs > 0 ? Math.max(1, Math.ceil(raw.lbrHrs / 20)) : 1,
     };
     const alternateEstimate = {
       items: alternate.items || [],
       settings: alternateSettings,
     };
-    const raw = calcEstimate(alternateEstimate);
     const computedTotal = computeCosts(raw.mtl, raw.lbrHrs, alternateSettings, alternateEstimate.items || []).total || 0;
     const displayTotal = computedTotal || alternate.amount || 0;
     return {
