@@ -9,6 +9,8 @@ import { useEstimate } from "../../shared/EstimateContext.jsx";
 import { getCurrentUser } from "../../shared/currentUser.js";
 import { AHU_TYPES } from "../ahu/ahuData.js";
 import { AddEquipButtons } from "./AddEquipButtons.jsx";
+import { AiConnectionsModal } from "./AiConnectionsModal.jsx";
+import { AiTakeoffModal } from "./AiTakeoffModal.jsx";
 import { ProjectSettingsPanel } from "./ProjectSettingsPanel.jsx";
 import { ProposalDetailsModal } from "./ProposalDetailsModal.jsx";
 import {
@@ -26,6 +28,8 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
   const [expandedRows, setExpandedRows] = useState({});
   const [showSettings, setShowSettings] = useState(false);
   const [showProposalDetails, setShowProposalDetails] = useState(false);
+  const [showAiConnections, setShowAiConnections] = useState(false);
+  const [showAiParser, setShowAiParser] = useState(false);
   const [name,setName]         = useState(estimate.name);
   const [number,setNumber]     = useState(estimate.number||"");
   const [customer,setCustomer] = useState(estimate.customer||"");
@@ -42,6 +46,12 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
   }, [estimate.settings]);
   const drawingBasis = settings.drawingBasis || settings.proposalBasis || settings.bidBasis || "";
   const sharepointFolder = estimate.sharepointFolder || estimate.sharepoint_folder || estimate.body?.sharepointFolder || estimate.body?.sharepoint_folder || null;
+  const organizationId =
+    estimate.organizationId ||
+    estimate.organization_id ||
+    estimate.body?.organizationId ||
+    estimate.body?.organization_id ||
+    "";
   const alternates = useMemo(() => Array.isArray(estimate.alternates) ? estimate.alternates : [], [estimate.alternates]);
   const updateSettings = useCallback((patch) => {
     onUpdate({ ...estimate, updatedAt: new Date().toISOString(),
@@ -261,6 +271,26 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                       fontFamily:T.mono, fontWeight:600 }}>
                     Proposal Details
                   </button>
+                  {!customerMode && (
+                    <button onClick={()=>setShowAiConnections(s=>!s)}
+                      title="AI connections"
+                      style={{ padding:"7px 10px", border:"1px solid "+(showAiConnections?T.blue:T.border2),
+                        borderRadius:5, background:showAiConnections?T.blueFaint:"none",
+                        color:showAiConnections?T.blue:T.muted, cursor:"pointer", fontSize:12,
+                        fontFamily:T.mono, fontWeight:600 }}>
+                      AI Connections
+                    </button>
+                  )}
+                  {!customerMode && (
+                    <button onClick={()=>setShowAiParser(s=>!s)}
+                      title="AI parser"
+                      style={{ padding:"7px 10px", border:"1px solid "+(showAiParser?T.blue:T.border2),
+                        borderRadius:5, background:showAiParser?T.blueFaint:"none",
+                        color:showAiParser?T.blue:T.muted, cursor:"pointer", fontSize:12,
+                        fontFamily:T.mono, fontWeight:600 }}>
+                      AI Parser
+                    </button>
+                  )}
                   {showProjectSettings && (
                     <button onClick={()=>setShowSettings(s=>!s)}
                       title="Project settings"
@@ -366,6 +396,27 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
           sharepointFolder={sharepointFolder}
           drawingBasis={drawingBasis}
           onChangeDrawingBasis={(value) => updateSettings({ drawingBasis: value })}
+        />
+      )}
+
+      {!customerMode && (
+        <AiConnectionsModal
+          open={showAiConnections}
+          onClose={() => setShowAiConnections(false)}
+          organizationId={organizationId}
+        />
+      )}
+
+      {!customerMode && (
+        <AiTakeoffModal
+          open={showAiParser}
+          onClose={() => setShowAiParser(false)}
+          estimate={estimate}
+          organizationId={organizationId}
+          onManageConnections={() => {
+            setShowAiParser(false);
+            setShowAiConnections(true);
+          }}
         />
       )}
 

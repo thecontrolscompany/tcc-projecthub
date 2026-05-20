@@ -67,6 +67,21 @@ export async function extractProposalFromPdf(buffer: Buffer) {
   return extractProposalFromText(cleaned);
 }
 
+export async function extractTextFromImage(buffer: Buffer): Promise<string> {
+  const { createWorker } = await import("tesseract.js");
+  const worker = await createWorker("eng", 1, {
+    cacheMethod: "none",
+    logger: () => undefined,
+  });
+
+  try {
+    const result = await worker.recognize(buffer);
+    return String(result?.data?.text || "").trim();
+  } finally {
+    await worker.terminate().catch(() => undefined);
+  }
+}
+
 export async function extractEstimateFromWorkbook(buffer: Buffer): Promise<EstimateExtractionResult> {
   const ExcelJS = await import("exceljs").then((m) => m.default ?? m);
   const workbook = new ExcelJS.Workbook();

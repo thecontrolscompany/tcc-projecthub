@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { calcEstimate, calcItem, COMPS_MAP, TYPE_META } from "@/modules/hvac-estimator/components/estimate/estimateCalc";
 import { AddEquipButtons } from "@/modules/hvac-estimator/components/estimate/AddEquipButtons";
+import { AiConnectionsModal } from "@/modules/hvac-estimator/components/estimate/AiConnectionsModal";
+import { AiTakeoffModal } from "@/modules/hvac-estimator/components/estimate/AiTakeoffModal";
 import { EstimateDetail } from "@/modules/hvac-estimator/components/estimate/EstimateDetail";
 import { EstimateEditorWorkspace } from "@/modules/hvac-estimator/components/estimate/EstimateEditorWorkspace";
 import ConduitFillPage from "@/modules/hvac-estimator/components/conduitFill/ConduitFillPage";
@@ -21,9 +23,11 @@ import { applyVavDefaultSelections, getVisibleVavComponents, normalizeVavCfg } f
 import { buildDefaultVrfSelected, getVisibleVrfComponents, normalizeVrfCfg } from "@/modules/hvac-estimator/components/vrf/vrfData";
 import { summarizeHvacEstimate, type HvacEstimateBody } from "@/modules/hvac-estimator/platform-adapter";
 import { ProjectHubEstimateProvider, useEstimate } from "@/modules/hvac-estimator/shared/EstimateContext";
+import { ASSEMBLIES } from "@/modules/hvac-estimator/shared/assemblyData";
 import { CONDUIT_FILL_RESTORE_KEY } from "@/modules/hvac-estimator/shared/conduitFill";
 import { getCustomComponentOptions } from "@/modules/hvac-estimator/shared/componentCatalog";
 import { UnitaryFlowDiagram } from "@/modules/hvac-estimator/shared/UnitaryFlowDiagram";
+import { PLANT_COMPS, PLANT_TYPES } from "@/modules/hvac-estimator/components/plant/plantData";
 import type { EstimateRecord, EstimateStatus } from "@/types/database";
 
 type Props = {
@@ -403,6 +407,143 @@ function buildItemFromForm(form: AddItemForm): EstimateItem {
   };
 }
 
+function normalizeLookup(value: string) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function resolveImportedAssemblyId(assembly: Record<string, unknown>) {
+  const assemblyRef = asString(assembly.assemblyRef);
+  const assemblyCatalog = ASSEMBLIES as Record<string, { id: string; name?: string }>;
+  if (assemblyRef && assemblyCatalog[assemblyRef]) return assemblyRef;
+
+  const assemblyName = normalizeLookup(asString(assembly.assemblyName));
+  if (!assemblyName) return "";
+
+  const match = Object.values(assemblyCatalog).find((entry) => normalizeLookup(entry.name || "") === assemblyName);
+  return match?.id || "";
+}
+
+function inferImportedType(system: Record<string, unknown>) {
+  const rawType = normalizeLookup(asString(system.type));
+  const name = normalizeLookup(asString(system.name));
+  const haystack = `${rawType} ${name}`;
+
+  if (haystack.includes("ahu") || haystack.includes("air handling")) return "ahu";
+  if (haystack.includes("vav") || haystack.includes("terminal box")) return "vav";
+  if (haystack.includes("rtu") || haystack.includes("roof top") || haystack.includes("packaged rooftop")) return "rtu";
+  if (haystack.includes("dx") || haystack.includes("heat pump") || haystack.includes("split system")) return "dx";
+  if (haystack.includes("vrf")) return "vrf";
+  if (haystack.includes("fcu") || haystack.includes("fan coil")) return "fcu";
+  if (haystack.includes("unit heater") || haystack.includes("uh")) return "uh";
+  if (haystack.includes("exhaust fan") || haystack.includes("exhaust") || haystack === "ef") return "exhaust-fan";
+  if (
+    haystack.includes("chiller") ||
+    haystack.includes("boiler") ||
+    haystack.includes("cooling tower") ||
+    haystack.includes("pumping") ||
+    haystack.includes("pump")
+  ) {
+    return "plant";
+  }
+  if (haystack.includes("network") || haystack.includes("controller") || haystack.includes("gateway") || haystack.includes("panel")) {
+    return "network";
+  }
+  return supportedEquipmentTypes.includes(rawType) ? rawType : "custom";
+}
+
+function getPlantTypeFromImportedSystem(system: Record<string, unknown>) {
+  const rawType = normalizeLookup(asString(system.type));
+  const name = normalizeLookup(asString(system.name));
+  const haystack = `${rawType} ${name}`;
+
+  if (haystack.includes("air") && haystack.includes("chiller")) return "chiller-air";
+  if (haystack.includes("water") && haystack.includes("chiller")) return "chiller-water";
+  if (haystack.includes("cooling tower")) return "cooling-tower";
+  if (haystack.includes("steam boiler")) return "boiler-steam";
+  if (haystack.includes("boiler")) return "boiler-hw";
+  if (haystack.includes("condenser") && haystack.includes("pump")) return "pumping-cond";
+  if (haystack.includes("hot water") && haystack.includes("pump")) return "pumping-hw";
+  if (haystack.includes("chilled water") && haystack.includes("pump")) return "pumping-chw";
+  return "chiller-air";
+}
+
+function getImportedPlantSelections(plantType: string) {
+  const plantCatalog = PLANT_COMPS as Record<string, Array<{ id: string; def?: boolean }>>;
+  const comps = plantCatalog[plantType] || [];
+  return comps
+    .filter((component) => Boolean((component as { def?: boolean }).def))
+    .map((component) => ({ id: component.id, qty: 1 }));
+}
+
+function buildImportedPointCustomEntries(point: Record<string, unknown>) {
+  const assemblies = Array.isArray(point.assemblies) ? point.assemblies : [];
+  const qty = Math.max(1, asNumber(point.qty, 1));
+  const pointName = asString(point.name) || "Imported Point";
+
+  const entries = assemblies.flatMap((assembly, assemblyIndex) => {
+    const assemblyRecord = assembly && typeof assembly === "object" ? (assembly as Record<string, unknown>) : {};
+    const resolvedAssemblyId = resolveImportedAssemblyId(assemblyRecord);
+    const assemblyName = asString(assemblyRecord.assemblyName) || asString(assemblyRecord.assemblyRef) || "Imported Assembly";
+    const notes = [asString(assemblyRecord.notes), asString(assemblyRecord.assemblyRef) && !resolvedAssemblyId ? `Assembly ref: ${asString(assemblyRecord.assemblyRef)}` : ""]
+      .filter(Boolean)
+      .join(" · ");
+
+    return Array.from({ length: qty }, (_, copyIndex) => ({
+      id: `imported-${pointName}-${assemblyIndex}-${copyIndex}-${crypto.randomUUID()}`,
+      label: assemblyName,
+      name: assemblyName,
+      category: "Imported Assembly",
+      notes,
+      emtAID: resolvedAssemblyId,
+      plnAID: resolvedAssemblyId,
+    }));
+  });
+
+  if (!entries.length) {
+    return Array.from({ length: qty }, (_, copyIndex) => ({
+      id: `imported-${pointName}-${copyIndex}-${crypto.randomUUID()}`,
+      label: pointName,
+      name: pointName,
+      category: "Imported Point",
+      notes: asString(point.notes),
+      emtAID: "",
+      plnAID: "",
+    }));
+  }
+
+  return entries;
+}
+
+function buildImportedEstimateItem(system: Record<string, unknown>, index: number, installType: "EMT" | "Plenum"): EstimateItem {
+  const type = inferImportedType(system);
+  const plantType = type === "plant" ? getPlantTypeFromImportedSystem(system) : "";
+  const cfg =
+    type === "plant"
+      ? { plantType, aiScopeSystem: system }
+      : { ...getDefaultCfg(type), aiScopeSystem: system };
+  const selected =
+    type === "plant"
+      ? getImportedPlantSelections(plantType)
+      : getDefaultSelectedForType(type, cfg);
+  const points = Array.isArray(system.points) ? system.points : [];
+
+  return {
+    id: crypto.randomUUID(),
+    type,
+    tag: asString(system.name).trim() || `${getTypeMeta(type).label}-${index + 1}`,
+    location: asString(system.location).trim(),
+    qty: Math.max(1, asNumber(system.qty, 1)),
+    installType,
+    selected,
+    custom: points.flatMap((point) => buildImportedPointCustomEntries(point as Record<string, unknown>)),
+    priceSnap: {},
+    cfg: {
+      ...cfg,
+      aiScopeImport: system,
+    },
+  };
+}
+
 export function EstimateDetailClient({ estimate }: Props) {
   const router = useRouter();
   const initialEstimateState = getInitialEstimateState(estimate);
@@ -412,6 +553,8 @@ export function EstimateDetailClient({ estimate }: Props) {
   const [showAddEditor, setShowAddEditor] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showProposalDetails, setShowProposalDetails] = useState(false);
+  const [showAiConnections, setShowAiConnections] = useState(false);
+  const [showAiParser, setShowAiParser] = useState(false);
   const [editingComponentsFor, setEditingComponentsFor] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -420,6 +563,12 @@ export function EstimateDetailClient({ estimate }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const opportunityNumber = asString(body.platformContext?.opportunityNumber);
+  const organizationId =
+    asString(body.organizationId) ||
+    asString((estimate as unknown as Record<string, unknown>).organizationId) ||
+    asString((estimate as unknown as Record<string, unknown>).organization_id) ||
+    asString(body.platformContext?.organizationId) ||
+    asString(body.platformContext?.organization_id);
   const rawTotals = useMemo(() => calcEstimate(body) as { mtl: number; lbrHrs: number }, [body]);
   const costs = useMemo(
     () =>
@@ -559,6 +708,31 @@ export function EstimateDetailClient({ estimate }: Props) {
     updateBody({ items: body.items.filter((item) => item.id !== itemId) });
   }
 
+  async function applyImportedScopeImport(scopeImport: Record<string, unknown>) {
+    const systems = Array.isArray(scopeImport?.systems) ? scopeImport.systems : [];
+    if (!systems.length) {
+      throw new Error("The parsed import did not contain any systems.");
+    }
+
+    const installType: "EMT" | "Plenum" = body.settings.defaultInstallType === "Plenum" ? "Plenum" : "EMT";
+    const importedItems = systems
+      .filter((system) => system && typeof system === "object")
+      .map((system, index) => buildImportedEstimateItem(system as Record<string, unknown>, index, installType));
+
+    if (!importedItems.length) {
+      throw new Error("The parsed import did not produce any estimator items.");
+    }
+
+    const nextBody = {
+      ...body,
+      items: [...body.items, ...importedItems],
+      updatedAt: new Date().toISOString(),
+    };
+
+    await persistEstimate(nextBody, { showSuccessMessage: false });
+    setMessage(`Imported ${importedItems.length} system${importedItems.length === 1 ? "" : "s"} into the estimate.`);
+  }
+
   useEffect(() => {
     if (!dirty) return;
     writeLocalDraft(estimate.id, body, status);
@@ -693,6 +867,22 @@ export function EstimateDetailClient({ estimate }: Props) {
               </select>
               <button
                 type="button"
+                onClick={() => setShowAiConnections(true)}
+                disabled={!organizationId}
+                className="rounded-lg border border-border-default px-3 py-1.5 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                AI Connections
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAiParser(true)}
+                disabled={!organizationId}
+                className="rounded-lg border border-brand-primary/40 px-3 py-1.5 text-sm font-semibold text-brand-primary transition hover:bg-brand-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                AI Parser
+              </button>
+              <button
+                type="button"
                 onClick={handleSave}
                 disabled={saving || deleting}
                 className="rounded-lg bg-brand-primary px-3 py-1.5 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
@@ -715,6 +905,22 @@ export function EstimateDetailClient({ estimate }: Props) {
             onBack={() => {
               window.location.href = "/estimating";
             }}
+          />
+          <AiConnectionsModal
+            open={showAiConnections}
+            onClose={() => setShowAiConnections(false)}
+            organizationId={organizationId}
+          />
+          <AiTakeoffModal
+            open={showAiParser}
+            onClose={() => setShowAiParser(false)}
+            estimate={body}
+            organizationId={organizationId}
+            onManageConnections={() => {
+              setShowAiParser(false);
+              setShowAiConnections(true);
+            }}
+            onImport={(payload: unknown) => applyImportedScopeImport(payload as Record<string, unknown>)}
           />
         </div>
       </ProjectHubEstimateProvider>
