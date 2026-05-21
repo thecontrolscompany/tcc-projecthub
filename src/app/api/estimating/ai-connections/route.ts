@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
-import { canReadEstimates, canWriteEstimates } from "@/lib/estimates/api";
+import { canReadEstimates } from "@/lib/estimates/api";
 import { encryptAiApiKey, getKeyHint } from "@/modules/hvac-estimator/ai/connectionCrypto";
 import { isAiProvider } from "@/modules/hvac-estimator/ai/providerRegistry";
 
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const auth = await resolveAuth();
   if ("error" in auth) return auth.error;
-  if (!canWriteEstimates(auth.role)) {
+  if (!canReadEstimates(auth.role)) {
     return NextResponse.json({ error: "Access denied." }, { status: 403 });
   }
 
@@ -135,7 +135,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const auth = await resolveAuth();
   if ("error" in auth) return auth.error;
-  if (!canWriteEstimates(auth.role)) {
+  if (!canReadEstimates(auth.role)) {
     return NextResponse.json({ error: "Access denied." }, { status: 403 });
   }
 
