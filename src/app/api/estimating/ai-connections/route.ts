@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import { canReadEstimates } from "@/lib/estimates/api";
@@ -11,6 +12,13 @@ function normalizeText(value: unknown) {
 
 function badRequest(message: string) {
   return NextResponse.json({ error: message }, { status: 400 });
+}
+
+function createServiceClient() {
+  return createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
 }
 
 async function resolveAuth() {
@@ -87,7 +95,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: access.error instanceof Error ? access.error.message : "Unable to verify access." }, { status: 403 });
   }
 
-  const existingRes = await auth.supabase
+  const admin = createServiceClient();
+  const existingRes = await admin
     .from("estimator_ai_connections")
     .select("id, encrypted_api_key, key_hint, label, model, endpoint")
     .eq("organization_id", organizationId)
@@ -116,7 +125,7 @@ export async function POST(request: Request) {
     updated_at: new Date().toISOString(),
   };
 
-  const { data, error } = await auth.supabase
+  const { data, error } = await admin
     .from("estimator_ai_connections")
     .upsert(payload, { onConflict: "organization_id,provider" })
     .select("id, provider, label, model, endpoint, key_hint, created_at, updated_at, last_used_at")
@@ -145,7 +154,8 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: access.error instanceof Error ? access.error.message : "Unable to verify access." }, { status: 403 });
   }
 
-  const { error } = await auth.supabase
+  const admin = createServiceClient();
+  const { error } = await admin
     .from("estimator_ai_connections")
     .delete()
     .eq("organization_id", organizationId)
