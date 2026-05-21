@@ -45,95 +45,105 @@ async function hasOrganizationAccess(
 }
 
 export async function POST(request: Request) {
-  const auth = await resolveAuth();
-  if ("error" in auth) return auth.error;
-  if (!canReadEstimates(auth.role)) {
-    return NextResponse.json({ error: "Access denied." }, { status: 403 });
-  }
+  try {
+    const auth = await resolveAuth();
+    if ("error" in auth) return auth.error;
+    if (!canReadEstimates(auth.role)) {
+      return NextResponse.json({ error: "Access denied." }, { status: 403 });
+    }
 
-  const formData = await request.formData().catch(() => null);
-  if (!formData) return badRequest("Invalid form data.");
+    const formData = await request.formData().catch(() => null);
+    if (!formData) return badRequest("Invalid form data.");
 
-  const estimateId = normalizeText(formData.get("estimateId"));
-  const provider = normalizeText(formData.get("provider"));
-  const scopeText = normalizeText(formData.get("scopeText"));
+    const estimateId = normalizeText(formData.get("estimateId"));
+    const provider = normalizeText(formData.get("provider"));
+    const scopeText = normalizeText(formData.get("scopeText"));
 
-  if (!estimateId) return badRequest("estimateId is required.");
-  if (!provider) return badRequest("provider is required.");
-  if (!scopeText && formData.getAll("files").length === 0) {
-    return badRequest("Provide pasted scope text or upload at least one file.");
-  }
+    if (!estimateId) return badRequest("estimateId is required.");
+    if (!provider) return badRequest("provider is required.");
+    if (!scopeText && formData.getAll("files").length === 0) {
+      return badRequest("Provide pasted scope text or upload at least one file.");
+    }
 
-  const { data: estimate, error: estimateError } = await auth.supabase
-    .from("estimates")
-    .select("id, organization_id, name, body")
-    .eq("id", estimateId)
-    .maybeSingle();
+    const { data: estimate, error: estimateError } = await auth.supabase
+      .from("estimates")
+      .select("id, organization_id, name, body")
+      .eq("id", estimateId)
+      .maybeSingle();
 
-  if (estimateError) return NextResponse.json({ error: estimateError.message }, { status: 500 });
-  if (!estimate) return NextResponse.json({ error: "Estimate not found." }, { status: 404 });
+    if (estimateError) return NextResponse.json({ error: estimateError.message }, { status: 500 });
+    if (!estimate) return NextResponse.json({ error: "Estimate not found." }, { status: 404 });
 
-  const organizationId = estimate.organization_id as string | null;
-  if (!organizationId) return badRequest("Estimate is not linked to an organization.");
+    const organizationId = estimate.organization_id as string | null;
+    if (!organizationId) return badRequest("Estimate is not linked to an organization.");
 
-  const access = await hasOrganizationAccess(auth.supabase, organizationId);
-  if ("error" in access) {
-    return NextResponse.json({ error: access.error instanceof Error ? access.error.message : "Unable to verify access." }, { status: 403 });
-  }
+    const access = await hasOrganizationAccess(auth.supabase, organizationId);
+    if ("error" in access) {
+      return NextResponse.json({ error: access.error instanceof Error ? access.error.message : "Unable to verify access." }, { status: 403 });
+    }
 
-  const admin = createServiceClient();
-  const { data: connection, error: connectionError } = await admin
-    .from("estimator_ai_connections")
-    .select("id, provider, label, model, endpoint, encrypted_api_key")
-    .eq("organization_id", organizationId)
-    .eq("provider", provider)
-    .maybeSingle();
+    const admin = createServiceClient();
+    const { data: connection, error: connectionError } = await admin
+      .from("estimator_ai_connections")
+      .select("id, provider, label, model, endpoint, encrypted_api_key")
+      .eq("organization_id", organizationId)
+      .eq("provider", provider)
+      .maybeSingle();
 
-  if (connectionError) return NextResponse.json({ error: connectionError.message }, { status: 500 });
-  if (!connection) return NextResponse.json({ error: "No AI connection configured for this provider." }, { status: 404 });
-  if (!connection.model) return NextResponse.json({ error: "The saved AI connection is missing a model." }, { status: 400 });
-  if (connection.provider === "azure_openai" && !connection.endpoint) {
-    return NextResponse.json({ error: "The saved Azure OpenAI connection is missing an endpoint." }, { status: 400 });
-  }
+    if (connectionError) return NextResponse.json({ error: connectionError.message }, { status: 500 });
+    if (!connection) return NextResponse.json({ error: "No AI connection configured for this provider." }, { status: 404 });
+    if (!connection.model) return NextResponse.json({ error: "The saved AI connection is missing a model." }, { status: 400 });
+    if (connection.provider === "azure_openai" && !connection.endpoint) {
+      return NextResponse.json({ error: "The saved Azure OpenAI connection is missing an endpoint." }, { status: 400 });
+    }
 
-  const files = formData.getAll("files").filter((entry): entry is File => entry instanceof File && entry.size > 0);
-  const uploadedFiles = await Promise.all(
-    files.map(async (file) => ({
-      name: file.name,
-      text: await extractUploadedFileText(file),
-    })),
-  );
+    const files = formData.getAll("files").filter((entry): entry is File => entry instanceof File && entry.size > 0);
+    const uploadedFiles = await Promise.all(
+      files.map(async (file) => ({
+        name: file.name,
+        text: await extractUploadedFileText(file),
+      })),
+    );
 
-  const prompt = await buildScopeTakeoffPrompt({
-    estimate,
-    scopeText,
-    uploadedFiles,
-  });
+    const prompt = await buildScopeTakeoffPrompt({
+      estimate,
+      scopeText,
+      uploadedFiles,
+    });
 
-  const decryptedKey = decryptAiApiKey(connection.encrypted_api_key);
-  const { validated: scopeImport, rawText } = await runScopeTakeoffWithProvider({
-    provider: connection.provider,
-    apiKey: decryptedKey,
-    model: connection.model,
-    endpoint: connection.endpoint,
-    organizationId,
-    prompt,
-  });
-
-  await admin
-    .from("estimator_ai_connections")
-    .update({ last_used_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-    .eq("id", connection.id);
-
-  return NextResponse.json({
-    scopeImport,
-    source: {
-      estimateId,
-      organizationId,
+    const decryptedKey = decryptAiApiKey(connection.encrypted_api_key);
+    const { validated: scopeImport, rawText } = await runScopeTakeoffWithProvider({
       provider: connection.provider,
-      connectionId: connection.id,
-      files: uploadedFiles.map((file) => file.name),
-    },
-    rawText,
-  });
+      apiKey: decryptedKey,
+      model: connection.model,
+      endpoint: connection.endpoint,
+      organizationId,
+      prompt,
+    });
+
+    await admin
+      .from("estimator_ai_connections")
+      .update({ last_used_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq("id", connection.id);
+
+    return NextResponse.json({
+      scopeImport,
+      source: {
+        estimateId,
+        organizationId,
+        provider: connection.provider,
+        connectionId: connection.id,
+        files: uploadedFiles.map((file) => file.name),
+      },
+      rawText,
+    });
+  } catch (error) {
+    console.error("Estimating AI takeoff failed:", error);
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Unable to parse scope.",
+      },
+      { status: 500 },
+    );
+  }
 }
