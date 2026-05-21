@@ -226,6 +226,12 @@ export function EstimatingListClient() {
           >
             Help
           </Link>
+          <Link
+            href="/estimating/settings"
+            className="rounded-xl border border-border-default px-4 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
+          >
+            AI Settings
+          </Link>
           <a
             href="https://estimates.thecontrolscompany.com"
             target="_blank"

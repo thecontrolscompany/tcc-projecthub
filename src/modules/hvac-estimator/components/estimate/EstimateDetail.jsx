@@ -9,7 +9,6 @@ import { useEstimate } from "../../shared/EstimateContext.jsx";
 import { getCurrentUser } from "../../shared/currentUser.js";
 import { AHU_TYPES } from "../ahu/ahuData.js";
 import { AddEquipButtons } from "./AddEquipButtons.jsx";
-import { AiConnectionsModal } from "./AiConnectionsModal.jsx";
 import { AiTakeoffModal } from "./AiTakeoffModal.jsx";
 import { ProjectSettingsPanel } from "./ProjectSettingsPanel.jsx";
 import { ProposalDetailsModal } from "./ProposalDetailsModal.jsx";
@@ -28,7 +27,6 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
   const [expandedRows, setExpandedRows] = useState({});
   const [showSettings, setShowSettings] = useState(false);
   const [showProposalDetails, setShowProposalDetails] = useState(false);
-  const [showAiConnections, setShowAiConnections] = useState(false);
   const [showAiParser, setShowAiParser] = useState(false);
   const [name,setName]         = useState(estimate.name);
   const [number,setNumber]     = useState(estimate.number||"");
@@ -272,16 +270,6 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                     Proposal Details
                   </button>
                   {!customerMode && (
-                    <button onClick={()=>setShowAiConnections(s=>!s)}
-                      title="AI connections"
-                      style={{ padding:"7px 10px", border:"1px solid "+(showAiConnections?T.blue:T.border2),
-                        borderRadius:5, background:showAiConnections?T.blueFaint:"none",
-                        color:showAiConnections?T.blue:T.muted, cursor:"pointer", fontSize:12,
-                        fontFamily:T.mono, fontWeight:600 }}>
-                      AI Connections
-                    </button>
-                  )}
-                  {!customerMode && (
                     <button onClick={()=>setShowAiParser(s=>!s)}
                       title="AI parser"
                       style={{ padding:"7px 10px", border:"1px solid "+(showAiParser?T.blue:T.border2),
@@ -400,14 +388,6 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
       )}
 
       {!customerMode && (
-        <AiConnectionsModal
-          open={showAiConnections}
-          onClose={() => setShowAiConnections(false)}
-          organizationId={organizationId}
-        />
-      )}
-
-      {!customerMode && (
         <AiTakeoffModal
           open={showAiParser}
           onClose={() => setShowAiParser(false)}
@@ -415,7 +395,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
           organizationId={organizationId}
           onManageConnections={() => {
             setShowAiParser(false);
-            setShowAiConnections(true);
+            window.location.href = "/estimating/settings";
           }}
         />
       )}

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { calcEstimate, calcItem, COMPS_MAP, TYPE_META } from "@/modules/hvac-estimator/components/estimate/estimateCalc";
 import { AddEquipButtons } from "@/modules/hvac-estimator/components/estimate/AddEquipButtons";
-import { AiConnectionsModal } from "@/modules/hvac-estimator/components/estimate/AiConnectionsModal";
 import { AiTakeoffModal } from "@/modules/hvac-estimator/components/estimate/AiTakeoffModal";
 import { EstimateDetail } from "@/modules/hvac-estimator/components/estimate/EstimateDetail";
 import { EstimateEditorWorkspace } from "@/modules/hvac-estimator/components/estimate/EstimateEditorWorkspace";
@@ -553,7 +552,6 @@ export function EstimateDetailClient({ estimate }: Props) {
   const [showAddEditor, setShowAddEditor] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showProposalDetails, setShowProposalDetails] = useState(false);
-  const [showAiConnections, setShowAiConnections] = useState(false);
   const [showAiParser, setShowAiParser] = useState(false);
   const [editingComponentsFor, setEditingComponentsFor] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -867,11 +865,11 @@ export function EstimateDetailClient({ estimate }: Props) {
               </select>
               <button
                 type="button"
-                onClick={() => setShowAiConnections(true)}
+                onClick={() => router.push("/estimating/settings")}
                 disabled={!organizationId}
                 className="rounded-lg border border-border-default px-3 py-1.5 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay disabled:cursor-not-allowed disabled:opacity-50"
               >
-                AI Connections
+                AI Settings
               </button>
               <button
                 type="button"
@@ -906,11 +904,6 @@ export function EstimateDetailClient({ estimate }: Props) {
               window.location.href = "/estimating";
             }}
           />
-          <AiConnectionsModal
-            open={showAiConnections}
-            onClose={() => setShowAiConnections(false)}
-            organizationId={organizationId}
-          />
           <AiTakeoffModal
             open={showAiParser}
             onClose={() => setShowAiParser(false)}
@@ -918,7 +911,7 @@ export function EstimateDetailClient({ estimate }: Props) {
             organizationId={organizationId}
             onManageConnections={() => {
               setShowAiParser(false);
-              setShowAiConnections(true);
+              router.push("/estimating/settings");
             }}
             onImport={(payload: unknown) => applyImportedScopeImport(payload as Record<string, unknown>)}
           />
