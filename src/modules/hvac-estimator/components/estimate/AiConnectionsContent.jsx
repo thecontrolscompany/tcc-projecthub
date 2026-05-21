@@ -31,31 +31,25 @@ export function AiConnectionsContent({ organizationId }) {
     return [{ id: form.model, label: `Saved model: ${form.model}` }, ...baseOptions];
   }, [form.model, form.provider]);
 
-  useEffect(() => {
-    if (!organizationId) return undefined;
+  async function loadConnections() {
+    if (!organizationId) return;
 
-    let cancelled = false;
-    async function loadConnections() {
-      setLoading(true);
-      setMessage("");
-      try {
-        const response = await fetch(`/api/estimating/ai-connections?organizationId=${encodeURIComponent(organizationId)}`);
-        const json = await response.json();
-        if (!response.ok) throw new Error(json?.error || "Unable to load AI connections.");
-        if (!cancelled) {
-          setConnections(Array.isArray(json.connections) ? json.connections : []);
-        }
-      } catch (error) {
-        if (!cancelled) setMessage(error instanceof Error ? error.message : "Unable to load AI connections.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+    setLoading(true);
+    setMessage("");
+    try {
+      const response = await fetch(`/api/estimating/ai-connections?organizationId=${encodeURIComponent(organizationId)}`);
+      const json = await response.json();
+      if (!response.ok) throw new Error(json?.error || "Unable to load AI connections.");
+      setConnections(Array.isArray(json.connections) ? json.connections : []);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to load AI connections.");
+    } finally {
+      setLoading(false);
     }
+  }
 
+  useEffect(() => {
     loadConnections();
-    return () => {
-      cancelled = true;
-    };
   }, [organizationId]);
 
   useEffect(() => {
@@ -86,10 +80,7 @@ export function AiConnectionsContent({ organizationId }) {
       });
       const json = await response.json();
       if (!response.ok) throw new Error(json?.error || "Unable to save AI connection.");
-      setConnections((current) => {
-        const next = current.filter((connection) => connection.provider !== json.connection.provider);
-        return [...next, json.connection].sort((a, b) => a.provider.localeCompare(b.provider));
-      });
+      await loadConnections();
       setForm((state) => ({ ...state, apiKey: "" }));
       setMessage("AI connection saved.");
     } catch (error) {
@@ -111,7 +102,7 @@ export function AiConnectionsContent({ organizationId }) {
       });
       const json = await response.json();
       if (!response.ok) throw new Error(json?.error || "Unable to remove AI connection.");
-      setConnections((current) => current.filter((connection) => connection.provider !== provider));
+      await loadConnections();
       setMessage("AI connection removed.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to remove AI connection.");
