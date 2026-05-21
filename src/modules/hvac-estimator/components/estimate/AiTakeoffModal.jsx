@@ -266,13 +266,24 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
                 </div>
               </div>
               {result && (
-                <button
-                  type="button"
-                  onClick={() => navigator.clipboard.writeText(prettyJson(result.scopeImport || result))}
-                  className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-                >
-                  Copy JSON
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(prettyJson(result.scopeImport || result))}
+                    className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                  >
+                    Copy JSON
+                  </button>
+                  {onImport && (
+                    <button
+                      type="button"
+                      onClick={handleImport}
+                      className="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
+                    >
+                      Import into estimate
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 
@@ -284,15 +295,6 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
                   <pre className="whitespace-pre-wrap break-words text-xs leading-6 text-slate-800">
                     {prettyJson(result.scopeImport || result)}
                   </pre>
-                  {onImport && (
-                    <button
-                      type="button"
-                      onClick={handleImport}
-                      className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500"
-                    >
-                      Import into estimate
-                    </button>
-                  )}
                 </div>
               ) : (
                 <div className="text-sm text-slate-700">
