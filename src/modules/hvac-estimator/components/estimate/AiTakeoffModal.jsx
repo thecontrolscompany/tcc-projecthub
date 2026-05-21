@@ -135,7 +135,13 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
               form="ai-parser-form"
               onClick={runParser}
               disabled={parsing || !provider || loading}
-              className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-full px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+              style={{
+                backgroundColor: parsing || !provider || loading ? "#94a3b8" : "#059669",
+                color: "#ffffff",
+                boxShadow: "0 8px 24px rgba(5, 150, 105, 0.18)",
+                border: "1px solid rgba(4, 120, 87, 0.35)",
+              }}
             >
               {parsing ? "Parsing..." : "Parse scope"}
             </button>

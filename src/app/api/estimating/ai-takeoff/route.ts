@@ -4,6 +4,7 @@ import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import { canReadEstimates } from "@/lib/estimates/api";
 import { decryptAiApiKey } from "@/modules/hvac-estimator/ai/connectionCrypto";
 import { buildScopeTakeoffPrompt, extractUploadedFileText, runScopeTakeoffWithProvider } from "@/modules/hvac-estimator/ai/takeoffServer";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 function badRequest(message: string) {
   return NextResponse.json({ error: message }, { status: 400 });
@@ -11,6 +12,13 @@ function badRequest(message: string) {
 
 function normalizeText(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function createServiceClient() {
+  return createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
 }
 
 async function resolveAuth() {
@@ -27,18 +35,12 @@ async function resolveAuth() {
 
 async function hasOrganizationAccess(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
   organizationId: string,
 ) {
-  const { data, error } = await supabase
-    .from("organization_memberships")
-    .select("organization_id")
-    .eq("organization_id", organizationId)
-    .eq("profile_id", userId)
-    .maybeSingle();
-
+  const { data, error } = await supabase.rpc("current_user_organization_ids");
   if (error) return { error };
-  if (!data) return { error: new Error("Access denied.") };
+  const organizationIds = Array.isArray(data) ? data.map((value) => String(value)) : [];
+  if (!organizationIds.includes(organizationId)) return { error: new Error("Access denied.") };
   return { ok: true as const };
 }
 
@@ -74,12 +76,13 @@ export async function POST(request: Request) {
   const organizationId = estimate.organization_id as string | null;
   if (!organizationId) return badRequest("Estimate is not linked to an organization.");
 
-  const access = await hasOrganizationAccess(auth.supabase, auth.user.id, organizationId);
+  const access = await hasOrganizationAccess(auth.supabase, organizationId);
   if ("error" in access) {
     return NextResponse.json({ error: access.error instanceof Error ? access.error.message : "Unable to verify access." }, { status: 403 });
   }
 
-  const { data: connection, error: connectionError } = await auth.supabase
+  const admin = createServiceClient();
+  const { data: connection, error: connectionError } = await admin
     .from("estimator_ai_connections")
     .select("id, provider, label, model, endpoint, encrypted_api_key")
     .eq("organization_id", organizationId)
@@ -117,7 +120,7 @@ export async function POST(request: Request) {
     prompt,
   });
 
-  await auth.supabase
+  await admin
     .from("estimator_ai_connections")
     .update({ last_used_at: new Date().toISOString(), updated_at: new Date().toISOString() })
     .eq("id", connection.id);
