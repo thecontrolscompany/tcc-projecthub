@@ -165,7 +165,7 @@ export function AiConnectionsContent({ organizationId }) {
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-700">
             No AI connections yet.
           </div>
         )}
@@ -269,7 +269,7 @@ export function AiConnectionsContent({ organizationId }) {
           </div>
         </div>
 
-        {message && <div className="mt-4 text-sm text-slate-600">{message}</div>}
+        {message && <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-100 px-4 py-3 text-sm font-medium text-rose-900">{message}</div>}
       </form>
     </div>
   );

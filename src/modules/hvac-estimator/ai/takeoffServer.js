@@ -236,8 +236,8 @@ export async function buildScopeTakeoffPrompt({
     "",
     `Estimate context: ${JSON.stringify({
       projectName: estimate?.name || "",
-      customerName: estimate?.customer || "",
-      baseScopeName: estimate?.settings?.baseScopeName || "",
+      customerName: estimate?.body?.customer || estimate?.customer || "",
+      baseScopeName: estimate?.body?.settings?.baseScopeName || estimate?.settings?.baseScopeName || "",
       organizationId: estimate?.organizationId || estimate?.organization_id || "",
     })}`,
     "",

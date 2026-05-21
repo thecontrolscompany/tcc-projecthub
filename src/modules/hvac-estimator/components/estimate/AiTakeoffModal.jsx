@@ -237,7 +237,7 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
                 </button>
               </div>
 
-              {message && <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{message}</div>}
+              {message && <div className="rounded-2xl border border-rose-200 bg-rose-100 px-4 py-3 text-sm font-medium text-rose-900">{message}</div>}
             </div>
           </form>
 
@@ -262,7 +262,7 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
 
             <div className="mt-4 min-h-[40vh] overflow-auto rounded-2xl border border-slate-200 bg-white p-4">
               {loading ? (
-                <div className="text-sm text-slate-600">Loading saved connections...</div>
+                <div className="text-sm text-slate-700">Loading saved connections...</div>
               ) : result ? (
                 <div className="space-y-4">
                   <pre className="whitespace-pre-wrap break-words text-xs leading-6 text-slate-800">
@@ -279,7 +279,7 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
                   )}
                 </div>
               ) : (
-                <div className="text-sm text-slate-500">
+                <div className="text-sm text-slate-700">
                   Parsed JSON will appear here. The estimator schema expects systems, points, and assembly lists.
                 </div>
               )}

@@ -64,7 +64,7 @@ export async function POST(request: Request) {
 
   const { data: estimate, error: estimateError } = await auth.supabase
     .from("estimates")
-    .select("id, organization_id, name, customer, body")
+    .select("id, organization_id, name, body")
     .eq("id", estimateId)
     .maybeSingle();
 
