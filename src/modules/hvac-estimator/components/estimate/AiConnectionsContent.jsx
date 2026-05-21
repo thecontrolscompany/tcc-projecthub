@@ -151,7 +151,13 @@ export function AiConnectionsContent({ organizationId }) {
                       type="button"
                       disabled={saving}
                       onClick={() => removeConnection(connection.provider)}
-                      className="rounded-xl border border-rose-700 bg-rose-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-xl px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed"
+                      style={{
+                        backgroundColor: saving ? "#fb7185" : "#b91c1c",
+                        border: "1px solid #991b1b",
+                        color: "#ffffff",
+                        boxShadow: "0 8px 18px rgba(185, 28, 28, 0.18)",
+                      }}
                     >
                       Remove
                     </button>
