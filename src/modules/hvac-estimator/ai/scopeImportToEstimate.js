@@ -184,7 +184,23 @@ function getImportedPlantSelections(plantType) {
     .map((component) => ({ id: component.id, qty: 1 }));
 }
 
-function buildImportedPointCustomEntries(point) {
+function getSelectedAssemblyIds(type, cfg, selected, installType) {
+  const visibleComponents = getVisibleComponentsForType(type, cfg);
+  const selectedIds = new Set((selected || []).map((entry) => entry.id));
+  const assemblyIds = new Set();
+
+  for (const comp of visibleComponents) {
+    if (!selectedIds.has(comp.id)) continue;
+    const aid = String(installType === "EMT" ? comp.emtAID : comp.plnAID);
+    if (aid && aid !== "undefined") {
+      assemblyIds.add(aid);
+    }
+  }
+
+  return assemblyIds;
+}
+
+function buildImportedPointCustomEntries(point, selectedAssemblyIds = new Set()) {
   const assemblies = Array.isArray(point.assemblies) ? point.assemblies : [];
   const qty = Math.max(1, asNumber(point.qty, 1));
   const pointName = asString(point.name) || "Imported Point";
@@ -202,6 +218,10 @@ function buildImportedPointCustomEntries(point) {
       .filter(Boolean)
       .join(" · ");
 
+    if (resolved?.id && selectedAssemblyIds.has(String(resolved.id))) {
+      return null;
+    }
+
     return {
       id: `imported-${pointName}-${assemblyIndex}-${crypto.randomUUID()}`,
       label: assemblyName,
@@ -212,7 +232,7 @@ function buildImportedPointCustomEntries(point) {
       emtAID: resolved?.id || "",
       plnAID: resolved?.id || "",
     };
-  });
+  }).filter(Boolean);
 
   if (!entries.length) {
     return [
@@ -243,6 +263,7 @@ function buildImportedEstimateItem(system, index, installType) {
     type === "plant"
       ? getImportedPlantSelections(plantType)
       : getDefaultSelectedForType(type, cfg);
+  const selectedAssemblyIds = getSelectedAssemblyIds(type, cfg, selected, installType);
   const points = Array.isArray(system.points) ? system.points : [];
 
   return {
@@ -253,7 +274,7 @@ function buildImportedEstimateItem(system, index, installType) {
     qty: Math.max(1, asNumber(system.qty, 1)),
     installType,
     selected,
-    custom: points.flatMap((point) => buildImportedPointCustomEntries(point)),
+    custom: points.flatMap((point) => buildImportedPointCustomEntries(point, selectedAssemblyIds)),
     priceSnap: {},
     cfg: {
       ...cfg,
