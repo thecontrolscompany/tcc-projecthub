@@ -40,6 +40,15 @@ function asNumber(value, fallback = 1) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function normalizeImportedPointQty(pointQty, systemQty) {
+  const qty = Math.max(1, asNumber(pointQty, 1));
+  const equipmentQty = Math.max(1, asNumber(systemQty, 1));
+  if (equipmentQty > 1 && qty > 1 && qty % equipmentQty === 0) {
+    return Math.max(1, qty / equipmentQty);
+  }
+  return qty;
+}
+
 function normalizeLookup(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -200,9 +209,9 @@ function getSelectedAssemblyIds(type, cfg, selected, installType) {
   return assemblyIds;
 }
 
-function buildImportedPointCustomEntries(point, selectedAssemblyIds = new Set()) {
+function buildImportedPointCustomEntries(point, selectedAssemblyIds = new Set(), systemQty = 1) {
   const assemblies = Array.isArray(point.assemblies) ? point.assemblies : [];
-  const qty = Math.max(1, asNumber(point.qty, 1));
+  const qty = normalizeImportedPointQty(point.qty, systemQty);
   const pointName = asString(point.name) || "Imported Point";
 
   const entries = assemblies.map((assembly, assemblyIndex) => {
@@ -265,16 +274,17 @@ function buildImportedEstimateItem(system, index, installType) {
       : getDefaultSelectedForType(type, cfg);
   const selectedAssemblyIds = getSelectedAssemblyIds(type, cfg, selected, installType);
   const points = Array.isArray(system.points) ? system.points : [];
+  const systemQty = Math.max(1, asNumber(system.qty, 1));
 
   return {
     id: crypto.randomUUID(),
     type,
     tag: asString(system.name).trim() || `${type.toUpperCase()}-${index + 1}`,
     location: asString(system.location).trim(),
-    qty: Math.max(1, asNumber(system.qty, 1)),
+    qty: systemQty,
     installType,
     selected,
-    custom: points.flatMap((point) => buildImportedPointCustomEntries(point, selectedAssemblyIds)),
+    custom: points.flatMap((point) => buildImportedPointCustomEntries(point, selectedAssemblyIds, systemQty)),
     priceSnap: {},
     cfg: {
       ...cfg,

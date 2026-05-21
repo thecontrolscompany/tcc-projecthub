@@ -122,6 +122,7 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
 
   const connection = connections.find((entry) => entry.provider === provider);
   const providerLabel = AI_PROVIDERS.find((entry) => entry.id === provider)?.label || provider || "Provider";
+  const canImport = Boolean(result && onImport);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-8" onClick={onClose}>
@@ -155,6 +156,15 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
             >
               {parsing ? "Parsing..." : "Parse scope"}
             </button>
+            {canImport && (
+              <button
+                type="button"
+                onClick={handleImport}
+                className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500"
+              >
+                Import into estimate
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}
@@ -258,34 +268,26 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
           </form>
 
           <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="text-sm font-semibold text-slate-800">Parsed output</div>
                 <div className="mt-1 text-xs text-slate-500">
                   Validate this payload before importing it into the estimator.
                 </div>
               </div>
-              {result && (
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => navigator.clipboard.writeText(prettyJson(result.scopeImport || result))}
-                    className="shrink-0 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-                  >
-                    Copy JSON
-                  </button>
-                  {onImport && (
-                    <button
-                      type="button"
-                      onClick={handleImport}
-                      className="shrink-0 rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500"
-                    >
-                      Import into estimate
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
+
+            {result && (
+              <div className="mt-4 flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard.writeText(prettyJson(result.scopeImport || result))}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 sm:w-auto"
+                >
+                  Copy JSON
+                </button>
+              </div>
+            )}
 
             <div className="mt-4 min-h-[40vh] overflow-auto rounded-2xl border border-slate-200 bg-white p-4">
               {loading ? (
