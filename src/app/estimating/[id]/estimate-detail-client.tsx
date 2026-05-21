@@ -22,11 +22,11 @@ import { applyVavDefaultSelections, getVisibleVavComponents, normalizeVavCfg } f
 import { buildDefaultVrfSelected, getVisibleVrfComponents, normalizeVrfCfg } from "@/modules/hvac-estimator/components/vrf/vrfData";
 import { summarizeHvacEstimate, type HvacEstimateBody } from "@/modules/hvac-estimator/platform-adapter";
 import { ProjectHubEstimateProvider, useEstimate } from "@/modules/hvac-estimator/shared/EstimateContext";
-import { ASSEMBLIES } from "@/modules/hvac-estimator/shared/assemblyData";
 import { CONDUIT_FILL_RESTORE_KEY } from "@/modules/hvac-estimator/shared/conduitFill";
 import { getCustomComponentOptions } from "@/modules/hvac-estimator/shared/componentCatalog";
 import { UnitaryFlowDiagram } from "@/modules/hvac-estimator/shared/UnitaryFlowDiagram";
 import { PLANT_COMPS, PLANT_TYPES } from "@/modules/hvac-estimator/components/plant/plantData";
+import { describeAssemblyResolution, resolveAssemblyCatalogMatch } from "@/modules/hvac-estimator/ai/assemblyResolver";
 import type { EstimateRecord, EstimateStatus } from "@/types/database";
 
 type Props = {
@@ -410,18 +410,6 @@ function normalizeLookup(value: string) {
   return String(value || "").trim().toLowerCase();
 }
 
-function resolveImportedAssemblyId(assembly: Record<string, unknown>) {
-  const assemblyRef = asString(assembly.assemblyRef);
-  const assemblyCatalog = ASSEMBLIES as Record<string, { id: string; name?: string }>;
-  if (assemblyRef && assemblyCatalog[assemblyRef]) return assemblyRef;
-
-  const assemblyName = normalizeLookup(asString(assembly.assemblyName));
-  if (!assemblyName) return "";
-
-  const match = Object.values(assemblyCatalog).find((entry) => normalizeLookup(entry.name || "") === assemblyName);
-  return match?.id || "";
-}
-
 function inferImportedType(system: Record<string, unknown>) {
   const rawType = normalizeLookup(asString(system.type));
   const name = normalizeLookup(asString(system.name));
@@ -481,9 +469,14 @@ function buildImportedPointCustomEntries(point: Record<string, unknown>) {
 
   const entries = assemblies.flatMap((assembly, assemblyIndex) => {
     const assemblyRecord = assembly && typeof assembly === "object" ? (assembly as Record<string, unknown>) : {};
-    const resolvedAssemblyId = resolveImportedAssemblyId(assemblyRecord);
-    const assemblyName = asString(assemblyRecord.assemblyName) || asString(assemblyRecord.assemblyRef) || "Imported Assembly";
-    const notes = [asString(assemblyRecord.notes), asString(assemblyRecord.assemblyRef) && !resolvedAssemblyId ? `Assembly ref: ${asString(assemblyRecord.assemblyRef)}` : ""]
+    const resolved = resolveAssemblyCatalogMatch({
+      assemblyRef: asString(assemblyRecord.assemblyRef),
+      assemblyName: asString(assemblyRecord.assemblyName),
+      sourceText: asString(assemblyRecord.notes),
+    });
+    const sourceAssemblyName = asString(assemblyRecord.assemblyName) || asString(assemblyRecord.assemblyRef) || "Imported Assembly";
+    const assemblyName = resolved?.name || sourceAssemblyName;
+    const notes = [describeAssemblyResolution(resolved, sourceAssemblyName, asString(assemblyRecord.assemblyRef)), asString(assemblyRecord.notes)]
       .filter(Boolean)
       .join(" · ");
 
@@ -491,10 +484,10 @@ function buildImportedPointCustomEntries(point: Record<string, unknown>) {
       id: `imported-${pointName}-${assemblyIndex}-${copyIndex}-${crypto.randomUUID()}`,
       label: assemblyName,
       name: assemblyName,
-      category: "Imported Assembly",
+      category: resolved ? "Assembly" : "Imported Assembly",
       notes,
-      emtAID: resolvedAssemblyId,
-      plnAID: resolvedAssemblyId,
+      emtAID: resolved?.id || "",
+      plnAID: resolved?.id || "",
     }));
   });
 
