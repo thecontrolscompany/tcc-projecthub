@@ -31,15 +31,10 @@ async function hasOrganizationAccess(
   userId: string,
   organizationId: string,
 ) {
-  const { data, error } = await supabase
-    .from("organization_memberships")
-    .select("organization_id")
-    .eq("organization_id", organizationId)
-    .eq("profile_id", userId)
-    .maybeSingle();
-
-  if (error || !data) return false;
-  return true;
+  const { data, error } = await supabase.rpc("current_user_organization_ids");
+  if (error) return false;
+  const organizationIds = Array.isArray(data) ? data.map((value) => String(value)) : [];
+  return organizationIds.includes(organizationId);
 }
 
 export default async function EstimatingSettingsPage({

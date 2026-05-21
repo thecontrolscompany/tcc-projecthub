@@ -30,15 +30,10 @@ async function resolveOrganizationAccess(
   userId: string,
   organizationId: string,
 ) {
-  const { data, error } = await supabase
-    .from("organization_memberships")
-    .select("organization_id")
-    .eq("organization_id", organizationId)
-    .eq("profile_id", userId)
-    .maybeSingle();
-
+  const { data, error } = await supabase.rpc("current_user_organization_ids");
   if (error) return { error };
-  if (!data) return { error: new Error("Access denied.") };
+  const organizationIds = Array.isArray(data) ? data.map((value) => String(value)) : [];
+  if (!organizationIds.includes(organizationId)) return { error: new Error("Access denied.") };
   return { ok: true as const };
 }
 
