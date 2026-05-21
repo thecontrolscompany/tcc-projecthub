@@ -266,11 +266,11 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
                 </div>
               </div>
               {result && (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => navigator.clipboard.writeText(prettyJson(result.scopeImport || result))}
-                    className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                    className="shrink-0 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                   >
                     Copy JSON
                   </button>
@@ -278,7 +278,7 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
                     <button
                       type="button"
                       onClick={handleImport}
-                      className="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
+                      className="shrink-0 rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500"
                     >
                       Import into estimate
                     </button>
