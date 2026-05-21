@@ -26,8 +26,29 @@ async function resolveDefaultOrganizationId(supabase: Awaited<ReturnType<typeof 
   return null;
 }
 
-export default async function EstimatingSettingsPage() {
+async function hasOrganizationAccess(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  organizationId: string,
+) {
+  const { data, error } = await supabase
+    .from("organization_memberships")
+    .select("organization_id")
+    .eq("organization_id", organizationId)
+    .eq("profile_id", userId)
+    .maybeSingle();
+
+  if (error || !data) return false;
+  return true;
+}
+
+export default async function EstimatingSettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ organizationId?: string }>;
+}) {
   const supabase = await createClient();
+  const params = await searchParams;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -37,7 +58,12 @@ export default async function EstimatingSettingsPage() {
   const profile = await resolveUserRole(user);
   if (!canWriteEstimates(profile?.role ?? "")) notFound();
 
-  const organizationId = await resolveDefaultOrganizationId(supabase, user.id);
+  const requestedOrganizationId = typeof params.organizationId === "string" ? params.organizationId.trim() : "";
+  if (requestedOrganizationId && !(await hasOrganizationAccess(supabase, user.id, requestedOrganizationId))) {
+    notFound();
+  }
+
+  const organizationId = requestedOrganizationId || (await resolveDefaultOrganizationId(supabase, user.id));
   if (!organizationId) notFound();
 
   return <EstimatingSettingsClient organizationId={organizationId} />;

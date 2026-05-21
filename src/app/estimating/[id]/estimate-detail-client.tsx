@@ -865,7 +865,7 @@ export function EstimateDetailClient({ estimate }: Props) {
               </select>
               <button
                 type="button"
-                onClick={() => router.push("/estimating/settings")}
+                onClick={() => router.push(`/estimating/settings?organizationId=${encodeURIComponent(organizationId)}`)}
                 disabled={!organizationId}
                 className="rounded-lg border border-border-default px-3 py-1.5 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -911,7 +911,7 @@ export function EstimateDetailClient({ estimate }: Props) {
             organizationId={organizationId}
             onManageConnections={() => {
               setShowAiParser(false);
-              router.push("/estimating/settings");
+              router.push(`/estimating/settings?organizationId=${encodeURIComponent(organizationId)}`);
             }}
             onImport={(payload: unknown) => applyImportedScopeImport(payload as Record<string, unknown>)}
           />

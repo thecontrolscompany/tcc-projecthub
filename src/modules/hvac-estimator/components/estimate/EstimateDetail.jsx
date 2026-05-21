@@ -388,14 +388,14 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
       )}
 
       {!customerMode && (
-        <AiTakeoffModal
+          <AiTakeoffModal
           open={showAiParser}
           onClose={() => setShowAiParser(false)}
           estimate={estimate}
           organizationId={organizationId}
           onManageConnections={() => {
             setShowAiParser(false);
-            window.location.href = "/estimating/settings";
+            window.location.href = `/estimating/settings?organizationId=${encodeURIComponent(organizationId)}`;
           }}
         />
       )}
