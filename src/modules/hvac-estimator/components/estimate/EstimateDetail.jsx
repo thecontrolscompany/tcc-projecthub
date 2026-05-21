@@ -702,7 +702,10 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                               }}>
                                 <div style={{ minWidth:0 }}>
                                   <div style={{ fontSize:12, color:T.text }}>{entry.label}</div>
-                                  <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono }}>Added manually</div>
+                                  <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono }}>
+                                    {entry.category === "Assembly" ? "Catalog assembly" : "Imported assembly"}
+                                    {entry.qty > 1 ? ` · Qty ${entry.qty}` : ""}
+                                  </div>
                                 </div>
                                 {!customerMode && (
                                   <div style={{ textAlign:"right", flexShrink:0 }}>

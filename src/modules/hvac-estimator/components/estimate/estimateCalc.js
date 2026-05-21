@@ -72,10 +72,17 @@ function getCompCost(item, comp) {
 
 function getCustomCost(item, custom) {
   const aid = String(item.installType === "EMT" ? custom.emtAID : custom.plnAID);
-  if (aid && aid !== "undefined") return calcAssembly(aid);
+  const qty = Math.max(1, Number(custom.qty || 1));
+  if (aid && aid !== "undefined") {
+    const result = calcAssembly(aid);
+    return {
+      mtl: (result?.mtl || 0) * qty,
+      lbr: (result?.lbr || 0) * qty,
+    };
+  }
   return {
-    mtl: (custom.unitMtl || 0) + (custom.extraMtl || 0),
-    lbr: (custom.unitLbr || 0) + (custom.extraLbr || 0),
+    mtl: ((custom.unitMtl || 0) + (custom.extraMtl || 0)) * qty,
+    lbr: ((custom.unitLbr || 0) + (custom.extraLbr || 0)) * qty,
   };
 }
 
@@ -125,6 +132,8 @@ export function getItemDetails(item) {
     return {
       id: entry.id || entry.label,
       label: entry.label || "Custom",
+      category: entry.category || "Imported Assembly",
+      qty: Math.max(1, Number(entry.qty || 1)),
       mtl: cost.mtl || 0,
       lbr: cost.lbr || 0,
     };

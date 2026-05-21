@@ -23,6 +23,23 @@ const DEFAULT_WEIGHTS = new Map([
   ["switch", 2.5],
 ]);
 
+const ASSEMBLY_ALIASES = [
+  { id: "50001", aliases: ["small controller xfmr", "small enclosure controller xfmr", "field mount controller xfmr", "controller with ups"] },
+  { id: "50002", aliases: ["average controller xfmr", "average enclosure controller xfmr", "controller enclosure average", "medium controller xfmr"] },
+  { id: "50003", aliases: ["large controller xfmr", "large enclosure controller xfmr", "controller enclosure large"] },
+  { id: "60032", aliases: ["temp sensor room bacnet", "room temp sensor bacnet", "zone temperature sensor", "room temperature sensor", "wall temperature sensor"] },
+  { id: "60059", aliases: ["dp switch air", "air dp switch", "differential pressure switch", "filter dp switch"] },
+  { id: "60071", aliases: ["general relay", "command relay", "status relay", "control relay", "relay"] },
+  { id: "60077", aliases: ["valve actuator", "control valve actuator", "heating coil control valve", "bypass control valve"] },
+  { id: "60079", aliases: ["zone valve actuator", "zone valve act", "zone valve actuator and valve"] },
+  { id: "60080", aliases: ["transformer", "general transformer", "panel mounted transformer", "xfmr"] },
+  { id: "60152", aliases: ["insertion flow meter", "flow meter", "water flow meter"] },
+  { id: "60163", aliases: ["temp sensor room net stat", "room temp sensor", "zone temp sensor", "stat sensor"] },
+].map((entry) => ({
+  ...entry,
+  normalizedAliases: entry.aliases.map((alias) => normalizeAssemblyText(alias)).filter(Boolean),
+}));
+
 function normalizeAssemblyText(value) {
   return String(value || "")
     .toLowerCase()
@@ -66,6 +83,26 @@ function scoreCandidate(candidate, sourceTokens, sourceText) {
   if (candidateTokens.includes("valve") && sourceTokens.includes("actuator")) score += 1.25;
 
   return score;
+}
+
+function resolveAliasAssembly(sourceText) {
+  const normalizedSource = normalizeAssemblyText(sourceText);
+  if (!normalizedSource) return null;
+
+  for (const entry of ASSEMBLY_ALIASES) {
+    if (entry.normalizedAliases.some((alias) => normalizedSource === alias || normalizedSource.includes(alias) || alias.includes(normalizedSource))) {
+      const match = ASSEMBLIES[entry.id];
+      if (match) {
+        return {
+          id: String(match.id),
+          name: String(match.name || match.desc || match.id),
+          matchedBy: `alias:${entry.normalizedAliases.find((alias) => normalizedSource === alias || normalizedSource.includes(alias) || alias.includes(normalizedSource))}`,
+        };
+      }
+    }
+  }
+
+  return null;
 }
 
 function resolveControllerPanel(sourceTokens, sourceText) {
@@ -118,6 +155,11 @@ export function resolveAssemblyCatalogMatch({ assemblyRef = "", assemblyName = "
     };
   }
 
+  const alias = resolveAliasAssembly(normalizedSource);
+  if (alias) {
+    return alias;
+  }
+
   const controllerPanel = resolveControllerPanel(sourceTokens, normalizedSource);
   if (controllerPanel) {
     return {
@@ -149,6 +191,7 @@ export function describeAssemblyResolution(match, sourceAssemblyName = "", sourc
   if (sourceAssemblyName) parts.push(`AI assembly: ${sourceAssemblyName}`);
   if (sourceAssemblyRef && sourceAssemblyRef !== match?.id) parts.push(`AI ref: ${sourceAssemblyRef}`);
   if (match?.id) parts.push(`Mapped to catalog assembly ${match.name} (${match.id})`);
+  if (match?.matchedBy?.startsWith("alias:")) parts.push(`Matched by catalog alias ${match.matchedBy.slice(6)}`);
   if (!match?.id) parts.push("Unmapped assembly candidate");
   return parts.join(" · ");
 }

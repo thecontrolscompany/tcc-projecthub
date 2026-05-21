@@ -189,7 +189,7 @@ function buildImportedPointCustomEntries(point) {
   const qty = Math.max(1, asNumber(point.qty, 1));
   const pointName = asString(point.name) || "Imported Point";
 
-  const entries = assemblies.flatMap((assembly, assemblyIndex) => {
+  const entries = assemblies.map((assembly, assemblyIndex) => {
     const assemblyRecord = assembly && typeof assembly === "object" ? assembly : {};
     const resolved = resolveAssemblyCatalogMatch({
       assemblyRef: asString(assemblyRecord.assemblyRef),
@@ -202,27 +202,31 @@ function buildImportedPointCustomEntries(point) {
       .filter(Boolean)
       .join(" · ");
 
-    return Array.from({ length: qty }, (_, copyIndex) => ({
-      id: `imported-${pointName}-${assemblyIndex}-${copyIndex}-${crypto.randomUUID()}`,
+    return {
+      id: `imported-${pointName}-${assemblyIndex}-${crypto.randomUUID()}`,
       label: assemblyName,
       name: assemblyName,
       category: resolved ? "Assembly" : "Imported Assembly",
       notes,
+      qty,
       emtAID: resolved?.id || "",
       plnAID: resolved?.id || "",
-    }));
+    };
   });
 
   if (!entries.length) {
-    return Array.from({ length: qty }, (_, copyIndex) => ({
-      id: `imported-${pointName}-${copyIndex}-${crypto.randomUUID()}`,
-      label: pointName,
-      name: pointName,
-      category: "Imported Point",
-      notes: asString(point.notes),
-      emtAID: "",
-      plnAID: "",
-    }));
+    return [
+      {
+        id: `imported-${pointName}-${crypto.randomUUID()}`,
+        label: pointName,
+        name: pointName,
+        category: "Imported Point",
+        notes: asString(point.notes),
+        qty,
+        emtAID: "",
+        plnAID: "",
+      },
+    ];
   }
 
   return entries;
