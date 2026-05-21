@@ -61,7 +61,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: access.error instanceof Error ? access.error.message : "Unable to verify access." }, { status: 403 });
   }
 
-  const { data, error } = await auth.supabase
+  const admin = createServiceClient();
+  const { data, error } = await admin
     .from("estimator_ai_connections")
     .select("id, provider, label, model, endpoint, key_hint, created_at, updated_at, last_used_at")
     .eq("organization_id", organizationId)
