@@ -233,6 +233,7 @@ export function AiConnectionsContent({ organizationId }) {
               value={form.endpoint}
               onChange={(event) => setForm((state) => ({ ...state, endpoint: event.target.value }))}
               placeholder="Optional for OpenAI-compatible providers; required for Azure OpenAI"
+              autoComplete="off"
               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-slate-500"
             />
           </label>
@@ -244,6 +245,7 @@ export function AiConnectionsContent({ organizationId }) {
               value={form.apiKey}
               onChange={(event) => setForm((state) => ({ ...state, apiKey: event.target.value }))}
               placeholder="Paste the provider API key"
+              autoComplete="new-password"
               className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-slate-500"
             />
           </label>

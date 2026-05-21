@@ -10,6 +10,16 @@ function normalizeText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function normalizeEndpoint(provider: string, value: unknown) {
+  const endpoint = normalizeText(value);
+  if (!endpoint) return "";
+  const looksLikeUrl = /^https?:\/\//i.test(endpoint);
+  if (provider === "azure_openai") {
+    return looksLikeUrl ? endpoint : "";
+  }
+  return looksLikeUrl ? endpoint : "";
+}
+
 function badRequest(message: string) {
   return NextResponse.json({ error: message }, { status: 400 });
 }
@@ -85,11 +95,14 @@ export async function POST(request: Request) {
   const provider = normalizeText(body?.provider);
   const label = normalizeText(body?.label);
   const model = normalizeText(body?.model);
-  const endpoint = normalizeText(body?.endpoint);
+  const endpoint = normalizeEndpoint(provider, body?.endpoint);
   const apiKey = normalizeText(body?.apiKey);
 
   if (!organizationId) return badRequest("organizationId is required.");
   if (!isAiProvider(provider)) return badRequest("Select a supported AI provider.");
+  if (provider === "azure_openai" && !endpoint) {
+    return badRequest("Enter a valid https:// endpoint for Azure OpenAI.");
+  }
 
   const access = await resolveOrganizationAccess(auth.supabase, auth.user.id, organizationId);
   if ("error" in access) {
