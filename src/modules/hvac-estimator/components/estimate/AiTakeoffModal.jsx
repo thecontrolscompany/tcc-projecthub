@@ -5,6 +5,16 @@ function prettyJson(value) {
   return JSON.stringify(value, null, 2);
 }
 
+async function readResponseJson(response) {
+  const text = await response.text();
+  if (!text.trim()) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { error: text };
+  }
+}
+
 export function AiTakeoffModal({ open, onClose, estimate, organizationId, onManageConnections, onImport }) {
   const [connections, setConnections] = useState([]);
   const [provider, setProvider] = useState("");
@@ -44,9 +54,9 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
       setMessage("");
       try {
         const response = await fetch(`/api/estimating/ai-connections?organizationId=${encodeURIComponent(organizationId)}`);
-        const json = await response.json();
+        const json = await readResponseJson(response);
         if (!response.ok) throw new Error(json?.error || "Unable to load AI connections.");
-        const nextConnections = Array.isArray(json.connections) ? json.connections : [];
+        const nextConnections = Array.isArray(json?.connections) ? json.connections : [];
         if (!cancelled) {
           setConnections(nextConnections);
           setProvider((current) => current || nextConnections[0]?.provider || "");
@@ -89,9 +99,9 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
         method: "POST",
         body: formData,
       });
-      const json = await response.json();
+      const json = await readResponseJson(response);
       if (!response.ok) throw new Error(json?.error || "Unable to parse scope.");
-      setResult(json);
+      setResult(json || {});
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to parse scope.");
     } finally {

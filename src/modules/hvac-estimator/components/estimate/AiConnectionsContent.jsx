@@ -9,6 +9,16 @@ const emptyForm = {
   apiKey: "",
 };
 
+async function readResponseJson(response) {
+  const text = await response.text();
+  if (!text.trim()) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { error: text };
+  }
+}
+
 export function AiConnectionsContent({ organizationId }) {
   const [connections, setConnections] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -38,9 +48,9 @@ export function AiConnectionsContent({ organizationId }) {
     setMessage("");
     try {
       const response = await fetch(`/api/estimating/ai-connections?organizationId=${encodeURIComponent(organizationId)}`);
-      const json = await response.json();
+      const json = await readResponseJson(response);
       if (!response.ok) throw new Error(json?.error || "Unable to load AI connections.");
-      setConnections(Array.isArray(json.connections) ? json.connections : []);
+      setConnections(Array.isArray(json?.connections) ? json.connections : []);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to load AI connections.");
     } finally {
@@ -78,7 +88,7 @@ export function AiConnectionsContent({ organizationId }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ ...form, organizationId }),
       });
-      const json = await response.json();
+      const json = await readResponseJson(response);
       if (!response.ok) throw new Error(json?.error || "Unable to save AI connection.");
       await loadConnections();
       setForm((state) => ({ ...state, apiKey: "" }));
@@ -100,7 +110,7 @@ export function AiConnectionsContent({ organizationId }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ organizationId, provider }),
       });
-      const json = await response.json();
+      const json = await readResponseJson(response);
       if (!response.ok) throw new Error(json?.error || "Unable to remove AI connection.");
       await loadConnections();
       setMessage("AI connection removed.");
