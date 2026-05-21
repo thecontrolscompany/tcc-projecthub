@@ -26,7 +26,7 @@ import { CONDUIT_FILL_RESTORE_KEY } from "@/modules/hvac-estimator/shared/condui
 import { getCustomComponentOptions } from "@/modules/hvac-estimator/shared/componentCatalog";
 import { UnitaryFlowDiagram } from "@/modules/hvac-estimator/shared/UnitaryFlowDiagram";
 import { PLANT_COMPS, PLANT_TYPES } from "@/modules/hvac-estimator/components/plant/plantData";
-import { describeAssemblyResolution, resolveAssemblyCatalogMatch } from "@/modules/hvac-estimator/ai/assemblyResolver";
+import { applyImportedScopeImportToEstimate } from "@/modules/hvac-estimator/ai/scopeImportToEstimate";
 import type { EstimateRecord, EstimateStatus } from "@/types/database";
 
 type Props = {
@@ -410,132 +410,6 @@ function normalizeLookup(value: string) {
   return String(value || "").trim().toLowerCase();
 }
 
-function inferImportedType(system: Record<string, unknown>) {
-  const rawType = normalizeLookup(asString(system.type));
-  const name = normalizeLookup(asString(system.name));
-  const haystack = `${rawType} ${name}`;
-
-  if (haystack.includes("ahu") || haystack.includes("air handling")) return "ahu";
-  if (haystack.includes("vav") || haystack.includes("terminal box")) return "vav";
-  if (haystack.includes("rtu") || haystack.includes("roof top") || haystack.includes("packaged rooftop")) return "rtu";
-  if (haystack.includes("dx") || haystack.includes("heat pump") || haystack.includes("split system")) return "dx";
-  if (haystack.includes("vrf")) return "vrf";
-  if (haystack.includes("fcu") || haystack.includes("fan coil")) return "fcu";
-  if (haystack.includes("unit heater") || haystack.includes("uh")) return "uh";
-  if (haystack.includes("exhaust fan") || haystack.includes("exhaust") || haystack === "ef") return "exhaust-fan";
-  if (
-    haystack.includes("chiller") ||
-    haystack.includes("boiler") ||
-    haystack.includes("cooling tower") ||
-    haystack.includes("pumping") ||
-    haystack.includes("pump")
-  ) {
-    return "plant";
-  }
-  if (haystack.includes("network") || haystack.includes("controller") || haystack.includes("gateway") || haystack.includes("panel")) {
-    return "network";
-  }
-  return supportedEquipmentTypes.includes(rawType) ? rawType : "custom";
-}
-
-function getPlantTypeFromImportedSystem(system: Record<string, unknown>) {
-  const rawType = normalizeLookup(asString(system.type));
-  const name = normalizeLookup(asString(system.name));
-  const haystack = `${rawType} ${name}`;
-
-  if (haystack.includes("air") && haystack.includes("chiller")) return "chiller-air";
-  if (haystack.includes("water") && haystack.includes("chiller")) return "chiller-water";
-  if (haystack.includes("cooling tower")) return "cooling-tower";
-  if (haystack.includes("steam boiler")) return "boiler-steam";
-  if (haystack.includes("boiler")) return "boiler-hw";
-  if (haystack.includes("condenser") && haystack.includes("pump")) return "pumping-cond";
-  if (haystack.includes("hot water") && haystack.includes("pump")) return "pumping-hw";
-  if (haystack.includes("chilled water") && haystack.includes("pump")) return "pumping-chw";
-  return "chiller-air";
-}
-
-function getImportedPlantSelections(plantType: string) {
-  const plantCatalog = PLANT_COMPS as Record<string, Array<{ id: string; def?: boolean }>>;
-  const comps = plantCatalog[plantType] || [];
-  return comps
-    .filter((component) => Boolean((component as { def?: boolean }).def))
-    .map((component) => ({ id: component.id, qty: 1 }));
-}
-
-function buildImportedPointCustomEntries(point: Record<string, unknown>) {
-  const assemblies = Array.isArray(point.assemblies) ? point.assemblies : [];
-  const qty = Math.max(1, asNumber(point.qty, 1));
-  const pointName = asString(point.name) || "Imported Point";
-
-  const entries = assemblies.flatMap((assembly, assemblyIndex) => {
-    const assemblyRecord = assembly && typeof assembly === "object" ? (assembly as Record<string, unknown>) : {};
-    const resolved = resolveAssemblyCatalogMatch({
-      assemblyRef: asString(assemblyRecord.assemblyRef),
-      assemblyName: asString(assemblyRecord.assemblyName),
-      sourceText: asString(assemblyRecord.notes),
-    });
-    const sourceAssemblyName = asString(assemblyRecord.assemblyName) || asString(assemblyRecord.assemblyRef) || "Imported Assembly";
-    const assemblyName = resolved?.name || sourceAssemblyName;
-    const notes = [describeAssemblyResolution(resolved, sourceAssemblyName, asString(assemblyRecord.assemblyRef)), asString(assemblyRecord.notes)]
-      .filter(Boolean)
-      .join(" · ");
-
-    return Array.from({ length: qty }, (_, copyIndex) => ({
-      id: `imported-${pointName}-${assemblyIndex}-${copyIndex}-${crypto.randomUUID()}`,
-      label: assemblyName,
-      name: assemblyName,
-      category: resolved ? "Assembly" : "Imported Assembly",
-      notes,
-      emtAID: resolved?.id || "",
-      plnAID: resolved?.id || "",
-    }));
-  });
-
-  if (!entries.length) {
-    return Array.from({ length: qty }, (_, copyIndex) => ({
-      id: `imported-${pointName}-${copyIndex}-${crypto.randomUUID()}`,
-      label: pointName,
-      name: pointName,
-      category: "Imported Point",
-      notes: asString(point.notes),
-      emtAID: "",
-      plnAID: "",
-    }));
-  }
-
-  return entries;
-}
-
-function buildImportedEstimateItem(system: Record<string, unknown>, index: number, installType: "EMT" | "Plenum"): EstimateItem {
-  const type = inferImportedType(system);
-  const plantType = type === "plant" ? getPlantTypeFromImportedSystem(system) : "";
-  const cfg =
-    type === "plant"
-      ? { plantType, aiScopeSystem: system }
-      : { ...getDefaultCfg(type), aiScopeSystem: system };
-  const selected =
-    type === "plant"
-      ? getImportedPlantSelections(plantType)
-      : getDefaultSelectedForType(type, cfg);
-  const points = Array.isArray(system.points) ? system.points : [];
-
-  return {
-    id: crypto.randomUUID(),
-    type,
-    tag: asString(system.name).trim() || `${getTypeMeta(type).label}-${index + 1}`,
-    location: asString(system.location).trim(),
-    qty: Math.max(1, asNumber(system.qty, 1)),
-    installType,
-    selected,
-    custom: points.flatMap((point) => buildImportedPointCustomEntries(point as Record<string, unknown>)),
-    priceSnap: {},
-    cfg: {
-      ...cfg,
-      aiScopeImport: system,
-    },
-  };
-}
-
 export function EstimateDetailClient({ estimate }: Props) {
   const router = useRouter();
   const initialEstimateState = getInitialEstimateState(estimate);
@@ -700,28 +574,13 @@ export function EstimateDetailClient({ estimate }: Props) {
   }
 
   async function applyImportedScopeImport(scopeImport: Record<string, unknown>) {
-    const systems = Array.isArray(scopeImport?.systems) ? scopeImport.systems : [];
-    if (!systems.length) {
-      throw new Error("The parsed import did not contain any systems.");
-    }
-
-    const installType: "EMT" | "Plenum" = body.settings.defaultInstallType === "Plenum" ? "Plenum" : "EMT";
-    const importedItems = systems
-      .filter((system) => system && typeof system === "object")
-      .map((system, index) => buildImportedEstimateItem(system as Record<string, unknown>, index, installType));
-
-    if (!importedItems.length) {
-      throw new Error("The parsed import did not produce any estimator items.");
-    }
-
-    const nextBody = {
-      ...body,
-      items: [...body.items, ...importedItems],
-      updatedAt: new Date().toISOString(),
+    const { nextEstimate, importedCount } = applyImportedScopeImportToEstimate(body, scopeImport) as {
+      nextEstimate: EstimateBody;
+      importedCount: number;
     };
 
-    await persistEstimate(nextBody, { showSuccessMessage: false });
-    setMessage(`Imported ${importedItems.length} system${importedItems.length === 1 ? "" : "s"} into the estimate.`);
+    await persistEstimate(nextEstimate, { showSuccessMessage: false });
+    setMessage(`Imported ${importedCount} system${importedCount === 1 ? "" : "s"} into the estimate.`);
   }
 
   useEffect(() => {

@@ -12,6 +12,7 @@ import { AddEquipButtons } from "./AddEquipButtons.jsx";
 import { AiTakeoffModal } from "./AiTakeoffModal.jsx";
 import { ProjectSettingsPanel } from "./ProjectSettingsPanel.jsx";
 import { ProposalDetailsModal } from "./ProposalDetailsModal.jsx";
+import { applyImportedScopeImportToEstimate } from "../../ai/scopeImportToEstimate.js";
 import {
   TYPE_META,
   buildItemsWithComps,
@@ -150,6 +151,12 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
   const toggleRowDetails = useCallback((itemId) => {
     setExpandedRows(prev => ({ ...prev, [itemId]: !prev[itemId] }));
   }, []);
+
+  const handleImportedScopeImport = useCallback((scopeImport) => {
+    const { nextEstimate, importedCount } = applyImportedScopeImportToEstimate(estimate, scopeImport);
+    onUpdate(nextEstimate);
+    return importedCount;
+  }, [estimate, onUpdate]);
 
   return (
     <div style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
@@ -396,6 +403,9 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
           onManageConnections={() => {
             setShowAiParser(false);
             window.location.href = `/estimating/settings?organizationId=${encodeURIComponent(organizationId)}`;
+          }}
+          onImport={(payload) => {
+            handleImportedScopeImport(payload);
           }}
         />
       )}
