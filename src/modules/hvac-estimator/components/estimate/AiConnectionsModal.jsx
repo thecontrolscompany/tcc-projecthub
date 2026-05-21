@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AI_PROVIDERS } from "../../ai/providerRegistry.js";
+import { AI_PROVIDERS, getDefaultProviderModel, getProviderModelOptions } from "../../ai/providerRegistry.js";
 
 const emptyForm = {
   provider: AI_PROVIDERS[0]?.id || "openai",
@@ -23,6 +23,13 @@ export function AiConnectionsModal({ open, onClose, organizationId }) {
     }
     return map;
   }, [connections]);
+
+  const modelOptions = useMemo(() => {
+    const baseOptions = getProviderModelOptions(form.provider);
+    if (!form.model) return baseOptions;
+    if (baseOptions.some((option) => option.id === form.model)) return baseOptions;
+    return [{ id: form.model, label: `Saved model: ${form.model}` }, ...baseOptions];
+  }, [form.model, form.provider]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -69,7 +76,7 @@ export function AiConnectionsModal({ open, onClose, organizationId }) {
     setForm((state) => ({
       ...state,
       label: current?.label ?? state.label,
-      model: current?.model ?? state.model,
+      model: current?.model || state.model || getDefaultProviderModel(form.provider),
       endpoint: current?.endpoint ?? state.endpoint,
     }));
   }, [connectionByProvider, form.provider, open]);
@@ -141,7 +148,16 @@ export function AiConnectionsModal({ open, onClose, organizationId }) {
               Connect a provider key for estimator takeoff and scope parsing
             </div>
             <div className="mt-2 text-sm text-slate-600">
-              Keys stay server-side and are stored per user. This first pass supports key-based providers only.
+              Keys stay server-side and are stored per organization. You can connect multiple providers, but only one key per provider per organization.
+            </div>
+            <div className="mt-3 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-slate-700">
+              <div className="font-semibold text-slate-900">How to add a connection</div>
+              <ol className="mt-2 list-decimal space-y-1 pl-5">
+                <li>Choose a provider such as OpenAI, Claude, Gemini, xAI, or Azure OpenAI.</li>
+                <li>Enter a label so your team knows what the connection is for.</li>
+                <li>Enter the model name or deployment name.</li>
+                <li>Paste the API key and save.</li>
+              </ol>
             </div>
           </div>
           <button
@@ -239,12 +255,32 @@ export function AiConnectionsModal({ open, onClose, organizationId }) {
 
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Model</span>
-                <input
-                  value={form.model}
-                  onChange={(event) => setForm((state) => ({ ...state, model: event.target.value }))}
-                  placeholder="Optional model name"
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-slate-500"
-                />
+                {modelOptions.length ? (
+                  <select
+                    value={form.model}
+                    onChange={(event) => setForm((state) => ({ ...state, model: event.target.value }))}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-slate-500"
+                  >
+                    <option value="">{form.provider === "openai" || form.provider === "anthropic" ? "Select a model" : "Select a deployment"}</option>
+                    {modelOptions.map((model) => (
+                      <option key={model.id} value={model.id}>
+                        {model.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    value={form.model}
+                    onChange={(event) => setForm((state) => ({ ...state, model: event.target.value }))}
+                    placeholder="Optional model name"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-slate-500"
+                  />
+                )}
+                {modelOptions.length > 0 && (
+                  <div className="mt-1 text-xs text-slate-500">
+                    Pick from the supported provider models to avoid typos.
+                  </div>
+                )}
               </label>
 
               <label className="block">
