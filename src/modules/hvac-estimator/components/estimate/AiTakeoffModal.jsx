@@ -129,17 +129,28 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
               Uses the organization&apos;s saved AI connections and keeps the output aligned to the estimator schema.
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
-          >
-            Close
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              form="ai-parser-form"
+              onClick={runParser}
+              disabled={parsing || !provider || loading}
+              className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {parsing ? "Parsing..." : "Parse scope"}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+            >
+              Close
+            </button>
+          </div>
         </div>
 
         <div className="grid min-h-0 flex-1 gap-6 overflow-y-auto p-6 lg:grid-cols-[0.95fr_1.05fr]">
-          <form onSubmit={runParser} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <form id="ai-parser-form" onSubmit={runParser} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-sm font-semibold text-slate-800">Parser inputs</div>
@@ -223,13 +234,6 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
                   className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                 >
                   Clear
-                </button>
-                <button
-                  type="submit"
-                  disabled={parsing || !provider || loading}
-                  className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {parsing ? "Parsing..." : "Parse scope"}
                 </button>
               </div>
 
