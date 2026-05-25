@@ -112,6 +112,21 @@ export function ProposalDetailsPanel({ settings, onChange }) {
       <div style={{ fontSize: 10, color: T.muted }}>
         Used in the exported customer proposal.
       </div>
+      {S.customerScopeImport && (
+        <div
+          style={{
+            fontSize: 10,
+            color: "#0F766E",
+            background: "#0F766E12",
+            border: "1px solid #0F766E30",
+            borderRadius: 6,
+            padding: "6px 8px",
+            lineHeight: 1.4,
+          }}
+        >
+          Parsed scope from the AI importer is loaded into this estimate and will be used when customer scope is enabled.
+        </div>
+      )}
       {selectField(
         "proposalScopeMode",
         "Proposal Scope",

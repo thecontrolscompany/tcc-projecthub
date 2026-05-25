@@ -1,13 +1,13 @@
 import { getCustomComponentOptions } from "../shared/componentCatalog.js";
 import { resolveAssemblyCatalogMatch, describeAssemblyResolution } from "./assemblyResolver.js";
-import { normalizeAhuCfg, applyAhuDefaultSelections, getVisibleAhuComponents } from "../components/ahu/ahuData.js";
-import { normalizeDxCfg, applyDxDefaultSelections, getVisibleDxComponents } from "../components/dx/dxData.js";
-import { normalizeFcuCfg, applyFcuDefaultSelections, getVisibleFcuComponents } from "../components/fcu/fcuData.js";
-import { normalizeRtuCfg, applyRtuDefaultSelections, getVisibleRtuComponents } from "../components/rtu/rtuData.js";
-import { normalizeUhCfg, applyUhDefaultSelections, getVisibleUhComponents } from "../components/uh/uhData.js";
-import { normalizeVavCfg, applyVavDefaultSelections, getVisibleVavComponents } from "../components/vav/vavData.js";
-import { normalizeVrfCfg, buildDefaultVrfSelected, getVisibleVrfComponents } from "../components/vrf/vrfData.js";
-import { PLANT_COMPS, PLANT_TYPES } from "../components/plant/plantData.js";
+import { normalizeAhuCfg, applyAhuDefaultSelections } from "../components/ahu/ahuData.js";
+import { normalizeDxCfg, applyDxDefaultSelections } from "../components/dx/dxData.js";
+import { normalizeFcuCfg, applyFcuDefaultSelections } from "../components/fcu/fcuData.js";
+import { normalizeRtuCfg, applyRtuDefaultSelections } from "../components/rtu/rtuData.js";
+import { normalizeUhCfg, applyUhDefaultSelections } from "../components/uh/uhData.js";
+import { normalizeVavCfg, applyVavDefaultSelections } from "../components/vav/vavData.js";
+import { normalizeVrfCfg, buildDefaultVrfSelected } from "../components/vrf/vrfData.js";
+import { PLANT_COMPS } from "../components/plant/plantData.js";
 import { NETWORK_COMPS } from "../components/network/networkData.js";
 import { EXHAUST_FAN_COMPS } from "../components/exhaustFan/exhaustFanData.js";
 
@@ -53,6 +53,107 @@ function normalizeLookup(value) {
   return String(value || "").trim().toLowerCase();
 }
 
+function pushLine(lines, value = "") {
+  if (arguments.length === 1) {
+    lines.push("");
+    return;
+  }
+  if (value === null || value === undefined) return;
+  const text = String(value).trim();
+  if (!text) return;
+  lines.push(text);
+}
+
+function buildIndentedBullet(lines, value, indent = 0) {
+  if (value === null || value === undefined) return;
+  const text = String(value).trim();
+  if (!text) return;
+  lines.push(`${"  ".repeat(Math.max(0, indent))}- ${text}`);
+}
+
+function isGenericSystemType(value) {
+  const type = normalizeLookup(value);
+  return !type || type === "equipment" || type === "system" || type === "misc";
+}
+
+export function buildCustomerScopeFromScopeImport(scopeImport) {
+  const systems = Array.isArray(scopeImport?.systems) ? scopeImport.systems : [];
+  const assumptions = Array.isArray(scopeImport?.assumptions) ? scopeImport.assumptions : [];
+  const exclusions = Array.isArray(scopeImport?.exclusions) ? scopeImport.exclusions : [];
+  const notes = Array.isArray(scopeImport?.notes) ? scopeImport.notes : [];
+  const lines = [];
+
+  pushLine(lines, scopeImport?.baseScopeName || "Customer Scope");
+  pushLine(lines);
+
+  systems.forEach((system, systemIndex) => {
+    if (!system || typeof system !== "object") return;
+
+    const systemName = asString(system.name).trim() || `System ${systemIndex + 1}`;
+    const systemParts = [];
+    const qty = Math.max(1, asNumber(system.qty, 1));
+    const location = asString(system.location).trim();
+    const type = asString(system.type).trim();
+    const sourceText = asString(system.sourceText).trim();
+    const systemNotes = asString(system.notes).trim();
+
+    if (qty > 1) systemParts.push(`Qty ${qty}`);
+    if (!isGenericSystemType(type)) systemParts.push(type);
+    if (location) systemParts.push(location);
+
+    pushLine(lines, `${systemIndex + 1}. ${systemName}${systemParts.length ? ` (${systemParts.join(" - ")})` : ""}`);
+
+    if (sourceText) buildIndentedBullet(lines, sourceText, 1);
+    if (systemNotes) buildIndentedBullet(lines, systemNotes, 1);
+
+    const points = Array.isArray(system.points) ? system.points : [];
+    points.forEach((point) => {
+      if (!point || typeof point !== "object") return;
+
+      const pointName = asString(point.name).trim();
+      const pointQty = Math.max(1, asNumber(point.qty, 1));
+      const pointNotes = asString(point.notes).trim();
+      const assemblies = Array.isArray(point.assemblies) ? point.assemblies : [];
+
+      buildIndentedBullet(lines, `${pointName || "Point"}${pointQty > 1 ? ` (Qty ${pointQty})` : ""}`, 1);
+
+      if (pointNotes) buildIndentedBullet(lines, pointNotes, 2);
+
+      assemblies.forEach((assembly) => {
+        if (!assembly || typeof assembly !== "object") return;
+
+        const assemblyName = asString(assembly.assemblyName).trim() || asString(assembly.assemblyRef).trim();
+        const assemblyQty = Math.max(1, asNumber(assembly.qty, 1));
+        const assemblyNotes = asString(assembly.notes).trim();
+        const label = assemblyName || "Assembly";
+        buildIndentedBullet(lines, `${label}${assemblyQty > 1 ? ` (Qty ${assemblyQty})` : ""}`, 2);
+        if (assemblyNotes) buildIndentedBullet(lines, assemblyNotes, 3);
+      });
+    });
+
+    pushLine(lines);
+  });
+
+  if (assumptions.length) {
+    pushLine(lines, "Assumptions");
+    assumptions.forEach((item) => buildIndentedBullet(lines, item, 1));
+    pushLine(lines);
+  }
+
+  if (exclusions.length) {
+    pushLine(lines, "Exclusions");
+    exclusions.forEach((item) => buildIndentedBullet(lines, item, 1));
+    pushLine(lines);
+  }
+
+  if (notes.length) {
+    pushLine(lines, "Notes");
+    notes.forEach((item) => buildIndentedBullet(lines, item, 1));
+  }
+
+  return lines.join("\n").trim();
+}
+
 function getComponents(type) {
   const value = TYPE_COMPONENTS[type];
   return Array.isArray(value) ? value : [];
@@ -84,33 +185,6 @@ function getDefaultCfg(type) {
       return { componentId: CUSTOM_COMPONENT_OPTIONS[0]?.id ?? "" };
     default:
       return {};
-  }
-}
-
-function getVisibleComponentsForType(type, cfg) {
-  switch (type) {
-    case "ahu":
-      return getVisibleAhuComponents(cfg);
-    case "vav":
-      return getVisibleVavComponents(cfg);
-    case "rtu":
-      return getVisibleRtuComponents(cfg);
-    case "dx":
-      return getVisibleDxComponents(cfg);
-    case "vrf":
-      return getVisibleVrfComponents(cfg);
-    case "fcu":
-      return getVisibleFcuComponents(cfg);
-    case "uh":
-      return getVisibleUhComponents(cfg);
-    case "custom":
-      return CUSTOM_COMPONENT_OPTIONS.map((component) => ({
-        ...component.component,
-        sourceType: component.type,
-        sourceLabel: component.typeLabel,
-      }));
-    default:
-      return getComponents(type);
   }
 }
 
@@ -191,22 +265,6 @@ function getImportedPlantSelections(plantType) {
   return comps
     .filter((component) => Boolean(component.def))
     .map((component) => ({ id: component.id, qty: 1 }));
-}
-
-function getSelectedAssemblyIds(type, cfg, selected, installType) {
-  const visibleComponents = getVisibleComponentsForType(type, cfg);
-  const selectedIds = new Set((selected || []).map((entry) => entry.id));
-  const assemblyIds = new Set();
-
-  for (const comp of visibleComponents) {
-    if (!selectedIds.has(comp.id)) continue;
-    const aid = String(installType === "EMT" ? comp.emtAID : comp.plnAID);
-    if (aid && aid !== "undefined") {
-      assemblyIds.add(aid);
-    }
-  }
-
-  return assemblyIds;
 }
 
 function buildImportedPointCustomEntries(point, selectedAssemblyIds = new Set(), systemQty = 1) {
@@ -310,6 +368,8 @@ export function applyImportedScopeImportToEstimate(estimate, scopeImport) {
   const importedItems = systems
     .filter((system) => system && typeof system === "object")
     .map((system, index) => buildImportedEstimateItem(system, index, installType));
+  const customerScope = buildCustomerScopeFromScopeImport(scopeImport);
+  const currentSettings = estimate?.settings || {};
 
   if (!importedItems.length) {
     throw new Error("The parsed import did not produce any estimator items.");
@@ -318,6 +378,13 @@ export function applyImportedScopeImportToEstimate(estimate, scopeImport) {
   return {
     nextEstimate: {
       ...estimate,
+      settings: {
+        ...currentSettings,
+        ...(scopeImport?.baseScopeName ? { baseScopeName: scopeImport.baseScopeName } : {}),
+        useCustomerScope: true,
+        customerScope,
+        customerScopeImport: scopeImport,
+      },
       items: [...(estimate.items || []), ...importedItems],
       updatedAt: new Date().toISOString(),
     },

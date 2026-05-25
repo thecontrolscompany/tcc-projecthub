@@ -19,6 +19,7 @@ export const DEFAULT_SETTINGS = {
   baseScopeName:    "Scope",
   useCustomerScope: false,
   customerScope: "",
+  customerScopeImport: null,
 
   // ── Project info ────────────────────────────────────────────────────────────
   address:        "",
