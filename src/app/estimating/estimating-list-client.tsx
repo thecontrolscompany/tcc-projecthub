@@ -10,6 +10,11 @@ type ApiResponse = {
   error?: string;
 };
 
+type CustomerRecord = {
+  id: string;
+  name: string;
+};
+
 function formatCurrency(value: number | null | undefined) {
   if (value === null || value === undefined) return "-";
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
@@ -29,6 +34,7 @@ function getEstimateBodyField(body: Record<string, unknown> | null | undefined, 
 
 export function EstimatingListClient() {
   const [estimates, setEstimates] = useState<EstimateRecord[]>([]);
+  const [customers, setCustomers] = useState<CustomerRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -46,18 +52,25 @@ export function EstimatingListClient() {
   useEffect(() => {
     let active = true;
 
-    async function loadEstimates() {
+    async function loadData() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("/api/estimates?include_archived=true", { cache: "no-store" });
-        const json = (await res.json().catch(() => null)) as ApiResponse | null;
+        const [estimatesRes, customersRes] = await Promise.all([
+          fetch("/api/estimates?include_archived=true", { cache: "no-store" }),
+          fetch("/api/admin/data?section=project-lookups", { cache: "no-store" }),
+        ]);
         if (!active) return;
-        if (!res.ok || !json?.estimates) {
-          setError(json?.error ?? "Unable to load estimates.");
+
+        const estimatesJson = (await estimatesRes.json().catch(() => null)) as ApiResponse | null;
+        if (!estimatesRes.ok || !estimatesJson?.estimates) {
+          setError(estimatesJson?.error ?? "Unable to load estimates.");
           return;
         }
-        setEstimates(json.estimates);
+        setEstimates(estimatesJson.estimates);
+
+        const customersJson = await customersRes.json().catch(() => null) as { customers?: CustomerRecord[] } | null;
+        if (customersJson?.customers) setCustomers(customersJson.customers);
       } catch {
         if (active) setError("Unable to load estimates.");
       } finally {
@@ -65,23 +78,25 @@ export function EstimatingListClient() {
       }
     }
 
-    loadEstimates();
+    loadData();
     return () => {
       active = false;
     };
   }, []);
 
-  // All unique customer + bidder names across estimates, for the Add Bidder modal
+  // Customer names from the customers table (same list as new-project form),
+  // supplemented by any bidder names already used in estimates that aren't in the table.
   const bidderSuggestions = useMemo(() => {
     const seen = new Set<string>();
+    for (const c of customers) {
+      if (c.name) seen.add(c.name);
+    }
     for (const est of estimates) {
-      const customer = getEstimateBodyField(est.body, "customer");
       const bidder = getEstimateBodyField(est.body, "bidder");
-      if (customer) seen.add(customer);
       if (bidder) seen.add(bidder);
     }
     return Array.from(seen).sort((a, b) => a.localeCompare(b));
-  }, [estimates]);
+  }, [customers, estimates]);
 
   // Build parentId → children map across all estimates (not filtered)
   const childrenByParentId = useMemo(() => {
