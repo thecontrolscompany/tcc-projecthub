@@ -266,7 +266,6 @@ function renderImportedScopeList(scopeImport) {
 
     const innerHtml = pointLines.length
       ? `\n          <ul style="margin-top:4px; padding-left:18px; line-height:1.7;">\n${pointLines.join("\n")}
-            <li>Demolish and remove existing controls associated with this equipment where required; return removed equipment to owner's stock.</li>
           </ul>`
       : "";
 
@@ -532,7 +531,6 @@ function renderGeneratedScope(itemsWithComps = [], mode = "brief") {
               }
               return `\n            <li>Install ${esc(displayName)} provided by others; furnish and install associated control wiring.</li>`;
             }).join("") : `\n            <li>Install controls field devices provided by others; furnish and install associated control wiring.</li>`}
-            <li>Demolish and remove existing controls associated with this equipment where required; return removed equipment to owner's stock.</li>
           </ul>
         </li>`;
   }).join("\n");
