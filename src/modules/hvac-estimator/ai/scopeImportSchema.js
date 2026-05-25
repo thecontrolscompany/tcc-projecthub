@@ -5,6 +5,11 @@ const coercedString = z.union([
   z.array(z.string()).transform((arr) => arr.join("\n")),
 ]).optional().default("");
 
+const coercedStringArray = z.union([
+  z.array(z.string()),
+  z.string().transform((s) => (s ? [s] : [])),
+]).default([]);
+
 export const scopeImportAssemblySchema = z.object({
   assemblyRef: z.string().min(1),
   assemblyName: z.string().optional().default(""),
@@ -34,11 +39,11 @@ export const scopeImportSchema = z.object({
   customerName: z.string().optional().default(""),
   baseScopeName: z.string().optional().default(""),
   sourceType: z.enum(["pasted_scope", "uploaded_scope", "drawings", "mixed"]).default("pasted_scope"),
-  sourceFiles: z.array(z.string()).default([]),
+  sourceFiles: coercedStringArray,
   systems: z.array(scopeImportSystemSchema).default([]),
-  assumptions: z.array(z.string()).default([]),
-  exclusions: z.array(z.string()).default([]),
-  notes: z.array(z.string()).default([]),
+  assumptions: coercedStringArray,
+  exclusions: coercedStringArray,
+  notes: coercedStringArray,
 });
 
 export function normalizeScopeImport(value) {
