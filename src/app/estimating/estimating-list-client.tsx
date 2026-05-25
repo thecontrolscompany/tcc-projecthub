@@ -38,6 +38,7 @@ export function EstimatingListClient() {
   const [addingBidderId, setAddingBidderId] = useState<string | null>(null);
   const [addBidderTarget, setAddBidderTarget] = useState<EstimateRecord | null>(null);
   const [bidderInput, setBidderInput] = useState("");
+  const [bidderHighlight, setBidderHighlight] = useState(-1);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"active" | "archived">("active");
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
@@ -523,78 +524,106 @@ export function EstimatingListClient() {
       )}
 
       {/* Add Bidder modal */}
-      {addBidderTarget && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4"
-          onClick={() => setAddBidderTarget(null)}
-        >
+      {addBidderTarget && (() => {
+        const filtered = bidderSuggestions.filter(
+          (s) => !bidderInput || s.toLowerCase().includes(bidderInput.toLowerCase()),
+        );
+        const clamped = Math.min(bidderHighlight, filtered.length - 1);
+
+        function handleKey(e: React.KeyboardEvent<HTMLInputElement>) {
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setBidderHighlight((i) => Math.min(i + 1, filtered.length - 1));
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setBidderHighlight((i) => Math.max(i - 1, -1));
+          } else if (e.key === "Enter") {
+            e.preventDefault();
+            if (clamped >= 0 && filtered[clamped]) {
+              setBidderInput(filtered[clamped]);
+              setBidderHighlight(-1);
+            } else {
+              void submitAddBidder();
+            }
+          } else if (e.key === "Escape") {
+            setAddBidderTarget(null);
+          } else {
+            setBidderHighlight(-1);
+          }
+        }
+
+        return (
           <div
-            className="w-full max-w-sm rounded-2xl bg-surface-raised p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4"
+            onClick={() => setAddBidderTarget(null)}
           >
-            <div className="mb-1 text-base font-semibold text-text-primary">Add Bidder</div>
-            <div className="mb-4 text-sm text-text-secondary">
-              Adding a linked estimate for{" "}
-              <span className="font-medium text-text-primary">
-                {(addBidderTarget.name ?? getEstimateBodyField(addBidderTarget.body, "name")) || "this estimate"}
-              </span>
-            </div>
-
-            <input
-              autoFocus
-              value={bidderInput}
-              onChange={(e) => setBidderInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") void submitAddBidder(); if (e.key === "Escape") setAddBidderTarget(null); }}
-              placeholder="Bidder name (e.g. ECS, Siemens)"
-              className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
-            />
-
-            {bidderSuggestions.length > 0 && (
-              <div className="mt-3">
-                <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-text-tertiary">
-                  Existing names
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {bidderSuggestions
-                    .filter((s) => !bidderInput || s.toLowerCase().includes(bidderInput.toLowerCase()))
-                    .map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        type="button"
-                        onClick={() => setBidderInput(suggestion)}
-                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                          bidderInput === suggestion
-                            ? "border-brand-primary bg-brand-primary/10 text-brand-primary"
-                            : "border-border-default bg-surface-overlay text-text-secondary hover:border-brand-primary/40 hover:text-text-primary"
-                        }`}
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                </div>
+            <div
+              className="w-full max-w-sm rounded-2xl bg-surface-raised p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-1 text-base font-semibold text-text-primary">Add Bidder</div>
+              <div className="mb-4 text-sm text-text-secondary">
+                Linked estimate for{" "}
+                <span className="font-medium text-text-primary">
+                  {(addBidderTarget.name ?? getEstimateBodyField(addBidderTarget.body, "name")) || "this estimate"}
+                </span>
               </div>
-            )}
 
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setAddBidderTarget(null)}
-                className="rounded-xl border border-border-default px-4 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => void submitAddBidder()}
-                disabled={!bidderInput.trim()}
-                className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Add Bidder
-              </button>
+              <div className="relative">
+                <input
+                  autoFocus
+                  value={bidderInput}
+                  onChange={(e) => { setBidderInput(e.target.value); setBidderHighlight(-1); }}
+                  onKeyDown={handleKey}
+                  placeholder="Type to search or enter a new name"
+                  className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+                />
+                {filtered.length > 0 && (
+                  <ul className="absolute left-0 right-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-xl border border-border-default bg-surface-raised shadow-lg">
+                    {filtered.map((suggestion, i) => (
+                      <li key={suggestion}>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => { setBidderInput(suggestion); setBidderHighlight(-1); }}
+                          className={`w-full px-3 py-2 text-left text-sm transition ${
+                            i === clamped
+                              ? "bg-brand-primary/10 font-semibold text-brand-primary"
+                              : "text-text-primary hover:bg-surface-overlay"
+                          }`}
+                        >
+                          {suggestion}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <p className="mt-1.5 text-xs text-text-tertiary">
+                Select an existing name above, or type a new one and click Add Bidder.
+              </p>
+
+              <div className="mt-5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAddBidderTarget(null)}
+                  className="rounded-xl border border-border-default px-4 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void submitAddBidder()}
+                  disabled={!bidderInput.trim()}
+                  className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Add Bidder
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
