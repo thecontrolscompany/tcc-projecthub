@@ -156,11 +156,18 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
             >
               {parsing ? "Parsing..." : "Parse scope"}
             </button>
-            {canImport && (
+            {onImport && (
               <button
                 type="button"
                 onClick={handleImport}
-                className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500"
+                disabled={!result}
+                className="rounded-full px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
+                style={{
+                  backgroundColor: result ? "#1d4ed8" : "#94a3b8",
+                  color: "#ffffff",
+                  boxShadow: result ? "0 8px 24px rgba(29, 78, 216, 0.18)" : "none",
+                  border: result ? "1px solid rgba(29, 78, 216, 0.35)" : "1px solid rgba(148, 163, 184, 0.35)",
+                }}
               >
                 Import into estimate
               </button>
@@ -286,6 +293,15 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
                 >
                   Copy JSON
                 </button>
+                {canImport && (
+                  <button
+                    type="button"
+                    onClick={handleImport}
+                    className="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 sm:w-auto"
+                  >
+                    Import into estimate
+                  </button>
+                )}
               </div>
             )}
 
