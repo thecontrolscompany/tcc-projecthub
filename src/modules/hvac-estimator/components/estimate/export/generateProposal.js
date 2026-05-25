@@ -193,86 +193,95 @@ function renderImportedScopeList(scopeImport) {
   const assumptions = Array.isArray(scopeImport.assumptions) ? scopeImport.assumptions : [];
   const exclusions = Array.isArray(scopeImport.exclusions) ? scopeImport.exclusions : [];
   const notes = Array.isArray(scopeImport.notes) ? scopeImport.notes : [];
+  const MAX_POINT_SUMMARIES = 8;
+  const MAX_ASSM_SUMMARIES = 5;
 
-  const renderList = (items, depth = 0) => {
-    if (!items.length) return "";
-    const pad = depth === 0 ? "" : " style=\"margin-top:4px; padding-left:18px; line-height:1.7;\"";
-    return `<ul${pad}>${items.join("")}</ul>`;
-  };
+  function joinClean(values, separator = " • ") {
+    return values.map((value) => String(value || "").trim()).filter(Boolean).join(separator);
+  }
 
-  const renderBulletItems = (values) =>
-    (Array.isArray(values) ? values : [])
-      .map((value) => {
-        const text = String(value || "").trim();
-        return text ? `<li>${esc(text)}</li>` : "";
+  function summarizeAssemblies(assemblies) {
+    const items = (Array.isArray(assemblies) ? assemblies : [])
+      .map((assembly) => {
+        if (!assembly || typeof assembly !== "object") return "";
+        const name = String(assembly.assemblyName || assembly.assemblyRef || "").trim();
+        const qty = Number(assembly.qty || 1);
+        const notesText = String(assembly.notes || "").trim();
+        const parts = [];
+        if (name) parts.push(name);
+        if (Number.isFinite(qty) && qty > 1) parts.push(`Qty ${qty}`);
+        if (notesText) parts.push(notesText);
+        return parts.join(" - ");
       })
       .filter(Boolean);
 
-  const renderAssemblies = (assemblies) => {
-    const rows = (Array.isArray(assemblies) ? assemblies : []).map((assembly) => {
-      if (!assembly || typeof assembly !== "object") return "";
-      const label = String(assembly.assemblyName || assembly.assemblyRef || "Assembly").trim();
-      const qty = Number(assembly.qty || 1);
-      const notesText = String(assembly.notes || "").trim();
-      const children = renderBulletItems([
-        ...(Number.isFinite(qty) && qty > 1 ? [`Qty ${qty}`] : []),
-        ...(notesText ? [notesText] : []),
-      ]);
-      return `<li><strong>${esc(label)}</strong>${children.length ? renderList(children, 2) : ""}</li>`;
-    }).filter(Boolean);
-    return renderList(rows, 2);
-  };
+    if (!items.length) return "";
+    const shown = items.slice(0, MAX_ASSM_SUMMARIES);
+    const extra = items.length - shown.length;
+    return `Included assemblies: ${shown.join("; ")}${extra > 0 ? `; ${extra} more` : ""}`;
+  }
 
-  const renderPoints = (points) => {
-    const rows = (Array.isArray(points) ? points : []).map((point) => {
-      if (!point || typeof point !== "object") return "";
-      const label = String(point.name || "Point").trim();
-      const qty = Number(point.qty || 1);
-      const notesText = String(point.notes || "").trim();
-      const childLines = renderBulletItems([
-        ...(Number.isFinite(qty) && qty > 1 ? [`Qty ${qty}`] : []),
-        ...(notesText ? [notesText] : []),
-      ]);
-      const pointBullets = childLines.length ? renderList(childLines, 1) : "";
-      const assemblyHtml = renderAssemblies(point.assemblies);
-      return `<li><strong>${esc(label)}</strong>${pointBullets}${assemblyHtml}</li>`;
-    }).filter(Boolean);
-    return renderList(rows, 1);
-  };
+  function summarizePoints(points) {
+    const items = (Array.isArray(points) ? points : [])
+      .map((point) => {
+        if (!point || typeof point !== "object") return "";
+        const name = String(point.name || "Point").trim();
+        const qty = Number(point.qty || 1);
+        const notesText = String(point.notes || "").trim();
+        const assemblyText = summarizeAssemblies(point.assemblies);
+        const parts = [];
+        if (name) parts.push(name);
+        if (Number.isFinite(qty) && qty > 1) parts.push(`Qty ${qty}`);
+        if (notesText) parts.push(notesText);
+        if (assemblyText) parts.push(assemblyText);
+        return parts.join(" - ");
+      })
+      .filter(Boolean);
 
-  const systemRows = systems.map((system, index) => {
+    if (!items.length) return "";
+    const shown = items.slice(0, MAX_POINT_SUMMARIES);
+    const extra = items.length - shown.length;
+    return `Included points: ${shown.join("; ")}${extra > 0 ? `; ${extra} more` : ""}`;
+  }
+
+  const systemItems = systems.map((system, index) => {
     if (!system || typeof system !== "object") return "";
+
     const label = String(system.name || `System ${index + 1}`).trim();
     const qty = Number(system.qty || 1);
     const type = String(system.type || "").trim();
     const location = String(system.location || "").trim();
     const sourceText = String(system.sourceText || "").trim();
     const notesText = String(system.notes || "").trim();
-    const childLines = renderBulletItems([
-      ...(Number.isFinite(qty) && qty > 1 ? [`Qty ${qty}`] : []),
-      ...(type && !["equipment", "system", "misc"].includes(type.toLowerCase()) ? [type] : []),
-      ...(location ? [location] : []),
-      ...(sourceText ? [sourceText] : []),
-      ...(notesText ? [notesText] : []),
+    const meta = joinClean([
+      Number.isFinite(qty) && qty > 1 ? `Qty ${qty}` : "",
+      type && !["equipment", "system", "misc"].includes(type.toLowerCase()) ? type : "",
+      location,
     ]);
+    const pointSummary = summarizePoints(system.points);
+    const description = joinClean([sourceText, notesText], ". ");
 
-    const systemBullets = childLines.length ? renderList(childLines, 1) : "";
-    const pointsHtml = renderPoints(system.points);
-    return `<li><strong>${esc(label)}</strong>${systemBullets}${pointsHtml}</li>`;
+    return `<li><strong>${esc(label)}</strong>${
+      meta ? `<div style="margin-top:4px; font-size:13px; line-height:1.6; color:var(--muted);">${esc(meta)}</div>` : ""
+    }${
+      description ? `<div style="margin-top:4px; font-size:13px; line-height:1.7;">${esc(description)}</div>` : ""
+    }${
+      pointSummary ? `<div style="margin-top:4px; font-size:13px; line-height:1.7;">${esc(pointSummary)}</div>` : ""
+    }</li>`;
   }).filter(Boolean);
 
   const sections = [];
-  if (systemRows.length) {
-    sections.push(`<li><strong>${esc(String(scopeImport.baseScopeName || "Scope"))}</strong>${renderList(systemRows, 0)}</li>`);
+  if (systemItems.length) {
+    sections.push(`<li><strong>${esc(String(scopeImport.baseScopeName || "Scope"))}</strong><div style="margin-top:4px;"><ul style="margin:0; padding-left:18px; line-height:1.7;">${systemItems.join("")}</ul></div></li>`);
   }
   if (assumptions.length) {
-    sections.push(`<li><strong>Assumptions</strong>${renderList(renderBulletItems(assumptions), 0)}</li>`);
+    sections.push(`<li><strong>Assumptions</strong><ul style="margin-top:4px; padding-left:18px; line-height:1.7;">${assumptions.map((item) => `<li>${esc(String(item || "").trim())}</li>`).filter(Boolean).join("")}</ul></li>`);
   }
   if (exclusions.length) {
-    sections.push(`<li><strong>Exclusions</strong>${renderList(renderBulletItems(exclusions), 0)}</li>`);
+    sections.push(`<li><strong>Exclusions</strong><ul style="margin-top:4px; padding-left:18px; line-height:1.7;">${exclusions.map((item) => `<li>${esc(String(item || "").trim())}</li>`).filter(Boolean).join("")}</ul></li>`);
   }
   if (notes.length) {
-    sections.push(`<li><strong>Notes</strong>${renderList(renderBulletItems(notes), 0)}</li>`);
+    sections.push(`<li><strong>Notes</strong><ul style="margin-top:4px; padding-left:18px; line-height:1.7;">${notes.map((item) => `<li>${esc(String(item || "").trim())}</li>`).filter(Boolean).join("")}</ul></li>`);
   }
 
   return sections.length ? `<ul class="scope-list">${sections.join("")}</ul>` : "";
