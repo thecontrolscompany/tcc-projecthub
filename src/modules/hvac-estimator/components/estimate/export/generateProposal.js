@@ -123,6 +123,46 @@ function normalizeCompName(name) {
     .trim();
 }
 
+const SCOPE_DISPLAY_NAMES = {
+  "air flow stn": "Airflow Measurement Station",
+  "cntler small/avg": "DDC Controller and Enclosure",
+  "control/status": "BACnet Integration (Control/Status Monitoring)",
+  "device.mount.015.term.06.tubing.2": "Controls Device Mounting Assembly",
+  "diff pressure water": "Water Differential Pressure Sensor",
+  "discharge air temp": "Discharge Air Temperature Sensor",
+  "dmpr act end sw": "Damper Actuator with End Switch",
+  "dmpr actuator": "Damper Actuator",
+  "dp switch air": "Differential Pressure Switch",
+  "dp switch air (filter)": "Filter Differential Pressure Switch",
+  "dp transducer air": "Duct Static Pressure Sensor",
+  "dp transducer air (2/3 duct)": "Duct Static Pressure Sensor",
+  "duct temp": "Duct Temperature Sensor",
+  "ef start/stop/status in emt": "Fan Start/Stop/Status Control",
+  "ef start/stop/status plenum": "Fan Start/Stop/Status Control",
+  "enclosure (average) controller/ xfmr": "DDC Controller and Enclosure",
+  "enclosure (large) controller/ xfmr": "Large DDC Controller and Enclosure",
+  "enclosure (small) controller/ xfmr": "Equipment Controller and Enclosure",
+  "fcu controller": "Fan Coil Unit Controller",
+  "humtemp duct": "Duct Temperature/Humidity Sensor",
+  "humtemp room": "Room Temperature/Humidity Sensor",
+  "reheat valve - proportional": "Proportional Hot Water Reheat Valve and Actuator",
+  "seq (no home run)": "MS/TP Network Segment",
+  "temp sensor room bacnet": "BACnet Room Temperature Sensor",
+  "temp sensor room net stat": "Room Temperature Sensor",
+  "valve actuator": "Control Valve Actuator",
+  "valveactuator": "Control Valve Actuator",
+  "vav controller": "VAV Terminal Unit Controller",
+  "vsd start/stop/status/speed": "VFD Integration (Start/Stop/Status/Speed)",
+  "well temp sensor": "Immersion Temperature Sensor",
+  "welltmpsensor": "Immersion Temperature Sensor",
+  "zone temp sensor": "Zone Temperature Sensor",
+};
+
+function getAssemblyDisplayName(name) {
+  const key = String(name || "").toLowerCase().replace(/\s+/g, " ").trim();
+  return SCOPE_DISPLAY_NAMES[key] || name;
+}
+
 function renderBulletBlock(items) {
   const filtered = (items || []).filter(Boolean);
   if (!filtered.length) return "";
@@ -193,56 +233,6 @@ function renderImportedScopeList(scopeImport) {
   const assumptions = Array.isArray(scopeImport.assumptions) ? scopeImport.assumptions : [];
   const exclusions = Array.isArray(scopeImport.exclusions) ? scopeImport.exclusions : [];
   const notes = Array.isArray(scopeImport.notes) ? scopeImport.notes : [];
-  const MAX_POINT_SUMMARIES = 8;
-  const MAX_ASSM_SUMMARIES = 5;
-
-  function joinClean(values, separator = " • ") {
-    return values.map((value) => String(value || "").trim()).filter(Boolean).join(separator);
-  }
-
-  function summarizeAssemblies(assemblies) {
-    const items = (Array.isArray(assemblies) ? assemblies : [])
-      .map((assembly) => {
-        if (!assembly || typeof assembly !== "object") return "";
-        const name = String(assembly.assemblyName || assembly.assemblyRef || "").trim();
-        const qty = Number(assembly.qty || 1);
-        const notesText = String(assembly.notes || "").trim();
-        const parts = [];
-        if (name) parts.push(name);
-        if (Number.isFinite(qty) && qty > 1) parts.push(`Qty ${qty}`);
-        if (notesText) parts.push(notesText);
-        return parts.join(" - ");
-      })
-      .filter(Boolean);
-
-    if (!items.length) return "";
-    const shown = items.slice(0, MAX_ASSM_SUMMARIES);
-    const extra = items.length - shown.length;
-    return `Included assemblies: ${shown.join("; ")}${extra > 0 ? `; ${extra} more` : ""}`;
-  }
-
-  function summarizePoints(points) {
-    const items = (Array.isArray(points) ? points : [])
-      .map((point) => {
-        if (!point || typeof point !== "object") return "";
-        const name = String(point.name || "Point").trim();
-        const qty = Number(point.qty || 1);
-        const notesText = String(point.notes || "").trim();
-        const assemblyText = summarizeAssemblies(point.assemblies);
-        const parts = [];
-        if (name) parts.push(name);
-        if (Number.isFinite(qty) && qty > 1) parts.push(`Qty ${qty}`);
-        if (notesText) parts.push(notesText);
-        if (assemblyText) parts.push(assemblyText);
-        return parts.join(" - ");
-      })
-      .filter(Boolean);
-
-    if (!items.length) return "";
-    const shown = items.slice(0, MAX_POINT_SUMMARIES);
-    const extra = items.length - shown.length;
-    return `Included points: ${shown.join("; ")}${extra > 0 ? `; ${extra} more` : ""}`;
-  }
 
   const systemItems = systems.map((system, index) => {
     if (!system || typeof system !== "object") return "";
@@ -251,40 +241,55 @@ function renderImportedScopeList(scopeImport) {
     const qty = Number(system.qty || 1);
     const type = String(system.type || "").trim();
     const location = String(system.location || "").trim();
-    const sourceText = String(system.sourceText || "").trim();
-    const notesText = String(system.notes || "").trim();
-    const meta = joinClean([
-      Number.isFinite(qty) && qty > 1 ? `Qty ${qty}` : "",
+    const qtyLabel = Number.isFinite(qty) && qty > 1 ? `Qty ${qty} ` : "";
+
+    const metaParts = [
       type && !["equipment", "system", "misc"].includes(type.toLowerCase()) ? type : "",
       location,
-    ]);
-    const pointSummary = summarizePoints(system.points);
-    const description = joinClean([sourceText, notesText], ". ");
+    ].filter(Boolean);
 
-    return `<li><strong>${esc(label)}</strong>${
-      meta ? `<div style="margin-top:4px; font-size:13px; line-height:1.6; color:var(--muted);">${esc(meta)}</div>` : ""
-    }${
-      description ? `<div style="margin-top:4px; font-size:13px; line-height:1.7;">${esc(description)}</div>` : ""
-    }${
-      pointSummary ? `<div style="margin-top:4px; font-size:13px; line-height:1.7;">${esc(pointSummary)}</div>` : ""
-    }</li>`;
+    const points = Array.isArray(system.points) ? system.points : [];
+    const pointLines = points.flatMap((point) => {
+      if (!point || typeof point !== "object") return [];
+      const pointName = String(point.name || "").trim();
+      if (!pointName) return [];
+      const pointQty = Number(point.qty || 1);
+      const pointNotes = String(point.notes || "").trim();
+      const qtyPrefix = Number.isFinite(pointQty) && pointQty > 1 ? `Qty ${pointQty} ` : "";
+      const notesSuffix = pointNotes ? ` (${pointNotes})` : "";
+      return [`            <li>Install ${esc(`${qtyPrefix}${pointName}${notesSuffix}`)} provided by others; furnish and install associated control wiring.</li>`];
+    });
+
+    const metaHtml = metaParts.length
+      ? `\n          <div style="margin-top:4px; font-size:12px; color:var(--muted);">${esc(metaParts.join(" • "))}</div>`
+      : "";
+
+    const innerHtml = pointLines.length
+      ? `\n          <ul style="margin-top:4px; padding-left:18px; line-height:1.7;">\n${pointLines.join("\n")}
+            <li>Demolish and remove existing controls associated with this equipment where required; return removed equipment to owner's stock.</li>
+          </ul>`
+      : "";
+
+    return `
+        <li><strong>${esc(qtyLabel + label)}</strong>${metaHtml}${innerHtml}
+        </li>`;
   }).filter(Boolean);
+
+  const makeSubList = (title, items) =>
+    `\n    <li><strong>${esc(title)}</strong>\n      <ul style="margin-top:4px; padding-left:18px; line-height:1.7;">\n${
+      items.map((item) => `        <li>${esc(String(item || "").trim())}</li>`).filter(Boolean).join("\n")
+    }\n      </ul>\n    </li>`;
 
   const sections = [];
   if (systemItems.length) {
-    sections.push(`<li><strong>${esc(String(scopeImport.baseScopeName || "Scope"))}</strong><div style="margin-top:4px;"><ul style="margin:0; padding-left:18px; line-height:1.7;">${systemItems.join("")}</ul></div></li>`);
+    const baseName = esc(String(scopeImport.baseScopeName || "Scope"));
+    sections.push(`\n    <li><strong>${baseName}</strong>\n      <div style="margin-top:4px;">\n        <ul style="margin:0; padding-left:18px; line-height:1.7;">${systemItems.join("")}\n        </ul>\n      </div>\n    </li>`);
   }
-  if (assumptions.length) {
-    sections.push(`<li><strong>Assumptions</strong><ul style="margin-top:4px; padding-left:18px; line-height:1.7;">${assumptions.map((item) => `<li>${esc(String(item || "").trim())}</li>`).filter(Boolean).join("")}</ul></li>`);
-  }
-  if (exclusions.length) {
-    sections.push(`<li><strong>Exclusions</strong><ul style="margin-top:4px; padding-left:18px; line-height:1.7;">${exclusions.map((item) => `<li>${esc(String(item || "").trim())}</li>`).filter(Boolean).join("")}</ul></li>`);
-  }
-  if (notes.length) {
-    sections.push(`<li><strong>Notes</strong><ul style="margin-top:4px; padding-left:18px; line-height:1.7;">${notes.map((item) => `<li>${esc(String(item || "").trim())}</li>`).filter(Boolean).join("")}</ul></li>`);
-  }
+  if (assumptions.length) sections.push(makeSubList("Assumptions", assumptions));
+  if (exclusions.length) sections.push(makeSubList("Exclusions", exclusions));
+  if (notes.length) sections.push(makeSubList("Notes", notes));
 
-  return sections.length ? `<ul class="scope-list">${sections.join("")}</ul>` : "";
+  return sections.length ? `<ul class="scope-list">${sections.join("")}\n</ul>` : "";
 }
 
 function getProposalScopeHtml(settings) {
@@ -521,11 +526,12 @@ function renderGeneratedScope(itemsWithComps = [], mode = "brief") {
             ${locations.length ? `<li>Work area${locations.length > 1 ? "s" : ""} include ${esc(locations.join(", "))}.</li>` : ""}
             ${components.length ? components.map(name => {
               const normalized = normalizeCompName(name);
+              const displayName = getAssemblyDisplayName(normalized);
               if (/conduit|wire|cable|raceway/i.test(normalized)) {
-                return `<li>Furnish and install ${esc(normalized.toLowerCase())} required for this system.</li>`;
+                return `\n            <li>Furnish and install ${esc(displayName.toLowerCase())} required for this system.</li>`;
               }
-              return `<li>Install ${esc(normalized.toLowerCase())} provided by others; furnish and install associated control wiring.</li>`;
-            }).join("") : `<li>Install controls field devices provided by others; furnish and install associated control wiring.</li>`}
+              return `\n            <li>Install ${esc(displayName)} provided by others; furnish and install associated control wiring.</li>`;
+            }).join("") : `\n            <li>Install controls field devices provided by others; furnish and install associated control wiring.</li>`}
             <li>Demolish and remove existing controls associated with this equipment where required; return removed equipment to owner's stock.</li>
           </ul>
         </li>`;
