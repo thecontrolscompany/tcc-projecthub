@@ -97,13 +97,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "The saved Azure OpenAI connection is missing an endpoint." }, { status: 400 });
     }
 
-    const files = formData.getAll("files").filter((entry): entry is File => entry instanceof File && entry.size > 0);
-    const uploadedFiles = await Promise.all(
-      files.map(async (file) => ({
-        name: file.name,
-        text: await extractUploadedFileText(file),
-      })),
-    );
+    const storagePathsRaw = normalizeText(formData.get("storagePaths"));
+    const storagePaths: string[] = storagePathsRaw
+      ? (() => { try { return JSON.parse(storagePathsRaw); } catch { return []; } })()
+      : [];
+
+    const directFiles = formData.getAll("files").filter((entry): entry is File => entry instanceof File && entry.size > 0);
+
+    let uploadedFiles: { name: string; text: string }[] = [];
+
+    if (storagePaths.length > 0) {
+      uploadedFiles = await Promise.all(
+        storagePaths.map(async (path) => {
+          const { data, error } = await admin.storage.from("ai-parser-uploads").download(path);
+          if (error || !data) throw new Error(`Unable to download staged file: ${path}`);
+          const fileName = path.split("/").pop() ?? path;
+          const file = new File([await data.arrayBuffer()], fileName, { type: data.type });
+          const text = await extractUploadedFileText(file);
+          await admin.storage.from("ai-parser-uploads").remove([path]);
+          return { name: fileName, text };
+        }),
+      );
+    } else {
+      uploadedFiles = await Promise.all(
+        directFiles.map(async (file) => ({
+          name: file.name,
+          text: await extractUploadedFileText(file),
+        })),
+      );
+    }
 
     const prompt = await buildScopeTakeoffPrompt({
       estimate,

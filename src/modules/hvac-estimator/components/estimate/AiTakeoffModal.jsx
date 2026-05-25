@@ -1,5 +1,27 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { AI_PROVIDERS } from "../../ai/providerRegistry.js";
+
+const STORAGE_THRESHOLD_BYTES = 4 * 1024 * 1024; // 4 MB — stay under Vercel's 4.5 MB payload cap
+const STORAGE_BUCKET = "ai-parser-uploads";
+
+async function uploadFilesToStorage(files, userId) {
+  const supabase = createClient();
+  const paths = [];
+  for (const file of files) {
+    const path = `${userId}/${crypto.randomUUID()}-${file.name}`;
+    const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(path, file);
+    if (error) throw new Error(`Storage upload failed for ${file.name}: ${error.message}`);
+    paths.push(path);
+  }
+  return paths;
+}
+
+async function deleteStorageFiles(paths) {
+  const supabase = createClient();
+  if (!paths.length) return;
+  await supabase.storage.from(STORAGE_BUCKET).remove(paths);
+}
 
 function prettyJson(value) {
   return JSON.stringify(value, null, 2);
@@ -86,13 +108,30 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
     setParsing(true);
     setMessage("");
     setResult(null);
+    let storagePaths = [];
     try {
+      const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+      const useStorage = totalSize > STORAGE_THRESHOLD_BYTES && files.length > 0;
+
+      if (useStorage) {
+        setMessage("Uploading large files…");
+        const { data: { user } } = await createClient().auth.getUser();
+        if (!user) throw new Error("Not authenticated.");
+        storagePaths = await uploadFilesToStorage(files, user.id);
+        setMessage("");
+      }
+
       const formData = new FormData();
       formData.set("estimateId", estimate.id);
       formData.set("provider", provider);
       formData.set("scopeText", scopeText);
-      for (const file of files) {
-        formData.append("files", file);
+
+      if (useStorage) {
+        formData.set("storagePaths", JSON.stringify(storagePaths));
+      } else {
+        for (const file of files) {
+          formData.append("files", file);
+        }
       }
 
       const response = await fetch("/api/estimating/ai-takeoff", {
@@ -102,8 +141,10 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
       const json = await readResponseJson(response);
       if (!response.ok) throw new Error(json?.error || "Unable to parse scope.");
       setResult(json || {});
+      storagePaths = []; // API handles cleanup
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to parse scope.");
+      await deleteStorageFiles(storagePaths);
     } finally {
       setParsing(false);
     }
@@ -250,7 +291,9 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
                   className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-xl file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-700"
                 />
                 <div className="mt-2 text-xs text-slate-500">
-                  {files.length ? `${files.length} file(s) selected` : "Accepted files are passed through text extraction when possible."}
+                  {files.length
+                    ? `${files.length} file(s) selected${files.reduce((s, f) => s + f.size, 0) > STORAGE_THRESHOLD_BYTES ? " · large files will be staged via storage" : ""}`
+                    : "Accepted files are passed through text extraction when possible."}
                 </div>
               </div>
 
