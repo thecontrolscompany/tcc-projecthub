@@ -268,13 +268,19 @@ function buildImportedEstimateItem(system, index, installType) {
     type === "plant"
       ? { plantType, aiScopeSystem: system }
       : { ...getDefaultCfg(type), aiScopeSystem: system };
-  const selected =
-    type === "plant"
-      ? getImportedPlantSelections(plantType)
-      : getDefaultSelectedForType(type, cfg);
-  const selectedAssemblyIds = getSelectedAssemblyIds(type, cfg, selected, installType);
+
   const points = Array.isArray(system.points) ? system.points : [];
   const systemQty = Math.max(1, asNumber(system.qty, 1));
+  const hasAiPoints = points.length > 0;
+
+  // When the AI provides explicit points, start with no default selections so
+  // AI assemblies drive the estimate without duplicating template defaults.
+  // For systems with no AI points, fall back to defaults so the item isn't empty.
+  const selected = hasAiPoints
+    ? []
+    : type === "plant"
+      ? getImportedPlantSelections(plantType)
+      : getDefaultSelectedForType(type, cfg);
 
   return {
     id: crypto.randomUUID(),
@@ -284,7 +290,7 @@ function buildImportedEstimateItem(system, index, installType) {
     qty: systemQty,
     installType,
     selected,
-    custom: points.flatMap((point) => buildImportedPointCustomEntries(point, selectedAssemblyIds, systemQty)),
+    custom: points.flatMap((point) => buildImportedPointCustomEntries(point, new Set(), systemQty)),
     priceSnap: {},
     cfg: {
       ...cfg,

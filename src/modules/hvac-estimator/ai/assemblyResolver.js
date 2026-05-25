@@ -24,17 +24,50 @@ const DEFAULT_WEIGHTS = new Map([
 ]);
 
 const ASSEMBLY_ALIASES = [
-  { id: "50001", aliases: ["small controller xfmr", "small enclosure controller xfmr", "field mount controller xfmr", "controller with ups"] },
-  { id: "50002", aliases: ["average controller xfmr", "average enclosure controller xfmr", "controller enclosure average", "medium controller xfmr"] },
-  { id: "50003", aliases: ["large controller xfmr", "large enclosure controller xfmr", "controller enclosure large"] },
-  { id: "60032", aliases: ["temp sensor room bacnet", "room temp sensor bacnet", "zone temperature sensor", "room temperature sensor", "wall temperature sensor"] },
-  { id: "60059", aliases: ["dp switch air", "air dp switch", "differential pressure switch", "filter dp switch"] },
-  { id: "60071", aliases: ["general relay", "command relay", "status relay", "control relay", "relay"] },
-  { id: "60077", aliases: ["valve actuator", "control valve actuator", "heating coil control valve", "bypass control valve"] },
-  { id: "60079", aliases: ["zone valve actuator", "zone valve act", "zone valve actuator and valve"] },
-  { id: "60080", aliases: ["transformer", "general transformer", "panel mounted transformer", "xfmr"] },
-  { id: "60152", aliases: ["insertion flow meter", "flow meter", "water flow meter"] },
+  // Controllers / enclosures
+  { id: "50001", aliases: ["small controller xfmr", "small enclosure controller xfmr", "field mount controller xfmr", "controller with ups", "enclosure small controller xfmr", "dxr controller package", "fcu controller package", "vav dxr controller", "dxr equipment controller"] },
+  { id: "50002", aliases: ["average controller xfmr", "average enclosure controller xfmr", "controller enclosure average", "medium controller xfmr", "enclosure average controller xfmr", "pxc control panel", "ahu control panel", "bas control panel", "pxc panel"] },
+  { id: "50003", aliases: ["large controller xfmr", "large enclosure controller xfmr", "controller enclosure large", "enclosure large controller xfmr"] },
+  // Temperature sensors — room
+  { id: "60032", aliases: ["temp sensor room bacnet", "room temp sensor bacnet", "zone temperature sensor", "room temperature sensor", "wall temperature sensor", "space temperature sensor", "space temp sensor"] },
   { id: "60163", aliases: ["temp sensor room net stat", "room temp sensor", "zone temp sensor", "stat sensor"] },
+  // Temperature sensors — duct / immersion
+  { id: "60073", aliases: ["duct temp", "temp sensor duct", "duct temperature sensor", "discharge air temp", "leaving air temp", "sa duct temp", "oa duct temp", "ma temp", "mixed air temp", "preheat leaving air temp", "cooling leaving air temp", "reheat leaving air temp", "duct temperature"] },
+  { id: "60076", aliases: ["well temp sensor", "welltmpsensor", "temp sensor immersion", "immersion temperature sensor", "immersion temp", "hwr immersion temp", "chwr immersion temp", "hot water immersion", "chilled water immersion"] },
+  // Humidity + temp
+  { id: "60064", aliases: ["humtemp duct", "hum temp duct", "duct temp humidity", "duct humidity temp", "ra temp rh", "ra duct temp humidity", "temp rh duct", "duct temp rh sensor", "humidity duct"] },
+  { id: "60065", aliases: ["humtemp room", "hum temp room", "room temp humidity", "space temp rh"] },
+  // Pressure — air
+  { id: "60059", aliases: ["dp switch air", "air dp switch", "differential pressure switch", "filter dp switch", "dp switch filter", "filter differential pressure switch"] },
+  { id: "60060", aliases: ["dp transducer air", "pressure sensor air", "static pressure sensor", "duct static pressure", "differential pressure air", "air differential pressure", "air pressure sensor", "duct dp sensor", "da static pressure", "sa static pressure", "discharge dp", "low suction dp", "pre filter dp", "final filter dp", "filter dp transmitter", "oa filter dp", "filter dp sensor"] },
+  // Pressure — water
+  { id: "60100", aliases: ["diff pressure water", "differential pressure water", "pressure sensor water", "chws dp sensor", "hws dp sensor", "building dp sensor", "campus dp sensor", "chws chwr dp", "hws hwr dp", "water differential pressure"] },
+  // Air flow
+  { id: "60057", aliases: ["air flow stn", "air flow station", "afms", "airflow measurement station", "oa air flow measurement", "airflow station"] },
+  // Water flow
+  { id: "60152", aliases: ["insertion flow meter", "flow meter", "water flow meter"] },
+  // Valve actuators
+  { id: "60077", aliases: ["valve actuator", "valveactuator", "control valve actuator", "heating coil control valve", "bypass control valve", "picv control", "2 way valve", "2way valve", "hot water valve", "cooling valve", "heating valve", "reheat valve", "preheat valve"] },
+  { id: "60079", aliases: ["zone valve actuator", "zone valve act", "zone valve actuator and valve"] },
+  // Damper actuators
+  { id: "60069", aliases: ["dmpr actuator", "damper actuator", "modulating damper actuator", "motorized damper actuator", "2 position damper", "damper open close", "oa damper", "ra damper actuator", "sa damper actuator", "gravity ventilator damper"] },
+  { id: "60068", aliases: ["dmpr act end sw", "damper actuator end switch", "dmprActEndSw"] },
+  // Relays
+  { id: "60070", aliases: ["relay"] },
+  { id: "60071", aliases: ["general relay", "command relay", "status relay", "control relay", "condensate alarm", "drain pan status", "uv status", "vfd hoa status", "smoke damper feedback"] },
+  // Fan start/stop
+  { id: "60047", aliases: ["ef start stop status plenum", "exhaust fan start stop status plenum"] },
+  { id: "60137", aliases: ["ef start stop status", "ef start stop status emt", "exhaust fan start stop", "exhaust fan start stop status", "fan start stop status", "supply fan start stop", "fan start stop"] },
+  // VSD / VFD
+  { id: "60129", aliases: ["vsd start stop status speed", "vfd integration bacnet", "vfd bacnet", "vsd bacnet", "vfd integration", "vsd integration", "supply fan vfd", "chwp vfd", "hwp vfd", "pump vfd bacnet", "pump vfd integration"] },
+  // Pump
+  { id: "60131", aliases: ["pump start stop status", "pump controller", "pump status", "pump start stop"] },
+  // Interlock
+  { id: "60123", aliases: ["hardwire interlock", "interlock relay", "interlock wiring", "smoke damper interlock relay", "smoke damper interlock"] },
+  // Control / status monitoring (PBO devices, BACnet third-party integrations)
+  { id: "60122", aliases: ["control status", "status monitoring", "di monitoring", "status point", "pbo status", "bacnet integration", "system controller integration", "unit controller integration", "heater controller integration", "pump controller integration", "system integration bacnet", "lighting control integration", "gas detection integration", "electric meter integration", "dhw system integration", "energy valve integration", "belimo energy valve"] },
+  // Transformer
+  { id: "60080", aliases: ["transformer", "general transformer", "panel mounted transformer", "xfmr", "general xmfr", "fire smoke damper transformer", "smoke damper transformer", "fsd transformer"] },
 ].map((entry) => ({
   ...entry,
   normalizedAliases: entry.aliases.map((alias) => normalizeAssemblyText(alias)).filter(Boolean),
