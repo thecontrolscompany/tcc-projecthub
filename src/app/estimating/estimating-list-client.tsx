@@ -309,6 +309,65 @@ export function EstimatingListClient() {
   const activeCount = estimates.filter((est) => !est.archived && !getEstimateBodyField(est.body, "parentEstimateId")).length;
   const archivedCount = estimates.filter((est) => est.archived && !getEstimateBodyField(est.body, "parentEstimateId")).length;
 
+  function renderSubRow(estimate: EstimateRecord): React.ReactNode {
+    const name = (estimate.name ?? getEstimateBodyField(estimate.body, "name")) || "Untitled Estimate";
+    const number = estimate.number ?? getEstimateBodyField(estimate.body, "number");
+    const customer = getEstimateBodyField(estimate.body, "customer");
+    const bidder = getEstimateBodyField(estimate.body, "bidder");
+
+    return (
+      <tr key={estimate.id} className="border-l-4 border-l-brand-primary/30 bg-brand-primary/[0.03] hover:bg-brand-primary/[0.07]">
+        <td className="px-4 py-3 pl-10">
+          <div className="flex items-center gap-1.5">
+            <Link href={`/estimating/${estimate.id}`} className="font-medium text-text-primary hover:text-brand-primary">
+              {bidder || name}
+            </Link>
+          </div>
+          <div className="mt-0.5 text-xs text-text-tertiary">{number || estimate.id.slice(0, 8)}</div>
+        </td>
+        <td className="px-4 py-3 text-text-secondary">{bidder || customer || "-"}</td>
+        <td className="px-4 py-3">
+          <span className="rounded-full bg-surface-overlay px-2 py-1 text-xs font-medium text-text-secondary">
+            {estimate.status.replace(/_/g, " ")}
+          </span>
+        </td>
+        <td className="px-4 py-3 text-right font-medium text-text-primary">{formatCurrency(estimate.total_amount)}</td>
+        <td className="px-4 py-3 text-text-tertiary">{formatDate(estimate.updated_at)}</td>
+        <td className="px-4 py-3 text-right">
+          <div className="flex justify-end gap-1.5">
+            <button
+              type="button"
+              onClick={() => copyEstimate(estimate)}
+              disabled={copyingId === estimate.id}
+              className="rounded-lg border border-border-default px-2.5 py-1.5 text-xs font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {copyingId === estimate.id ? "Copying..." : "Copy"}
+            </button>
+            {estimate.archived ? (
+              <button
+                type="button"
+                onClick={() => restoreEstimate(estimate)}
+                disabled={restoringId === estimate.id}
+                className="rounded-lg border border-brand-primary/40 px-2.5 py-1.5 text-xs font-semibold text-brand-primary transition hover:bg-brand-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {restoringId === estimate.id ? "Restoring..." : "Restore"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => deleteEstimate(estimate)}
+                disabled={deletingId === estimate.id}
+                className="rounded-lg border border-status-danger/40 px-2.5 py-1.5 text-xs font-semibold text-status-danger transition hover:bg-status-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deletingId === estimate.id ? "Deleting..." : "Delete"}
+              </button>
+            )}
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
   function renderEstimateRow(estimate: EstimateRecord, isChild = false): React.ReactNode {
     const name = (estimate.name ?? getEstimateBodyField(estimate.body, "name")) || "Untitled Estimate";
     const number = estimate.number ?? getEstimateBodyField(estimate.body, "number");
@@ -318,12 +377,16 @@ export function EstimatingListClient() {
     const hasChildren = children.length > 0;
     const isExpanded = expandedParents.has(estimate.id);
 
-    return (
-      <>
-        <tr key={estimate.id} className={`hover:bg-surface-overlay/60 ${isChild ? "bg-surface-overlay/30" : ""}`}>
-          <td className="px-4 py-3">
-            <div className={`flex items-center gap-2 ${isChild ? "pl-6" : ""}`}>
-              {!isChild && hasChildren && (
+    // When this top-level estimate has sub-bids, render it as a container header.
+    // The estimate itself drops into the first sub-row so both it and its children
+    // appear at the same indented level.
+    if (hasChildren && !isChild) {
+      const totalBidders = children.length + 1; // parent + children
+      return (
+        <>
+          <tr key={`${estimate.id}-header`} className="hover:bg-surface-overlay/60">
+            <td className="px-4 py-3">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => toggleExpanded(estimate.id)}
@@ -332,8 +395,49 @@ export function EstimatingListClient() {
                 >
                   {isExpanded ? "▼" : "▶"}
                 </button>
+                <div>
+                  <span className="font-medium text-text-primary">{name}</span>
+                  <div className="mt-0.5 text-xs text-text-tertiary">
+                    {number || estimate.id.slice(0, 8)}
+                    {!isExpanded && <span className="ml-2">· {totalBidders} bidders</span>}
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td className="px-4 py-3"><span className="italic text-text-tertiary">Multiple</span></td>
+            <td className="px-4 py-3 text-text-tertiary">—</td>
+            <td className="px-4 py-3 text-right text-text-tertiary">—</td>
+            <td className="px-4 py-3 text-text-tertiary">{formatDate(estimate.updated_at)}</td>
+            <td className="px-4 py-3 text-right">
+              {!estimate.archived && (
+                <button
+                  type="button"
+                  onClick={() => addBidder(estimate)}
+                  disabled={addingBidderId === estimate.id}
+                  className="rounded-lg border border-border-default px-2.5 py-1.5 text-xs font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {addingBidderId === estimate.id ? "Adding..." : "+ Bidder"}
+                </button>
               )}
-              {!isChild && !hasChildren && <span className="w-5 flex-shrink-0" />}
+            </td>
+          </tr>
+          {isExpanded && (
+            <>
+              {renderSubRow(estimate)}
+              {children.map((child) => renderSubRow(child))}
+            </>
+          )}
+        </>
+      );
+    }
+
+    // Normal (non-container) row
+    return (
+      <>
+        <tr key={estimate.id} className="hover:bg-surface-overlay/60">
+          <td className="px-4 py-3">
+            <div className="flex items-center gap-2">
+              <span className="w-5 flex-shrink-0" />
               <div>
                 <div className="flex items-center gap-1.5">
                   <Link href={`/estimating/${estimate.id}`} className="font-medium text-text-primary hover:text-brand-primary">
@@ -345,30 +449,21 @@ export function EstimatingListClient() {
                     </span>
                   )}
                 </div>
-                <div className="mt-0.5 text-xs text-text-tertiary">
-                  {number || estimate.id.slice(0, 8)}
-                  {hasChildren && !isExpanded && (
-                    <span className="ml-2 text-text-tertiary">· {children.length} bidder{children.length !== 1 ? "s" : ""}</span>
-                  )}
-                </div>
+                <div className="mt-0.5 text-xs text-text-tertiary">{number || estimate.id.slice(0, 8)}</div>
               </div>
             </div>
           </td>
-          <td className="px-4 py-3 text-text-secondary">
-            {hasChildren ? <span className="italic text-text-tertiary">Multiple</span> : (bidder || customer || "-")}
-          </td>
+          <td className="px-4 py-3 text-text-secondary">{bidder || customer || "-"}</td>
           <td className="px-4 py-3">
             <span className="rounded-full bg-surface-overlay px-2 py-1 text-xs font-medium text-text-secondary">
               {estimate.status.replace(/_/g, " ")}
             </span>
           </td>
-          <td className="px-4 py-3 text-right font-medium text-text-primary">
-            {formatCurrency(estimate.total_amount)}
-          </td>
+          <td className="px-4 py-3 text-right font-medium text-text-primary">{formatCurrency(estimate.total_amount)}</td>
           <td className="px-4 py-3 text-text-tertiary">{formatDate(estimate.updated_at)}</td>
           <td className="px-4 py-3 text-right">
             <div className="flex justify-end gap-1.5">
-              {!isChild && !estimate.archived && (
+              {!estimate.archived && (
                 <button
                   type="button"
                   onClick={() => addBidder(estimate)}
@@ -408,7 +503,6 @@ export function EstimatingListClient() {
             </div>
           </td>
         </tr>
-        {!isChild && isExpanded && children.map((child) => renderEstimateRow(child, true))}
       </>
     );
   }
