@@ -354,7 +354,7 @@ export function EstimatingListClient() {
               </div>
             </div>
           </td>
-          <td className="px-4 py-3 text-text-secondary">{customer || "-"}</td>
+          <td className="px-4 py-3 text-text-secondary">{bidder || customer || "-"}</td>
           <td className="px-4 py-3">
             <span className="rounded-full bg-surface-overlay px-2 py-1 text-xs font-medium text-text-secondary">
               {estimate.status.replace(/_/g, " ")}
