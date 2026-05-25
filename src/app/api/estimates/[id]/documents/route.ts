@@ -14,7 +14,7 @@ import {
   graphFetch,
 } from "@/lib/graph/client";
 
-type EstimateDocumentRole = "supporting_scope" | "customer_upload" | "addendum" | "scope_of_work";
+type EstimateDocumentRole = "supporting_scope" | "customer_upload" | "addendum" | "scope_of_work" | "proposal_pdf";
 type EstimateDocumentStorage = {
   storagePath: string;
   storageItemId: string;
@@ -39,6 +39,7 @@ const DOCUMENT_ROLE_FOLDERS: Record<EstimateDocumentRole, string> = {
   scope_of_work: "01 Customer Uploads",
   supporting_scope: "02 Internal Review",
   addendum: "03 Estimate Working",
+  proposal_pdf: "04 Submitted Quote",
 };
 
 const PROJECT_SUBFOLDERS = [

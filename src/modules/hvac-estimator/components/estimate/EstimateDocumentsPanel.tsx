@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import { T } from "../../shared/tokens";
 
 type EstimateDocument = {
@@ -77,6 +78,8 @@ export function EstimateDocumentsPanel({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [batchNote, setBatchNote] = useState("");
   const [localFolder, setLocalFolder] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const dragCounter = useRef(0);
 
   const sharepointFolder = localFolder ?? sharepointFolderProp ?? null;
 
@@ -124,6 +127,34 @@ export function EstimateDocumentsPanel({
     } finally {
       setProvisioning(false);
     }
+  }
+
+  async function reconnectMicrosoft() {
+    const supabase = createSupabaseClient();
+    await supabase.auth.signInWithOAuth({
+      provider: "azure",
+      options: { redirectTo: window.location.href },
+    });
+  }
+
+  function handleDragEnter(e: React.DragEvent) {
+    e.preventDefault();
+    dragCounter.current += 1;
+    setIsDragOver(true);
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    e.preventDefault();
+    dragCounter.current -= 1;
+    if (dragCounter.current === 0) setIsDragOver(false);
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    dragCounter.current = 0;
+    setIsDragOver(false);
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.size > 0);
+    if (files.length) setSelectedFiles(files);
   }
 
   async function requestUploadSession(file: File) {
@@ -323,7 +354,13 @@ export function EstimateDocumentsPanel({
 
         <div className="rounded-xl border border-border-default bg-surface-overlay p-4">
           <div className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Upload Files</div>
-          <div className="mt-3 space-y-3">
+          <div
+            className="mt-3 space-y-3"
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDrop}
+          >
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-text-secondary">File type</span>
               <select
@@ -351,16 +388,21 @@ export function EstimateDocumentsPanel({
 
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-text-secondary">Files</span>
-              <input
-                type="file"
-                multiple
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.msg,.eml,.png,.jpg,.jpeg,.tif,.tiff"
-                onChange={(event) => setSelectedFiles(Array.from(event.target.files ?? []))}
-                className="block w-full text-sm text-text-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-surface-base file:px-3 file:py-2 file:text-sm file:font-medium file:text-text-primary"
-              />
-              <p className="mt-1 text-xs text-text-tertiary">
-                PDFs, drawings, emails, spreadsheets, and zipped packages are all supported.
-              </p>
+              <div
+                className={`rounded-xl border-2 border-dashed p-3 transition ${isDragOver ? "border-brand-primary bg-brand-primary/10" : "border-border-default bg-surface-base"}`}
+              >
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.msg,.eml,.png,.jpg,.jpeg,.tif,.tiff"
+                  onChange={(event) => setSelectedFiles(Array.from(event.target.files ?? []))}
+                  className="block w-full text-sm text-text-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-surface-overlay file:px-3 file:py-2 file:text-sm file:font-medium file:text-text-primary"
+                />
+                <p className="mt-1 text-xs text-text-tertiary">
+                  {isDragOver ? "Drop files here" : "Click to choose or drag and drop files here."}
+                  {selectedFiles.length > 0 && ` — ${selectedFiles.length} file${selectedFiles.length === 1 ? "" : "s"} selected`}
+                </p>
+              </div>
             </label>
 
             <button
@@ -377,14 +419,23 @@ export function EstimateDocumentsPanel({
                 <p className="text-xs text-status-warning">
                   SharePoint folder has not been provisioned yet for this estimate.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => void provisionFolder()}
-                  disabled={provisioning}
-                  className="rounded-xl border border-brand-primary/30 bg-brand-primary/10 px-3 py-2 text-xs font-semibold text-brand-primary transition hover:bg-brand-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {provisioning ? "Provisioning..." : "Provision SharePoint Folder"}
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void provisionFolder()}
+                    disabled={provisioning}
+                    className="rounded-xl border border-brand-primary/30 bg-brand-primary/10 px-3 py-2 text-xs font-semibold text-brand-primary transition hover:bg-brand-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {provisioning ? "Provisioning..." : "Provision SharePoint Folder"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void reconnectMicrosoft()}
+                    className="rounded-xl border border-border-default bg-surface-base px-3 py-2 text-xs font-semibold text-text-secondary transition hover:bg-surface-overlay"
+                  >
+                    Reconnect Microsoft
+                  </button>
+                </div>
               </div>
             )}
           </div>

@@ -127,11 +127,61 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
   }, [alternates, setSubPage, subPage, updateAlternates]);
 
   const [exporting, setExporting] = useState(false);
+
+  async function uploadGeneratedToSharePoint(blob, fileName, documentRole) {
+    const estimateId = estimate.id || estimate.body?.estimateId;
+    if (!estimateId) return;
+    try {
+      const prepRes = await fetch(`/api/estimates/${estimateId}/documents`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "prepare", documentRole, fileName }),
+      });
+      if (!prepRes.ok) return;
+      const prep = await prepRes.json().catch(() => null);
+      if (!prep?.uploadUrl) return;
+
+      const buffer = await blob.arrayBuffer();
+      const upRes = await fetch(prep.uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": blob.type || "text/html",
+          "Content-Length": String(buffer.byteLength),
+          "Content-Range": `bytes 0-${buffer.byteLength - 1}/${buffer.byteLength}`,
+        },
+        body: buffer,
+      });
+      if (![200, 201, 202].includes(upRes.status)) return;
+      const upData = await upRes.json().catch(() => null);
+
+      await fetch(`/api/estimates/${estimateId}/documents`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "commit",
+          documentRole,
+          fileName,
+          fileExt: fileName.includes(".") ? `.${fileName.split(".").pop()}`.toLowerCase() : null,
+          contentType: blob.type || "text/html",
+          fileSizeBytes: blob.size,
+          storageItemId: upData?.id || "",
+          storageWebUrl: upData?.webUrl || null,
+          storagePath: prep.storagePath,
+        }),
+      });
+    } catch {
+      // SharePoint upload is best-effort; don't block the download
+    }
+  }
+
   const exportProposal = useCallback(async () => {
     setExporting(true);
     try {
       const itemsWithComps = buildItemsWithComps(estimate);
-      await generateProposal(estimate, itemsWithComps, grandTotal, costs.bond);
+      const result = await generateProposal(estimate, itemsWithComps, grandTotal, costs.bond);
+      if (result?.blob) {
+        void uploadGeneratedToSharePoint(result.blob, result.fileName, "proposal_pdf");
+      }
     } catch (err) {
       console.error("Proposal export failed:", err);
       alert("Export failed: " + err.message);
@@ -140,9 +190,12 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     }
   }, [estimate, grandTotal, costs.bond]);
 
-  const exportInternal = useCallback(() => {
+  const exportInternal = useCallback(async () => {
     try {
-      generateInternalEstimateExport(estimate, costs, getCurrentUser());
+      const result = generateInternalEstimateExport(estimate, costs, getCurrentUser());
+      if (result?.blob) {
+        void uploadGeneratedToSharePoint(result.blob, result.fileName, "supporting_scope");
+      }
     } catch (err) {
       console.error("Internal export failed:", err);
       alert("Internal export failed: " + err.message);

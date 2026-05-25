@@ -160,18 +160,40 @@ export async function POST(
       id,
     );
     const folderPath = `Bids/${folderName}`;
+    const hasBidder = Boolean(bidder);
 
     await ensureSharePointFolderPath(providerToken, driveId, "Bids");
-    folderItemId = await ensureSharePointFolderPath(providerToken, driveId, folderPath);
 
-    for (const subfolder of ESTIMATE_SUBFOLDERS) {
-      try {
-        await createSharePointFolder(providerToken, driveId, folderPath, subfolder);
-      } catch (error) {
-        if (!(error instanceof Error) || !error.message.includes("409")) throw error;
+    if (hasBidder) {
+      folderItemId = await ensureSharePointFolderPath(providerToken, driveId, folderPath);
+      for (const subfolder of ESTIMATE_SUBFOLDERS) {
+        try {
+          await createSharePointFolder(providerToken, driveId, folderPath, subfolder);
+        } catch (error) {
+          if (!(error instanceof Error) || !error.message.includes("409")) throw error;
+        }
       }
+      sharepointFolder = folderPath;
+    } else {
+      await ensureSharePointFolderPath(providerToken, driveId, folderPath);
+      for (const subfolder of PROJECT_SUBFOLDERS) {
+        try {
+          await createSharePointFolder(providerToken, driveId, folderPath, subfolder);
+        } catch (error) {
+          if (!(error instanceof Error) || !error.message.includes("409")) throw error;
+        }
+      }
+      const estimateRoot = `${folderPath}/02 Estimate`;
+      folderItemId = await ensureSharePointFolderPath(providerToken, driveId, estimateRoot);
+      for (const subfolder of ESTIMATE_SUBFOLDERS) {
+        try {
+          await createSharePointFolder(providerToken, driveId, estimateRoot, subfolder);
+        } catch (error) {
+          if (!(error instanceof Error) || !error.message.includes("409")) throw error;
+        }
+      }
+      sharepointFolder = estimateRoot;
     }
-    sharepointFolder = folderPath;
   }
 
   const updatedBody = {

@@ -658,4 +658,5 @@ export async function generateProposal(estimate, itemsWithComps, grandTotal, bon
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+  return { blob, fileName };
 }

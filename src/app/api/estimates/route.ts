@@ -155,24 +155,44 @@ async function provisionEstimateFolder(
 
   const folderName = buildEstimateFolderName(estimate, estimate.id);
   const folderPath = `Bids/${folderName}`;
+  const hasBidder = Boolean(estimate.bidder);
 
-  // ensureSharePointFolderPath creates each segment in order, so this handles
-  // both the flat case (Bids/EST-XXX - Customer - Name) and the bidder-subfolder
-  // case (Bids/EST-XXX - Name/Siemens) correctly.
   await ensureSharePointFolderPath(providerToken, driveId, "Bids");
-  const folderItemId = await ensureSharePointFolderPath(providerToken, driveId, folderPath);
 
-  for (const subfolder of ESTIMATE_SUBFOLDERS) {
+  if (hasBidder) {
+    // Bidder estimates live directly inside Bids/EST-XXX - Name/BidderName/
+    const folderItemId = await ensureSharePointFolderPath(providerToken, driveId, folderPath);
+    for (const subfolder of ESTIMATE_SUBFOLDERS) {
+      try {
+        await createSharePointFolder(providerToken, driveId, folderPath, subfolder);
+      } catch (error) {
+        if (!(error instanceof Error) || !error.message.includes("409")) throw error;
+      }
+    }
+    return { sharepointFolder: folderPath, sharepointItemId: folderItemId, warning: null as string | null };
+  }
+
+  // Standalone bids get the full project folder structure, with the estimate
+  // folder at {bidRoot}/02 Estimate — matching the active-project layout.
+  await ensureSharePointFolderPath(providerToken, driveId, folderPath);
+  for (const subfolder of PROJECT_SUBFOLDERS) {
     try {
       await createSharePointFolder(providerToken, driveId, folderPath, subfolder);
     } catch (error) {
-      if (!(error instanceof Error) || !error.message.includes("409")) {
-        throw error;
-      }
+      if (!(error instanceof Error) || !error.message.includes("409")) throw error;
+    }
+  }
+  const estimateRoot = `${folderPath}/02 Estimate`;
+  const folderItemId = await ensureSharePointFolderPath(providerToken, driveId, estimateRoot);
+  for (const subfolder of ESTIMATE_SUBFOLDERS) {
+    try {
+      await createSharePointFolder(providerToken, driveId, estimateRoot, subfolder);
+    } catch (error) {
+      if (!(error instanceof Error) || !error.message.includes("409")) throw error;
     }
   }
 
-  return { sharepointFolder: folderPath, sharepointItemId: folderItemId, warning: null as string | null };
+  return { sharepointFolder: estimateRoot, sharepointItemId: folderItemId, warning: null as string | null };
 }
 
 async function resolveOrganizationId(
