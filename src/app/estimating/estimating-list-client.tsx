@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { OpportunityHubSubnav } from "@/components/opportunity-hub-subnav";
 import type { EstimateRecord } from "@/types/database";
 
@@ -35,8 +35,10 @@ export function EstimatingListClient() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [copyingId, setCopyingId] = useState<string | null>(null);
   const [restoringId, setRestoringId] = useState<string | null>(null);
+  const [addingBidderId, setAddingBidderId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"active" | "archived">("active");
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let active = true;
@@ -48,14 +50,13 @@ export function EstimatingListClient() {
         const res = await fetch("/api/estimates?include_archived=true", { cache: "no-store" });
         const json = (await res.json().catch(() => null)) as ApiResponse | null;
         if (!active) return;
-
-        if (!res.ok) {
+        if (!res.ok || !json?.estimates) {
           setError(json?.error ?? "Unable to load estimates.");
-          setEstimates([]);
           return;
         }
-
-        setEstimates(json?.estimates ?? []);
+        setEstimates(json.estimates);
+      } catch {
+        if (active) setError("Unable to load estimates.");
       } finally {
         if (active) setLoading(false);
       }
@@ -66,6 +67,19 @@ export function EstimatingListClient() {
       active = false;
     };
   }, []);
+
+  // Build parentId → children map across all estimates (not filtered)
+  const childrenByParentId = useMemo(() => {
+    const map = new Map<string, EstimateRecord[]>();
+    for (const est of estimates) {
+      const parentId = getEstimateBodyField(est.body, "parentEstimateId");
+      if (!parentId) continue;
+      const list = map.get(parentId) ?? [];
+      list.push(est);
+      map.set(parentId, list);
+    }
+    return map;
+  }, [estimates]);
 
   async function deleteEstimate(estimate: EstimateRecord) {
     const name = (estimate.name ?? getEstimateBodyField(estimate.body, "name")) || "this estimate";
@@ -140,6 +154,7 @@ export function EstimatingListClient() {
       number: "",
       version: "1.0",
       archived: false,
+      parentEstimateId: undefined,
       copiedFromEstimateId: estimate.id,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -176,25 +191,188 @@ export function EstimatingListClient() {
     }
   }
 
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    if (!query) return estimates;
+  async function addBidder(parent: EstimateRecord) {
+    const bidderName = window.prompt("New bidder name (e.g. ECS, Siemens):");
+    if (!bidderName?.trim()) return;
 
-    return estimates.filter((estimate) => {
-      const name = estimate.name ?? getEstimateBodyField(estimate.body, "name");
-      const number = estimate.number ?? getEstimateBodyField(estimate.body, "number");
-      const customer = getEstimateBodyField(estimate.body, "customer");
-      return `${name} ${number} ${customer}`.toLowerCase().includes(query);
+    setAddingBidderId(parent.id);
+    setError(null);
+    setMessage(null);
+
+    const baseBody = (parent.body ?? {}) as Record<string, unknown>;
+    const nextBody = {
+      ...baseBody,
+      id: crypto.randomUUID(),
+      bidder: bidderName.trim(),
+      parentEstimateId: parent.id,
+      sharepointFolder: null,
+      sharepointItemId: null,
+      number: "",
+      version: "1.0",
+      archived: false,
+      copiedFromEstimateId: parent.id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    try {
+      const res = await fetch("/api/estimates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          organization_id: parent.organization_id,
+          linked_opportunity_id: parent.linked_opportunity_id,
+          linked_project_id: parent.linked_project_id,
+          body: nextBody,
+          status: "draft",
+          archived: false,
+        }),
+      });
+      const json = (await res.json().catch(() => null)) as { estimate?: EstimateRecord; error?: string } | null;
+
+      if (!res.ok || !json?.estimate) {
+        setError(json?.error ?? "Unable to add bidder estimate.");
+        return;
+      }
+
+      setEstimates((current) => [...current, json.estimate as EstimateRecord]);
+      setExpandedParents((prev) => new Set([...prev, parent.id]));
+      setMessage(`Added bidder "${bidderName.trim()}" as a linked estimate.`);
+    } finally {
+      setAddingBidderId(null);
+    }
+  }
+
+  function toggleExpanded(parentId: string) {
+    setExpandedParents((prev) => {
+      const next = new Set(prev);
+      if (next.has(parentId)) next.delete(parentId);
+      else next.add(parentId);
+      return next;
     });
-  }, [estimates, search]);
+  }
 
-  const visibleEstimates = useMemo(() => {
+  // Only top-level (non-child) estimates appear as rows; children appear under their parent
+  const visibleParents = useMemo(() => {
     const archived = tab === "archived";
-    return filtered.filter((estimate) => Boolean(estimate.archived) === archived);
-  }, [filtered, tab]);
+    const query = search.trim().toLowerCase();
 
-  const activeCount = estimates.filter((estimate) => !estimate.archived).length;
-  const archivedCount = estimates.filter((estimate) => estimate.archived).length;
+    return estimates.filter((est) => {
+      if (getEstimateBodyField(est.body, "parentEstimateId")) return false; // children handled separately
+      if (Boolean(est.archived) !== archived) return false;
+      if (!query) return true;
+      const name = est.name ?? getEstimateBodyField(est.body, "name");
+      const number = est.number ?? getEstimateBodyField(est.body, "number");
+      const customer = getEstimateBodyField(est.body, "customer");
+      const bidder = getEstimateBodyField(est.body, "bidder");
+      return `${name} ${number} ${customer} ${bidder}`.toLowerCase().includes(query);
+    });
+  }, [estimates, tab, search]);
+
+  const activeCount = estimates.filter((est) => !est.archived && !getEstimateBodyField(est.body, "parentEstimateId")).length;
+  const archivedCount = estimates.filter((est) => est.archived && !getEstimateBodyField(est.body, "parentEstimateId")).length;
+
+  function renderEstimateRow(estimate: EstimateRecord, isChild = false): React.ReactNode {
+    const name = (estimate.name ?? getEstimateBodyField(estimate.body, "name")) || "Untitled Estimate";
+    const number = estimate.number ?? getEstimateBodyField(estimate.body, "number");
+    const customer = getEstimateBodyField(estimate.body, "customer");
+    const bidder = getEstimateBodyField(estimate.body, "bidder");
+    const children = childrenByParentId.get(estimate.id) ?? [];
+    const hasChildren = children.length > 0;
+    const isExpanded = expandedParents.has(estimate.id);
+
+    return (
+      <>
+        <tr key={estimate.id} className={`hover:bg-surface-overlay/60 ${isChild ? "bg-surface-overlay/30" : ""}`}>
+          <td className="px-4 py-3">
+            <div className={`flex items-center gap-2 ${isChild ? "pl-6" : ""}`}>
+              {!isChild && hasChildren && (
+                <button
+                  type="button"
+                  onClick={() => toggleExpanded(estimate.id)}
+                  className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded text-text-tertiary transition hover:bg-surface-overlay hover:text-text-primary"
+                  aria-label={isExpanded ? "Collapse bidders" : "Expand bidders"}
+                >
+                  {isExpanded ? "▼" : "▶"}
+                </button>
+              )}
+              {!isChild && !hasChildren && <span className="w-5 flex-shrink-0" />}
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <Link href={`/estimating/${estimate.id}`} className="font-medium text-text-primary hover:text-brand-primary">
+                    {name}
+                  </Link>
+                  {bidder && (
+                    <span className="rounded-full bg-brand-primary/10 px-2 py-0.5 text-xs font-semibold text-brand-primary">
+                      {bidder}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-0.5 text-xs text-text-tertiary">
+                  {number || estimate.id.slice(0, 8)}
+                  {hasChildren && !isExpanded && (
+                    <span className="ml-2 text-text-tertiary">· {children.length} bidder{children.length !== 1 ? "s" : ""}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </td>
+          <td className="px-4 py-3 text-text-secondary">{customer || "-"}</td>
+          <td className="px-4 py-3">
+            <span className="rounded-full bg-surface-overlay px-2 py-1 text-xs font-medium text-text-secondary">
+              {estimate.status.replace(/_/g, " ")}
+            </span>
+          </td>
+          <td className="px-4 py-3 text-right font-medium text-text-primary">
+            {formatCurrency(estimate.total_amount)}
+          </td>
+          <td className="px-4 py-3 text-text-tertiary">{formatDate(estimate.updated_at)}</td>
+          <td className="px-4 py-3 text-right">
+            <div className="flex justify-end gap-1.5">
+              {!isChild && !estimate.archived && (
+                <button
+                  type="button"
+                  onClick={() => addBidder(estimate)}
+                  disabled={addingBidderId === estimate.id}
+                  className="rounded-lg border border-border-default px-2.5 py-1.5 text-xs font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {addingBidderId === estimate.id ? "Adding..." : "+ Bidder"}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => copyEstimate(estimate)}
+                disabled={copyingId === estimate.id}
+                className="rounded-lg border border-border-default px-2.5 py-1.5 text-xs font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {copyingId === estimate.id ? "Copying..." : "Copy"}
+              </button>
+              {estimate.archived ? (
+                <button
+                  type="button"
+                  onClick={() => restoreEstimate(estimate)}
+                  disabled={restoringId === estimate.id}
+                  className="rounded-lg border border-brand-primary/40 px-2.5 py-1.5 text-xs font-semibold text-brand-primary transition hover:bg-brand-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {restoringId === estimate.id ? "Restoring..." : "Restore"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => deleteEstimate(estimate)}
+                  disabled={deletingId === estimate.id}
+                  className="rounded-lg border border-status-danger/40 px-2.5 py-1.5 text-xs font-semibold text-status-danger transition hover:bg-status-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {deletingId === estimate.id ? "Deleting..." : "Delete"}
+                </button>
+              )}
+            </div>
+          </td>
+        </tr>
+        {!isChild && isExpanded && children.map((child) => renderEstimateRow(child, true))}
+      </>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-6">
@@ -270,7 +448,7 @@ export function EstimatingListClient() {
           />
         </div>
         <div className="text-sm text-text-tertiary">
-          {visibleEstimates.length} of {filtered.length} matching estimates
+          {visibleParents.length} estimate{visibleParents.length !== 1 ? "s" : ""}
         </div>
       </div>
 
@@ -288,7 +466,7 @@ export function EstimatingListClient() {
         <div className="rounded-2xl border border-status-danger/30 bg-status-danger/10 p-4 text-sm text-status-danger">
           {error}
         </div>
-      ) : visibleEstimates.length === 0 ? (
+      ) : visibleParents.length === 0 ? (
         <div className="rounded-2xl border border-border-default bg-surface-raised p-8 text-center">
           <p className="text-sm font-medium text-text-primary">
             {tab === "archived" ? "No archived estimates." : "No active estimates yet."}
@@ -317,63 +495,7 @@ export function EstimatingListClient() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border-default">
-              {visibleEstimates.map((estimate) => {
-                const name = (estimate.name ?? getEstimateBodyField(estimate.body, "name")) || "Untitled Estimate";
-                const number = estimate.number ?? getEstimateBodyField(estimate.body, "number");
-                const customer = getEstimateBodyField(estimate.body, "customer");
-
-                return (
-                  <tr key={estimate.id} className="hover:bg-surface-overlay/60">
-                    <td className="px-4 py-4">
-                      <Link href={`/estimating/${estimate.id}`} className="font-medium text-text-primary hover:text-brand-primary">
-                        {name}
-                      </Link>
-                      <div className="mt-0.5 text-xs text-text-tertiary">{number || estimate.id}</div>
-                    </td>
-                    <td className="px-4 py-4 text-text-secondary">{customer || "-"}</td>
-                    <td className="px-4 py-4">
-                      <span className="rounded-full bg-surface-overlay px-2 py-1 text-xs font-medium text-text-secondary">
-                        {estimate.status.replace(/_/g, " ")}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-right font-medium text-text-primary">
-                      {formatCurrency(estimate.total_amount)}
-                    </td>
-                    <td className="px-4 py-4 text-text-tertiary">{formatDate(estimate.updated_at)}</td>
-                    <td className="px-4 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => copyEstimate(estimate)}
-                          disabled={copyingId === estimate.id}
-                          className="rounded-lg border border-border-default px-3 py-1.5 text-xs font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {copyingId === estimate.id ? "Copying..." : "Copy"}
-                        </button>
-                        {estimate.archived ? (
-                          <button
-                            type="button"
-                            onClick={() => restoreEstimate(estimate)}
-                            disabled={restoringId === estimate.id}
-                            className="rounded-lg border border-brand-primary/40 px-3 py-1.5 text-xs font-semibold text-brand-primary transition hover:bg-brand-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {restoringId === estimate.id ? "Restoring..." : "Restore"}
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => deleteEstimate(estimate)}
-                            disabled={deletingId === estimate.id}
-                            className="rounded-lg border border-status-danger/40 px-3 py-1.5 text-xs font-semibold text-status-danger transition hover:bg-status-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {deletingId === estimate.id ? "Deleting..." : "Delete"}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+              {visibleParents.map((estimate) => renderEstimateRow(estimate, false))}
             </tbody>
           </table>
         </div>
