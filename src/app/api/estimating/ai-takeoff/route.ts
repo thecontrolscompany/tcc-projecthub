@@ -5,6 +5,15 @@ import { canReadEstimates } from "@/lib/estimates/api";
 import { decryptAiApiKey } from "@/modules/hvac-estimator/ai/connectionCrypto";
 import { buildScopeTakeoffPrompt, extractUploadedFileText, runScopeTakeoffWithProvider } from "@/modules/hvac-estimator/ai/takeoffServer";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import {
+  getSharePointSiteId,
+  getSharePointDriveId,
+  deleteSharePointItem,
+  fetchSharePointItemContent,
+  graphFetch,
+} from "@/lib/graph/client";
+
+const AI_PARSER_TEMP_FOLDER = "AI Parser Temp";
 
 function badRequest(message: string) {
   return NextResponse.json({ error: message }, { status: 400 });
@@ -44,6 +53,73 @@ async function hasOrganizationAccess(
   return { ok: true as const };
 }
 
+async function getProviderToken(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.provider_token;
+  if (!token) throw new Error("Microsoft access token not available. Please sign in again.");
+  return token;
+}
+
+// GET /api/estimating/ai-takeoff?action=prepare-upload&estimateId=...&fileName=...
+// Creates a SharePoint upload session so the client can upload large files directly
+// to Microsoft without going through Vercel.
+export async function GET(request: Request) {
+  try {
+    const auth = await resolveAuth();
+    if ("error" in auth) return auth.error;
+    if (!canReadEstimates(auth.role)) {
+      return NextResponse.json({ error: "Access denied." }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const action = searchParams.get("action");
+    if (action !== "prepare-upload") return badRequest("Unknown action.");
+
+    const estimateId = (searchParams.get("estimateId") ?? "").trim();
+    const fileName = (searchParams.get("fileName") ?? "").trim();
+    if (!estimateId) return badRequest("estimateId is required.");
+    if (!fileName) return badRequest("fileName is required.");
+
+    const providerToken = await getProviderToken(auth.supabase);
+    const siteId = await getSharePointSiteId(providerToken);
+    const driveId = await getSharePointDriveId(providerToken, siteId);
+
+    const folderPath = `${AI_PARSER_TEMP_FOLDER}/${estimateId}`;
+    const encodedPath = folderPath
+      .split("/")
+      .filter(Boolean)
+      .map(encodeURIComponent)
+      .join("/");
+    const encodedName = encodeURIComponent(fileName);
+
+    const sessionRes = await graphFetch(
+      `/drives/${driveId}/root:/${encodedPath}/${encodedName}:/createUploadSession`,
+      providerToken,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          item: { "@microsoft.graph.conflictBehavior": "replace", name: fileName },
+        }),
+      },
+    );
+
+    if (!sessionRes.ok) {
+      const msg = await sessionRes.text();
+      throw new Error(msg || "Unable to create SharePoint upload session.");
+    }
+
+    const session = await sessionRes.json();
+    if (!session?.uploadUrl) throw new Error("SharePoint did not return an upload URL.");
+
+    return NextResponse.json({ uploadUrl: session.uploadUrl, driveId });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unable to prepare upload." },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const auth = await resolveAuth();
@@ -58,10 +134,17 @@ export async function POST(request: Request) {
     const estimateId = normalizeText(formData.get("estimateId"));
     const provider = normalizeText(formData.get("provider"));
     const scopeText = normalizeText(formData.get("scopeText"));
+    const tempItemsRaw = normalizeText(formData.get("tempItems"));
 
     if (!estimateId) return badRequest("estimateId is required.");
     if (!provider) return badRequest("provider is required.");
-    if (!scopeText && formData.getAll("files").length === 0) {
+
+    const directFiles = formData.getAll("files").filter((entry): entry is File => entry instanceof File && entry.size > 0);
+    const tempItems: { driveId: string; itemId: string; name: string }[] = tempItemsRaw
+      ? (() => { try { return JSON.parse(tempItemsRaw); } catch { return []; } })()
+      : [];
+
+    if (!scopeText && directFiles.length === 0 && tempItems.length === 0) {
       return badRequest("Provide pasted scope text or upload at least one file.");
     }
 
@@ -97,25 +180,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "The saved Azure OpenAI connection is missing an endpoint." }, { status: 400 });
     }
 
-    const storagePathsRaw = normalizeText(formData.get("storagePaths"));
-    const storagePaths: string[] = storagePathsRaw
-      ? (() => { try { return JSON.parse(storagePathsRaw); } catch { return []; } })()
-      : [];
-
-    const directFiles = formData.getAll("files").filter((entry): entry is File => entry instanceof File && entry.size > 0);
-
     let uploadedFiles: { name: string; text: string }[] = [];
 
-    if (storagePaths.length > 0) {
+    if (tempItems.length > 0) {
+      const providerToken = await getProviderToken(auth.supabase);
       uploadedFiles = await Promise.all(
-        storagePaths.map(async (path) => {
-          const { data, error } = await admin.storage.from("ai-parser-uploads").download(path);
-          if (error || !data) throw new Error(`Unable to download staged file: ${path}`);
-          const fileName = path.split("/").pop() ?? path;
-          const file = new File([await data.arrayBuffer()], fileName, { type: data.type });
+        tempItems.map(async (item) => {
+          const contentRes = await fetchSharePointItemContent(providerToken, item.driveId, item.itemId);
+          if (!contentRes.ok) throw new Error(`Unable to download staged file: ${item.name}`);
+          const buffer = Buffer.from(await contentRes.arrayBuffer());
+          const file = new File([buffer], item.name);
           const text = await extractUploadedFileText(file);
-          await admin.storage.from("ai-parser-uploads").remove([path]);
-          return { name: fileName, text };
+          // Clean up temp file — non-fatal if it fails
+          deleteSharePointItem(providerToken, item.driveId, item.itemId).catch(() => {});
+          return { name: item.name, text };
         }),
       );
     } else {
@@ -162,9 +240,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Estimating AI takeoff failed:", error);
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Unable to parse scope.",
-      },
+      { error: error instanceof Error ? error.message : "Unable to parse scope." },
       { status: 500 },
     );
   }

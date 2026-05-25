@@ -1,26 +1,36 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { AI_PROVIDERS } from "../../ai/providerRegistry.js";
 
-const STORAGE_THRESHOLD_BYTES = 4 * 1024 * 1024; // 4 MB — stay under Vercel's 4.5 MB payload cap
-const STORAGE_BUCKET = "ai-parser-uploads";
+const DIRECT_UPLOAD_LIMIT = 4 * 1024 * 1024; // 4 MB — stay under Vercel's 4.5 MB payload cap
 
-async function uploadFilesToStorage(files, userId) {
-  const supabase = createClient();
-  const paths = [];
-  for (const file of files) {
-    const path = `${userId}/${crypto.randomUUID()}-${file.name}`;
-    const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(path, file);
-    if (error) throw new Error(`Storage upload failed for ${file.name}: ${error.message}`);
-    paths.push(path);
+async function stageFileViaSharePoint(estimateId, file) {
+  // Get a SharePoint upload session URL from our API
+  const prepRes = await fetch(
+    `/api/estimating/ai-takeoff?action=prepare-upload&estimateId=${encodeURIComponent(estimateId)}&fileName=${encodeURIComponent(file.name)}`,
+  );
+  const prepJson = await prepRes.json();
+  if (!prepRes.ok) throw new Error(prepJson?.error || "Unable to prepare SharePoint upload.");
+
+  const { uploadUrl, driveId } = prepJson;
+
+  // Upload directly to Microsoft — bypasses Vercel payload limit
+  const uploadRes = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Length": String(file.size),
+      "Content-Range": `bytes 0-${file.size - 1}/${file.size}`,
+    },
+    body: file,
+  });
+
+  if (![200, 201].includes(uploadRes.status)) {
+    const msg = await uploadRes.text();
+    throw new Error(`SharePoint upload failed for ${file.name}: ${msg}`);
   }
-  return paths;
-}
 
-async function deleteStorageFiles(paths) {
-  const supabase = createClient();
-  if (!paths.length) return;
-  await supabase.storage.from(STORAGE_BUCKET).remove(paths);
+  const data = await uploadRes.json();
+  if (!data?.id) throw new Error(`SharePoint upload did not return an item ID for ${file.name}.`);
+  return { driveId, itemId: data.id, name: file.name };
 }
 
 function prettyJson(value) {
@@ -108,26 +118,20 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
     setParsing(true);
     setMessage("");
     setResult(null);
-    let storagePaths = [];
     try {
       const totalSize = files.reduce((sum, f) => sum + f.size, 0);
-      const useStorage = totalSize > STORAGE_THRESHOLD_BYTES && files.length > 0;
-
-      if (useStorage) {
-        setMessage("Uploading large files…");
-        const { data: { user } } = await createClient().auth.getUser();
-        if (!user) throw new Error("Not authenticated.");
-        storagePaths = await uploadFilesToStorage(files, user.id);
-        setMessage("");
-      }
+      const useSharePoint = totalSize > DIRECT_UPLOAD_LIMIT && files.length > 0;
 
       const formData = new FormData();
       formData.set("estimateId", estimate.id);
       formData.set("provider", provider);
       formData.set("scopeText", scopeText);
 
-      if (useStorage) {
-        formData.set("storagePaths", JSON.stringify(storagePaths));
+      if (useSharePoint) {
+        setMessage("Uploading large files to SharePoint…");
+        const tempItems = await Promise.all(files.map((f) => stageFileViaSharePoint(estimate.id, f)));
+        setMessage("");
+        formData.set("tempItems", JSON.stringify(tempItems));
       } else {
         for (const file of files) {
           formData.append("files", file);
@@ -141,10 +145,8 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
       const json = await readResponseJson(response);
       if (!response.ok) throw new Error(json?.error || "Unable to parse scope.");
       setResult(json || {});
-      storagePaths = []; // API handles cleanup
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to parse scope.");
-      await deleteStorageFiles(storagePaths);
     } finally {
       setParsing(false);
     }
@@ -292,7 +294,7 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
                 />
                 <div className="mt-2 text-xs text-slate-500">
                   {files.length
-                    ? `${files.length} file(s) selected${files.reduce((s, f) => s + f.size, 0) > STORAGE_THRESHOLD_BYTES ? " · large files will be staged via storage" : ""}`
+                    ? `${files.length} file(s) selected${files.reduce((s, f) => s + f.size, 0) > DIRECT_UPLOAD_LIMIT ? " · large files will be staged via SharePoint" : ""}`
                     : "Accepted files are passed through text extraction when possible."}
                 </div>
               </div>
