@@ -3,7 +3,7 @@ import { T } from "../../shared/tokens";
 
 type EstimateDocument = {
   id: string;
-  document_role: "proposal_docx" | "proposal_pdf" | "estimate_xlsm" | "addendum" | "supporting_scope" | "customer_upload";
+  document_role: "proposal_docx" | "proposal_pdf" | "estimate_xlsm" | "addendum" | "supporting_scope" | "customer_upload" | "scope_of_work";
   file_name: string;
   file_ext: string | null;
   content_type: string | null;
@@ -28,7 +28,8 @@ type Props = {
 const ROLE_OPTIONS: Array<{ value: EstimateDocument["document_role"]; label: string; folder: string }> = [
   { value: "supporting_scope", label: "Reference / drawing", folder: "02 Internal Review" },
   { value: "customer_upload", label: "Customer upload", folder: "01 Customer Uploads" },
-  { value: "addendum", label: "Addendum", folder: "02 Internal Review" },
+  { value: "scope_of_work", label: "Scope of Work", folder: "01 Customer Uploads" },
+  { value: "addendum", label: "Addendum", folder: "03 Estimate Working" },
 ];
 
 function sharePointUrl(folder: string) {

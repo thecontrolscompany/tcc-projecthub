@@ -14,7 +14,7 @@ import {
   graphFetch,
 } from "@/lib/graph/client";
 
-type EstimateDocumentRole = "supporting_scope" | "customer_upload" | "addendum";
+type EstimateDocumentRole = "supporting_scope" | "customer_upload" | "addendum" | "scope_of_work";
 type EstimateDocumentStorage = {
   storagePath: string;
   storageItemId: string;
@@ -36,6 +36,7 @@ type EstimateAuth = {
 
 const DOCUMENT_ROLE_FOLDERS: Record<EstimateDocumentRole, string> = {
   customer_upload: "01 Customer Uploads",
+  scope_of_work: "01 Customer Uploads",
   supporting_scope: "02 Internal Review",
   addendum: "03 Estimate Working",
 };
