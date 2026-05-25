@@ -5,7 +5,7 @@
  * C:\Users\TimothyCollins\dev\tcc-templates\proposal-template.html
  */
 
-import { buildItemsWithComps, calcEstimate, calcItem } from "../estimateCalc.js";
+import { buildItemsWithComps, calcEstimate } from "../estimateCalc.js";
 import { DEFAULT_SETTINGS, computeCosts } from "../projectSettings.js";
 
 const TEMPLATE_PATH = "/report-assets/proposal-template.html";
@@ -186,6 +186,107 @@ ${items.map((item) => `
       </ul>`;
 }
 
+function renderImportedScopeList(scopeImport) {
+  if (!scopeImport || typeof scopeImport !== "object") return "";
+
+  const systems = Array.isArray(scopeImport.systems) ? scopeImport.systems : [];
+  const assumptions = Array.isArray(scopeImport.assumptions) ? scopeImport.assumptions : [];
+  const exclusions = Array.isArray(scopeImport.exclusions) ? scopeImport.exclusions : [];
+  const notes = Array.isArray(scopeImport.notes) ? scopeImport.notes : [];
+
+  const renderList = (items, depth = 0) => {
+    if (!items.length) return "";
+    const pad = depth === 0 ? "" : " style=\"margin-top:4px; padding-left:18px; line-height:1.7;\"";
+    return `<ul${pad}>${items.join("")}</ul>`;
+  };
+
+  const renderBulletItems = (values) =>
+    (Array.isArray(values) ? values : [])
+      .map((value) => {
+        const text = String(value || "").trim();
+        return text ? `<li>${esc(text)}</li>` : "";
+      })
+      .filter(Boolean);
+
+  const renderAssemblies = (assemblies) => {
+    const rows = (Array.isArray(assemblies) ? assemblies : []).map((assembly) => {
+      if (!assembly || typeof assembly !== "object") return "";
+      const label = String(assembly.assemblyName || assembly.assemblyRef || "Assembly").trim();
+      const qty = Number(assembly.qty || 1);
+      const notesText = String(assembly.notes || "").trim();
+      const children = renderBulletItems([
+        ...(Number.isFinite(qty) && qty > 1 ? [`Qty ${qty}`] : []),
+        ...(notesText ? [notesText] : []),
+      ]);
+      return `<li><strong>${esc(label)}</strong>${children.length ? renderList(children, 2) : ""}</li>`;
+    }).filter(Boolean);
+    return renderList(rows, 2);
+  };
+
+  const renderPoints = (points) => {
+    const rows = (Array.isArray(points) ? points : []).map((point) => {
+      if (!point || typeof point !== "object") return "";
+      const label = String(point.name || "Point").trim();
+      const qty = Number(point.qty || 1);
+      const notesText = String(point.notes || "").trim();
+      const childLines = renderBulletItems([
+        ...(Number.isFinite(qty) && qty > 1 ? [`Qty ${qty}`] : []),
+        ...(notesText ? [notesText] : []),
+      ]);
+      const pointBullets = childLines.length ? renderList(childLines, 1) : "";
+      const assemblyHtml = renderAssemblies(point.assemblies);
+      return `<li><strong>${esc(label)}</strong>${pointBullets}${assemblyHtml}</li>`;
+    }).filter(Boolean);
+    return renderList(rows, 1);
+  };
+
+  const systemRows = systems.map((system, index) => {
+    if (!system || typeof system !== "object") return "";
+    const label = String(system.name || `System ${index + 1}`).trim();
+    const qty = Number(system.qty || 1);
+    const type = String(system.type || "").trim();
+    const location = String(system.location || "").trim();
+    const sourceText = String(system.sourceText || "").trim();
+    const notesText = String(system.notes || "").trim();
+    const childLines = renderBulletItems([
+      ...(Number.isFinite(qty) && qty > 1 ? [`Qty ${qty}`] : []),
+      ...(type && !["equipment", "system", "misc"].includes(type.toLowerCase()) ? [type] : []),
+      ...(location ? [location] : []),
+      ...(sourceText ? [sourceText] : []),
+      ...(notesText ? [notesText] : []),
+    ]);
+
+    const systemBullets = childLines.length ? renderList(childLines, 1) : "";
+    const pointsHtml = renderPoints(system.points);
+    return `<li><strong>${esc(label)}</strong>${systemBullets}${pointsHtml}</li>`;
+  }).filter(Boolean);
+
+  const sections = [];
+  if (systemRows.length) {
+    sections.push(`<li><strong>${esc(String(scopeImport.baseScopeName || "Scope"))}</strong>${renderList(systemRows, 0)}</li>`);
+  }
+  if (assumptions.length) {
+    sections.push(`<li><strong>Assumptions</strong>${renderList(renderBulletItems(assumptions), 0)}</li>`);
+  }
+  if (exclusions.length) {
+    sections.push(`<li><strong>Exclusions</strong>${renderList(renderBulletItems(exclusions), 0)}</li>`);
+  }
+  if (notes.length) {
+    sections.push(`<li><strong>Notes</strong>${renderList(renderBulletItems(notes), 0)}</li>`);
+  }
+
+  return sections.length ? `<ul class="scope-list">${sections.join("")}</ul>` : "";
+}
+
+function getProposalScopeHtml(settings) {
+  if (settings?.customerScopeImport) {
+    const importedHtml = renderImportedScopeList(settings.customerScopeImport);
+    if (importedHtml) return importedHtml;
+  }
+
+  return renderCustomerScope(settings.customerScope);
+}
+
 function getClarificationItems(settings) {
   return [
     "This proposal shall be incorporated into any final contract terms and conditions.",
@@ -220,24 +321,6 @@ function getExclusionItems() {
   ];
 }
 
-const SECTION_DEFS = [
-  {
-    id: "airside",
-    label: "Section 1 - Airside Systems",
-    types: new Set(["ahu", "rtu", "vav", "dx", "vrf", "fcu", "uh", "exhaust-fan"]),
-  },
-  {
-    id: "waterside",
-    label: "Section 2 - Waterside / Plant Systems",
-    types: new Set(["plant"]),
-  },
-  {
-    id: "network",
-    label: "Section 3 - BAS Network Infrastructure",
-    types: new Set(["network"]),
-  },
-];
-
 const TYPE_SCOPE_LABELS = {
   ahu: "Air Handling Units",
   rtu: "Rooftop Units",
@@ -251,69 +334,6 @@ const TYPE_SCOPE_LABELS = {
   network: "BAS Network Infrastructure",
   custom: "Custom HVAC Controls Scope",
 };
-
-function getSectionDef(type) {
-  return SECTION_DEFS.find(section => section.types.has(type)) || {
-    id: "misc",
-    label: "Scope",
-    types: new Set(),
-  };
-}
-
-function getItemWeight(item) {
-  try {
-    const cost = calcItem(item);
-    return Math.max(0, (cost.totalMtl || 0) + (cost.totalLbr || 0) * 100);
-  } catch {
-    return 0;
-  }
-}
-
-function buildSections(itemsWithComps = [], grandTotal = 0) {
-  const sections = new Map();
-
-  for (const entry of itemsWithComps) {
-    const sectionDef = getSectionDef(entry.item?.type);
-    if (!sections.has(sectionDef.id)) {
-      sections.set(sectionDef.id, {
-        id: sectionDef.id,
-        label: sectionDef.label,
-        entries: [],
-        weight: 0,
-      });
-    }
-
-    const section = sections.get(sectionDef.id);
-    section.entries.push(entry);
-    section.weight += getItemWeight(entry.item);
-  }
-
-  const result = Array.from(sections.values());
-  if (result.length === 1 && result[0].id === "misc") {
-    result[0] = { ...result[0], label: "Scope" };
-  }
-  const totalWeight = result.reduce((sum, section) => sum + section.weight, 0);
-
-  if (result.length === 0) {
-    return [{
-      id: "base",
-      label: "Base Bid - HVAC Controls Installation",
-      entries: [],
-      weight: 1,
-      price: grandTotal || 0,
-    }];
-  }
-
-  if (totalWeight <= 0) {
-    const price = (grandTotal || 0) / result.length;
-    return result.map(section => ({ ...section, price }));
-  }
-
-  return result.map(section => ({
-    ...section,
-    price: (grandTotal || 0) * (section.weight / totalWeight),
-  }));
-}
 
 function normalizeAlternates(estimate) {
   const source = Array.isArray(estimate?.alternates) ? estimate.alternates : [];
@@ -395,7 +415,7 @@ ${alternateRows.join("\n")}
 `;
 }
 
-function renderAlternateScopeSections(alternates, scopeMode, baseSettings) {
+function renderAlternateScopeSections(alternates, scopeMode) {
   if (!alternates.length) return "";
 
   const blocks = alternates.map((alternate) => {
@@ -409,12 +429,10 @@ function renderAlternateScopeSections(alternates, scopeMode, baseSettings) {
       items: alternate.items || [],
       settings: alternateSettings,
     };
-    const computedTotal = computeCosts(raw.mtl, raw.lbrHrs, alternateSettings, alternateEstimate.items || []).total || 0;
-    const displayTotal = computedTotal || alternate.amount || 0;
     const alternateScopeMode = alternateSettings.proposalScopeMode === "detailed" ? "detailed" : scopeMode;
     const useCustomerScope = Boolean(alternateSettings.useCustomerScope && String(alternateSettings.customerScope || "").trim());
     const alternateScope = useCustomerScope
-      ? renderCustomerScope(alternateSettings.customerScope)
+      ? getProposalScopeHtml(alternateSettings)
       : alternate.items?.length
         ? renderGeneratedScope(buildItemsWithComps(alternateEstimate), alternateScopeMode)
         : "";
@@ -449,16 +467,6 @@ function insertAlternateScopeSection(template, alternateHtml) {
   const index = template.indexOf(marker);
   if (index === -1) return template;
   return `${template.slice(0, index)}${alternateHtml}\n${template.slice(index)}`;
-}
-
-function groupEntriesByType(entries) {
-  const groups = new Map();
-  for (const entry of entries) {
-    const type = entry.item?.type || "misc";
-    if (!groups.has(type)) groups.set(type, []);
-    groups.get(type).push(entry);
-  }
-  return Array.from(groups.entries());
 }
 
 function summarizeComponents(entries) {
@@ -562,7 +570,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   const baseScopeName = String(settings.baseScopeName || "Scope").trim() || "Scope";
   const useCustomerScope = Boolean(settings.useCustomerScope && String(settings.customerScope || "").trim());
   const scopeHtml = useCustomerScope
-    ? renderCustomerScope(settings.customerScope)
+    ? getProposalScopeHtml(settings)
     : renderGeneratedScope(itemsWithComps, scopeMode);
   const alternates = normalizeAlternates(estimate).map((alternate) => {
     const raw = calcEstimate({ items: alternate.items || [] });
@@ -584,7 +592,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
     };
   });
   const pricingHtml = renderPricingTable(baseScopeName, installedTotal, totalBond, alternates);
-  const alternateScopeHtml = renderAlternateScopeSections(alternates, scopeMode, settings);
+  const alternateScopeHtml = renderAlternateScopeSections(alternates, scopeMode);
   const clarificationHtml = renderBulletBlock(getClarificationItems(settings));
   const exclusionHtml = renderBulletBlock(getExclusionItems());
 
