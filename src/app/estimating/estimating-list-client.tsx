@@ -36,6 +36,8 @@ export function EstimatingListClient() {
   const [copyingId, setCopyingId] = useState<string | null>(null);
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [addingBidderId, setAddingBidderId] = useState<string | null>(null);
+  const [addBidderTarget, setAddBidderTarget] = useState<EstimateRecord | null>(null);
+  const [bidderInput, setBidderInput] = useState("");
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"active" | "archived">("active");
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
@@ -67,6 +69,18 @@ export function EstimatingListClient() {
       active = false;
     };
   }, []);
+
+  // All unique customer + bidder names across estimates, for the Add Bidder modal
+  const bidderSuggestions = useMemo(() => {
+    const seen = new Set<string>();
+    for (const est of estimates) {
+      const customer = getEstimateBodyField(est.body, "customer");
+      const bidder = getEstimateBodyField(est.body, "bidder");
+      if (customer) seen.add(customer);
+      if (bidder) seen.add(bidder);
+    }
+    return Array.from(seen).sort((a, b) => a.localeCompare(b));
+  }, [estimates]);
 
   // Build parentId → children map across all estimates (not filtered)
   const childrenByParentId = useMemo(() => {
@@ -191,11 +205,18 @@ export function EstimatingListClient() {
     }
   }
 
-  async function addBidder(parent: EstimateRecord) {
-    const bidderName = window.prompt("New bidder name (e.g. ECS, Siemens):");
-    if (!bidderName?.trim()) return;
+  function addBidder(parent: EstimateRecord) {
+    setAddBidderTarget(parent);
+    setBidderInput("");
+  }
+
+  async function submitAddBidder() {
+    const parent = addBidderTarget;
+    const bidderName = bidderInput.trim();
+    if (!parent || !bidderName) return;
 
     setAddingBidderId(parent.id);
+    setAddBidderTarget(null);
     setError(null);
     setMessage(null);
 
@@ -203,7 +224,7 @@ export function EstimatingListClient() {
     const nextBody = {
       ...baseBody,
       id: crypto.randomUUID(),
-      bidder: bidderName.trim(),
+      bidder: bidderName,
       parentEstimateId: parent.id,
       sharepointFolder: null,
       sharepointItemId: null,
@@ -237,7 +258,7 @@ export function EstimatingListClient() {
 
       setEstimates((current) => [...current, json.estimate as EstimateRecord]);
       setExpandedParents((prev) => new Set([...prev, parent.id]));
-      setMessage(`Added bidder "${bidderName.trim()}" as a linked estimate.`);
+      setMessage(`Added bidder "${bidderName}" as a linked estimate.`);
     } finally {
       setAddingBidderId(null);
     }
@@ -498,6 +519,80 @@ export function EstimatingListClient() {
               {visibleParents.map((estimate) => renderEstimateRow(estimate, false))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Add Bidder modal */}
+      {addBidderTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4"
+          onClick={() => setAddBidderTarget(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-surface-raised p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-1 text-base font-semibold text-text-primary">Add Bidder</div>
+            <div className="mb-4 text-sm text-text-secondary">
+              Adding a linked estimate for{" "}
+              <span className="font-medium text-text-primary">
+                {(addBidderTarget.name ?? getEstimateBodyField(addBidderTarget.body, "name")) || "this estimate"}
+              </span>
+            </div>
+
+            <input
+              autoFocus
+              value={bidderInput}
+              onChange={(e) => setBidderInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") void submitAddBidder(); if (e.key === "Escape") setAddBidderTarget(null); }}
+              placeholder="Bidder name (e.g. ECS, Siemens)"
+              className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+            />
+
+            {bidderSuggestions.length > 0 && (
+              <div className="mt-3">
+                <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                  Existing names
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {bidderSuggestions
+                    .filter((s) => !bidderInput || s.toLowerCase().includes(bidderInput.toLowerCase()))
+                    .map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => setBidderInput(suggestion)}
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                          bidderInput === suggestion
+                            ? "border-brand-primary bg-brand-primary/10 text-brand-primary"
+                            : "border-border-default bg-surface-overlay text-text-secondary hover:border-brand-primary/40 hover:text-text-primary"
+                        }`}
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setAddBidderTarget(null)}
+                className="rounded-xl border border-border-default px-4 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void submitAddBidder()}
+                disabled={!bidderInput.trim()}
+                className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Add Bidder
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
