@@ -1,17 +1,22 @@
 import { z } from "zod";
 
+const coercedString = z.union([
+  z.string(),
+  z.array(z.string()).transform((arr) => arr.join("\n")),
+]).optional().default("");
+
 export const scopeImportAssemblySchema = z.object({
   assemblyRef: z.string().min(1),
   assemblyName: z.string().optional().default(""),
   qty: z.number().finite().positive().default(1),
-  notes: z.string().optional().default(""),
+  notes: coercedString,
 });
 
 export const scopeImportPointSchema = z.object({
   name: z.string().min(1),
   qty: z.number().finite().positive().default(1),
   assemblies: z.array(scopeImportAssemblySchema).default([]),
-  notes: z.string().optional().default(""),
+  notes: coercedString,
 });
 
 export const scopeImportSystemSchema = z.object({
@@ -21,7 +26,7 @@ export const scopeImportSystemSchema = z.object({
   location: z.string().optional().default(""),
   sourceText: z.string().optional().default(""),
   points: z.array(scopeImportPointSchema).default([]),
-  notes: z.string().optional().default(""),
+  notes: coercedString,
 });
 
 export const scopeImportSchema = z.object({
