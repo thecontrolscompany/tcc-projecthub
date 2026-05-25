@@ -36,13 +36,19 @@ function sanitizeFolderSegment(value: string) {
 }
 
 function buildEstimateFolderName(
-  estimate: { number: string | null; name: string; customer: string },
+  estimate: { number: string | null; name: string; customer: string; bidder?: string | null },
   estimateId: string,
 ) {
   const estimateNumber = sanitizeFolderSegment(estimate.number || "");
   const estimateLabel = estimateNumber ? `EST-${estimateNumber}` : `EST-${estimateId.slice(0, 8).toUpperCase()}`;
-  const customer = sanitizeFolderSegment(estimate.customer || "");
   const projectName = sanitizeFolderSegment(estimate.name || "Untitled Estimate");
+  const bidder = sanitizeFolderSegment(estimate.bidder || "");
+
+  if (bidder) {
+    return `${[estimateLabel, projectName].filter(Boolean).join(" - ")}/${bidder}`;
+  }
+
+  const customer = sanitizeFolderSegment(estimate.customer || "");
   return [estimateLabel, customer, projectName].filter(Boolean).join(" - ");
 }
 
@@ -104,6 +110,7 @@ export async function POST(
   }
 
   const customer = typeof estimate.body?.customer === "string" ? estimate.body.customer : "";
+  const bidder = typeof estimate.body?.bidder === "string" ? estimate.body.bidder : "";
 
   const siteId = await getSharePointSiteId(providerToken);
   const driveId = await getSharePointDriveId(providerToken, siteId);
@@ -149,7 +156,7 @@ export async function POST(
     sharepointFolder = estimateRoot;
   } else {
     const folderName = buildEstimateFolderName(
-      { number: estimate.number, name: estimate.name, customer },
+      { number: estimate.number, name: estimate.name, customer, bidder },
       id,
     );
     const folderPath = `Bids/${folderName}`;

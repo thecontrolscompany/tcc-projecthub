@@ -13,6 +13,7 @@ export type HvacEstimateBody = {
   number: string;
   customerAccountId?: string | null;
   customer: string;
+  bidder?: string | null;
   version: string;
   notes: string;
   settings: Record<string, unknown>;

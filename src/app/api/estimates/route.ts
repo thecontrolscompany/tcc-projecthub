@@ -41,11 +41,21 @@ function sanitizeFolderSegment(value: string) {
     .trim();
 }
 
-function buildEstimateFolderName(estimate: { number: string | null; name: string; customer: string }, estimateId: string) {
+function buildEstimateFolderName(
+  estimate: { number: string | null; name: string; customer: string; bidder?: string | null },
+  estimateId: string,
+) {
   const estimateNumber = sanitizeFolderSegment(estimate.number || "");
   const estimateLabel = estimateNumber ? `EST-${estimateNumber}` : `EST-${estimateId.slice(0, 8).toUpperCase()}`;
-  const customer = sanitizeFolderSegment(estimate.customer || "");
   const projectName = sanitizeFolderSegment(estimate.name || "Untitled Estimate");
+  const bidder = sanitizeFolderSegment(estimate.bidder || "");
+
+  if (bidder) {
+    // Parent folder named after project only; bidder is a subfolder
+    return `${[estimateLabel, projectName].filter(Boolean).join(" - ")}/${bidder}`;
+  }
+
+  const customer = sanitizeFolderSegment(estimate.customer || "");
   return [estimateLabel, customer, projectName].filter(Boolean).join(" - ");
 }
 
@@ -96,7 +106,7 @@ async function resolveEstimateProject(
 
 async function provisionEstimateFolder(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  estimate: { id: string; number: string | null; name: string; customer: string; linked_project_id: string | null },
+  estimate: { id: string; number: string | null; name: string; customer: string; bidder?: string | null; linked_project_id: string | null },
 ) {
   const {
     data: { session },
@@ -146,6 +156,9 @@ async function provisionEstimateFolder(
   const folderName = buildEstimateFolderName(estimate, estimate.id);
   const folderPath = `Bids/${folderName}`;
 
+  // ensureSharePointFolderPath creates each segment in order, so this handles
+  // both the flat case (Bids/EST-XXX - Customer - Name) and the bidder-subfolder
+  // case (Bids/EST-XXX - Name/Siemens) correctly.
   await ensureSharePointFolderPath(providerToken, driveId, "Bids");
   const folderItemId = await ensureSharePointFolderPath(providerToken, driveId, folderPath);
 
@@ -300,6 +313,7 @@ export async function POST(request: Request) {
       number: data.number,
       name: data.name,
       customer: typeof data.body?.customer === "string" ? data.body.customer : "",
+      bidder: typeof data.body?.bidder === "string" ? data.body.bidder : "",
       linked_project_id: data.linked_project_id ?? null,
     });
 

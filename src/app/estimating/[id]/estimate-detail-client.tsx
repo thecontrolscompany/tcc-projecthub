@@ -359,6 +359,7 @@ function normalizeBody(record: EstimateRecord): EstimateBody {
     sharepointItemId: asString(body.sharepointItemId) || null,
     customerAccountId: asString(body.customerAccountId) || null,
     customer: asString(body.customer),
+    bidder: asString(body.bidder) || null,
     version: asString(body.version) || "1.0",
     notes: asString(body.notes),
     settings: { ...DEFAULT_SETTINGS, ...(body.settings ?? {}) },
@@ -693,6 +694,7 @@ export function EstimateDetailClient({ estimate }: Props) {
               <span className="text-xs text-text-tertiary">
                 {body.number || estimate.id}
                 {body.customer ? ` · ${body.customer}` : ""}
+                {body.bidder ? ` · ${body.bidder}` : ""}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-2">

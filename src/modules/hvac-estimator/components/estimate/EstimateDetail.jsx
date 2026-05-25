@@ -32,6 +32,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
   const [name,setName]         = useState(estimate.name);
   const [number,setNumber]     = useState(estimate.number||"");
   const [customer,setCustomer] = useState(estimate.customer||"");
+  const [bidder,setBidder]     = useState(estimate.bidder||estimate.body?.bidder||"");
   const [version,setVersion]   = useState(estimate.version||"");
   const [notes,setNotes]       = useState(estimate.notes||"");
   const createdBy = estimate.createdBy?.name || estimate.createdBy?.email || "";
@@ -62,7 +63,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
   const grandTotal = costs.total;
 
   const saveHeader = () => {
-    onUpdate({...estimate, name, number, customer, version, notes, updatedAt:new Date().toISOString()});
+    onUpdate({...estimate, name, number, customer, bidder, version, notes, updatedAt:new Date().toISOString()});
     setEditHeader(false);
   };
 
@@ -207,6 +208,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                     padding:"1px 6px", borderRadius:8, fontFamily:T.mono, border:"1px solid "+T.blueMid }}>
                     v{estimate.version}</span>}
                   {estimate.customer && <span style={{ fontSize:12, color:T.muted }}>· {estimate.customer}</span>}
+                  {(estimate.bidder||estimate.body?.bidder) && <span style={{ fontSize:12, color:T.blue, background:T.blueFaint, padding:"1px 6px", borderRadius:8, fontFamily:T.mono, border:"1px solid "+T.blueMid }}>Bidder: {estimate.bidder||estimate.body?.bidder}</span>}
                   <button onClick={()=>setEditHeader(true)} style={{ background:"none", border:"none",
                     color:T.dim, cursor:"pointer", fontSize:11, fontFamily:T.mono }}>✏ edit</button>
                 </div>
@@ -307,7 +309,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
               fontFamily:T.mono, padding:"4px 10px", whiteSpace:"nowrap" }}>← All Estimates</button>
             <div style={{ flex:1, display:"flex", flexWrap:"wrap", gap:8, alignItems:"flex-end" }}>
               {[["Name",name,setName,200],["Est #",number,setNumber,100],
-                ["Customer",customer,setCustomer,160],["Version",version,setVersion,80]].map(([lbl,val,fn,w])=>(
+                ["Customer",customer,setCustomer,160],["Bidder",bidder,setBidder,140],["Version",version,setVersion,80]].map(([lbl,val,fn,w])=>(
                 <div key={lbl}>
                   <div style={{ fontSize:9, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1, marginBottom:2 }}>{lbl}</div>
                   <input value={val} onChange={e=>fn(e.target.value)}
