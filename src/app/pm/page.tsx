@@ -390,6 +390,7 @@ function UpdateForm({
   const [deliverySending, setDeliverySending] = useState(false);
   const [deliveryError, setDeliveryError] = useState<string | null>(null);
   const [deliveryMessage, setDeliveryMessage] = useState<string | null>(null);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   const totalWeight = pocItems.reduce((sum, item) => sum + item.weight, 0);
   const pocPctDecimal =
@@ -761,23 +762,29 @@ function UpdateForm({
       }
 
       await loadData();
+      const savedUpdateId = (json?.update?.id as string | undefined) ?? activeUpdateId ?? null;
 
       if (nextStatus === "draft") {
         setStatusMessage("Draft saved.");
         return;
       }
 
+      if (savedUpdateId) {
+        await handleSendLiveReportEmail(savedUpdateId);
+      }
+
       if (isSubmittedEdit || options?.stayOnForm) {
         setEditNote("");
         setIsEditing(false);
-        setStatusMessage(json?.editLogged ? "Edit saved and logged." : "Weekly update submitted.");
+        setStatusMessage(
+          json?.editLogged
+            ? "Edit saved, logged, and emailed to customers."
+            : "Weekly update submitted and emailed to customers."
+        );
         return;
       }
 
-      setStatusMessage("Weekly update submitted.");
-      setTimeout(() => {
-        onBack();
-      }, 1200);
+      setStatusMessage("Weekly update submitted and emailed to customers.");
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Save failed. Please try again.");
     } finally {
@@ -841,15 +848,15 @@ function UpdateForm({
     }
   }
 
-  async function handleSendLiveReportEmail() {
-    if (!submittedUpdateId) return;
+  async function handleSendLiveReportEmail(reportId = submittedUpdateId) {
+    if (!reportId) return;
 
     setDeliverySending(true);
     setDeliveryError(null);
     setDeliveryMessage(null);
 
     try {
-      const response = await fetch(`/api/reports/weekly-update/${encodeURIComponent(submittedUpdateId)}/delivery`, {
+      const response = await fetch(`/api/reports/weekly-update/${encodeURIComponent(reportId)}/delivery`, {
         method: "POST",
         credentials: "include",
       });
@@ -880,7 +887,14 @@ function UpdateForm({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    await saveWeeklyUpdate("submitted");
+    setDeliveryError(null);
+    setDeliveryMessage(null);
+    setShowSubmitConfirm(true);
+  }
+
+  async function handleConfirmSubmitAndSend() {
+    setShowSubmitConfirm(false);
+    await saveWeeklyUpdate("submitted", { stayOnForm: true });
   }
 
   async function handleSavePocChanges() {
@@ -1430,11 +1444,11 @@ function UpdateForm({
                   {submittedUpdateId && (
                     <button
                       type="button"
-                      onClick={() => void handleSendLiveReportEmail()}
+                      onClick={() => setShowSubmitConfirm(true)}
                       disabled={deliverySending || deliveryLoading || deliveryRecipients.length === 0}
                       className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {deliverySending ? "Sending..." : "Approve & Send"}
+                      Approve & Send
                     </button>
                   )}
                   <button
@@ -2430,6 +2444,95 @@ function UpdateForm({
             </a>
           </div>
           <BomTab projectId={project.id} readOnly allowReceiptEditing />
+        </div>
+      )}
+
+      {showSubmitConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6">
+          <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-border-default bg-surface-base shadow-2xl">
+            <div className="flex items-start justify-between border-b border-border-default px-5 py-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Approve &amp; Send</p>
+                <h3 className="mt-1 text-lg font-bold text-text-primary">Send this weekly report to customers?</h3>
+                <p className="mt-1 text-sm text-text-tertiary">
+                  This will submit the report and email every customer contact that has email digest enabled.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSubmitConfirm(false)}
+                className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-sm font-semibold text-text-primary transition hover:bg-surface-raised"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <div className="grid gap-4 p-5 lg:grid-cols-[320px_minmax(0,1fr)]">
+              <div className="space-y-3">
+                <div className="rounded-xl border border-border-default bg-surface-raised p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Recipients</p>
+                  <p className="mt-1 text-sm font-medium text-text-primary">
+                    {deliveryRecipients.length} recipient{deliveryRecipients.length === 1 ? "" : "s"}
+                  </p>
+                  <div className="mt-3 space-y-2">
+                    {deliveryRecipients.map((recipient) => (
+                      <div key={recipient.email} className="rounded-lg border border-border-default bg-surface-base px-3 py-2">
+                        <p className="text-sm font-medium text-text-primary">{recipient.fullName || recipient.email}</p>
+                        <p className="text-xs text-text-tertiary">{recipient.email}</p>
+                      </div>
+                    ))}
+                    {deliveryRecipients.length === 0 && (
+                      <p className="text-sm text-status-warning">No customer recipients are configured yet.</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border-default bg-surface-raised p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Email Subject</p>
+                  <p className="mt-1 text-sm font-medium text-text-primary">
+                    {deliveryPreviewSubject || "Weekly report"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-border-default bg-surface-raised p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Preview</p>
+                {deliveryLoading ? (
+                  <div className="mt-3 flex min-h-[420px] items-center justify-center rounded-lg border border-dashed border-border-default bg-surface-overlay text-sm text-text-tertiary">
+                    Loading preview...
+                  </div>
+                ) : deliveryPreviewHtml ? (
+                  <iframe
+                    title="Weekly report approval preview"
+                    srcDoc={deliveryPreviewHtml}
+                    className="mt-3 min-h-[420px] w-full rounded-lg border border-border-default bg-white"
+                  />
+                ) : (
+                  <div className="mt-3 flex min-h-[420px] items-center justify-center rounded-lg border border-dashed border-border-default bg-surface-overlay text-sm text-text-tertiary">
+                    Preview unavailable.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border-default px-5 py-4">
+              <button
+                type="button"
+                onClick={() => setShowSubmitConfirm(false)}
+                className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-semibold text-text-primary transition hover:bg-surface-raised"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleConfirmSubmitAndSend()}
+                disabled={Boolean(saving) || deliverySending || deliveryLoading}
+                className="rounded-xl bg-status-success px-4 py-2.5 text-sm font-semibold text-text-inverse transition hover:opacity-90 disabled:opacity-50"
+              >
+                {saving === "submit" || deliverySending ? "Sending..." : "Approve & Send"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
