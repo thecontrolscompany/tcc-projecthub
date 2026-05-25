@@ -62,7 +62,7 @@ async function callOpenAiCompatible({ endpoint, apiKey, model, prompt, organizat
         },
     body: JSON.stringify({
       model,
-      temperature: 0.1,
+      temperature: 0,
       response_format: { type: "json_object" },
       messages: buildMessages(prompt),
       user: organizationId,
@@ -88,7 +88,7 @@ async function callAnthropic({ apiKey, model, prompt, organizationId }) {
     body: JSON.stringify({
       model,
       max_tokens: 4096,
-      temperature: 0.1,
+      temperature: 0,
       system:
         "You are a senior HVAC estimator. Return only valid JSON matching the provided schema. " +
         "Do not wrap the JSON in code fences or add commentary.",
@@ -130,7 +130,7 @@ async function callGemini({ apiKey, model, prompt, organizationId }) {
         },
       ],
       generationConfig: {
-        temperature: 0.1,
+        temperature: 0,
       },
     }),
   });
@@ -342,6 +342,14 @@ export async function buildScopeTakeoffPrompt({
     "- When a system appears multiple times (e.g. AHU-1 and AHU-2), combine them into one system with qty > 1 ONLY if they are identical. If they differ in points, create separate systems.",
     "- ALWAYS include a 'Network / BAS Backbone' system as the last system, even if it is not described in the scope. Use it to capture backbone wiring, conduit, BAS front-end extensions, and network infrastructure. If nothing is mentioned, leave its points empty and add a note that it requires review.",
     "- notes field must always be a plain string, never an array.",
+    "ASSEMBLY COUNT RULES — only include assemblies that are EXPLICITLY stated in the scope:",
+    "- Simple exhaust fans: use exactly 1 assembly (EF Start/Stop/Status in EMT). Do NOT add relays, current switches, or interlocks unless the scope explicitly requires them.",
+    "- Unit heaters: use exactly 1 assembly (Control/Status) unless the scope explicitly calls for start/stop/status hardwired integration.",
+    "- Circulation pumps, sump pumps, and domestic hot water systems with no VFD: use exactly 1 assembly (Control/Status).",
+    "- Electric meters, water meters, gas meters, air curtains, generators, gas detection, lighting controls: use exactly 1 assembly (Control/Status) each.",
+    "- VAV boxes: use exactly 2 assemblies — Enclosure (Small) Controller/ Xfmr (for the DXR controller) and ValveActuator (if hot-water reheat is present). Add no others unless explicitly stated.",
+    "- Fan coil units: use exactly Enclosure (Small) Controller/ Xfmr + ValveActuator(s) as appropriate for pipe count. Add no others unless explicitly stated.",
+    "- DO NOT infer sensors or assemblies from equipment type alone — only add what the scope document explicitly describes.",
     "The baseScopeName should be the actual project scope label from the proposal, not a generic placeholder like 'Scope'.",
     "Return ONLY a single JSON object that matches this schema exactly:",
     JSON.stringify(schemaExample, null, 2),
@@ -350,7 +358,7 @@ export async function buildScopeTakeoffPrompt({
     "- Include one system object for each HVAC system or equipment group in the scope.",
     "- Each system should include the point-level items that make up the equipment.",
     "- Each point should include the assemblies needed to build that point.",
-    "- Use conservative assumptions. If something is unclear, omit it or add an assumption note.",
+    "- STRICT: only include assemblies that are explicitly mentioned in the scope text. Do not infer standard sensors if they are not explicitly listed.",
     "- Keep assemblyRef stable, human-readable, and slug-like when exact estimator assembly IDs are unknown.",
     "- Use assemblyName for the catalog-style label and assemblyRef for the stable source-facing identifier.",
     "",

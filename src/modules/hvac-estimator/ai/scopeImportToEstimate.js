@@ -221,7 +221,7 @@ function inferImportedType(system) {
   const haystack = `${rawType} ${name}`;
 
   if (haystack.includes("ahu") || haystack.includes("air handling")) return "ahu";
-  if (haystack.includes("vav") || haystack.includes("terminal box")) return "vav";
+  if (haystack.includes("vav") || haystack.includes("terminal box") || haystack.includes("variable volume") || haystack.includes("variable air volume") || haystack.includes("air terminal unit")) return "vav";
   if (haystack.includes("rtu") || haystack.includes("roof top") || haystack.includes("packaged rooftop")) return "rtu";
   if (haystack.includes("dx") || haystack.includes("heat pump") || haystack.includes("split system")) return "dx";
   if (haystack.includes("vrf")) return "vrf";
