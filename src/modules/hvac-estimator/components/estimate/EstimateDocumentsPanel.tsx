@@ -21,6 +21,7 @@ type Props = {
   sharepointFolder?: string | null;
   drawingBasis: string;
   onChangeDrawingBasis: (value: string) => void;
+  onFolderProvisioned?: (folder: string) => void;
   embedded?: boolean;
 };
 
@@ -59,19 +60,24 @@ function formatDate(value: string) {
 
 export function EstimateDocumentsPanel({
   estimateId,
-  sharepointFolder,
+  sharepointFolder: sharepointFolderProp,
   drawingBasis,
   onChangeDrawingBasis,
+  onFolderProvisioned,
   embedded = false,
 }: Props) {
   const [documents, setDocuments] = useState<EstimateDocument[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [provisioning, setProvisioning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<EstimateDocument["document_role"]>("supporting_scope");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [batchNote, setBatchNote] = useState("");
+  const [localFolder, setLocalFolder] = useState<string | null>(null);
+
+  const sharepointFolder = localFolder ?? sharepointFolderProp ?? null;
 
   async function readErrorMessage(res: Response, fallback: string) {
     const text = await res.text().catch(() => "");
@@ -96,6 +102,27 @@ export function EstimateDocumentsPanel({
     }
 
     return fallback;
+  }
+
+  async function provisionFolder() {
+    setProvisioning(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/estimates/${estimateId}/provision-folder`, { method: "POST" });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(json?.error || "Unable to provision SharePoint folder.");
+      const folder = typeof json?.sharepointFolder === "string" ? json.sharepointFolder : null;
+      if (folder) {
+        setLocalFolder(folder);
+        onFolderProvisioned?.(folder);
+        setMessage("SharePoint folder provisioned successfully.");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to provision SharePoint folder.");
+    } finally {
+      setProvisioning(false);
+    }
   }
 
   async function requestUploadSession(file: File) {
@@ -345,9 +372,19 @@ export function EstimateDocumentsPanel({
             </button>
 
             {!sharepointFolder && (
-              <p className="text-xs text-status-warning">
-                SharePoint folder has not been provisioned yet for this estimate.
-              </p>
+              <div className="space-y-2">
+                <p className="text-xs text-status-warning">
+                  SharePoint folder has not been provisioned yet for this estimate.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void provisionFolder()}
+                  disabled={provisioning}
+                  className="rounded-xl border border-brand-primary/30 bg-brand-primary/10 px-3 py-2 text-xs font-semibold text-brand-primary transition hover:bg-brand-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {provisioning ? "Provisioning..." : "Provision SharePoint Folder"}
+                </button>
+              </div>
             )}
           </div>
         </div>

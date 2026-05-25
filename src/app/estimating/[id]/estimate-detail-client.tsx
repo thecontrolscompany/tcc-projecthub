@@ -898,6 +898,7 @@ export function EstimateDetailClient({ estimate }: Props) {
               sharepointFolder={body.sharepointFolder}
               drawingBasis={asString(body.settings.drawingBasis)}
               onChangeDrawingBasis={(value: string) => updateSettings({ drawingBasis: value })}
+              onFolderProvisioned={(folder: string) => updateBody({ sharepointFolder: folder })}
             />
           </section>
 

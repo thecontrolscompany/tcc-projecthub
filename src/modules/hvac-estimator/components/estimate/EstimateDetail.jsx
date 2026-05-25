@@ -391,6 +391,13 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
           sharepointFolder={sharepointFolder}
           drawingBasis={drawingBasis}
           onChangeDrawingBasis={(value) => updateSettings({ drawingBasis: value })}
+          onFolderProvisioned={(folder) => {
+            onUpdate({
+              ...estimate,
+              body: { ...(estimate.body || {}), sharepointFolder: folder },
+              updatedAt: new Date().toISOString(),
+            });
+          }}
         />
       )}
 
