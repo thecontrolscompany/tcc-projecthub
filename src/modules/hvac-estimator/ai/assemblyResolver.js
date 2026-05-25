@@ -24,10 +24,12 @@ const DEFAULT_WEIGHTS = new Map([
 ]);
 
 const ASSEMBLY_ALIASES = [
-  // Controllers / enclosures
-  { id: "50001", aliases: ["small controller xfmr", "small enclosure controller xfmr", "field mount controller xfmr", "controller with ups", "enclosure small controller xfmr", "dxr controller package", "fcu controller package", "vav dxr controller", "dxr equipment controller"] },
-  { id: "50002", aliases: ["average controller xfmr", "average enclosure controller xfmr", "controller enclosure average", "medium controller xfmr", "enclosure average controller xfmr", "pxc control panel", "ahu control panel", "bas control panel", "pxc panel"] },
-  { id: "50003", aliases: ["large controller xfmr", "large enclosure controller xfmr", "controller enclosure large", "enclosure large controller xfmr"] },
+  // Controllers / enclosures — FCU/VAV level
+  { id: "60034", aliases: ["fcu controller package", "vav dxr controller", "dxr equipment controller", "dxr controller package"] },
+  // Controllers / enclosures — small to average (AHU panel, BAS panel, field enclosure)
+  { id: "60087", aliases: ["small controller xfmr", "small enclosure controller xfmr", "field mount controller xfmr", "controller with ups", "enclosure small controller xfmr", "average controller xfmr", "average enclosure controller xfmr", "controller enclosure average", "medium controller xfmr", "enclosure average controller xfmr", "pxc control panel", "ahu control panel", "bas control panel", "pxc panel"] },
+  // Controllers / enclosures — large
+  { id: "60095", aliases: ["large controller xfmr", "large enclosure controller xfmr", "controller enclosure large", "enclosure large controller xfmr"] },
   // Temperature sensors — room
   { id: "60032", aliases: ["temp sensor room bacnet", "room temp sensor bacnet", "zone temperature sensor", "room temperature sensor", "wall temperature sensor", "space temperature sensor", "space temp sensor"] },
   { id: "60163", aliases: ["temp sensor room net stat", "room temp sensor", "zone temp sensor", "stat sensor"] },
@@ -143,9 +145,8 @@ function resolveControllerPanel(sourceTokens, sourceText) {
     return null;
   }
 
-  if (sourceTokens.includes("large")) return ASSEMBLIES["50003"] || null;
-  if (sourceTokens.includes("average")) return ASSEMBLIES["50002"] || null;
-  return ASSEMBLIES["50001"] || null;
+  if (sourceTokens.includes("large")) return ASSEMBLIES["60095"] || null;
+  return ASSEMBLIES["60087"] || null;
 }
 
 function resolveExactAssembly(assemblyRef, assemblyName, sourceText) {
