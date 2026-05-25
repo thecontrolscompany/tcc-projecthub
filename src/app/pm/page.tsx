@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ViewReportLink } from "@/components/view-report-link";
 import { BomTab } from "@/components/bom-tab";
+import type { WeeklyUpdateRecipient } from "@/lib/reports/weekly-update-email";
 import { formatWeekEndingSaturday, normalizeWeekEndingSaturday } from "@/lib/utils/week-ending";
 import type { ChangeOrder, LaborHoursWorker } from "@/types/database";
 import type {
@@ -21,7 +22,6 @@ import { fmtCurrency } from "@/lib/utils/format";
 import { ROLE_LABELS, ROLE_BADGE_STYLES_WITH_BORDER } from "@/lib/project/roles";
 import { safeJson } from "@/lib/utils/safe-json";
 
-type ViewState = "list" | "update";
 type ProjectTab = "overview" | "contacts" | "update" | "poc" | "change-orders" | "rfis" | "photos" | "bom";
 
 interface ProjectContact {
@@ -145,7 +145,6 @@ export default function PmPage() {
   const searchParams = useSearchParams();
   const [projects, setProjects] = useState<ProjectWithBilling[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
 
   const selectedProjectId = searchParams.get("project");
   const selectedProject = projects.find((p) => p.id === selectedProjectId) ?? null;
@@ -156,7 +155,7 @@ export default function PmPage() {
   }
 
   function goBack() {
-    if (userId) void loadProjects(userId);
+    void loadProjects();
     router.push("/pm");
   }
 
@@ -167,8 +166,7 @@ export default function PmPage() {
           data: { user },
         } = await supabase.auth.getUser();
         if (user) {
-          setUserId(user.id);
-          await loadProjects(user.id);
+          await loadProjects();
         } else {
           setProjects([]);
           setLoading(false);
@@ -183,7 +181,7 @@ export default function PmPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function loadProjects(profileId: string) {
+  async function loadProjects() {
     try {
       const res = await fetch("/api/pm/projects", {
         credentials: "include",
@@ -385,6 +383,13 @@ function UpdateForm({
   const [laborHasMapping, setLaborHasMapping] = useState<boolean | null>(null);
   const [pullingHours, setPullingHours] = useState(false);
   const [laborPullError, setLaborPullError] = useState<string | null>(null);
+  const [deliveryRecipients, setDeliveryRecipients] = useState<WeeklyUpdateRecipient[]>([]);
+  const [deliveryPreviewHtml, setDeliveryPreviewHtml] = useState<string>("");
+  const [deliveryPreviewSubject, setDeliveryPreviewSubject] = useState<string>("");
+  const [deliveryLoading, setDeliveryLoading] = useState(false);
+  const [deliverySending, setDeliverySending] = useState(false);
+  const [deliveryError, setDeliveryError] = useState<string | null>(null);
+  const [deliveryMessage, setDeliveryMessage] = useState<string | null>(null);
 
   const totalWeight = pocItems.reduce((sum, item) => sum + item.weight, 0);
   const pocPctDecimal =
@@ -563,6 +568,19 @@ function UpdateForm({
     void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project.id]);
+
+  useEffect(() => {
+    if (!submittedUpdateId) {
+      setDeliveryRecipients([]);
+      setDeliveryPreviewHtml("");
+      setDeliveryPreviewSubject("");
+      setDeliveryError(null);
+      setDeliveryMessage(null);
+      return;
+    }
+
+    void loadDeliveryPreview(submittedUpdateId);
+  }, [submittedUpdateId, project.id]);
 
   useEffect(() => {
     if (!laborDetail || laborDetail.length === 0) {
@@ -794,6 +812,69 @@ function UpdateForm({
       setSaveError(err instanceof Error ? err.message : "Unable to send test email.");
     } finally {
       setSendingTestEmail(false);
+    }
+  }
+
+  async function loadDeliveryPreview(updateId: string) {
+    setDeliveryLoading(true);
+    setDeliveryError(null);
+    try {
+      const response = await fetch(`/api/reports/weekly-update/${encodeURIComponent(updateId)}/delivery`, {
+        credentials: "include",
+      });
+      const json = await safeJson(response);
+
+      if (!response.ok) {
+        throw new Error(json?.error ?? "Unable to load customer delivery preview.");
+      }
+
+      setDeliveryRecipients((json?.recipients as WeeklyUpdateRecipient[]) ?? []);
+      setDeliveryPreviewHtml((json?.report?.html as string) ?? "");
+      setDeliveryPreviewSubject((json?.report?.subject as string) ?? "");
+    } catch (err) {
+      setDeliveryRecipients([]);
+      setDeliveryPreviewHtml("");
+      setDeliveryPreviewSubject("");
+      setDeliveryError(err instanceof Error ? err.message : "Unable to load customer delivery preview.");
+    } finally {
+      setDeliveryLoading(false);
+    }
+  }
+
+  async function handleSendLiveReportEmail() {
+    if (!submittedUpdateId) return;
+
+    setDeliverySending(true);
+    setDeliveryError(null);
+    setDeliveryMessage(null);
+
+    try {
+      const response = await fetch(`/api/reports/weekly-update/${encodeURIComponent(submittedUpdateId)}/delivery`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const json = await safeJson(response);
+
+      if (!response.ok) {
+        throw new Error(json?.error ?? "Unable to send report to customers.");
+      }
+
+      const sentCount = json?.sentCount ?? 0;
+      const failedCount = json?.failedCount ?? 0;
+      setDeliveryMessage(
+        failedCount > 0
+          ? `Sent to ${sentCount} recipient${sentCount === 1 ? "" : "s"}; ${failedCount} failed.`
+          : `Sent to ${sentCount} customer recipient${sentCount === 1 ? "" : "s"}.`
+      );
+      setStatusMessage(
+        failedCount > 0
+          ? `Customer email partially sent (${sentCount} sent, ${failedCount} failed).`
+          : `Customer email sent to ${sentCount} recipient${sentCount === 1 ? "" : "s"}.`
+      );
+    } catch (err) {
+      setDeliveryError(err instanceof Error ? err.message : "Unable to send report to customers.");
+    } finally {
+      setDeliverySending(false);
     }
   }
 
@@ -1319,6 +1400,14 @@ function UpdateForm({
             <div className="rounded-xl bg-status-success/10 px-4 py-3 text-sm font-medium text-status-success">{statusMessage}</div>
           )}
 
+          {deliveryError && (
+            <div className="rounded-xl bg-status-danger/10 px-4 py-3 text-sm text-status-danger">{deliveryError}</div>
+          )}
+
+          {deliveryMessage && !deliveryError && (
+            <div className="rounded-xl bg-status-success/10 px-4 py-3 text-sm font-medium text-status-success">{deliveryMessage}</div>
+          )}
+
           {isReadOnlySubmitted ? (
             <div className="space-y-4 rounded-2xl border border-border-default bg-surface-raised p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1338,6 +1427,16 @@ function UpdateForm({
                       {sendingTestEmail ? "Sending..." : "Email Test"}
                     </button>
                   )}
+                  {submittedUpdateId && (
+                    <button
+                      type="button"
+                      onClick={() => void handleSendLiveReportEmail()}
+                      disabled={deliverySending || deliveryLoading || deliveryRecipients.length === 0}
+                      className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {deliverySending ? "Sending..." : "Approve & Send"}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
@@ -1345,6 +1444,80 @@ function UpdateForm({
                   >
                     Edit
                   </button>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-border-default bg-surface-overlay/60 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-text-primary">Customer Delivery</p>
+                    <p className="mt-1 text-xs text-text-tertiary">
+                      These contacts have email digest enabled for this project.
+                    </p>
+                  </div>
+                  <p className="text-xs text-text-tertiary">
+                    {deliveryRecipients.length} recipient{deliveryRecipients.length === 1 ? "" : "s"}
+                  </p>
+                </div>
+
+                <div className="mt-4 grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+                  <div className="space-y-3">
+                    <div className="rounded-xl border border-border-default bg-surface-raised p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Subject</p>
+                      <p className="mt-1 text-sm font-medium text-text-primary">
+                        {deliveryLoading ? "Loading preview..." : deliveryPreviewSubject || "Weekly report"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-xl border border-border-default bg-surface-raised p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Recipients</p>
+                      {deliveryLoading ? (
+                        <p className="mt-2 text-sm text-text-tertiary">Loading recipients...</p>
+                      ) : deliveryRecipients.length === 0 ? (
+                        <p className="mt-2 text-sm text-status-warning">No customer recipients are configured yet.</p>
+                      ) : (
+                        <div className="mt-2 space-y-2">
+                          {deliveryRecipients.map((recipient) => (
+                            <div key={recipient.email} className="rounded-lg border border-border-default bg-surface-base px-3 py-2">
+                              <p className="text-sm font-medium text-text-primary">{recipient.fullName || recipient.email}</p>
+                              <p className="text-xs text-text-tertiary">{recipient.email}</p>
+                              <div className="mt-1 flex flex-wrap gap-1.5">
+                                <span className="rounded-full bg-status-success/10 px-2 py-0.5 text-[11px] font-medium text-status-success">
+                                  Email digest
+                                </span>
+                                <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${recipient.portalAccess ? "bg-brand-primary/10 text-brand-primary" : "bg-surface-overlay text-text-tertiary"}`}>
+                                  {recipient.portalAccess ? "Portal access" : "Email only"}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="overflow-hidden rounded-xl border border-border-default bg-surface-raised">
+                    <div className="border-b border-border-default px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Email Preview</p>
+                    </div>
+                    <div className="bg-surface-base p-3">
+                      {deliveryLoading ? (
+                        <div className="flex min-h-[640px] items-center justify-center rounded-lg border border-dashed border-border-default bg-surface-overlay text-sm text-text-tertiary">
+                          Loading preview...
+                        </div>
+                      ) : deliveryPreviewHtml ? (
+                        <iframe
+                          title="Weekly report email preview"
+                          srcDoc={deliveryPreviewHtml}
+                          className="min-h-[640px] w-full rounded-lg border border-border-default bg-white"
+                        />
+                      ) : (
+                        <div className="flex min-h-[640px] items-center justify-center rounded-lg border border-dashed border-border-default bg-surface-overlay text-sm text-text-tertiary">
+                          Preview unavailable.
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -3132,14 +3305,6 @@ function Stat({ label, value, highlight }: { label: string; value: string; highl
     <div>
       <p className="text-xs text-text-tertiary">{label}</p>
       <p className={`mt-0.5 text-sm font-semibold ${highlight ? "text-brand-primary" : "text-text-primary"}`}>{value}</p>
-    </div>
-  );
-}
-
-function CenteredMsg({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-surface-base text-text-secondary">
-      {children}
     </div>
   );
 }
