@@ -88,12 +88,7 @@ export async function POST(
     return NextResponse.json({ error: "Access denied." }, { status: 403 });
   }
 
-  const adminClient = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-
-  const { data: estimate, error: estimateError } = await adminClient
+  const { data: estimate, error: estimateError } = await supabase
     .from("estimates")
     .select("id, number, name, body, linked_project_id")
     .eq("id", id)
@@ -105,6 +100,11 @@ export async function POST(
   if (!estimate) {
     return NextResponse.json({ error: `[estimate-lookup] no row found for id=${id}` }, { status: 404 });
   }
+
+  const adminClient = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
 
   const {
     data: { session },
