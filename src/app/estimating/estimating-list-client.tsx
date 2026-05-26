@@ -320,10 +320,13 @@ export function EstimatingListClient() {
         <td className="px-4 py-3 pl-10">
           <div className="flex items-center gap-1.5">
             <Link href={`/estimating/${estimate.id}`} className="font-medium text-text-primary hover:text-brand-primary">
-              {bidder || name}
+              {name}
             </Link>
           </div>
-          <div className="mt-0.5 text-xs text-text-tertiary">{number || estimate.id.slice(0, 8)}</div>
+          <div className="mt-0.5 text-xs text-text-tertiary">
+            {number || estimate.id.slice(0, 8)}
+            {bidder && <span className="ml-2 text-text-tertiary">· {bidder}</span>}
+          </div>
         </td>
         <td className="px-4 py-3 text-text-secondary">{bidder || customer || "-"}</td>
         <td className="px-4 py-3">
