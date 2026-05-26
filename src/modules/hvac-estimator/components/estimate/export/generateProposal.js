@@ -257,7 +257,7 @@ function renderImportedScopeList(scopeImport) {
       const pointNotes = String(point.notes || "").trim();
       const qtyPrefix = Number.isFinite(pointQty) && pointQty > 1 ? `Qty ${pointQty} ` : "";
       const notesSuffix = pointNotes ? ` (${pointNotes})` : "";
-      return [`            <li>Install ${esc(`${qtyPrefix}${pointName}${notesSuffix}`)} provided by others; furnish and install associated control wiring.</li>`];
+      return [`            <li>${esc(`${qtyPrefix}${pointName}${notesSuffix}`)}</li>`];
     });
 
     const metaHtml = metaParts.length
@@ -529,8 +529,8 @@ function renderGeneratedScope(itemsWithComps = [], mode = "brief") {
               if (/conduit|wire|cable|raceway/i.test(normalized)) {
                 return `\n            <li>Furnish and install ${esc(displayName.toLowerCase())} required for this system.</li>`;
               }
-              return `\n            <li>Install ${esc(displayName)} provided by others; furnish and install associated control wiring.</li>`;
-            }).join("") : `\n            <li>Install controls field devices provided by others; furnish and install associated control wiring.</li>`}
+              return `\n            <li>${esc(displayName)}</li>`;
+            }).join("") : `\n            <li>Controls field devices per project documents.</li>`}
           </ul>
         </li>`;
   }).join("\n");
