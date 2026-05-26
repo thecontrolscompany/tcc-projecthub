@@ -100,7 +100,7 @@ export async function POST(
     .single();
 
   if (estimateError || !estimate) {
-    return NextResponse.json({ error: estimateError?.message || "Estimate not found." }, { status: 404 });
+    return NextResponse.json({ error: `[estimate-lookup] ${estimateError?.message || "Estimate not found."}` }, { status: 404 });
   }
 
   const {
@@ -117,8 +117,14 @@ export async function POST(
   const customer = typeof estimate.body?.customer === "string" ? estimate.body.customer : "";
   const bidder = typeof estimate.body?.bidder === "string" ? estimate.body.bidder : "";
 
-  const siteId = await getSharePointSiteId(providerToken);
-  const driveId = await getSharePointDriveId(providerToken, siteId);
+  let siteId: string;
+  let driveId: string;
+  try {
+    siteId = await getSharePointSiteId(providerToken);
+    driveId = await getSharePointDriveId(providerToken, siteId);
+  } catch (err) {
+    return NextResponse.json({ error: `[sharepoint-init] ${err instanceof Error ? err.message : String(err)}` }, { status: 502 });
+  }
 
   let sharepointFolder: string;
   let folderItemId: string;
@@ -134,6 +140,7 @@ export async function POST(
     linkedProject = data ?? null;
   }
 
+  try {
   if (linkedProject) {
     const projectRoot =
       typeof linkedProject.sharepoint_folder === "string" && linkedProject.sharepoint_folder.trim()
@@ -201,6 +208,10 @@ export async function POST(
     }
   }
 
+  } catch (err) {
+    return NextResponse.json({ error: `[folder-provision] ${err instanceof Error ? err.message : String(err)}` }, { status: 502 });
+  }
+
   const updatedBody = {
     ...(estimate.body as Record<string, unknown>),
     sharepointFolder,
@@ -213,7 +224,7 @@ export async function POST(
     .eq("id", id);
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return NextResponse.json({ error: `[body-update] ${updateError.message}` }, { status: 500 });
   }
 
   return NextResponse.json({ sharepointFolder, ok: true });
