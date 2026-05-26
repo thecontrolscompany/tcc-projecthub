@@ -97,10 +97,13 @@ export async function POST(
     .from("estimates")
     .select("id, number, name, body, linked_project_id")
     .eq("id", id)
-    .single();
+    .maybeSingle();
 
-  if (estimateError || !estimate) {
-    return NextResponse.json({ error: `[estimate-lookup] ${estimateError?.message || "Estimate not found."}` }, { status: 404 });
+  if (estimateError) {
+    return NextResponse.json({ error: `[estimate-lookup] query error: ${estimateError.message}` }, { status: 500 });
+  }
+  if (!estimate) {
+    return NextResponse.json({ error: `[estimate-lookup] no row found for id=${id}` }, { status: 404 });
   }
 
   const {
