@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import { canWriteEstimates } from "@/lib/estimates/api";
 import {
@@ -87,7 +88,12 @@ export async function POST(
     return NextResponse.json({ error: "Access denied." }, { status: 403 });
   }
 
-  const { data: estimate, error: estimateError } = await supabase
+  const adminClient = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { data: estimate, error: estimateError } = await adminClient
     .from("estimates")
     .select("id, number, name, body, linked_project_id")
     .eq("id", id)
@@ -201,7 +207,7 @@ export async function POST(
     sharepointItemId: folderItemId,
   };
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await adminClient
     .from("estimates")
     .update({ body: updatedBody, updated_at: new Date().toISOString() })
     .eq("id", id);
