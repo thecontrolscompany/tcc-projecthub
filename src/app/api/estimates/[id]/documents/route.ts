@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import {
   canReadEstimates,
@@ -128,8 +129,12 @@ async function requireWriteAccess(): Promise<EstimateAuth | Response> {
   return auth;
 }
 
-async function resolveEstimateRecord(supabase: Awaited<ReturnType<typeof createClient>>, estimateId: string) {
-  const { data, error } = await supabase.from("estimates").select(ESTIMATE_SELECT).eq("id", estimateId).single();
+async function resolveEstimateRecord(_supabase: Awaited<ReturnType<typeof createClient>>, estimateId: string) {
+  const adminClient = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+  const { data, error } = await adminClient.from("estimates").select(ESTIMATE_SELECT).eq("id", estimateId).single();
   if (error) throw error;
   return data as {
     id: string;
