@@ -88,7 +88,7 @@ function getEstimateCustomer(body: Record<string, unknown>) {
 
 function getEstimateFolderName(estimate: { id: string; number: string | null; name: string; body: Record<string, unknown> }) {
   const estimateLabel = estimate.number?.trim()
-    ? `EST-${sanitizeSegment(estimate.number)}`
+    ? `EST-${sanitizeSegment(estimate.number).replace(/^EST-/i, "")}`
     : `EST-${estimate.id.slice(0, 8).toUpperCase()}`;
   const customer = sanitizeSegment(getEstimateCustomer(estimate.body));
   const projectName = sanitizeSegment(estimate.name || "Untitled Estimate");

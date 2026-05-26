@@ -39,7 +39,7 @@ function buildEstimateFolderName(
   estimate: { number: string | null; name: string; customer: string; bidder?: string | null },
   estimateId: string,
 ) {
-  const estimateNumber = sanitizeFolderSegment(estimate.number || "");
+  const estimateNumber = sanitizeFolderSegment(estimate.number || "").replace(/^EST-/i, "");
   const estimateLabel = estimateNumber ? `EST-${estimateNumber}` : `EST-${estimateId.slice(0, 8).toUpperCase()}`;
   const projectName = sanitizeFolderSegment(estimate.name || "Untitled Estimate");
   const bidder = sanitizeFolderSegment(estimate.bidder || "");
