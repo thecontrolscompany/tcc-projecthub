@@ -21,7 +21,7 @@ import {
   fmtAuditDate,
   getItemDetails,
 } from "./estimateCalc.js";
-export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = false, showProjectSettings = true, showBidAlternates = true }) {
+export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = false, showProjectSettings = true, showBidAlternates = true, platformEstimateId = null }) {
   const { subPage, setSubPage, applyDefaultInstallType } = useEstimate();
   const isMobile = useIsMobile();
   const [editHeader, setEditHeader] = useState(false);
@@ -129,7 +129,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
   const [exporting, setExporting] = useState(false);
 
   async function uploadGeneratedToSharePoint(blob, fileName, documentRole) {
-    const estimateId = estimate.id || estimate.body?.estimateId;
+    const estimateId = platformEstimateId || estimate.id || estimate.body?.estimateId;
     if (!estimateId) return;
     try {
       const prepRes = await fetch(`/api/estimates/${estimateId}/documents`, {
@@ -442,7 +442,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
           settings={settings}
           onChange={updateSettings}
           onClose={() => setShowProposalDetails(false)}
-          estimateId={estimate.id}
+          estimateId={platformEstimateId || estimate.id}
           sharepointFolder={sharepointFolder}
           drawingBasis={drawingBasis}
           onChangeDrawingBasis={(value) => updateSettings({ drawingBasis: value })}

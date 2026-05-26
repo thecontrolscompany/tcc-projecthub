@@ -23,6 +23,7 @@ import SelectionWizardPage from "../selectionWizard";
  * @property {(() => import("react").ReactNode) | null} [renderBidAlternateEditor]
  * @property {boolean} [showProjectSettings]
  * @property {boolean} [showBidAlternates]
+ * @property {string | null} [platformEstimateId]
  */
 
 /**
@@ -36,6 +37,7 @@ export function EstimateEditorWorkspace({
   renderBidAlternateEditor = null,
   showProjectSettings = false,
   showBidAlternates = false,
+  platformEstimateId = null,
 }) {
   const { subPage, setSubPage } = useEstimate();
 
@@ -88,6 +90,7 @@ export function EstimateEditorWorkspace({
               onUpdate={onUpdate}
               showProjectSettings={showProjectSettings}
               showBidAlternates={showBidAlternates}
+              platformEstimateId={platformEstimateId}
             />
           );
         default:
@@ -98,6 +101,7 @@ export function EstimateEditorWorkspace({
               onUpdate={onUpdate}
               showProjectSettings={showProjectSettings}
               showBidAlternates={showBidAlternates}
+              platformEstimateId={platformEstimateId}
             />
           );
       }
@@ -117,6 +121,7 @@ export function EstimateEditorWorkspace({
       onUpdate={onUpdate}
       showProjectSettings={showProjectSettings}
       showBidAlternates={showBidAlternates}
+      platformEstimateId={platformEstimateId}
     />
   );
 }

@@ -757,6 +757,7 @@ export function EstimateDetailClient({ estimate }: Props) {
             onBack={() => {
               window.location.href = "/estimating";
             }}
+            platformEstimateId={estimate.id}
           />
           <AiTakeoffModal
             open={showAiParser}
@@ -1335,10 +1336,12 @@ function LegacyEstimatorWorkspace({
   estimate,
   onUpdate,
   onBack,
+  platformEstimateId,
 }: {
   estimate: EstimateBody;
   onUpdate: (patch: Partial<EstimateBody>) => void;
   onBack: () => void;
+  platformEstimateId: string;
 }) {
   const { subPage, setSubPage } = useEstimate() as unknown as {
     subPage?: { type?: string; alternateId?: string } | null;
@@ -1408,6 +1411,7 @@ function LegacyEstimatorWorkspace({
       renderBidAlternateEditor={() => <BidAlternateEditor estimate={estimate} onBack={() => setSubPage(null)} onUpdate={onUpdate} alternateId={subPage?.alternateId} />}
       showProjectSettings={true}
       showBidAlternates={true}
+      platformEstimateId={platformEstimateId}
     />
   );
 }
