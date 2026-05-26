@@ -323,10 +323,7 @@ export function EstimatingListClient() {
               {name}
             </Link>
           </div>
-          <div className="mt-0.5 text-xs text-text-tertiary">
-            {number || estimate.id.slice(0, 8)}
-            {bidder && <span className="ml-2 text-text-tertiary">· {bidder}</span>}
-          </div>
+          <div className="mt-0.5 text-xs text-text-tertiary">{number || estimate.id.slice(0, 8)}</div>
         </td>
         <td className="px-4 py-3 text-text-secondary">{bidder || customer || "-"}</td>
         <td className="px-4 py-3">
