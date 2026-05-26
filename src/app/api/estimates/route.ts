@@ -55,8 +55,7 @@ function buildEstimateFolderName(
     return `${[estimateLabel, projectName].filter(Boolean).join(" - ")}/${bidder}`;
   }
 
-  const customer = sanitizeFolderSegment(estimate.customer || "");
-  return [estimateLabel, customer, projectName].filter(Boolean).join(" - ");
+  return [estimateLabel, projectName].filter(Boolean).join(" - ");
 }
 
 async function ensureSharePointFolderPath(

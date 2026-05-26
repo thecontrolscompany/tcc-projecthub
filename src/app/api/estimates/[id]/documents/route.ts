@@ -90,9 +90,8 @@ function getEstimateFolderName(estimate: { id: string; number: string | null; na
   const estimateLabel = estimate.number?.trim()
     ? `EST-${sanitizeSegment(estimate.number).replace(/^EST-/i, "")}`
     : `EST-${estimate.id.slice(0, 8).toUpperCase()}`;
-  const customer = sanitizeSegment(getEstimateCustomer(estimate.body));
   const projectName = sanitizeSegment(estimate.name || "Untitled Estimate");
-  return [estimateLabel, customer, projectName].filter(Boolean).join(" - ");
+  return [estimateLabel, projectName].filter(Boolean).join(" - ");
 }
 
 async function getAuth(): Promise<EstimateAuth | { error: Response }> {
