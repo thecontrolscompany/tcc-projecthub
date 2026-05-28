@@ -24,7 +24,10 @@ const DEFAULT_WEIGHTS = new Map([
 ]);
 
 const ASSEMBLY_ALIASES = [
-  // Controllers / enclosures — FCU/VAV level
+  // Controllers — VAV/VMA specific (60092 EMT / 60036 Plenum)
+  { id: "60092", aliases: ["vav controller", "vma controller", "vav vma controller", "vav controller package", "vav ddc controller", "cvm controller", "vma ddc controller", "vav unit controller"] },
+  // Controllers — FCU specific (60090 EMT / 60034 Plenum)
+  { id: "60090", aliases: ["fcu controller", "fan coil controller", "fcu ddc controller", "fan coil unit controller", "fcu unit controller"] },
   { id: "60034", aliases: ["fcu controller package", "vav dxr controller", "dxr equipment controller", "dxr controller package"] },
   // Controllers / enclosures — small to average (AHU panel, BAS panel, field enclosure)
   { id: "60087", aliases: ["small controller xfmr", "small enclosure controller xfmr", "field mount controller xfmr", "controller with ups", "enclosure small controller xfmr", "average controller xfmr", "average enclosure controller xfmr", "controller enclosure average", "medium controller xfmr", "enclosure average controller xfmr", "pxc control panel", "ahu control panel", "bas control panel", "pxc panel"] },
@@ -33,8 +36,10 @@ const ASSEMBLY_ALIASES = [
   // Temperature sensors — room
   { id: "60032", aliases: ["temp sensor room bacnet", "room temp sensor bacnet", "zone temperature sensor", "room temperature sensor", "wall temperature sensor", "space temperature sensor", "space temp sensor"] },
   { id: "60163", aliases: ["temp sensor room net stat", "room temp sensor", "zone temp sensor", "stat sensor"] },
-  // Temperature sensors — duct / immersion
-  { id: "60073", aliases: ["duct temp", "temp sensor duct", "duct temperature sensor", "discharge air temp", "leaving air temp", "sa duct temp", "oa duct temp", "ma temp", "mixed air temp", "preheat leaving air temp", "cooling leaving air temp", "reheat leaving air temp", "duct temperature"] },
+  // Temperature sensors — VAV/FCU discharge air (60093 EMT / 60037 Plenum)
+  { id: "60093", aliases: ["discharge air temp", "discharge air temperature sensor", "da temp sensor", "vav discharge air temp", "fcu discharge air temp", "vav da temp", "supply air temp sensor unit"] },
+  // Temperature sensors — duct (AHU/RTU applications; NOT for VAV/FCU discharge air)
+  { id: "60073", aliases: ["duct temp", "temp sensor duct", "duct temperature sensor", "leaving air temp", "sa duct temp", "oa duct temp", "ma temp", "mixed air temp", "preheat leaving air temp", "cooling leaving air temp", "reheat leaving air temp", "duct temperature"] },
   { id: "60076", aliases: ["well temp sensor", "welltmpsensor", "temp sensor immersion", "immersion temperature sensor", "immersion temp", "hwr immersion temp", "chwr immersion temp", "hot water immersion", "chilled water immersion"] },
   // Humidity + temp
   { id: "60064", aliases: ["humtemp duct", "hum temp duct", "duct temp humidity", "duct humidity temp", "ra temp rh", "ra duct temp humidity", "temp rh duct", "duct temp rh sensor", "humidity duct"] },
@@ -48,8 +53,10 @@ const ASSEMBLY_ALIASES = [
   { id: "60057", aliases: ["air flow stn", "air flow station", "afms", "airflow measurement station", "oa air flow measurement", "airflow station"] },
   // Water flow
   { id: "60152", aliases: ["insertion flow meter", "flow meter", "water flow meter"] },
-  // Valve actuators
-  { id: "60077", aliases: ["valve actuator", "valveactuator", "control valve actuator", "heating coil control valve", "bypass control valve", "picv control", "2 way valve", "2way valve", "hot water valve", "cooling valve", "heating valve", "reheat valve", "preheat valve"] },
+  // Valve actuators — reheat coil (VAV/FCU, 60081 EMT / 60033 Plenum)
+  { id: "60081", aliases: ["reheat valve", "heating coil control valve", "vav reheat valve", "hot water reheat valve", "hw reheat valve", "proportional reheat valve", "modulating reheat valve", "hw heating coil valve", "reheat valve actuator", "fcu heating valve"] },
+  // Valve actuators — generic (AHU coils, bypass, PICV, plant-level)
+  { id: "60077", aliases: ["valve actuator", "valveactuator", "control valve actuator", "bypass control valve", "picv control", "2 way valve", "2way valve", "hot water valve", "cooling valve", "heating valve", "preheat valve", "chw valve", "hw bypass valve", "ahu heating valve", "ahu cooling valve"] },
   { id: "60079", aliases: ["zone valve actuator", "zone valve act", "zone valve actuator and valve"] },
   // Damper actuators
   { id: "60069", aliases: ["dmpr actuator", "damper actuator", "modulating damper actuator", "motorized damper actuator", "2 position damper", "damper open close", "oa damper", "ra damper actuator", "sa damper actuator", "gravity ventilator damper"] },
@@ -66,6 +73,8 @@ const ASSEMBLY_ALIASES = [
   { id: "60131", aliases: ["pump start stop status", "pump controller", "pump status", "pump start stop"] },
   // Interlock
   { id: "60123", aliases: ["hardwire interlock", "interlock relay", "interlock wiring", "smoke damper interlock relay", "smoke damper interlock"] },
+  // Current switch / fan or motor proof
+  { id: "60061", aliases: ["zone current switch relay", "current switch relay", "fan current switch", "motor current switch", "current switch status", "current switch proof", "current switch with relay"] },
   // Control / status monitoring (PBO devices, BACnet third-party integrations)
   { id: "60122", aliases: ["control status", "status monitoring", "di monitoring", "status point", "pbo status", "bacnet integration", "system controller integration", "unit controller integration", "heater controller integration", "pump controller integration", "system integration bacnet", "lighting control integration", "gas detection integration", "electric meter integration", "dhw system integration", "energy valve integration", "belimo energy valve"] },
   // Transformer
