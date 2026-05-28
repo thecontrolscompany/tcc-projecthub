@@ -14,6 +14,7 @@ const ADMIN_SECTIONS = [
     title: "System Tools",
     description: "Behind-the-curtain maintenance for data, integrations, and project infrastructure.",
     links: [
+      { href: "/ops", label: "Manage Projects" },
       { href: "/admin/migrate-sharepoint", label: "SharePoint Migration" },
       { href: "/admin/analytics", label: "System Analytics" },
       { href: "/admin/user-activity", label: "User Activity" },

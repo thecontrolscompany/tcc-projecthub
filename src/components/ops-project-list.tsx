@@ -97,6 +97,9 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
   const [loadingUpdatesFor, setLoadingUpdatesFor] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<ProjectEditorRow | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [isNewProjectFlow, setIsNewProjectFlow] = useState(false);
+  const [isWaitingForSharePointFolder, setIsWaitingForSharePointFolder] = useState(false);
+  const [jobNumberPreview, setJobNumberPreview] = useState("");
   const [saving, setSaving] = useState(false);
   const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
@@ -205,6 +208,9 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
   function resetModal() {
     setShowModal(false);
     setSelectedProject(null);
+    setIsNewProjectFlow(false);
+    setIsWaitingForSharePointFolder(false);
+    setJobNumberPreview("");
     setLoadingProjectId(null);
     setModalError(null);
     setSaveError(null);
@@ -214,6 +220,35 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
     setPendingRoleOnProject("pm");
     setPrimaryPersonId(null);
     setValidationErrors({});
+  }
+
+  async function getNextJobNumber() {
+    const year = new Date().getFullYear();
+    const { data } = await supabase
+      .from("projects")
+      .select("job_number")
+      .like("job_number", `${year}-%`)
+      .order("job_number", { ascending: false })
+      .limit(1);
+    const last = data?.[0]?.job_number ?? `${year}-000`;
+    const sequence = Number(last.split("-")[1] ?? "0") + 1;
+    return `${year}-${String(sequence).padStart(3, "0")}`;
+  }
+
+  async function openNewProjectModal() {
+    const nextJobNumber = await getNextJobNumber();
+    setSelectedProject(null);
+    setIsNewProjectFlow(true);
+    setIsWaitingForSharePointFolder(false);
+    setFormValues(EMPTY_PROJECT_FORM);
+    setAssignments([]);
+    setPendingTeamMemberId("");
+    setPendingRoleOnProject("pm");
+    setPrimaryPersonId(null);
+    setValidationErrors({});
+    setSaveError(null);
+    setJobNumberPreview(nextJobNumber);
+    setShowModal(true);
   }
 
   function updateFormValue<K extends keyof ProjectFormValues>(field: K, value: ProjectFormValues[K]) {
@@ -316,6 +351,8 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
 
       const project = normalizeProject(json.project as Record<string, unknown>);
       setSelectedProject(project);
+      setJobNumberPreview(project.job_number ?? "");
+      setIsNewProjectFlow(false);
       setFormValues({
         projectName: project.name.startsWith(`${project.job_number} - `) && project.job_number
           ? project.name.slice(project.job_number.length + 3)
@@ -384,8 +421,6 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
   }
 
   async function handleSaveProject() {
-    if (!selectedProject) return;
-
     const errors: ProjectFormErrors = {};
     if (!formValues.projectName.trim()) errors.projectName = "Project name is required";
     if (formValues.useNewCustomer) {
@@ -418,15 +453,17 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
         })
         .filter(Boolean);
 
-      const prevContractPrice = selectedProject.contract_price ?? selectedProject.estimated_income ?? null;
+      const prevContractPrice = selectedProject
+        ? (selectedProject.contract_price ?? selectedProject.estimated_income ?? null)
+        : null;
 
       const response = await fetch("/api/admin/save-project", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          projectId: selectedProject.id,
-          jobNumberPreview: selectedProject.job_number ?? "",
+          projectId: selectedProject?.id ?? null,
+          jobNumberPreview,
           prevContractPrice,
           formValues,
           resolvedAssignments,
@@ -436,6 +473,21 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
 
       if (!response.ok) {
         throw new Error(json?.error ?? "Save failed.");
+      }
+
+      if (!selectedProject) {
+        const newProjectId: string = json.projectId;
+        const newJobNumber: string = json.jobNumber ?? jobNumberPreview;
+        setIsWaitingForSharePointFolder(true);
+        fetch("/api/admin/provision-project-folder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            projectId: newProjectId,
+            jobNumber: newJobNumber,
+            projectName: formValues.projectName.trim(),
+          }),
+        }).catch((err) => console.error("Project folder provisioning failed", err));
       }
 
       resetModal();
@@ -557,51 +609,60 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => setViewMode("grouped")}
-            className={[
-              "rounded-lg px-4 py-2 text-sm font-medium transition",
-              viewMode === "grouped"
-                ? "bg-surface-overlay text-text-primary shadow-sm"
-                : "text-text-secondary hover:bg-surface-overlay/70 hover:text-text-primary",
-            ].join(" ")}
+            onClick={() => void openNewProjectModal()}
+            className="rounded-xl bg-brand-primary px-4 py-1.5 text-sm font-semibold text-text-inverse hover:bg-brand-hover"
           >
-            By PM
+            + New Project
           </button>
-          <button
-            onClick={() => setViewMode("all")}
-            className={[
-              "rounded-lg px-4 py-2 text-sm font-medium transition",
-              viewMode === "all"
-                ? "bg-surface-overlay text-text-primary shadow-sm"
-                : "text-text-secondary hover:bg-surface-overlay/70 hover:text-text-primary",
-            ].join(" ")}
-          >
-            By Project
-          </button>
-          <button
-            onClick={() => setViewMode("by-customer")}
-            className={[
-              "rounded-lg px-4 py-2 text-sm font-medium transition",
-              viewMode === "by-customer"
-                ? "bg-surface-overlay text-text-primary shadow-sm"
-                : "text-text-secondary hover:bg-surface-overlay/70 hover:text-text-primary",
-            ].join(" ")}
-          >
-            By Customer
-          </button>
-          <button
-            onClick={() => setViewMode("customer-access")}
-            className={[
-              "rounded-lg px-4 py-2 text-sm font-medium transition",
-              viewMode === "customer-access"
-                ? "bg-surface-overlay text-text-primary shadow-sm"
-                : "text-text-secondary hover:bg-surface-overlay/70 hover:text-text-primary",
-            ].join(" ")}
-          >
-            Customer Access
-          </button>
+          <div className="h-5 w-px bg-border-default" />
+          <div className="flex gap-2">
+            <button
+              onClick={() => setViewMode("grouped")}
+              className={[
+                "rounded-lg px-4 py-2 text-sm font-medium transition",
+                viewMode === "grouped"
+                  ? "bg-surface-overlay text-text-primary shadow-sm"
+                  : "text-text-secondary hover:bg-surface-overlay/70 hover:text-text-primary",
+              ].join(" ")}
+            >
+              By PM
+            </button>
+            <button
+              onClick={() => setViewMode("all")}
+              className={[
+                "rounded-lg px-4 py-2 text-sm font-medium transition",
+                viewMode === "all"
+                  ? "bg-surface-overlay text-text-primary shadow-sm"
+                  : "text-text-secondary hover:bg-surface-overlay/70 hover:text-text-primary",
+              ].join(" ")}
+            >
+              By Project
+            </button>
+            <button
+              onClick={() => setViewMode("by-customer")}
+              className={[
+                "rounded-lg px-4 py-2 text-sm font-medium transition",
+                viewMode === "by-customer"
+                  ? "bg-surface-overlay text-text-primary shadow-sm"
+                  : "text-text-secondary hover:bg-surface-overlay/70 hover:text-text-primary",
+              ].join(" ")}
+            >
+              By Customer
+            </button>
+            <button
+              onClick={() => setViewMode("customer-access")}
+              className={[
+                "rounded-lg px-4 py-2 text-sm font-medium transition",
+                viewMode === "customer-access"
+                  ? "bg-surface-overlay text-text-primary shadow-sm"
+                  : "text-text-secondary hover:bg-surface-overlay/70 hover:text-text-primary",
+              ].join(" ")}
+            >
+              Customer Access
+            </button>
+          </div>
         </div>
         {viewMode !== "customer-access" && (
           <label className="inline-flex items-center gap-2 text-sm text-text-secondary">
@@ -883,10 +944,10 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
         </div>
       )}
 
-      {showModal && selectedProject && (
+      {showModal && (
         <ProjectModal
           editingProject={selectedProject}
-          jobNumberPreview={selectedProject.job_number ?? ""}
+          jobNumberPreview={jobNumberPreview}
           customers={customers}
           teamMemberOptions={teamMemberOptions}
           externalContacts={externalContacts}
@@ -906,8 +967,8 @@ export function OpsProjectList({ projects, portalCustomerIds }: { projects: OpsP
           onAddAssignment={addAssignment}
           onRemoveAssignment={removeAssignment}
           onSave={handleSaveProject}
-          isNewProjectFlow={false}
-          isWaitingForSharePointFolder={false}
+          isNewProjectFlow={isNewProjectFlow}
+          isWaitingForSharePointFolder={isWaitingForSharePointFolder}
         />
       )}
     </div>
