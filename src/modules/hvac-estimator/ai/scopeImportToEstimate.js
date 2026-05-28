@@ -1,17 +1,33 @@
 import { getCustomComponentOptions } from "../shared/componentCatalog.js";
 import { resolveAssemblyCatalogMatch, describeAssemblyResolution } from "./assemblyResolver.js";
-import { normalizeAhuCfg, applyAhuDefaultSelections } from "../components/ahu/ahuData.js";
-import { normalizeDxCfg, applyDxDefaultSelections } from "../components/dx/dxData.js";
-import { normalizeFcuCfg, applyFcuDefaultSelections } from "../components/fcu/fcuData.js";
-import { normalizeRtuCfg, applyRtuDefaultSelections } from "../components/rtu/rtuData.js";
-import { normalizeUhCfg, applyUhDefaultSelections } from "../components/uh/uhData.js";
-import { normalizeVavCfg, applyVavDefaultSelections } from "../components/vav/vavData.js";
-import { normalizeVrfCfg, buildDefaultVrfSelected } from "../components/vrf/vrfData.js";
+import { normalizeAhuCfg, applyAhuDefaultSelections, getVisibleAhuComponents } from "../components/ahu/ahuData.js";
+import { normalizeDxCfg, applyDxDefaultSelections, getVisibleDxComponents } from "../components/dx/dxData.js";
+import { normalizeFcuCfg, applyFcuDefaultSelections, getVisibleFcuComponents } from "../components/fcu/fcuData.js";
+import { normalizeRtuCfg, applyRtuDefaultSelections, getVisibleRtuComponents } from "../components/rtu/rtuData.js";
+import { normalizeUhCfg, applyUhDefaultSelections, getVisibleUhComponents } from "../components/uh/uhData.js";
+import { normalizeVavCfg, applyVavDefaultSelections, getVisibleVavComponents } from "../components/vav/vavData.js";
+import { normalizeVrfCfg, buildDefaultVrfSelected, getVisibleVrfComponents } from "../components/vrf/vrfData.js";
 import { PLANT_COMPS } from "../components/plant/plantData.js";
 import { NETWORK_COMPS } from "../components/network/networkData.js";
 import { EXHAUST_FAN_COMPS } from "../components/exhaustFan/exhaustFanData.js";
 
 const CUSTOM_COMPONENT_OPTIONS = getCustomComponentOptions();
+
+function getVisibleCompsForType(type, cfg) {
+  switch (type) {
+    case "vav": return getVisibleVavComponents(cfg);
+    case "ahu": return getVisibleAhuComponents(cfg);
+    case "rtu": return getVisibleRtuComponents(cfg);
+    case "dx": return getVisibleDxComponents(cfg);
+    case "fcu": return getVisibleFcuComponents(cfg);
+    case "uh": return getVisibleUhComponents(cfg);
+    case "vrf": return getVisibleVrfComponents(cfg);
+    case "network": return NETWORK_COMPS;
+    case "exhaust-fan": return EXHAUST_FAN_COMPS;
+    default: return [];
+  }
+}
+
 const SUPPORTED_TYPES = [
   "ahu",
   "vav",
@@ -331,14 +347,30 @@ function buildImportedEstimateItem(system, index, installType) {
   const systemQty = Math.max(1, asNumber(system.qty, 1));
   const hasAiPoints = points.length > 0;
 
-  // When the AI provides explicit points, start with no default selections so
-  // AI assemblies drive the estimate without duplicating template defaults.
-  // For systems with no AI points, fall back to defaults so the item isn't empty.
-  const selected = hasAiPoints
+  const baseSelected = hasAiPoints
     ? []
     : type === "plant"
       ? getImportedPlantSelections(plantType)
       : getDefaultSelectedForType(type, cfg);
+
+  // Map of standard component IDs for this equipment type so resolved assemblies
+  // land in selected[] (priced as catalog items) rather than custom[].
+  const standardCompIds = new Set(getVisibleCompsForType(type, cfg).map((c) => String(c.id)));
+  const selectedIds = new Set(baseSelected.map((s) => String(s.id)));
+  const additionalSelected = [];
+  const customEntries = [];
+
+  for (const point of points) {
+    for (const entry of buildImportedPointCustomEntries(point, selectedIds, systemQty)) {
+      const resolvedId = entry.emtAID ? String(entry.emtAID) : "";
+      if (resolvedId && standardCompIds.has(resolvedId) && !selectedIds.has(resolvedId)) {
+        additionalSelected.push({ id: resolvedId, qty: entry.qty });
+        selectedIds.add(resolvedId);
+      } else {
+        customEntries.push(entry);
+      }
+    }
+  }
 
   return {
     id: crypto.randomUUID(),
@@ -347,8 +379,8 @@ function buildImportedEstimateItem(system, index, installType) {
     location: asString(system.location).trim(),
     qty: systemQty,
     installType,
-    selected,
-    custom: points.flatMap((point) => buildImportedPointCustomEntries(point, new Set(), systemQty)),
+    selected: [...baseSelected, ...additionalSelected],
+    custom: customEntries,
     priceSnap: {},
     cfg: {
       ...cfg,

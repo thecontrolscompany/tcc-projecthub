@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { T, CAT_COLOR } from "../../shared/tokens.js";
 import { fmt$, fmtHr } from "../../shared/utils.js";
 import { AssemblyPickerModal } from "../../shared/AssemblyPickerModal.jsx";
@@ -860,8 +860,10 @@ export default function AHUPage() {
     [cfg]
   );
 
+  const reconcileRanOnce = useRef(false);
   useEffect(() => {
     if (!cfg) return;
+    if (!reconcileRanOnce.current) { reconcileRanOnce.current = true; return; }
     setSel(current => reconcileAhuSelected(current, cfg, { components: visibleComponents, blockedIds }));
   }, [cfg, visibleComponents, blockedIds]);
 

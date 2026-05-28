@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { T, CAT_COLOR } from "./tokens.js";
 import { fmt$, fmtHr } from "./utils.js";
 import { AddToEstimateBtn } from "./AddToEstimateBtn.jsx";
@@ -90,8 +90,12 @@ export function UnitEditorPage({
     if (typeof draft.location === "string") setLoc(draft.location);
   }, [editingItem?.id, subPage, type]);
 
+  const reconcileRanOnce = useRef(false);
   useEffect(() => {
     if (!reconcileSelected) return;
+    // Skip first run — useState initializer already set up the correct state.
+    // Subsequent runs handle cfg-driven visibility changes (e.g. changing equipment subtype).
+    if (!reconcileRanOnce.current) { reconcileRanOnce.current = true; return; }
     setSel(list => reconcileSelected(list, comps, cfg));
   }, [cfg, comps]);
 
