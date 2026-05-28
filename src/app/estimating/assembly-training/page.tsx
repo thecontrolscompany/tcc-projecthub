@@ -10,6 +10,8 @@ import { DX_COMPS } from "@/modules/hvac-estimator/components/dx/dxData";
 import { VRF_COMPS } from "@/modules/hvac-estimator/components/vrf/vrfData";
 import { NETWORK_COMPS } from "@/modules/hvac-estimator/components/network/networkData";
 import { EXHAUST_FAN_COMPS } from "@/modules/hvac-estimator/components/exhaustFan/exhaustFanData";
+import { PLANT_COMPS } from "@/modules/hvac-estimator/components/plant/plantData";
+import { ASSEMBLIES } from "@/modules/hvac-estimator/shared/assemblyData";
 import { resolveAssemblyCatalogMatch } from "@/modules/hvac-estimator/ai/assemblyResolver";
 import { AssemblyTrainingClient } from "./assembly-training-client";
 
@@ -25,6 +27,7 @@ export type CatalogOption = {
 };
 
 export type ResolverResult = { id: string; name: string; matchedBy: string } | null;
+export type AllAssemblyOption = { id: string; name: string };
 
 type RawComp = { id: string; emtAID?: unknown; plnAID?: unknown; name?: unknown; cat?: unknown; hidden?: boolean };
 
@@ -68,6 +71,20 @@ export default async function AssemblyTrainingPage() {
   const organizationId = typeof defaultOrgId === "string" ? defaultOrgId : null;
 
   const asRaw = (arr: unknown) => arr as RawComp[];
+
+  // Flatten all plant sub-arrays into one list
+  const plantCompsFlat = asRaw(
+    Object.values(PLANT_COMPS as Record<string, unknown[]>).flat()
+  );
+  // Deduplicate plant comps by emtAID (same sensor appears across plant types)
+  const plantSeen = new Set<string>();
+  const plantCompsDeduped = plantCompsFlat.filter((c) => {
+    const key = String(c.emtAID ?? "");
+    if (!key || plantSeen.has(key)) return false;
+    plantSeen.add(key);
+    return true;
+  });
+
   const catalogByType: Record<string, CatalogOption[]> = {
     vav: buildOptions(asRaw(VAV_COMPS), "vav"),
     ahu: buildOptions(asRaw(AHU_COMPS), "ahu"),
@@ -78,11 +95,20 @@ export default async function AssemblyTrainingPage() {
     vrf: buildOptions(asRaw(VRF_COMPS), "vrf"),
     network: buildOptions(asRaw(NETWORK_COMPS), "network"),
     "exhaust-fan": buildOptions(asRaw(EXHAUST_FAN_COMPS), "exhaust-fan"),
+    plant: buildOptions(plantCompsDeduped, "plant"),
   };
+
+  // Full ASSEMBLIES catalog for the "All Assemblies" dropdown group
+  const assemblies = ASSEMBLIES as Record<string, { id?: unknown; name?: unknown }>;
+  const allAssemblies: AllAssemblyOption[] = Object.values(assemblies)
+    .filter((a) => a && a.id && a.name)
+    .map((a) => ({ id: String(a.id), name: String(a.name) }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <AssemblyTrainingClient
       catalogByType={catalogByType}
+      allAssemblies={allAssemblies}
       organizationId={organizationId ?? ""}
       resolveAssembly={resolveAssemblyAction}
       resolveAllAssemblies={resolveAllAssembliesAction}

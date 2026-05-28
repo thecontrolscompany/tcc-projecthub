@@ -40,7 +40,8 @@ const ASSEMBLY_ALIASES = [
   { id: "60093", aliases: ["discharge air temp", "discharge air temperature sensor", "da temp sensor", "vav discharge air temp", "fcu discharge air temp", "vav da temp", "supply air temp sensor unit"] },
   // Temperature sensors — duct (AHU/RTU applications; NOT for VAV/FCU discharge air)
   { id: "60073", aliases: ["duct temp", "temp sensor duct", "duct temperature sensor", "leaving air temp", "sa duct temp", "oa duct temp", "ma temp", "mixed air temp", "preheat leaving air temp", "cooling leaving air temp", "reheat leaving air temp", "duct temperature"] },
-  { id: "60076", aliases: ["well temp sensor", "welltmpsensor", "temp sensor immersion", "immersion temperature sensor", "immersion temp", "hwr immersion temp", "chwr immersion temp", "hot water immersion", "chilled water immersion"] },
+  { id: "60078", aliases: ["well temp sensor", "welltmpsensor", "temp sensor immersion", "immersion temperature sensor", "immersion temp", "hwr immersion temp", "chwr immersion temp", "hot water immersion", "chilled water immersion"] },
+  { id: "60076", aliases: ["well temp sensor short", "immersion temp short run"] },
   // Humidity + temp
   { id: "60064", aliases: ["humtemp duct", "hum temp duct", "duct temp humidity", "duct humidity temp", "ra temp rh", "ra duct temp humidity", "temp rh duct", "duct temp rh sensor", "humidity duct"] },
   { id: "60065", aliases: ["humtemp room", "hum temp room", "room temp humidity", "space temp rh"] },

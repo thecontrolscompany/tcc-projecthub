@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import type { CatalogOption, ResolverResult } from "./page";
+import type { AllAssemblyOption, CatalogOption, ResolverResult } from "./page";
 
 const STORAGE_KEY = "hvac-estimator-assembly-training-v1";
 
@@ -80,12 +80,13 @@ function savePairs(pairs: TrainingPair[]) {
 
 type Props = {
   catalogByType: Record<string, CatalogOption[]>;
+  allAssemblies: AllAssemblyOption[];
   organizationId: string;
   resolveAssembly: (sourceText: string, equipmentType: string) => Promise<ResolverResult>;
   resolveAllAssemblies: (assemblies: { sourceText: string; equipmentType: string }[]) => Promise<ResolverResult[]>;
 };
 
-export function AssemblyTrainingClient({ catalogByType, organizationId, resolveAssembly, resolveAllAssemblies }: Props) {
+export function AssemblyTrainingClient({ catalogByType, allAssemblies, organizationId, resolveAssembly, resolveAllAssemblies }: Props) {
   // ---- Single resolver tester ----
   const [testText, setTestText] = useState("");
   const [testType, setTestType] = useState("vav");
@@ -442,6 +443,7 @@ export function AssemblyTrainingClient({ catalogByType, organizationId, resolveA
                     onChange: (v: string) => void,
                     grouped: { type: string; options: { value: string; label: string }[] }[],
                     mismatch: boolean,
+                    isEmt: boolean,
                   ) => (
                     <select
                       value={value}
@@ -456,6 +458,11 @@ export function AssemblyTrainingClient({ catalogByType, organizationId, resolveA
                           ))}
                         </optgroup>
                       ))}
+                      <optgroup label="── ALL ASSEMBLIES ──">
+                        {allAssemblies.map((a) => (
+                          <option key={a.id} value={a.id}>[{a.id}] {a.name}{isEmt ? "" : " (PLN)"}</option>
+                        ))}
+                      </optgroup>
                     </select>
                   );
 
@@ -477,10 +484,10 @@ export function AssemblyTrainingClient({ catalogByType, organizationId, resolveA
                         )}
                       </td>
                       <td className="px-4 py-2.5 min-w-[200px]">
-                        {makeSelect(row.overrideEmtId, (v) => updateRowEmtOverride(row.rowId, v), emtGrouped, !!emtMismatch)}
+                        {makeSelect(row.overrideEmtId, (v) => updateRowEmtOverride(row.rowId, v), emtGrouped, !!emtMismatch, true)}
                       </td>
                       <td className="px-4 py-2.5 min-w-[200px]">
-                        {makeSelect(row.overridePlnId, (v) => updateRowPlnOverride(row.rowId, v), plnGrouped, !!plnMismatch)}
+                        {makeSelect(row.overridePlnId, (v) => updateRowPlnOverride(row.rowId, v), plnGrouped, !!plnMismatch, false)}
                       </td>
                     </tr>
                   );
