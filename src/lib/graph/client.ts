@@ -8,7 +8,7 @@
  *
  * Azure AD App Registration requirements:
  *   Redirect URI: {APP_URL}/auth/callback
- *   Scopes: openid email profile offline_access Files.ReadWrite Mail.ReadWrite
+ *   Scopes: openid email profile offline_access Files.ReadWrite Mail.ReadWrite Sites.ReadWrite.All
  */
 
 const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
@@ -141,7 +141,15 @@ export async function getSharePointSiteId(providerToken: string): Promise<string
   const res = await graphFetch("/sites/controlsco.sharepoint.com:/sites/TCCProjects", providerToken);
 
   if (!res.ok) {
-    throw new Error("SharePoint site not found at https://controlsco.sharepoint.com/sites/TCCProjects");
+    const body = await res.text().catch(() => "");
+    if (res.status === 403) {
+      throw new Error(
+        `SharePoint access denied (403). The Azure AD app may be missing admin consent for Sites.ReadWrite.All. Body: ${body}`
+      );
+    }
+    throw new Error(
+      `SharePoint site not found at https://controlsco.sharepoint.com/sites/TCCProjects (HTTP ${res.status}). Body: ${body}`
+    );
   }
 
   const data = await res.json();

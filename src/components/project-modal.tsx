@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { BomTab } from "@/components/bom-tab";
 import type { ProjectAssignmentRole } from "@/types/database";
 import { ROLE_LABELS, ROLE_BADGE_STYLES } from "@/lib/project/roles";
@@ -903,6 +904,19 @@ function SiteAddressInput({
   );
 }
 
+const MICROSOFT_AUTH_ERROR = "Microsoft sign-in required";
+
+async function reauthWithMicrosoft() {
+  const supabase = createClient();
+  await supabase.auth.signInWithOAuth({
+    provider: "azure",
+    options: {
+      scopes: "openid email profile offline_access Files.ReadWrite Mail.ReadWrite Sites.ReadWrite.All",
+      redirectTo: `${window.location.origin}/auth/callback`,
+    },
+  });
+}
+
 function ProjectDocumentUploads({
   project,
   isNewProjectFlow,
@@ -1088,6 +1102,17 @@ function ProjectDocumentUploads({
                   <a href={status.webUrl} target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">
                     {status.message}
                   </a>
+                ) : status.state === "error" && status.message.includes(MICROSOFT_AUTH_ERROR) ? (
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span>{status.message}</span>
+                    <button
+                      type="button"
+                      onClick={() => void reauthWithMicrosoft()}
+                      className="rounded-lg border border-status-danger/40 bg-status-danger/10 px-2.5 py-1 text-xs font-semibold text-status-danger transition hover:bg-status-danger/20"
+                    >
+                      Reauthenticate with Microsoft
+                    </button>
+                  </span>
                 ) : (
                   status.message
                 )}
