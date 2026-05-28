@@ -906,17 +906,6 @@ function SiteAddressInput({
 
 const MICROSOFT_AUTH_ERROR = "Microsoft sign-in required";
 
-async function reauthWithMicrosoft() {
-  const supabase = createClient();
-  await supabase.auth.signInWithOAuth({
-    provider: "azure",
-    options: {
-      scopes: "openid email profile offline_access Files.ReadWrite Mail.ReadWrite Sites.ReadWrite.All",
-      redirectTo: `${window.location.origin}/auth/callback`,
-    },
-  });
-}
-
 function ProjectDocumentUploads({
   project,
   isNewProjectFlow,
@@ -930,6 +919,7 @@ function ProjectDocumentUploads({
   sharepointProvisionFailed?: boolean;
   onRetryProvision?: () => void;
 }) {
+  const supabase = createClient();
   const [selectedFiles, setSelectedFiles] = useState<Record<DocumentType, File | null>>({
     contract: null,
     scope: null,
@@ -953,6 +943,19 @@ function ProjectDocumentUploads({
       estimate: { state: "idle", message: "No file selected" },
     });
   }, [project.id]);
+
+  async function reauthWithMicrosoft() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "azure",
+      options: {
+        scopes: "openid email profile offline_access Files.ReadWrite Mail.ReadWrite Sites.ReadWrite.All",
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    if (error) {
+      console.error("Microsoft reauth failed:", error.message);
+    }
+  }
 
   async function handleUpload(documentType: DocumentType) {
     const file = selectedFiles[documentType];
