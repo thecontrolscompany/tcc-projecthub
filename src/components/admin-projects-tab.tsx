@@ -137,6 +137,7 @@ export function AdminProjectsTab() {
   const [editingProject, setEditingProject] = useState<ProjectRow | null>(null);
   const [isNewProjectFlow, setIsNewProjectFlow] = useState(false);
   const [isWaitingForSharePointFolder, setIsWaitingForSharePointFolder] = useState(false);
+  const [sharepointProvisionFailed, setSharepointProvisionFailed] = useState(false);
   const [jobNumberPreview, setJobNumberPreview] = useState("");
   const [formValues, setFormValues] = useState<ProjectFormValues>(EMPTY_PROJECT_FORM);
   const [validationErrors, setValidationErrors] = useState<ProjectFormErrors>({});
@@ -239,6 +240,22 @@ export function AdminProjectsTab() {
     }
 
     setIsWaitingForSharePointFolder(false);
+    setSharepointProvisionFailed(true);
+  }
+
+  async function handleRetryProvision() {
+    const project = editingProject;
+    if (!project?.id || !project.job_number) return;
+    const projectName = project.name.startsWith(`${project.job_number} - `)
+      ? project.name.slice(project.job_number.length + 3)
+      : project.name;
+    setSharepointProvisionFailed(false);
+    fetch("/api/admin/provision-project-folder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projectId: project.id, jobNumber: project.job_number, projectName }),
+    }).catch((err) => console.error("Retry provision failed", err));
+    void pollForSharePointFolder(project.id);
   }
 
   async function getNextJobNumber() {
@@ -260,6 +277,7 @@ export function AdminProjectsTab() {
     setEditingProject(null);
     setIsNewProjectFlow(false);
     setIsWaitingForSharePointFolder(false);
+    setSharepointProvisionFailed(false);
     setFormValues(EMPTY_PROJECT_FORM);
     setValidationErrors({});
     setAssignments([]);
@@ -273,6 +291,7 @@ export function AdminProjectsTab() {
     setEditingProject(null);
     setIsNewProjectFlow(true);
     setIsWaitingForSharePointFolder(false);
+    setSharepointProvisionFailed(false);
     setFormValues(EMPTY_PROJECT_FORM);
     setAssignments([]);
     setPendingTeamMemberId("");
@@ -287,6 +306,7 @@ export function AdminProjectsTab() {
     setEditingProject(project);
     setIsNewProjectFlow(false);
     setIsWaitingForSharePointFolder(false);
+    setSharepointProvisionFailed(false);
     setJobNumberPreview(project.job_number ?? "");
     setFormValues({
       projectName: project.name.startsWith(`${project.job_number} - `) && project.job_number
@@ -573,6 +593,11 @@ export function AdminProjectsTab() {
                         Legacy
                       </span>
                     )}
+                    {!project.sharepoint_folder && project.migration_status !== "legacy" && (
+                      <span className="ml-2 inline-flex items-center rounded border border-status-danger/20 bg-status-danger/10 px-1.5 py-0.5 text-xs font-medium text-status-danger">
+                        No SP
+                      </span>
+                    )}
                   </td>
                   <td className="px-3 py-2 text-text-secondary">
                     <div>{project.customer?.name ?? "-"}</div>
@@ -630,6 +655,8 @@ export function AdminProjectsTab() {
           onSave={handleSaveProject}
           isNewProjectFlow={isNewProjectFlow}
           isWaitingForSharePointFolder={isWaitingForSharePointFolder}
+          sharepointProvisionFailed={sharepointProvisionFailed}
+          onRetryProvision={handleRetryProvision}
         />
       )}
     </div>

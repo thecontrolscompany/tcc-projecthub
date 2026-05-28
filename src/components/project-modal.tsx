@@ -142,6 +142,8 @@ export function ProjectModal({
   saveError,
   isNewProjectFlow,
   isWaitingForSharePointFolder,
+  sharepointProvisionFailed,
+  onRetryProvision,
   contractorNames,
   onClose,
   onChange,
@@ -167,6 +169,8 @@ export function ProjectModal({
   saveError?: string | null;
   isNewProjectFlow: boolean;
   isWaitingForSharePointFolder: boolean;
+  sharepointProvisionFailed?: boolean;
+  onRetryProvision?: () => void;
   siteAddresses?: string[];
   contractorNames?: string[];
   onClose: () => void;
@@ -604,6 +608,8 @@ export function ProjectModal({
               project={editingProject}
               isNewProjectFlow={isNewProjectFlow}
               isWaitingForSharePointFolder={isWaitingForSharePointFolder}
+              sharepointProvisionFailed={sharepointProvisionFailed}
+              onRetryProvision={onRetryProvision}
             />
           )}
 
@@ -901,10 +907,14 @@ function ProjectDocumentUploads({
   project,
   isNewProjectFlow,
   isWaitingForSharePointFolder,
+  sharepointProvisionFailed,
+  onRetryProvision,
 }: {
   project: ProjectModalProject;
   isNewProjectFlow: boolean;
   isWaitingForSharePointFolder: boolean;
+  sharepointProvisionFailed?: boolean;
+  onRetryProvision?: () => void;
 }) {
   const [selectedFiles, setSelectedFiles] = useState<Record<DocumentType, File | null>>({
     contract: null,
@@ -996,10 +1006,23 @@ function ProjectDocumentUploads({
             SharePoint folder is being provisioned - uploads available shortly after saving.
           </p>
         )}
-        {!uploadsEnabled && !isNewProjectFlow && (
-          <p className="text-sm text-status-warning">
-            SharePoint folder not yet provisioned for this project.
-          </p>
+        {!uploadsEnabled && !isNewProjectFlow && !isWaitingForSharePointFolder && (
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-status-warning">
+              {sharepointProvisionFailed
+                ? "SharePoint folder provisioning failed."
+                : "SharePoint folder not yet provisioned for this project."}
+            </p>
+            {onRetryProvision && (
+              <button
+                type="button"
+                onClick={onRetryProvision}
+                className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1 text-xs font-semibold text-text-secondary transition hover:bg-surface-base hover:text-text-primary"
+              >
+                Retry
+              </button>
+            )}
+          </div>
         )}
         {isWaitingForSharePointFolder && (
           <p className="text-sm text-brand-primary">Checking SharePoint folder availability...</p>
