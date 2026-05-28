@@ -154,40 +154,37 @@ async function sendToRecipients(
   reportId: string,
   cc: string[],
 ) {
-  const sentRecipients: string[] = [];
-  const failedRecipients: Array<{ email: string; message: string }> = [];
+  const toAddresses = recipients.map((r) => r.email);
+  const logId = await createSendAttemptLog({
+    admin,
+    recipientEmail: toAddresses.join(", "),
+    projectId,
+    reportId,
+  });
 
-  for (const recipient of recipients) {
-    const logId = await createSendAttemptLog({
-      admin,
-      recipientEmail: recipient.email,
-      projectId,
-      reportId,
+  try {
+    await sendReportsMailboxMail({
+      to: toAddresses,
+      cc,
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
     });
-
-    try {
-      await sendReportsMailboxMail({
-        to: recipient.email,
-        cc,
-        subject: email.subject,
-        html: email.html,
-        text: email.text,
-      });
-      sentRecipients.push(recipient.email);
-      await updateSendAttemptLog({ admin, logId, status: "sent" });
-    } catch (err) {
-      const graphError = err instanceof Error && "graphError" in err
-        ? (err as Error & { graphError?: GraphSendMailError }).graphError ?? null
-        : null;
-      await updateSendAttemptLog({ admin, logId, status: "failed", graphError });
-      failedRecipients.push({
-        email: recipient.email,
+    await updateSendAttemptLog({ admin, logId, status: "sent" });
+    return { sentRecipients: toAddresses, failedRecipients: [] };
+  } catch (err) {
+    const graphError = err instanceof Error && "graphError" in err
+      ? (err as Error & { graphError?: GraphSendMailError }).graphError ?? null
+      : null;
+    await updateSendAttemptLog({ admin, logId, status: "failed", graphError });
+    return {
+      sentRecipients: [],
+      failedRecipients: toAddresses.map((email) => ({
+        email,
         message: err instanceof Error ? err.message : "Unable to send report.",
-      });
-    }
+      })),
+    };
   }
-
-  return { sentRecipients, failedRecipients };
 }
 
 export async function GET(_request: Request, { params }: RouteContext) {

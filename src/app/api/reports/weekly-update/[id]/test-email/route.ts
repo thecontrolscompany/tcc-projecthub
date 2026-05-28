@@ -919,7 +919,7 @@ export async function POST(_request: Request, { params }: RouteContext) {
 
   try {
     await sendReportsMailboxMail({
-      to: user.email,
+      to: [user.email],
       subject: email.subject,
       html: email.html,
       text: email.text,

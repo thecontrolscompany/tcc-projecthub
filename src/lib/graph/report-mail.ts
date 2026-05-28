@@ -2,7 +2,7 @@ const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
 const REPORTS_MAILBOX = process.env.GRAPH_REPORTS_MAILBOX ?? "tccprojecthub@controlsco.net";
 
 export type GraphSendMailInput = {
-  to: string;
+  to: string[];
   cc?: string[];
   subject: string;
   html: string;
@@ -65,8 +65,10 @@ export async function sendReportsMailboxMail({
 }: GraphSendMailInput): Promise<void> {
   const token = await getGraphAppToken();
 
-  const ccAddresses = (cc ?? []).filter((addr) => addr && addr.toLowerCase() !== to.toLowerCase());
+  const toSet = new Set(to.map((a) => a.toLowerCase()));
+  const ccAddresses = (cc ?? []).filter((addr) => addr && !toSet.has(addr.toLowerCase()));
   const ccRecipients = ccAddresses.map((addr) => ({ emailAddress: { address: addr } }));
+  const toRecipients = to.map((addr) => ({ emailAddress: { address: addr } }));
 
   const response = await fetch(`${GRAPH_BASE}/users/${encodeURIComponent(REPORTS_MAILBOX)}/sendMail`, {
     method: "POST",
@@ -81,13 +83,7 @@ export async function sendReportsMailboxMail({
           contentType: "HTML",
           content: html,
         },
-        toRecipients: [
-          {
-            emailAddress: {
-              address: to,
-            },
-          },
-        ],
+        toRecipients,
         ...(ccRecipients.length > 0 ? { ccRecipients } : {}),
       },
       saveToSentItems: true,
