@@ -272,6 +272,11 @@ export function AssemblyTrainingClient({ catalogByType, organizationId, resolveA
     e.target.value = "";
   }
 
+  // Flat deduplicated list of all assemblies across all types — used as fallback for types with no catalog
+  const allCatalogOptions = Object.entries(catalogByType).flatMap(([type, opts]) =>
+    opts.map((o) => ({ ...o, equipmentType: type }))
+  ).filter((o, i, arr) => arr.findIndex((x) => x.emtAID === o.emtAID && x.equipmentType === o.equipmentType) === i);
+
   const visiblePairs = filterType === "all" ? pairs : pairs.filter((p) => p.equipmentType === filterType);
   const testCatalogOptions = catalogByType[testType] ?? [];
   const testMismatch = testResult !== "idle" && testResult !== null && testCorrect &&
@@ -406,22 +411,30 @@ export function AssemblyTrainingClient({ catalogByType, organizationId, resolveA
                         )}
                       </td>
                       <td className="px-4 py-2.5">
-                        {catalogOpts.length > 0 ? (
-                          <select
-                            value={row.overrideComponentId}
-                            onChange={(e) => updateRowOverride(row.rowId, e.target.value)}
-                            className={`w-full rounded-lg border px-2 py-1 text-xs focus:outline-none ${isMismatch ? "border-status-danger/40 bg-status-danger/5 text-status-danger" : "border-border-default bg-surface-base text-text-primary"}`}
-                          >
-                            <option value="">— no override —</option>
-                            {catalogOpts.map((opt) => (
-                              <option key={opt.componentId} value={opt.componentId}>
-                                [{opt.emtAID}] {opt.name}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <span className="text-xs text-text-tertiary">No catalog for type</span>
-                        )}
+                        {(() => {
+                          const opts = catalogOpts.length > 0 ? catalogOpts : null;
+                          const grouped = opts
+                            ? { [row.inferredType]: opts }
+                            : Object.fromEntries(Object.entries(catalogByType).filter(([, v]) => v.length > 0));
+                          return (
+                            <select
+                              value={row.overrideComponentId}
+                              onChange={(e) => updateRowOverride(row.rowId, e.target.value)}
+                              className={`w-full rounded-lg border px-2 py-1 text-xs focus:outline-none ${isMismatch ? "border-status-danger/40 bg-status-danger/5 text-status-danger" : "border-border-default bg-surface-base text-text-primary"}`}
+                            >
+                              <option value="">— no override —</option>
+                              {Object.entries(grouped).map(([type, typeOpts]) => (
+                                <optgroup key={type} label={type.toUpperCase()}>
+                                  {typeOpts.map((opt) => (
+                                    <option key={`${type}-${opt.componentId}`} value={opt.componentId}>
+                                      [{opt.emtAID}] {opt.name}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              ))}
+                            </select>
+                          );
+                        })()}
                       </td>
                     </tr>
                   );
