@@ -26,13 +26,6 @@ const PROJECT_SUBFOLDERS = [
   "99 Archive - Legacy Files",
 ];
 
-const ESTIMATE_SUBFOLDERS = [
-  "01 Customer Uploads",
-  "02 Internal Review",
-  "03 Estimate Working",
-  "04 Submitted Quote",
-  "99 Archive - Legacy Files",
-];
 
 function sanitizeFolderSegment(value: string) {
   return String(value || "")
@@ -139,16 +132,6 @@ async function provisionEstimateFolder(
     }
 
     const folderItemId = await ensureSharePointFolderPath(providerToken, driveId, estimateRoot);
-    for (const subfolder of ESTIMATE_SUBFOLDERS) {
-      try {
-        await createSharePointFolder(providerToken, driveId, estimateRoot, subfolder);
-      } catch (error) {
-        if (!(error instanceof Error) || !error.message.includes("409")) {
-          throw error;
-        }
-      }
-    }
-
     return { sharepointFolder: estimateRoot, sharepointItemId: folderItemId, warning: null as string | null };
   }
 
@@ -159,20 +142,11 @@ async function provisionEstimateFolder(
   await ensureSharePointFolderPath(providerToken, driveId, "Bids");
 
   if (hasBidder) {
-    // Bidder estimates live directly inside Bids/EST-XXX - Name/BidderName/
     const folderItemId = await ensureSharePointFolderPath(providerToken, driveId, folderPath);
-    for (const subfolder of ESTIMATE_SUBFOLDERS) {
-      try {
-        await createSharePointFolder(providerToken, driveId, folderPath, subfolder);
-      } catch (error) {
-        if (!(error instanceof Error) || !error.message.includes("409")) throw error;
-      }
-    }
     return { sharepointFolder: folderPath, sharepointItemId: folderItemId, warning: null as string | null };
   }
 
-  // Standalone bids get the full project folder structure, with the estimate
-  // folder at {bidRoot}/02 Estimate — matching the active-project layout.
+  // Standalone bids get the full project folder structure; estimate documents land in 02 Estimate.
   await ensureSharePointFolderPath(providerToken, driveId, folderPath);
   for (const subfolder of PROJECT_SUBFOLDERS) {
     try {
@@ -183,14 +157,6 @@ async function provisionEstimateFolder(
   }
   const estimateRoot = `${folderPath}/02 Estimate`;
   const folderItemId = await ensureSharePointFolderPath(providerToken, driveId, estimateRoot);
-  for (const subfolder of ESTIMATE_SUBFOLDERS) {
-    try {
-      await createSharePointFolder(providerToken, driveId, estimateRoot, subfolder);
-    } catch (error) {
-      if (!(error instanceof Error) || !error.message.includes("409")) throw error;
-    }
-  }
-
   return { sharepointFolder: estimateRoot, sharepointItemId: folderItemId, warning: null as string | null };
 }
 

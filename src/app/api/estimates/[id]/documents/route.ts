@@ -15,6 +15,7 @@ import {
 } from "@/lib/graph/client";
 
 type EstimateDocumentRole = "supporting_scope" | "customer_upload" | "addendum" | "scope_of_work" | "proposal_pdf";
+const VALID_DOCUMENT_ROLES = new Set<EstimateDocumentRole>(["supporting_scope", "customer_upload", "addendum", "scope_of_work", "proposal_pdf"]);
 type EstimateDocumentStorage = {
   storagePath: string;
   storageItemId: string;
@@ -34,14 +35,6 @@ type EstimateAuth = {
   role: string;
 };
 
-const DOCUMENT_ROLE_FOLDERS: Record<EstimateDocumentRole, string> = {
-  customer_upload: "01 Customer Uploads",
-  scope_of_work: "01 Customer Uploads",
-  supporting_scope: "02 Internal Review",
-  addendum: "03 Estimate Working",
-  proposal_pdf: "04 Submitted Quote",
-};
-
 const PROJECT_SUBFOLDERS = [
   "01 Contract",
   "02 Estimate",
@@ -50,14 +43,6 @@ const PROJECT_SUBFOLDERS = [
   "05 Change Orders",
   "06 Closeout",
   "07 Billing",
-  "99 Archive - Legacy Files",
-];
-
-const ESTIMATE_SUBFOLDERS = [
-  "01 Customer Uploads",
-  "02 Internal Review",
-  "03 Estimate Working",
-  "04 Submitted Quote",
   "99 Archive - Legacy Files",
 ];
 
@@ -170,8 +155,7 @@ async function createDocumentUploadSession(
   fileName: string,
 ) {
   const { driveId, folderPath } = await resolveSharePointContext(supabase, providerToken, estimate);
-  const destinationFolder = `${folderPath}/${DOCUMENT_ROLE_FOLDERS[documentRole]}`;
-  const encodedPath = encodeGraphPath(destinationFolder, fileName);
+  const encodedPath = encodeGraphPath(folderPath, fileName);
   const sessionRes = await graphFetch(`/drives/${driveId}/root:/${encodedPath}:/createUploadSession`, providerToken, {
     method: "POST",
     body: JSON.stringify({
@@ -195,7 +179,7 @@ async function createDocumentUploadSession(
 
   return {
     uploadUrl,
-    storagePath: `${destinationFolder}/${fileName}`,
+    storagePath: `${folderPath}/${fileName}`,
   };
 }
 
@@ -292,16 +276,6 @@ async function resolveSharePointContext(
     }
 
     const itemId = await ensureSharePointFolderPath(providerToken, driveId, estimateRoot);
-    for (const subfolder of ESTIMATE_SUBFOLDERS) {
-      try {
-        await createSharePointFolder(providerToken, driveId, estimateRoot, subfolder);
-      } catch (error) {
-        if (!(error instanceof Error) || !error.message.includes("409")) {
-          throw error;
-        }
-      }
-    }
-
     return { siteId, driveId, folderPath: estimateRoot, itemId };
   }
 
@@ -310,29 +284,13 @@ async function resolveSharePointContext(
 
   await ensureSharePointFolderPath(providerToken, driveId, "Bids");
 
-  async function ensureEstimateSubfolders(folderPath: string) {
-    for (const subfolder of ESTIMATE_SUBFOLDERS) {
-      try {
-        await createSharePointFolder(providerToken, driveId, folderPath, subfolder);
-      } catch (error) {
-        if (!(error instanceof Error) || !error.message.includes("409")) {
-          throw error;
-        }
-      }
-    }
-  }
-
   if (existingFolder) {
     const folderItemId = existingItemId || (await ensureSharePointFolderPath(providerToken, driveId, existingFolder));
-    await ensureEstimateSubfolders(existingFolder);
     return { siteId, driveId, folderPath: existingFolder, itemId: folderItemId || null };
   }
   const folderName = getEstimateFolderName(estimate);
   const folderPath = `Bids/${folderName}`;
-
   const itemId = await ensureSharePointFolderPath(providerToken, driveId, folderPath);
-  await ensureEstimateSubfolders(folderPath);
-
   return { siteId, driveId, folderPath, itemId };
 }
 
@@ -469,7 +427,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const action = String((payload as { action?: unknown }).action || "");
     const documentRole = String((payload as { documentRole?: unknown }).documentRole || "supporting_scope") as EstimateDocumentRole;
 
-    if (!(documentRole in DOCUMENT_ROLE_FOLDERS)) {
+    if (!VALID_DOCUMENT_ROLES.has(documentRole)) {
       return NextResponse.json({ error: "Invalid document role." }, { status: 400 });
     }
 
@@ -556,7 +514,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "A file is required." }, { status: 400 });
   }
 
-  if (!(documentRole in DOCUMENT_ROLE_FOLDERS)) {
+  if (!VALID_DOCUMENT_ROLES.has(documentRole)) {
     return NextResponse.json({ error: "Invalid document role." }, { status: 400 });
   }
 
@@ -567,11 +525,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     const { driveId, folderPath } = await resolveSharePointContext(auth.supabase, providerToken, estimate);
-    const destinationFolder = `${folderPath}/${DOCUMENT_ROLE_FOLDERS[documentRole]}`;
     const fileBuffer = await file.arrayBuffer();
     const ext = file.name.includes(".") ? `.${file.name.split(".").pop() ?? ""}`.toLowerCase() : null;
 
-    const upload = await uploadFile(providerToken, driveId, destinationFolder, file.name, fileBuffer, file.type || null);
+    const upload = await uploadFile(providerToken, driveId, folderPath, file.name, fileBuffer, file.type || null);
     if (!upload.id) {
       return NextResponse.json({ error: "SharePoint upload did not return an item ID." }, { status: 500 });
     }
@@ -587,7 +544,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         notes,
       },
       {
-        storagePath: `${destinationFolder}/${file.name}`,
+        storagePath: `${folderPath}/${file.name}`,
         storageItemId: upload.id,
         storageWebUrl: upload.webUrl,
       }
