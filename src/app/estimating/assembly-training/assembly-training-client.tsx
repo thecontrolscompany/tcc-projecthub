@@ -40,11 +40,20 @@ type ScopeImport = { systems: ParsedSystem[] };
 type AssemblyRow = {
   rowId: string;
   systemName: string;
-  inferredType: string; // inferred equipment type from system type/name
+  inferredType: string;
   assemblyName: string;
   resolverResult: ResolverResult;
-  overrideComponentId: string; // user's correction, empty = no override
+  overrideEmtId: string;   // correct EMT assembly ID; empty = no override
+  overridePlnId: string;   // correct Plenum assembly ID; empty = no override
 };
+
+// Build option lists keyed by install type
+function emtOptions(opts: CatalogOption[]): { value: string; label: string; componentId: string; name: string }[] {
+  return opts.map((o) => ({ value: o.emtAID, label: `[${o.emtAID}] ${o.name}`, componentId: o.componentId, name: o.name }));
+}
+function plnOptions(opts: CatalogOption[]): { value: string; label: string; componentId: string; name: string }[] {
+  return opts.map((o) => ({ value: o.plnAID, label: `[${o.plnAID}] ${o.name}`, componentId: o.componentId, name: o.name }));
+}
 
 function inferEquipmentType(system: ParsedSystem): string {
   const name = (system.name + " " + system.type).toLowerCase();
@@ -191,7 +200,8 @@ export function AssemblyTrainingClient({ catalogByType, organizationId, resolveA
               systemName: system.name,
               inferredType: equipType,
               assemblyName: asm.assemblyName || asm.assemblyRef || "Unknown",
-              overrideComponentId: "",
+              overrideEmtId: "",
+              overridePlnId: "",
             });
             flatAssemblies.push({ sourceText: asm.assemblyName || asm.assemblyRef || "", equipmentType: equipType });
           }
@@ -210,28 +220,49 @@ export function AssemblyTrainingClient({ catalogByType, organizationId, resolveA
     }
   }
 
-  function updateRowOverride(rowId: string, componentId: string) {
-    setRows((prev) => prev.map((r) => r.rowId === rowId ? { ...r, overrideComponentId: componentId } : r));
+  function updateRowEmtOverride(rowId: string, assemblyId: string) {
+    setRows((prev) => prev.map((r) => r.rowId === rowId ? { ...r, overrideEmtId: assemblyId } : r));
+  }
+  function updateRowPlnOverride(rowId: string, assemblyId: string) {
+    setRows((prev) => prev.map((r) => r.rowId === rowId ? { ...r, overridePlnId: assemblyId } : r));
   }
 
   function saveAllCorrections() {
+    // Build lookup: assemblyId → {name, componentId} across all catalog options
+    const allOpts = Object.values(catalogByType).flat();
+    const byEmtId = new Map(allOpts.map((o) => [o.emtAID, o]));
+    const byPlnId = new Map(allOpts.map((o) => [o.plnAID, o]));
+
     const newPairs: TrainingPair[] = [];
     for (const row of rows) {
-      const overrideOpt = (catalogByType[row.inferredType] ?? []).find((o) => o.componentId === row.overrideComponentId);
-      if (!overrideOpt) continue;
-      const resolvedId = row.resolverResult?.id;
-      const alreadyCorrect = resolvedId && (overrideOpt.emtAID === resolvedId || overrideOpt.plnAID === resolvedId);
-      if (alreadyCorrect) continue; // Only save actual corrections
-      newPairs.push({
-        id: crypto.randomUUID(),
-        sourceText: row.assemblyName,
-        equipmentType: row.inferredType,
-        resolverResult: row.resolverResult,
-        correctAssemblyId: overrideOpt.emtAID,
-        correctAssemblyName: overrideOpt.name,
-        correctComponentId: overrideOpt.componentId,
-        createdAt: new Date().toISOString(),
-      });
+      // Save EMT correction if set and different from resolver
+      if (row.overrideEmtId && row.resolverResult?.id !== row.overrideEmtId) {
+        const opt = byEmtId.get(row.overrideEmtId);
+        newPairs.push({
+          id: crypto.randomUUID(),
+          sourceText: row.assemblyName,
+          equipmentType: row.inferredType,
+          resolverResult: row.resolverResult,
+          correctAssemblyId: row.overrideEmtId,
+          correctAssemblyName: opt ? `${opt.name} · EMT` : row.overrideEmtId,
+          correctComponentId: opt?.componentId ?? "",
+          createdAt: new Date().toISOString(),
+        });
+      }
+      // Save Plenum correction if set and different from resolver
+      if (row.overridePlnId && row.resolverResult?.id !== row.overridePlnId) {
+        const opt = byPlnId.get(row.overridePlnId);
+        newPairs.push({
+          id: crypto.randomUUID(),
+          sourceText: `${row.assemblyName} (Plenum)`,
+          equipmentType: row.inferredType,
+          resolverResult: row.resolverResult,
+          correctAssemblyId: row.overridePlnId,
+          correctAssemblyName: opt ? `${opt.name} · Plenum` : row.overridePlnId,
+          correctComponentId: opt?.componentId ?? "",
+          createdAt: new Date().toISOString(),
+        });
+      }
     }
     if (!newPairs.length) return;
     const next = [...newPairs, ...pairs].filter(
@@ -282,7 +313,7 @@ export function AssemblyTrainingClient({ catalogByType, organizationId, resolveA
   const testMismatch = testResult !== "idle" && testResult !== null && testCorrect &&
     !testCatalogOptions.find((o) => o.componentId === testCorrect && (o.emtAID === testResult?.id || o.plnAID === testResult?.id));
 
-  const correctionsAvailable = rows.some((r) => r.overrideComponentId);
+  const correctionsAvailable = rows.some((r) => r.overrideEmtId || r.overridePlnId);
 
   return (
     <div className="mx-auto max-w-6xl space-y-10 px-4 py-8">
@@ -368,28 +399,68 @@ export function AssemblyTrainingClient({ catalogByType, organizationId, resolveA
             Only overrides that differ from the resolver&apos;s output are saved as training pairs.
           </p>
 
-          <div className="overflow-hidden rounded-2xl border border-border-default">
+          <div className="overflow-x-auto rounded-2xl border border-border-default">
             <table className="w-full text-sm">
               <thead className="border-b border-border-default bg-surface-raised">
                 <tr>
                   <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">System</th>
                   <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">AI Assembly Name</th>
                   <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Resolver Result</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Override</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-brand-primary">EMT Correct</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">Plenum Correct</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((row) => {
                   const catalogOpts = catalogByType[row.inferredType] ?? [];
-                  const resolvedOpt = row.resolverResult
-                    ? catalogOpts.find((o) => o.emtAID === row.resolverResult!.id || o.plnAID === row.resolverResult!.id)
-                    : null;
-                  const overrideOpt = catalogOpts.find((o) => o.componentId === row.overrideComponentId);
-                  const isMismatch = overrideOpt && row.resolverResult && (overrideOpt.emtAID !== row.resolverResult.id && overrideOpt.plnAID !== row.resolverResult.id);
-                  const isNoMatch = !row.resolverResult;
+                  const fallbackOpts = catalogOpts.length > 0
+                    ? catalogOpts
+                    : Object.values(catalogByType).flat();
+
+                  const emtOpts = emtOptions(fallbackOpts);
+                  const plnOpts = plnOptions(fallbackOpts);
+
+                  // Group for optgroup display
+                  const buildGrouped = (opts: CatalogOption[], getter: (o: CatalogOption) => string) =>
+                    Object.entries(
+                      catalogOpts.length > 0
+                        ? { [row.inferredType]: catalogOpts }
+                        : Object.fromEntries(Object.entries(catalogByType).filter(([, v]) => v.length > 0))
+                    ).map(([type, typeOpts]) => ({
+                      type,
+                      options: typeOpts.map((o) => ({ value: getter(o), label: `[${getter(o)}] ${o.name}`, componentId: o.componentId })),
+                    }));
+
+                  const emtGrouped = buildGrouped(fallbackOpts, (o) => o.emtAID);
+                  const plnGrouped = buildGrouped(fallbackOpts, (o) => o.plnAID);
+
+                  const emtMismatch = row.overrideEmtId && row.resolverResult?.id !== row.overrideEmtId;
+                  const plnMismatch = row.overridePlnId && row.resolverResult?.id !== row.overridePlnId;
+
+                  const makeSelect = (
+                    value: string,
+                    onChange: (v: string) => void,
+                    grouped: { type: string; options: { value: string; label: string }[] }[],
+                    mismatch: boolean,
+                  ) => (
+                    <select
+                      value={value}
+                      onChange={(e) => onChange(e.target.value)}
+                      className={`w-full rounded-lg border px-2 py-1 text-xs focus:outline-none ${mismatch ? "border-status-danger/40 bg-status-danger/5 text-status-danger" : "border-border-default bg-surface-base text-text-primary"}`}
+                    >
+                      <option value="">—</option>
+                      {grouped.map(({ type, options }) => (
+                        <optgroup key={type} label={type.toUpperCase()}>
+                          {options.map((opt) => (
+                            <option key={`${type}-${opt.value}`} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  );
 
                   return (
-                    <tr key={row.rowId} className={`border-b border-border-default last:border-0 ${isMismatch ? "bg-status-danger/3" : ""}`}>
+                    <tr key={row.rowId} className="border-b border-border-default last:border-0 hover:bg-surface-raised">
                       <td className="px-4 py-2.5">
                         <div className="font-medium text-text-primary">{row.systemName}</div>
                         <span className="rounded-full bg-surface-overlay px-1.5 py-0.5 font-mono text-xs text-text-tertiary">{row.inferredType}</span>
@@ -398,43 +469,18 @@ export function AssemblyTrainingClient({ catalogByType, organizationId, resolveA
                       <td className="px-4 py-2.5">
                         {row.resolverResult ? (
                           <div>
-                            <div className={`text-xs font-medium ${resolvedOpt ? "text-status-success" : "text-status-warning"}`}>
-                              {row.resolverResult.name}
-                            </div>
-                            <div className="font-mono text-xs text-text-tertiary">
-                              [{row.resolverResult.id}] via {row.resolverResult.matchedBy}
-                            </div>
-                            {resolvedOpt && <div className="text-xs text-text-tertiary">→ {resolvedOpt.name}</div>}
+                            <div className="text-xs font-medium text-text-primary">{row.resolverResult.name}</div>
+                            <div className="font-mono text-xs text-text-tertiary">[{row.resolverResult.id}] via {row.resolverResult.matchedBy}</div>
                           </div>
                         ) : (
                           <span className="text-xs text-status-danger">No match</span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5">
-                        {(() => {
-                          const opts = catalogOpts.length > 0 ? catalogOpts : null;
-                          const grouped = opts
-                            ? { [row.inferredType]: opts }
-                            : Object.fromEntries(Object.entries(catalogByType).filter(([, v]) => v.length > 0));
-                          return (
-                            <select
-                              value={row.overrideComponentId}
-                              onChange={(e) => updateRowOverride(row.rowId, e.target.value)}
-                              className={`w-full rounded-lg border px-2 py-1 text-xs focus:outline-none ${isMismatch ? "border-status-danger/40 bg-status-danger/5 text-status-danger" : "border-border-default bg-surface-base text-text-primary"}`}
-                            >
-                              <option value="">— no override —</option>
-                              {Object.entries(grouped).map(([type, typeOpts]) => (
-                                <optgroup key={type} label={type.toUpperCase()}>
-                                  {typeOpts.map((opt) => (
-                                    <option key={`${type}-${opt.componentId}`} value={opt.componentId}>
-                                      [{opt.emtAID}] {opt.name}
-                                    </option>
-                                  ))}
-                                </optgroup>
-                              ))}
-                            </select>
-                          );
-                        })()}
+                      <td className="px-4 py-2.5 min-w-[200px]">
+                        {makeSelect(row.overrideEmtId, (v) => updateRowEmtOverride(row.rowId, v), emtGrouped, !!emtMismatch)}
+                      </td>
+                      <td className="px-4 py-2.5 min-w-[200px]">
+                        {makeSelect(row.overridePlnId, (v) => updateRowPlnOverride(row.rowId, v), plnGrouped, !!plnMismatch)}
                       </td>
                     </tr>
                   );
