@@ -97,6 +97,14 @@ export function UnitEditorPage({
 
   const isOn = id => selected.some(entry => entry.id === id);
   const getQtyFor = id => selected.find(entry => entry.id === id)?.qty ?? 1;
+  const selectAll = () => setSel(sel => {
+    const next = [...sel];
+    for (const comp of visible) {
+      if (!next.some(s => s.id === comp.id)) next.push({ id: comp.id, qty: 1 });
+    }
+    return next;
+  });
+  const deselectAll = () => setSel(sel => sel.filter(s => !visible.some(c => c.id === s.id)));
   const toggle = id => setSel(list => {
     if (toggleSelected) {
       return toggleSelected(list, id, comps, cfg);
@@ -377,7 +385,7 @@ export function UnitEditorPage({
               />
             </div>
 
-            <div style={{ padding: "6px 10px", borderBottom: `1px solid ${T.border}`, display: "flex", gap: 3, flexWrap: "wrap" }}>
+            <div style={{ padding: "6px 10px", borderBottom: `1px solid ${T.border}`, display: "flex", gap: 3, flexWrap: "wrap", alignItems: "center" }}>
               {cats.map(cat => {
                 const color = CAT_COLOR[cat] || T.steel;
                 const active = filterCat === cat;
@@ -400,6 +408,10 @@ export function UnitEditorPage({
                   </button>
                 );
               })}
+              <div style={{ marginLeft: "auto", display: "flex", gap: 3 }}>
+                <button onClick={selectAll} style={{ padding: "2px 7px", borderRadius: 10, fontSize: 9.5, fontFamily: T.mono, cursor: "pointer", border: `1px solid ${T.border}`, background: "transparent", color: T.muted }}>All</button>
+                <button onClick={deselectAll} style={{ padding: "2px 7px", borderRadius: 10, fontSize: 9.5, fontFamily: T.mono, cursor: "pointer", border: `1px solid ${T.border}`, background: "transparent", color: T.muted }}>None</button>
+              </div>
             </div>
 
             <div style={{ flex: 1, overflowY: "auto" }}>

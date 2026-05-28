@@ -660,7 +660,7 @@ function CompPanel({cfg, onCfgChange, visibleComponents, selected,onToggle,onSet
         </div>
       </div>
 
-      <div style={{padding:"6px 10px",borderBottom:"1px solid "+T.border,display:"flex",gap:3,flexWrap:"wrap"}}>
+      <div style={{padding:"6px 10px",borderBottom:"1px solid "+T.border,display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}>
         {cats.map(cat=>{
           const color=CAT_COLOR[cat]||T.steel;
           const active=filterCat===cat;
@@ -673,6 +673,10 @@ function CompPanel({cfg, onCfgChange, visibleComponents, selected,onToggle,onSet
             </button>
           );
         })}
+        <div style={{marginLeft:"auto",display:"flex",gap:3}}>
+          <button onClick={()=>setSel(sel=>{const next=[...sel];for(const c of visible){if(!next.some(s=>s.id===c.id))next.push({id:c.id,qty:1});}return next;})} style={{padding:"2px 7px",borderRadius:10,fontSize:9.5,fontFamily:T.mono,cursor:"pointer",border:"1px solid "+T.border,background:"transparent",color:T.muted}}>All</button>
+          <button onClick={()=>setSel(sel=>sel.filter(s=>!visible.some(c=>c.id===s.id)))} style={{padding:"2px 7px",borderRadius:10,fontSize:9.5,fontFamily:T.mono,cursor:"pointer",border:"1px solid "+T.border,background:"transparent",color:T.muted}}>None</button>
+        </div>
       </div>
 
       <div style={{flex:1,overflowY:"auto"}}>
