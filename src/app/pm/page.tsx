@@ -585,19 +585,9 @@ function UpdateForm({
 
   useEffect(() => {
     if (!showSubmitConfirm || submittedUpdateId) return;
-    void (async () => {
-      try {
-        const res = await fetch(`/api/reports/recipients?projectId=${encodeURIComponent(project.id)}`, {
-          credentials: "include",
-        });
-        const json = await res.json().catch(() => ({}));
-        if (res.ok) {
-          setDeliveryRecipients((json?.recipients as WeeklyUpdateRecipient[]) ?? []);
-        }
-      } catch {
-        // non-fatal — modal still usable
-      }
-    })();
+    if (draftUpdateId) {
+      void loadDeliveryPreview(draftUpdateId);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showSubmitConfirm]);
 

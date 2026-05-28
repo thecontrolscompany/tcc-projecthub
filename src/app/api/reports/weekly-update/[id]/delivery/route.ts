@@ -224,10 +224,6 @@ export async function GET(_request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "You do not have access to this report." }, { status: 403 });
   }
 
-  if (previewLookup.data.status !== "submitted") {
-    return NextResponse.json({ error: "Only submitted reports can be delivered." }, { status: 400 });
-  }
-
   const emailContext = await loadWeeklyUpdateEmailData(admin, id);
   const recipients = await loadWeeklyUpdateRecipients(admin, emailContext.update.project_id);
   const email = buildWeeklyReportEmail({
