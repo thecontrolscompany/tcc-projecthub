@@ -584,6 +584,24 @@ function UpdateForm({
   }, [submittedUpdateId, project.id]);
 
   useEffect(() => {
+    if (!showSubmitConfirm || submittedUpdateId) return;
+    void (async () => {
+      try {
+        const res = await fetch(`/api/reports/recipients?projectId=${encodeURIComponent(project.id)}`, {
+          credentials: "include",
+        });
+        const json = await res.json().catch(() => ({}));
+        if (res.ok) {
+          setDeliveryRecipients((json?.recipients as WeeklyUpdateRecipient[]) ?? []);
+        }
+      } catch {
+        // non-fatal — modal still usable
+      }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showSubmitConfirm]);
+
+  useEffect(() => {
     if (!laborDetail || laborDetail.length === 0) {
       setLaborPulled(null);
       return;

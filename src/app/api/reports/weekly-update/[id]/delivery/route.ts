@@ -108,12 +108,51 @@ async function loadReportAccess(
   return false;
 }
 
+async function loadCcRecipients(
+  admin: ReturnType<typeof adminClient>,
+  projectId: string,
+  senderEmail: string | null | undefined,
+): Promise<string[]> {
+  const [{ data: assignments }, { data: opsManagers }] = await Promise.all([
+    admin
+      .from("project_assignments")
+      .select("profile:profiles(email)")
+      .eq("project_id", projectId)
+      .in("role_on_project", ["pm", "lead"]),
+    admin
+      .from("profiles")
+      .select("email")
+      .eq("role", "ops_manager"),
+  ]);
+
+  const emails = new Set<string>();
+
+  for (const row of (assignments ?? []) as Array<{ profile?: { email: string | null } | Array<{ email: string | null }> | null }>) {
+    const profile = Array.isArray(row.profile) ? row.profile[0] : row.profile;
+    const email = profile?.email?.trim().toLowerCase();
+    if (email) emails.add(email);
+  }
+
+  for (const row of (opsManagers ?? []) as Array<{ email: string | null }>) {
+    const email = row.email?.trim().toLowerCase();
+    if (email) emails.add(email);
+  }
+
+  if (senderEmail) {
+    const normalized = senderEmail.trim().toLowerCase();
+    if (normalized) emails.add(normalized);
+  }
+
+  return Array.from(emails);
+}
+
 async function sendToRecipients(
   admin: ReturnType<typeof adminClient>,
   recipients: WeeklyUpdateRecipient[],
   email: { subject: string; html: string; text: string },
   projectId: string,
-  reportId: string
+  reportId: string,
+  cc: string[],
 ) {
   const sentRecipients: string[] = [];
   const failedRecipients: Array<{ email: string; message: string }> = [];
@@ -129,6 +168,7 @@ async function sendToRecipients(
     try {
       await sendReportsMailboxMail({
         to: recipient.email,
+        cc,
         subject: email.subject,
         html: email.html,
         text: email.text,
@@ -270,13 +310,17 @@ export async function POST(_request: Request, { params }: RouteContext) {
     reportData: emailContext.reportData,
   });
 
+  const senderEmail = resolvedProfile?.email ?? user.email ?? null;
+  const cc = await loadCcRecipients(admin, emailContext.update.project_id, senderEmail);
+
   try {
     const { sentRecipients, failedRecipients } = await sendToRecipients(
       admin,
       recipients,
       email,
       emailContext.update.project_id,
-      emailContext.update.id
+      emailContext.update.id,
+      cc,
     );
 
     return NextResponse.json({

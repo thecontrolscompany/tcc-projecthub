@@ -221,7 +221,7 @@ export async function POST(request: Request) {
       project_id: projectId,
       profile_id: portalProfile.profileId,
       portal_access: false,
-      email_digest: false,
+      email_digest: true,
     }, { onConflict: "project_id,profile_id", ignoreDuplicates: true });
 
   if (insertError) {

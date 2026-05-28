@@ -3,6 +3,7 @@ const REPORTS_MAILBOX = process.env.GRAPH_REPORTS_MAILBOX ?? "tccprojecthub@cont
 
 export type GraphSendMailInput = {
   to: string;
+  cc?: string[];
   subject: string;
   html: string;
   text: string;
@@ -57,11 +58,16 @@ async function getGraphAppToken() {
 
 export async function sendReportsMailboxMail({
   to,
+  cc,
   subject,
   html,
   text,
 }: GraphSendMailInput): Promise<void> {
   const token = await getGraphAppToken();
+
+  const ccAddresses = (cc ?? []).filter((addr) => addr && addr.toLowerCase() !== to.toLowerCase());
+  const ccRecipients = ccAddresses.map((addr) => ({ emailAddress: { address: addr } }));
+
   const response = await fetch(`${GRAPH_BASE}/users/${encodeURIComponent(REPORTS_MAILBOX)}/sendMail`, {
     method: "POST",
     headers: {
@@ -82,6 +88,7 @@ export async function sendReportsMailboxMail({
             },
           },
         ],
+        ...(ccRecipients.length > 0 ? { ccRecipients } : {}),
       },
       saveToSentItems: true,
     }),
