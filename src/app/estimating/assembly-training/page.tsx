@@ -24,6 +24,8 @@ export type CatalogOption = {
   equipmentType: string;
 };
 
+export type ResolverResult = { id: string; name: string; matchedBy: string } | null;
+
 type RawComp = { id: string; emtAID?: unknown; plnAID?: unknown; name?: unknown; cat?: unknown; hidden?: boolean };
 
 function buildOptions(comps: RawComp[], type: string): CatalogOption[] {
@@ -39,21 +41,31 @@ function buildOptions(comps: RawComp[], type: string): CatalogOption[] {
     }));
 }
 
-export async function resolveAssemblyAction(sourceText: string, equipmentType: string): Promise<{ id: string; name: string; matchedBy: string } | null> {
+export async function resolveAssemblyAction(sourceText: string, _equipmentType: string): Promise<ResolverResult> {
   "use server";
   return resolveAssemblyCatalogMatch({ assemblyName: sourceText, sourceText });
 }
 
+export async function resolveAllAssembliesAction(
+  assemblies: { sourceText: string; equipmentType: string }[],
+): Promise<ResolverResult[]> {
+  "use server";
+  return assemblies.map(({ sourceText }) =>
+    resolveAssemblyCatalogMatch({ assemblyName: sourceText, sourceText }),
+  );
+}
+
 export default async function AssemblyTrainingPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) notFound();
 
   const profile = await resolveUserRole(user);
   if (!["admin", "estimator"].includes(profile?.role ?? "")) notFound();
+
+  // Resolve default organization ID for the AI training endpoint
+  const { data: defaultOrgId } = await supabase.rpc("current_user_default_organization_id");
+  const organizationId = typeof defaultOrgId === "string" ? defaultOrgId : null;
 
   const asRaw = (arr: unknown) => arr as RawComp[];
   const catalogByType: Record<string, CatalogOption[]> = {
@@ -68,5 +80,12 @@ export default async function AssemblyTrainingPage() {
     "exhaust-fan": buildOptions(asRaw(EXHAUST_FAN_COMPS), "exhaust-fan"),
   };
 
-  return <AssemblyTrainingClient catalogByType={catalogByType} resolveAssembly={resolveAssemblyAction} />;
+  return (
+    <AssemblyTrainingClient
+      catalogByType={catalogByType}
+      organizationId={organizationId ?? ""}
+      resolveAssembly={resolveAssemblyAction}
+      resolveAllAssemblies={resolveAllAssembliesAction}
+    />
+  );
 }
