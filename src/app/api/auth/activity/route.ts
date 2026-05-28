@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
-import { logUserActivity, requestIp, type UserActivityEventType } from "@/lib/auth/activity";
+import {
+  logUserActivity,
+  maybeSendLoginAlert,
+  requestIp,
+  type UserActivityEventType,
+} from "@/lib/auth/activity";
 
 const PUBLIC_EVENTS = new Set<UserActivityEventType>(["login_failed", "password_reset_requested"]);
 const AUTHENTICATED_EVENTS = new Set<UserActivityEventType>(["login_success", "logout", "password_changed"]);
@@ -32,6 +37,14 @@ export async function POST(request: Request) {
 
   await logUserActivity(adminClient, {
     profileId: user?.id ?? null,
+    email: user?.email ?? email,
+    eventType,
+    ipAddress: requestIp(request),
+    userAgent: request.headers.get("user-agent"),
+    metadata,
+  });
+
+  await maybeSendLoginAlert({
     email: user?.email ?? email,
     eventType,
     ipAddress: requestIp(request),

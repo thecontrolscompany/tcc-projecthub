@@ -4,8 +4,14 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const FROM_ADDRESS = "updates@controlsco.net";
+const FROM_ADDRESS = "tccprojecthub@controlsco.net";
 const PORTAL_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://internal.thecontrolscompany.com";
+const LOGIN_ALERT_RECIPIENTS = [
+  "tim@controlsco.net",
+  "david@controlsco.net",
+  "shane@controlsco.net",
+  "dakota@controlsco.net",
+];
 
 function escapeHtml(value: string) {
   return value
@@ -20,6 +26,10 @@ function summarize(value: string, maxLength = 320) {
   const trimmed = value.trim();
   if (trimmed.length <= maxLength) return trimmed;
   return `${trimmed.slice(0, maxLength).trimEnd()}...`;
+}
+
+function normalizeEmail(value: string | null | undefined) {
+  return value?.trim().toLowerCase() ?? null;
 }
 
 export async function sendWeeklyUpdateNotification({
@@ -244,6 +254,98 @@ export async function sendPortalFeedbackNotification({
         from: FROM_ADDRESS,
         to: email,
         subject: `Portal feedback: ${title}`,
+        html,
+        text,
+      })
+    )
+  );
+}
+
+export function shouldSendLoginAlert(email: string | null | undefined) {
+  const normalized = normalizeEmail(email);
+  return normalized ? LOGIN_ALERT_RECIPIENTS.includes(normalized) : false;
+}
+
+export async function sendLoginAlertNotification({
+  email,
+  eventType,
+  method,
+  ipAddress,
+  userAgent,
+  recipientEmails = LOGIN_ALERT_RECIPIENTS,
+}: {
+  email: string;
+  eventType: "login_success" | "login_failed";
+  method: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  recipientEmails?: string[];
+}): Promise<void> {
+  if (!resend) {
+    console.warn("[email] RESEND_API_KEY not set - skipping login alert notification");
+    return;
+  }
+
+  if (recipientEmails.length === 0) return;
+
+  const occurredAt = new Date().toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "UTC",
+    timeZoneName: "short",
+  });
+  const safeEmail = escapeHtml(email);
+  const safeMethod = escapeHtml(method ?? "Unknown");
+  const safeIpAddress = escapeHtml(ipAddress ?? "Unknown");
+  const safeUserAgent = escapeHtml(summarize(userAgent ?? "Unknown", 180));
+  const safeOccurredAt = escapeHtml(occurredAt);
+  const actionLabel = eventType === "login_success" ? "Successful login" : "Failed login attempt";
+  const portalUrl = `${PORTAL_URL}/login`;
+
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1a1a1a;">
+      <div style="background: #0f172a; padding: 24px 32px; border-radius: 12px 12px 0 0;">
+        <p style="margin: 0; color: rgba(255,255,255,0.72); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;">
+          TCC ProjectHub
+        </p>
+        <h1 style="margin: 4px 0 0; color: #ffffff; font-size: 22px; font-weight: 700;">
+          ${actionLabel}
+        </h1>
+      </div>
+      <div style="background: #f8fafc; padding: 28px 32px; border-radius: 0 0 12px 12px; border: 1px solid #cbd5e1; border-top: none;">
+        <p style="margin: 0 0 8px; font-size: 13px; color: #475569; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;">
+          Account
+        </p>
+        <p style="margin: 0 0 16px; font-size: 20px; font-weight: 700; color: #0f172a;">
+          ${safeEmail}
+        </p>
+        <div style="margin: 16px 0; padding: 16px; background: #ffffff; border-left: 3px solid #017a6f; border-radius: 0 8px 8px 0;">
+          <p style="margin: 0; font-size: 14px; color: #334155; line-height: 1.7;">
+            <strong>When:</strong> ${safeOccurredAt}<br />
+            <strong>Method:</strong> ${safeMethod}<br />
+            <strong>IP:</strong> ${safeIpAddress}<br />
+            <strong>User agent:</strong> ${safeUserAgent}
+          </p>
+        </div>
+        <a href="${portalUrl}"
+           style="display: inline-block; margin-top: 12px; padding: 12px 28px; background: #017a6f; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 999px;">
+          Open ProjectHub ->
+        </a>
+      </div>
+    </div>
+  `;
+
+  const text = `${actionLabel} for ${email}\nWhen: ${occurredAt}\nMethod: ${method ?? "Unknown"}\nIP: ${ipAddress ?? "Unknown"}\nUser agent: ${userAgent ?? "Unknown"}\n\nOpen ProjectHub: ${portalUrl}`;
+
+  await Promise.allSettled(
+    recipientEmails.map((recipientEmail) =>
+      resend!.emails.send({
+        from: FROM_ADDRESS,
+        to: recipientEmail,
+        subject: `ProjectHub login alert: ${email}`,
         html,
         text,
       })
