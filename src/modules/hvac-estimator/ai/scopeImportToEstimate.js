@@ -353,19 +353,30 @@ function buildImportedEstimateItem(system, index, installType) {
       ? getImportedPlantSelections(plantType)
       : getDefaultSelectedForType(type, cfg);
 
-  // Map of standard component IDs for this equipment type so resolved assemblies
-  // land in selected[] (priced as catalog items) rather than custom[].
-  const standardCompIds = new Set(getVisibleCompsForType(type, cfg).map((c) => String(c.id)));
+  // Build reverse map: assembly catalog ID (emtAID/plnAID) → component id.
+  // Resolved assemblies whose catalog ID matches a standard component for this
+  // equipment type land in selected[] instead of custom[].
+  const assemblyToCompId = new Map();
+  for (const comp of getVisibleCompsForType(type, cfg)) {
+    if (comp.emtAID && !assemblyToCompId.has(String(comp.emtAID))) {
+      assemblyToCompId.set(String(comp.emtAID), comp.id);
+    }
+    if (comp.plnAID && !assemblyToCompId.has(String(comp.plnAID))) {
+      assemblyToCompId.set(String(comp.plnAID), comp.id);
+    }
+  }
+
   const selectedIds = new Set(baseSelected.map((s) => String(s.id)));
   const additionalSelected = [];
   const customEntries = [];
 
   for (const point of points) {
     for (const entry of buildImportedPointCustomEntries(point, selectedIds, systemQty)) {
-      const resolvedId = entry.emtAID ? String(entry.emtAID) : "";
-      if (resolvedId && standardCompIds.has(resolvedId) && !selectedIds.has(resolvedId)) {
-        additionalSelected.push({ id: resolvedId, qty: entry.qty });
-        selectedIds.add(resolvedId);
+      const resolvedAssemblyId = entry.emtAID ? String(entry.emtAID) : "";
+      const compId = resolvedAssemblyId ? assemblyToCompId.get(resolvedAssemblyId) : null;
+      if (compId && !selectedIds.has(compId)) {
+        additionalSelected.push({ id: compId, qty: entry.qty });
+        selectedIds.add(compId);
       } else {
         customEntries.push(entry);
       }
