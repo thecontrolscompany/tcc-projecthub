@@ -1429,7 +1429,7 @@ function UpdateForm({
                   <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Submitted Report</p>
                   <p className="mt-1 text-sm text-text-secondary">Week ending {formatWeekEndingSaturday(weekOf, "MMMM d, yyyy")}</p>
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                   {submittedUpdateId && <ViewReportLink updateId={submittedUpdateId} />}
                   {submittedUpdateId && (
                     <button
@@ -1461,7 +1461,181 @@ function UpdateForm({
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-border-default bg-surface-overlay/60 p-4">
+              <div className="space-y-3 md:hidden">
+                <details className="rounded-2xl border border-border-default bg-surface-overlay/60 p-4">
+                  <summary className="cursor-pointer list-none text-sm font-semibold text-text-primary">
+                    Customer Delivery
+                    <span className="ml-2 text-xs font-normal text-text-tertiary">Recipients and preview</span>
+                  </summary>
+                  <div className="mt-4 space-y-3">
+                    <div className="rounded-xl border border-border-default bg-surface-raised p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Recipients</p>
+                      <p className="mt-1 text-sm font-medium text-text-primary">
+                        {deliveryRecipients.length} recipient{deliveryRecipients.length === 1 ? "" : "s"}
+                      </p>
+                      <div className="mt-3 space-y-2">
+                        {deliveryRecipients.map((recipient) => (
+                          <div key={recipient.email} className="rounded-lg border border-border-default bg-surface-base px-3 py-2">
+                            <p className="text-sm font-medium text-text-primary">{recipient.fullName || recipient.email}</p>
+                            <p className="text-xs text-text-tertiary">{recipient.email}</p>
+                          </div>
+                        ))}
+                        {deliveryRecipients.length === 0 && (
+                          <p className="text-sm text-status-warning">No customer recipients are configured yet.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-border-default bg-surface-raised p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Preview</p>
+                      {deliveryLoading ? (
+                        <div className="mt-3 flex min-h-[280px] items-center justify-center rounded-lg border border-dashed border-border-default bg-surface-overlay text-sm text-text-tertiary">
+                          Loading preview...
+                        </div>
+                      ) : deliveryPreviewHtml ? (
+                        <iframe
+                          title="Weekly report email preview"
+                          srcDoc={deliveryPreviewHtml}
+                          className="mt-3 min-h-[280px] w-full rounded-lg border border-border-default bg-white"
+                        />
+                      ) : (
+                        <div className="mt-3 flex min-h-[280px] items-center justify-center rounded-lg border border-dashed border-border-default bg-surface-overlay text-sm text-text-tertiary">
+                          Preview unavailable.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </details>
+
+                <details className="rounded-2xl border border-border-default bg-surface-overlay/60 p-4">
+                  <summary className="cursor-pointer list-none text-sm font-semibold text-text-primary">
+                    Report Summary
+                    <span className="ml-2 text-xs font-normal text-text-tertiary">Key report fields</span>
+                  </summary>
+                  <div className="mt-4 grid gap-3">
+                    <SummaryField label="Overall % Complete" value={`${pctComplete.toFixed(1)}%`} />
+                    <SummaryField label="Blockers" value={blockers} />
+                    <SummaryField label="Material Delivered" value={materialDelivered} />
+                    <SummaryField label="Equipment Set" value={equipmentSet} />
+                    <SummaryField label="Safety Incidents" value={safetyIncidents} />
+                    <SummaryField label="Inspections & Tests" value={inspectionsTests} />
+                    <SummaryField label="Delays / Impacts" value={delaysImpacts} />
+                    <SummaryField label="Other Remarks" value={otherRemarks} />
+                    <SummaryField label="Activity Updates" value={activityUpdates} />
+                    <div className="flex items-center gap-2 rounded-xl border border-border-default bg-surface-overlay px-4 py-3">
+                      <span
+                        className={[
+                          "inline-flex h-4 w-4 rounded-sm border",
+                          includeBomReport ? "border-brand-primary bg-brand-primary" : "border-border-default bg-surface-base",
+                        ].join(" ")}
+                      />
+                      <span className="text-sm text-text-primary">
+                        {includeBomReport ? "BOM report included" : "BOM report not included"}
+                      </span>
+                    </div>
+                    <SummaryField label="Additional Notes" value={notes} />
+                  </div>
+                </details>
+
+                <details className="rounded-2xl border border-border-default bg-surface-overlay/60 p-4">
+                  <summary className="cursor-pointer list-none text-sm font-semibold text-text-primary">
+                    Labor / Crew
+                    <span className="ml-2 text-xs font-normal text-text-tertiary">Hours and daily logs</span>
+                  </summary>
+                  <div className="mt-4">
+                    {laborDetail && laborDetail.length > 0 ? (
+                      <div className="space-y-3 rounded-xl border border-border-default bg-surface-base p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Labor Hours</p>
+                            {laborPulledAt && (
+                              <p className="mt-1 text-xs text-text-tertiary">
+                                Data as of {format(new Date(laborPulledAt), "MMM d, yyyy h:mm a")}
+                              </p>
+                            )}
+                          </div>
+                          {laborEffectiveHours != null && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-text-primary">{laborEffectiveHours.toFixed(1)} hrs</span>
+                              <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${laborBadgeClasses(laborOverrideActive ? "manual" : laborSource)}`}>
+                                {laborOverrideActive ? "Manual" : "QB Time"}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="overflow-x-auto rounded-xl border border-border-default">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-border-default bg-surface-overlay text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                                <th className="px-3 py-2">Name</th>
+                                <th className="px-3 py-2 text-center">Mon</th>
+                                <th className="px-3 py-2 text-center">Tue</th>
+                                <th className="px-3 py-2 text-center">Wed</th>
+                                <th className="px-3 py-2 text-center">Thu</th>
+                                <th className="px-3 py-2 text-center">Fri</th>
+                                <th className="px-3 py-2 text-center">Sat</th>
+                                <th className="px-3 py-2 text-center">Total</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {laborDetail.map((worker) => (
+                                <tr key={worker.display_name} className="border-b border-border-default last:border-0">
+                                  <td className="px-3 py-2 text-text-primary">{worker.display_name}</td>
+                                  <td className="px-3 py-2 text-center text-text-secondary">{worker.mon || "-"}</td>
+                                  <td className="px-3 py-2 text-center text-text-secondary">{worker.tue || "-"}</td>
+                                  <td className="px-3 py-2 text-center text-text-secondary">{worker.wed || "-"}</td>
+                                  <td className="px-3 py-2 text-center text-text-secondary">{worker.thu || "-"}</td>
+                                  <td className="px-3 py-2 text-center text-text-secondary">{worker.fri || "-"}</td>
+                                  <td className="px-3 py-2 text-center text-text-secondary">{worker.sat || "-"}</td>
+                                  <td className="px-3 py-2 text-center font-semibold text-text-primary">{worker.total || "-"}</td>
+                                </tr>
+                              ))}
+                              <tr className="bg-surface-overlay font-semibold text-text-primary">
+                                <td className="px-3 py-2">Total</td>
+                                <td className="px-3 py-2 text-center">-</td>
+                                <td className="px-3 py-2 text-center">-</td>
+                                <td className="px-3 py-2 text-center">-</td>
+                                <td className="px-3 py-2 text-center">-</td>
+                                <td className="px-3 py-2 text-center">-</td>
+                                <td className="px-3 py-2 text-center">-</td>
+                                <td className="px-3 py-2 text-center">{laborEffectiveHours?.toFixed(1) ?? "-"}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          {crewLog.filter(hasCrewLogEntry).map((row) => (
+                            <div key={row.day} className="rounded-xl border border-border-default bg-surface-base px-4 py-3">
+                              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-text-secondary">{row.day}</p>
+                              <div className="flex flex-wrap gap-4 text-sm">
+                                {row.workers > 0 && (
+                                  <span>
+                                    <span className="text-text-tertiary">Workers: </span>
+                                    <span className="font-medium text-text-primary">{row.workers}</span>
+                                  </span>
+                                )}
+                                {row.hours > 0 && (
+                                  <span>
+                                    <span className="text-text-tertiary">Hours: </span>
+                                    <span className="font-medium text-text-primary">{row.hours}</span>
+                                  </span>
+                                )}
+                              </div>
+                              {row.activities?.trim() && <p className="mt-1.5 text-sm text-text-primary">{row.activities}</p>}
+                            </div>
+                          ))}
+                          {crewLog.every((row) => !hasCrewLogEntry(row)) && <p className="text-sm text-text-tertiary">No crew log entries.</p>}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </details>
+              </div>
+
+              <div className="hidden md:block rounded-2xl border border-border-default bg-surface-overlay/60 p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-text-primary">Customer Delivery</p>
@@ -1535,7 +1709,7 @@ function UpdateForm({
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="hidden md:grid gap-4 md:grid-cols-2">
                 <SummaryField label="Overall % Complete" value={`${pctComplete.toFixed(1)}%`} />
                 <SummaryField label="Blockers" value={blockers} />
                 <SummaryField label="Material Delivered" value={materialDelivered} />
@@ -1558,10 +1732,13 @@ function UpdateForm({
                 </div>
               </div>
 
-              <SummaryField label="Additional Notes" value={notes} />
+              <div className="hidden md:block">
+                <SummaryField label="Additional Notes" value={notes} />
+              </div>
 
-              {laborDetail && laborDetail.length > 0 ? (
-                <div className="space-y-3 rounded-xl border border-border-default bg-surface-base p-4">
+              <div className="hidden md:block">
+                {laborDetail && laborDetail.length > 0 ? (
+                  <div className="space-y-3 rounded-xl border border-border-default bg-surface-base p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Labor Hours</p>
@@ -1624,57 +1801,58 @@ function UpdateForm({
                   <p className="text-xs text-text-tertiary">
                     *Hours rounded to nearest half hour
                   </p>
-                </div>
-              ) : (
-                <>
-                  <div className="space-y-2 md:hidden">
-                    {crewLog.filter(hasCrewLogEntry).map((row) => (
-                      <div key={row.day} className="rounded-xl border border-border-default bg-surface-base px-4 py-3">
-                        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-text-secondary">{row.day}</p>
-                        <div className="flex flex-wrap gap-4 text-sm">
-                          {row.workers > 0 && (
-                            <span>
-                              <span className="text-text-tertiary">Workers: </span>
-                              <span className="font-medium text-text-primary">{row.workers}</span>
-                            </span>
-                          )}
-                          {row.hours > 0 && (
-                            <span>
-                              <span className="text-text-tertiary">Hours: </span>
-                              <span className="font-medium text-text-primary">{row.hours}</span>
-                            </span>
-                          )}
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      {crewLog.filter(hasCrewLogEntry).map((row) => (
+                        <div key={row.day} className="rounded-xl border border-border-default bg-surface-base px-4 py-3">
+                          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-text-secondary">{row.day}</p>
+                          <div className="flex flex-wrap gap-4 text-sm">
+                            {row.workers > 0 && (
+                              <span>
+                                <span className="text-text-tertiary">Workers: </span>
+                                <span className="font-medium text-text-primary">{row.workers}</span>
+                              </span>
+                            )}
+                            {row.hours > 0 && (
+                              <span>
+                                <span className="text-text-tertiary">Hours: </span>
+                                <span className="font-medium text-text-primary">{row.hours}</span>
+                              </span>
+                            )}
+                          </div>
+                          {row.activities?.trim() && <p className="mt-1.5 text-sm text-text-primary">{row.activities}</p>}
                         </div>
-                        {row.activities?.trim() && <p className="mt-1.5 text-sm text-text-primary">{row.activities}</p>}
-                      </div>
-                    ))}
-                    {crewLog.every((row) => !hasCrewLogEntry(row)) && <p className="text-sm text-text-tertiary">No crew log entries.</p>}
-                  </div>
+                      ))}
+                      {crewLog.every((row) => !hasCrewLogEntry(row)) && <p className="text-sm text-text-tertiary">No crew log entries.</p>}
+                    </div>
 
-                  <div className="hidden overflow-x-auto rounded-xl border border-border-default md:block">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-border-default bg-surface-overlay text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">
-                          <th className="px-3 py-2">Day</th>
-                          <th className="px-3 py-2 text-center"># of Workers</th>
-                          <th className="px-3 py-2 text-center">Hours</th>
-                          <th className="px-3 py-2">Activities</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {crewLog.map((row) => (
-                          <tr key={row.day} className="border-b border-border-default last:border-0">
-                            <td className="px-3 py-2 text-text-secondary">{row.day}</td>
-                            <td className="px-3 py-2 text-center text-text-primary">{row.workers || "-"}</td>
-                            <td className="px-3 py-2 text-center text-text-primary">{row.hours || "-"}</td>
-                            <td className="px-3 py-2 text-text-primary">{row.activities || "-"}</td>
+                    <div className="hidden overflow-x-auto rounded-xl border border-border-default md:block">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border-default bg-surface-overlay text-left text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+                            <th className="px-3 py-2">Day</th>
+                            <th className="px-3 py-2 text-center"># of Workers</th>
+                            <th className="px-3 py-2 text-center">Hours</th>
+                            <th className="px-3 py-2">Activities</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
-              )}
+                        </thead>
+                        <tbody>
+                          {crewLog.map((row) => (
+                            <tr key={row.day} className="border-b border-border-default last:border-0">
+                              <td className="px-3 py-2 text-text-secondary">{row.day}</td>
+                              <td className="px-3 py-2 text-center text-text-primary">{row.workers || "-"}</td>
+                              <td className="px-3 py-2 text-center text-text-primary">{row.hours || "-"}</td>
+                              <td className="px-3 py-2 text-text-primary">{row.activities || "-"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -3176,6 +3354,7 @@ function RfiTab({
 }
 
 function PhotosTab({ projectId }: { projectId: string }) {
+  const supabase = createClient();
   const [photos, setPhotos] = useState<Array<{
     id: string;
     caption: string | null;
@@ -3191,6 +3370,17 @@ function PhotosTab({ projectId }: { projectId: string }) {
   const [pendingCaption, setPendingCaption] = useState("");
   const [pendingDate, setPendingDate] = useState(() => new Date().toISOString().slice(0, 10));
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function reauthWithMicrosoft() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "azure",
+      options: {
+        scopes: "openid email profile offline_access Files.ReadWrite Mail.ReadWrite Sites.ReadWrite.All",
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    if (error) console.error("Microsoft reauth failed:", error.message);
+  }
 
   useEffect(() => {
     void loadPhotos();
@@ -3295,7 +3485,20 @@ function PhotosTab({ projectId }: { projectId: string }) {
           </button>
           <span className="ml-3 text-xs text-text-tertiary">Images only, max 20 MB each</span>
         </div>
-        {uploadError && <p className="text-sm text-status-danger">{uploadError}</p>}
+        {uploadError && (
+          <div className="flex flex-wrap items-center gap-2 text-sm text-status-danger">
+            <span>{uploadError}</span>
+            {uploadError.includes("Microsoft sign-in required") && (
+              <button
+                type="button"
+                onClick={() => void reauthWithMicrosoft()}
+                className="rounded-lg border border-status-danger/40 bg-status-danger/10 px-2.5 py-1 text-xs font-semibold text-status-danger transition hover:bg-status-danger/20"
+              >
+                Reauthenticate with Microsoft
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {loading ? (
