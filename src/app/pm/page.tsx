@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ViewReportLink } from "@/components/view-report-link";
 import { BomTab } from "@/components/bom-tab";
+import { CustomerContactsSection } from "@/components/project-modal/customer-contacts-section";
 import type { WeeklyUpdateRecipient } from "@/lib/reports/weekly-update-email";
 import { formatWeekEndingSaturday, normalizeWeekEndingSaturday } from "@/lib/utils/week-ending";
 import type { ChangeOrder, LaborHoursWorker } from "@/types/database";
@@ -1371,11 +1372,16 @@ function UpdateForm({
       )}
 
       {activeTab === "contacts" && (
-        <ContactsTab
-          projectId={project.id}
-          contacts={contacts}
-          onSaved={(updated) => setContacts(updated)}
-        />
+        <div className="space-y-8">
+          <ContactsTab
+            projectId={project.id}
+            contacts={contacts}
+            onSaved={(updated) => setContacts(updated)}
+          />
+          <div className="border-t border-border-default pt-6">
+            <CustomerContactsSection projectId={project.id} />
+          </div>
+        </div>
       )}
 
       {activeTab === "update" && (

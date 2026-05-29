@@ -726,13 +726,26 @@ export async function GET(request: Request) {
   }
 
   if (section === "project-customer-contacts") {
-    if (!["admin", "ops_manager"].includes(requesterRole)) {
-      return NextResponse.json({ error: "Admin or ops manager access required." }, { status: 403 });
-    }
-
     const projectId = searchParams.get("projectId");
     if (!projectId) {
       return NextResponse.json({ error: "Missing project id." }, { status: 400 });
+    }
+
+    const isAdminOrOps = ["admin", "ops_manager"].includes(requesterRole);
+    let isPmOnProject = false;
+    if (!isAdminOrOps && ["pm", "lead"].includes(requesterRole) && resolvedProfile?.id) {
+      const { data: assignment } = await adminClient
+        .from("project_assignments")
+        .select("id")
+        .eq("project_id", projectId)
+        .eq("profile_id", resolvedProfile.id)
+        .in("role_on_project", ["pm", "lead"])
+        .maybeSingle();
+      isPmOnProject = Boolean(assignment);
+    }
+
+    if (!isAdminOrOps && !isPmOnProject) {
+      return NextResponse.json({ error: "Access denied." }, { status: 403 });
     }
 
     const [contactResult, availableContactsResult, crmContactsResult] = await Promise.all([

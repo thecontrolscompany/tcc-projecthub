@@ -5,6 +5,27 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import { logUserActivity, requestIp } from "@/lib/auth/activity";
 
+async function canManageContacts(
+  adminClient: SupabaseClient,
+  role: string | undefined,
+  profileId: string | undefined,
+  projectId: string,
+) {
+  if (!role) return false;
+  if (["admin", "ops_manager"].includes(role)) return true;
+  if (["pm", "lead"].includes(role) && profileId) {
+    const { data } = await adminClient
+      .from("project_assignments")
+      .select("id")
+      .eq("project_id", projectId)
+      .eq("profile_id", profileId)
+      .in("role_on_project", ["pm", "lead"])
+      .maybeSingle();
+    return Boolean(data);
+  }
+  return false;
+}
+
 type PortalContactSource = {
   email: string;
   firstName: string | null;
@@ -145,9 +166,6 @@ export async function POST(request: Request) {
   }
 
   const resolvedProfile = await resolveUserRole(user);
-  if (!["admin", "ops_manager"].includes(resolvedProfile?.role ?? "")) {
-    return NextResponse.json({ error: "Access denied." }, { status: 403 });
-  }
 
   const body = await request.json().catch(() => null);
   const projectId = typeof body?.projectId === "string" ? body.projectId : "";
@@ -162,6 +180,10 @@ export async function POST(request: Request) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+
+  if (!await canManageContacts(adminClient, resolvedProfile?.role, resolvedProfile?.id, projectId)) {
+    return NextResponse.json({ error: "Access denied." }, { status: 403 });
+  }
 
   let source: PortalContactSource | null = null;
 
@@ -266,9 +288,6 @@ export async function DELETE(request: Request) {
   }
 
   const resolvedProfile = await resolveUserRole(user);
-  if (!["admin", "ops_manager"].includes(resolvedProfile?.role ?? "")) {
-    return NextResponse.json({ error: "Access denied." }, { status: 403 });
-  }
 
   const body = await request.json().catch(() => null);
   const projectId = typeof body?.projectId === "string" ? body.projectId : "";
@@ -282,6 +301,10 @@ export async function DELETE(request: Request) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+
+  if (!await canManageContacts(adminClient, resolvedProfile?.role, resolvedProfile?.id, projectId)) {
+    return NextResponse.json({ error: "Access denied." }, { status: 403 });
+  }
 
   const { error } = await adminClient
     .from("project_customer_contacts")
@@ -307,9 +330,6 @@ export async function PATCH(request: Request) {
   }
 
   const resolvedProfile = await resolveUserRole(user);
-  if (!["admin", "ops_manager"].includes(resolvedProfile?.role ?? "")) {
-    return NextResponse.json({ error: "Access denied." }, { status: 403 });
-  }
 
   const body = await request.json().catch(() => null);
   const projectId = typeof body?.projectId === "string" ? body.projectId : "";
@@ -325,6 +345,10 @@ export async function PATCH(request: Request) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+
+  if (!await canManageContacts(adminClient, resolvedProfile?.role, resolvedProfile?.id, projectId)) {
+    return NextResponse.json({ error: "Access denied." }, { status: 403 });
+  }
 
   const updatePayload =
     field === "portal_access" && value === false
