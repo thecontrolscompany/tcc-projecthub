@@ -2641,8 +2641,8 @@ function UpdateForm({
 
       {showSubmitConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-6">
-          <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-border-default bg-surface-base shadow-2xl">
-            <div className="flex items-start justify-between border-b border-border-default px-5 py-4">
+          <div className="flex w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border-default bg-surface-base shadow-2xl" style={{ maxHeight: "calc(100dvh - 3rem)" }}>
+            <div className="flex shrink-0 items-start justify-between border-b border-border-default px-5 py-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-primary">Approve &amp; Send</p>
                 <h3 className="mt-1 text-lg font-bold text-text-primary">Send this weekly report to customers?</h3>
@@ -2659,7 +2659,7 @@ function UpdateForm({
               </button>
             </div>
 
-            <div className="grid gap-4 p-5 lg:grid-cols-[320px_minmax(0,1fr)]">
+            <div className="grid flex-1 gap-4 overflow-y-auto p-5 lg:grid-cols-[320px_minmax(0,1fr)]">
               <div className="space-y-3">
                 <div className="rounded-xl border border-border-default bg-surface-raised p-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Recipients</p>
@@ -2690,24 +2690,24 @@ function UpdateForm({
               <div className="rounded-xl border border-border-default bg-surface-raised p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Preview</p>
                 {deliveryLoading ? (
-                  <div className="mt-3 flex min-h-[420px] items-center justify-center rounded-lg border border-dashed border-border-default bg-surface-overlay text-sm text-text-tertiary">
+                  <div className="mt-3 flex h-[280px] items-center justify-center rounded-lg border border-dashed border-border-default bg-surface-overlay text-sm text-text-tertiary lg:h-[420px]">
                     Loading preview...
                   </div>
                 ) : deliveryPreviewHtml ? (
                   <iframe
                     title="Weekly report approval preview"
                     srcDoc={deliveryPreviewHtml}
-                    className="mt-3 min-h-[420px] w-full rounded-lg border border-border-default bg-white"
+                    className="mt-3 h-[280px] w-full rounded-lg border border-border-default bg-white lg:h-[420px]"
                   />
                 ) : (
-                  <div className="mt-3 flex min-h-[420px] items-center justify-center rounded-lg border border-dashed border-border-default bg-surface-overlay text-sm text-text-tertiary">
+                  <div className="mt-3 flex h-[280px] items-center justify-center rounded-lg border border-dashed border-border-default bg-surface-overlay text-sm text-text-tertiary lg:h-[420px]">
                     Preview unavailable.
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border-default px-5 py-4">
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-border-default px-5 py-4">
               <button
                 type="button"
                 onClick={() => setShowSubmitConfirm(false)}
