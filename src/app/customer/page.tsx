@@ -358,7 +358,7 @@ export default function CustomerPage() {
               </a>
             </div>
           ) : selectedProject ? (
-            <ProjectDetail project={selectedProject} userId={userId} onBack={() => router.push("/customer")} />
+            <ProjectDetail project={selectedProject} userId={userId} onBack={() => router.push("/customer")} initialTab={searchParams.get("tab") ?? undefined} />
           ) : (
             <ProjectList projects={projects} loadedAt={loadedAt} onSelect={(p) => { window.scrollTo({ top: 0, behavior: "instant" }); router.push(`/customer?project=${p.id}`); }} />
           )}
@@ -667,12 +667,17 @@ function ProjectDetail({
   project,
   userId,
   onBack,
+  initialTab,
 }: {
   project: CustomerProject;
   userId: string;
   onBack: () => void;
+  initialTab?: string;
 }) {
-  const [view, setView] = useState<"updates" | "billing" | "bom" | "schedule-reviews">("updates");
+  const validTabs = ["updates", "billing", "bom", "schedule-reviews"] as const;
+  const [view, setView] = useState<"updates" | "billing" | "bom" | "schedule-reviews">(
+    validTabs.includes(initialTab as typeof validTabs[number]) ? (initialTab as typeof validTabs[number]) : "updates"
+  );
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackSaving, setFeedbackSaving] = useState(false);
