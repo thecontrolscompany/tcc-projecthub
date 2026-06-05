@@ -28,12 +28,14 @@ import { SidebarLayout } from "../../shared/SidebarLayout.jsx";
 import { SchematicTabs } from "../../shared/SchematicTabs.jsx";
 import { DiagramViewer } from "../../shared/DiagramViewer.jsx";
 import { PointsList } from "../../shared/PointsList.jsx";
+import { resolveProjectHubGraphicsSource } from "../../shared/projecthubGraphics";
 import {
   buildCableBundleFromPoints,
   CONDUIT_FILL_BUNDLE_KEY,
   CONDUIT_FILL_CONTEXT_KEY,
   findHomeRunComponentId,
 } from "../../shared/conduitFill.js";
+import { GgtMixedAirPoc } from "../../../../components/system-graphic/GgtMixedAirPoc";
 
 const DuctWall = ({x,y,w,h}) => (
   <g>
@@ -859,6 +861,10 @@ export default function AHUPage() {
     () => (cfg ? getVisibleAhuComponents(cfg) : []),
     [cfg]
   );
+  const graphicsSource = useMemo(
+    () => resolveProjectHubGraphicsSource("ahu", cfg, selected),
+    [cfg, selected]
+  );
 
   const reconcileRanOnce = useRef(false);
   useEffect(() => {
@@ -974,7 +980,16 @@ export default function AHUPage() {
               <div style={{flex:1,background:T.surface,borderRadius:8,border:"1px solid "+T.border,
                 overflow:"hidden",minHeight:0}}>
                 <SchematicTabs>{{
-                  flow: <AHUSchematic cfg={cfg} visibleComponents={visibleComponents} selected={selected} onToggle={toggle}/>,
+                  flow: graphicsSource ? (
+                    <GgtMixedAirPoc
+                      selectedOntologyIds={graphicsSource.selectedOntologyIds}
+                      systemKey={graphicsSource.systemKey}
+                      showControls={false}
+                      showLegend={true}
+                    />
+                  ) : (
+                    <AHUSchematic cfg={cfg} visibleComponents={visibleComponents} selected={selected} onToggle={toggle}/>
+                  ),
                   elec: (
                     <DiagramViewer
                       svgPath="/diagrams/ahu-elec.svg"

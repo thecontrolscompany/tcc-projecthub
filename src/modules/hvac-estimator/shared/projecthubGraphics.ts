@@ -30,12 +30,14 @@ const VAV_ONTOLOGY_BY_COMPONENT: Record<string, string[]> = {
 
 const AHU_ONTOLOGY_BY_COMPONENT: Record<string, string[]> = {
   "oa-temp": ["outdoor_air_temperature"],
+  "oa-rh": ["outdoor_air_humidity"],
   "oa-damper": ["mixed_air_damper_position"],
   "ea-damper": ["mixed_air_damper_position"],
   "ra-damper": ["mixed_air_damper_position"],
   "min-oa-d": ["mixed_air_damper_position"],
   "fab-damper": ["mixed_air_damper_position"],
   "plate-bypass": ["mixed_air_damper_position"],
+  "filter-dp": ["prefilter_status"],
   "ph-valve": ["preheat_output"],
   "ph-valve-2pos": ["preheat_output"],
   "ph-steam-valve": ["preheat_output"],
@@ -50,6 +52,13 @@ const AHU_ONTOLOGY_BY_COMPONENT: Record<string, string[]> = {
   "clg-valve": ["cooling_output"],
   "clg-valve-2pos": ["cooling_output"],
   "clg-dx-staged": ["cooling_output"],
+  "sa-temp": ["supply_air_temperature", "discharge_air_temperature"],
+  "ra-temp": ["return_air_temperature"],
+  "sa-static": ["discharge_air_pressure_setpoint"],
+  "sf-starter": ["supply_fan_command"],
+  "vfd-sf": ["supply_fan_command", "vfd_fault"],
+  "rf-starter": ["return_fan_command"],
+  "vfd-rf": ["return_fan_command"],
 };
 
 const FCU_ONTOLOGY_BY_COMPONENT: Record<string, string[]> = {
