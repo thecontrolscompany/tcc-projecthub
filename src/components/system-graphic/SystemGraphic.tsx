@@ -10,7 +10,6 @@ interface Props {
   devices: DeviceConfig[];
   selectedDevice?: string | null;
   selectedOntologyIds?: string[];
-  presentationMode?: 'default' | 'selected-only';
   onDeviceClick?: (key: string) => void;
   className?: string;
 }
@@ -21,7 +20,6 @@ export function SystemGraphic({
   devices,
   selectedDevice,
   selectedOntologyIds,
-  presentationMode = 'default',
   onDeviceClick,
   className,
 }: Props) {
@@ -88,28 +86,9 @@ export function SystemGraphic({
       element.setAttribute('data-projecthub-highlight', 'true');
     }
 
-    if (presentationMode === 'selected-only') {
-      const visibleIds = new Set(resolvedIds);
-      for (const anchor of devices) {
-        const targetId = anchor.svg_element_id?.trim();
-        if (!targetId) continue;
-        const element = root.querySelector(`#${escapeSvgSelector(targetId)}`) as SVGElement | null;
-        if (!element) continue;
-        if (visibleIds.has(targetId)) {
-          element.style.opacity = '1';
-          element.style.visibility = 'visible';
-          element.style.display = '';
-        } else {
-          element.style.opacity = '0';
-          element.style.visibility = 'hidden';
-          element.style.display = 'none';
-        }
-      }
-    }
-
     setSelectedElementExists(foundAny);
     setResolvedElementIds(resolvedIds);
-  }, [devices, presentationMode, selectedAnchors, svgContent]);
+  }, [selectedAnchors, svgContent]);
 
   const { page_width_px: W, page_height_px: H } = metadata;
   const fallbackAnchors = selectedAnchors.filter((anchor) => {
@@ -122,16 +101,7 @@ export function SystemGraphic({
       <svg
         viewBox={`0 0 ${W} ${H}`}
         width="100%"
-        height="100%"
-        preserveAspectRatio="xMidYMid meet"
-        style={{
-          display: 'block',
-          background: '#f8fafc',
-          border: '1px solid #e2e8f0',
-          borderRadius: 4,
-          maxHeight: '100%',
-          overflow: 'hidden',
-        }}
+        style={{ display: 'block', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 4 }}
         xmlns="http://www.w3.org/2000/svg"
       >
         {selectedElementExists && (

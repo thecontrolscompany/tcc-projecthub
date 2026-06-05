@@ -28,14 +28,12 @@ import { SidebarLayout } from "../../shared/SidebarLayout.jsx";
 import { SchematicTabs } from "../../shared/SchematicTabs.jsx";
 import { DiagramViewer } from "../../shared/DiagramViewer.jsx";
 import { PointsList } from "../../shared/PointsList.jsx";
-import { ProjectHubOntologyGraphicPanel } from "../../shared/ProjectHubOntologyGraphicPanel";
 import {
   buildCableBundleFromPoints,
   CONDUIT_FILL_BUNDLE_KEY,
   CONDUIT_FILL_CONTEXT_KEY,
   findHomeRunComponentId,
 } from "../../shared/conduitFill.js";
-import { resolveProjectHubGraphicsSource } from "../../shared/projecthubGraphics";
 
 const DuctWall = ({x,y,w,h}) => (
   <g>
@@ -856,18 +854,6 @@ export default function AHUPage() {
   const [tag,setTag]        = useState(() => isEditing ? editingItem.tag : "AHU");
   const [loc,setLoc]        = useState(() => isEditing ? editingItem.location : "Mechanical Room");
   const [isLauncherMode, setIsLauncherMode] = useState(() => !isEditing);
-  const projectHubSource = useMemo(
-    () => resolveProjectHubGraphicsSource("ahu", cfg, selected),
-    [cfg, selected]
-  );
-  const projectHubGraphic = projectHubSource ? (
-    <ProjectHubOntologyGraphicPanel
-      type="ahu"
-      cfg={cfg}
-      selected={selected}
-      title="AHU Mixed Air"
-    />
-  ) : null;
 
   const visibleComponents = useMemo(
     () => (cfg ? getVisibleAhuComponents(cfg) : []),
@@ -988,8 +974,8 @@ export default function AHUPage() {
               <div style={{flex:1,background:T.surface,borderRadius:8,border:"1px solid "+T.border,
                 overflow:"hidden",minHeight:0}}>
                 <SchematicTabs>{{
-                  flow: projectHubGraphic || <AHUSchematic cfg={cfg} visibleComponents={visibleComponents} selected={selected} onToggle={toggle}/>,
-                  elec: projectHubGraphic || (
+                  flow: <AHUSchematic cfg={cfg} visibleComponents={visibleComponents} selected={selected} onToggle={toggle}/>,
+                  elec: (
                     <DiagramViewer
                       svgPath="/diagrams/ahu-elec.svg"
                       selectedIds={selected.map(s=>s.id)}

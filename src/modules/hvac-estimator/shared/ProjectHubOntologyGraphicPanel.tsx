@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { SystemGraphic } from '@/components/system-graphic';
 import type { DeviceConfig, DeviceType, SystemMetadata } from '@/components/system-graphic/types';
 import { buildSystemMetadata, getSystemPreviewLabel, getSystemSvgUrl } from '@/data/projecthub/projecthub-data';
@@ -47,7 +47,6 @@ export function ProjectHubOntologyGraphicPanel({ type, cfg, selected, className,
     () => resolveProjectHubGraphicsSource(type, cfg, selected),
     [type, cfg, selected]
   );
-  const svgPath = useMemo(() => (source ? getSystemSvgUrl(source.systemKey) : ''), [source]);
 
   const metadata = useMemo(
     () => (source ? buildSystemMetadata(source.systemKey) : null),
@@ -55,16 +54,6 @@ export function ProjectHubOntologyGraphicPanel({ type, cfg, selected, className,
   );
 
   const devices = useMemo(() => (metadata ? buildDevices(metadata) : []), [metadata]);
-
-  useEffect(() => {
-    if (!source || process.env.NODE_ENV === 'production') return;
-    console.debug('[ProjectHubOntologyGraphicPanel]', {
-      systemKey: source.systemKey,
-      svgPath,
-      selectedOntologyIds: source.selectedOntologyIds,
-      rendererMode: 'ontology',
-    });
-  }, [source, svgPath]);
 
   if (!source || !metadata) return null;
 
@@ -80,10 +69,9 @@ export function ProjectHubOntologyGraphicPanel({ type, cfg, selected, className,
       )}
       <SystemGraphic
         metadata={metadata}
-        svgUrl={svgPath}
+        svgUrl={getSystemSvgUrl(source.systemKey)}
         devices={devices}
         selectedOntologyIds={source.selectedOntologyIds}
-        presentationMode="selected-only"
       />
     </div>
   );
