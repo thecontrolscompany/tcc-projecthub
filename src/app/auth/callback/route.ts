@@ -89,7 +89,7 @@ export async function GET(request: Request) {
           metadata: { method: "microsoft" },
         });
 
-        return NextResponse.redirect(`${origin}${roleHome(effectiveRole)}`);
+        return NextResponse.redirect(`${origin}${next !== "/" ? next : roleHome(effectiveRole)}`);
       }
 
       return NextResponse.redirect(`${origin}${next}`);
