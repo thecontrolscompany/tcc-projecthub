@@ -860,6 +860,14 @@ export default function AHUPage() {
     () => resolveProjectHubGraphicsSource("ahu", cfg, selected),
     [cfg, selected]
   );
+  const projectHubGraphic = projectHubSource ? (
+    <ProjectHubOntologyGraphicPanel
+      type="ahu"
+      cfg={cfg}
+      selected={selected}
+      title="AHU Mixed Air"
+    />
+  ) : null;
 
   const visibleComponents = useMemo(
     () => (cfg ? getVisibleAhuComponents(cfg) : []),
@@ -980,14 +988,8 @@ export default function AHUPage() {
               <div style={{flex:1,background:T.surface,borderRadius:8,border:"1px solid "+T.border,
                 overflow:"hidden",minHeight:0}}>
                 <SchematicTabs>{{
-                  flow: <AHUSchematic cfg={cfg} visibleComponents={visibleComponents} selected={selected} onToggle={toggle}/>,
-                  elec: projectHubSource ? (
-                    <ProjectHubOntologyGraphicPanel
-                      type="ahu"
-                      cfg={cfg}
-                      selected={selected}
-                    />
-                  ) : (
+                  flow: projectHubGraphic || <AHUSchematic cfg={cfg} visibleComponents={visibleComponents} selected={selected} onToggle={toggle}/>,
+                  elec: projectHubGraphic || (
                     <DiagramViewer
                       svgPath="/diagrams/ahu-elec.svg"
                       selectedIds={selected.map(s=>s.id)}
