@@ -28,12 +28,14 @@ import { SidebarLayout } from "../../shared/SidebarLayout.jsx";
 import { SchematicTabs } from "../../shared/SchematicTabs.jsx";
 import { DiagramViewer } from "../../shared/DiagramViewer.jsx";
 import { PointsList } from "../../shared/PointsList.jsx";
+import { ProjectHubOntologyGraphicPanel } from "../../shared/ProjectHubOntologyGraphicPanel";
 import {
   buildCableBundleFromPoints,
   CONDUIT_FILL_BUNDLE_KEY,
   CONDUIT_FILL_CONTEXT_KEY,
   findHomeRunComponentId,
 } from "../../shared/conduitFill.js";
+import { resolveProjectHubGraphicsSource } from "../../shared/projecthubGraphics";
 
 const DuctWall = ({x,y,w,h}) => (
   <g>
@@ -608,7 +610,7 @@ function AhuConfigLauncher({ cfg, onCfgChange, onStart }) {
 }
 
 
-function CompPanel({cfg, onCfgChange, visibleComponents, selected,onToggle,onSetCompQty,custom,onAddCust,onRemoveCust,installType,setIT,qty,setQty}) {
+function CompPanel({cfg, visibleComponents, selected,onToggle,onSetCompQty,custom,onAddCust,onRemoveCust,installType,setIT,qty,setQty}) {
   const [filterCat,setFC]   = useState("All");
   const [expanded,setExp]   = useState(null);
   const [modal,setModal]    = useState(false);
@@ -854,6 +856,10 @@ export default function AHUPage() {
   const [tag,setTag]        = useState(() => isEditing ? editingItem.tag : "AHU");
   const [loc,setLoc]        = useState(() => isEditing ? editingItem.location : "Mechanical Room");
   const [isLauncherMode, setIsLauncherMode] = useState(() => !isEditing);
+  const projectHubSource = useMemo(
+    () => resolveProjectHubGraphicsSource("ahu", cfg, selected),
+    [cfg, selected]
+  );
 
   const visibleComponents = useMemo(
     () => (cfg ? getVisibleAhuComponents(cfg) : []),
@@ -975,12 +981,20 @@ export default function AHUPage() {
                 overflow:"hidden",minHeight:0}}>
                 <SchematicTabs>{{
                   flow: <AHUSchematic cfg={cfg} visibleComponents={visibleComponents} selected={selected} onToggle={toggle}/>,
-                  elec: <DiagramViewer
-                    svgPath="/diagrams/ahu-elec.svg"
-                    selectedIds={selected.map(s=>s.id)}
-                    allIds={AHU_COMPS.map(c=>c.id)}
-                    fallback={<div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100%"}}><span style={{color:T.muted,fontFamily:T.mono,fontSize:13}}>Drop ahu-elec.svg into public/diagrams/</span></div>}
-                  />,
+                  elec: projectHubSource ? (
+                    <ProjectHubOntologyGraphicPanel
+                      type="ahu"
+                      cfg={cfg}
+                      selected={selected}
+                    />
+                  ) : (
+                    <DiagramViewer
+                      svgPath="/diagrams/ahu-elec.svg"
+                      selectedIds={selected.map(s=>s.id)}
+                      allIds={AHU_COMPS.map(c=>c.id)}
+                      fallback={<div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100%"}}><span style={{color:T.muted,fontFamily:T.mono,fontSize:13}}>Drop ahu-elec.svg into public/diagrams/</span></div>}
+                    />
+                  ),
                   points: <PointsList comps={AHU_COMPS} selected={selected} installType={installType} tag={tag}/>
                 }}</SchematicTabs>
               </div>
@@ -1038,7 +1052,7 @@ export default function AHUPage() {
               </div>
             </div>
             )} sidebar={(
-              <CompPanel cfg={cfg} onCfgChange={handleCfgChange} visibleComponents={visibleComponents} selected={selected} onToggle={toggle} onSetCompQty={setCompQty}
+              <CompPanel cfg={cfg} visibleComponents={visibleComponents} selected={selected} onToggle={toggle} onSetCompQty={setCompQty}
                 custom={custom} onAddCust={c=>setCustom(cs=>[...cs,c])}
                 onRemoveCust={id=>setCustom(cs=>cs.filter(c=>c.id!==id))}
                 installType={installType} setIT={setIT} qty={qty} setQty={setQty}/>

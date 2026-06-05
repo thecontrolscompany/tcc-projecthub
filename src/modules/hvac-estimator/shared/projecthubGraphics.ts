@@ -101,6 +101,9 @@ export function resolveProjectHubGraphicsSource(type: string, cfg: Record<string
 
   if (type === "ahu") {
     const normalized = normalizeAhuCfg(cfg);
+    if (normalized.ahuType !== "mixed") {
+      return null;
+    }
     const systemKey: ProjectHubSystemKey =
       normalized.returnFanConfig === "dual" || normalized.supplyFanConfig === "dual"
         ? "mixed_air_dual_point_ahu"
