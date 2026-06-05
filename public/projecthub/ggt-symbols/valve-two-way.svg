@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" role="img" aria-label="Two-way valve symbol">
+  <path d="M18 50h18l14-14 14 14 18 0" stroke="#0f172a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M50 36v28" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="50" cy="50" r="10" fill="#dbeafe" stroke="#0f172a" stroke-width="4"/>
+  <path d="M44 44l12 12M56 44L44 56" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+  <path d="M50 18v10M50 72v10" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+</svg>

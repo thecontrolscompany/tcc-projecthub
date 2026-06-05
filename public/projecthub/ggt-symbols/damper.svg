@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" role="img" aria-label="Damper symbol">
+  <rect x="16" y="24" width="68" height="52" rx="5" fill="#f8fafc" stroke="#0f172a" stroke-width="4"/>
+  <path d="M26 30h48M26 44h48M26 58h48M26 72h48" stroke="#f59e0b" stroke-width="4" stroke-linecap="round"/>
+  <path d="M26 30l48 42M26 72l48-42" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+  <path d="M50 16v12M50 72v12" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+</svg>

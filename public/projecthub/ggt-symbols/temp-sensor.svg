@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" role="img" aria-label="Temperature sensor symbol">
+  <circle cx="50" cy="50" r="22" fill="#eff6ff" stroke="#0f172a" stroke-width="4"/>
+  <path d="M50 28v-14" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+  <path d="M50 50l10-10" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+  <path d="M50 50l-8 8" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+  <text x="50" y="56" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#0f172a">T</text>
+</svg>

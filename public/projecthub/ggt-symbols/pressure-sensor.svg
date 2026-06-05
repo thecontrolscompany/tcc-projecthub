@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" role="img" aria-label="Pressure sensor symbol">
+  <circle cx="50" cy="50" r="22" fill="#faf5ff" stroke="#0f172a" stroke-width="4"/>
+  <path d="M34 58a20 20 0 0 1 32 0" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+  <path d="M40 52l10-10 10 10" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M50 28v-12" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+  <text x="50" y="66" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#0f172a">P</text>
+</svg>

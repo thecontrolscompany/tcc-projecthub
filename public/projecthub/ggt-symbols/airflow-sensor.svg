@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" role="img" aria-label="Airflow sensor symbol">
+  <circle cx="50" cy="50" r="22" fill="#f0f9ff" stroke="#0f172a" stroke-width="4"/>
+  <path d="M26 50h22" stroke="#0ea5e9" stroke-width="4" stroke-linecap="round"/>
+  <path d="M48 40l12 10-12 10" stroke="#0ea5e9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="50" y="66" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#0f172a">F</text>
+</svg>

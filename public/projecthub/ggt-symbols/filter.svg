@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" role="img" aria-label="Filter symbol">
+  <rect x="18" y="18" width="64" height="64" rx="6" fill="#f8fafc" stroke="#0f172a" stroke-width="4"/>
+  <path d="M30 26l40 48M36 22l28 56M46 20l16 60M56 22l4 56" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+  <path d="M20 34h60M20 50h60M20 66h60" stroke="#0f172a" stroke-width="1.6" opacity="0.28"/>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" role="img" aria-label="Return fan symbol">
+  <circle cx="50" cy="50" r="38" stroke="#0f172a" stroke-width="4"/>
+  <circle cx="50" cy="50" r="7" fill="#0f172a"/>
+  <path d="M50 16c13 0 24 10 24 23-12-2-22 1-30 10 3-18 4-28 6-33Z" fill="#14b8a6" stroke="#0f172a" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M84 50c0 13-10 24-23 24 2-12-1-22-10-30 18 3 28 4 33 6Z" fill="#2dd4bf" stroke="#0f172a" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M50 84c-13 0-24-10-24-23 12 2 22-1 30-10-3 18-4 28-6 33Z" fill="#14b8a6" stroke="#0f172a" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M18 50h-8M90 50h-8" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+</svg>

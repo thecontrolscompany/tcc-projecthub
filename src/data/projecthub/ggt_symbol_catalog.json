@@ -1,0 +1,192 @@
+{
+  "generated_at": "2026-06-05T00:00:00-05:00",
+  "source_root": "C:/ProgramData/Johnson Controls/XAML Graphics Components/Graphic Generation Tool/Templates/V1",
+  "symbols": [
+    {
+      "symbol_id": "supply_fan",
+      "source_xaml": [
+        "Air/Mixed Air Single Path (Modulated Heating-Cooling).xaml",
+        "Air/Mixed Air Single Path (Modulated Coils).xaml",
+        "Air/VAV Single Duct.xaml",
+        "Air/Fan Coil (Heating-Cooling Coils).xaml"
+      ],
+      "equipment_device_type": "fan",
+      "output_svg_path": "/projecthub/ggt-symbols/supply-fan.svg",
+      "ontology_ids": ["supply_fan_status", "supply_fan_command"],
+      "notes": "Primary air-moving symbol derived from SupplyFanAdapter hosts."
+    },
+    {
+      "symbol_id": "return_fan",
+      "source_xaml": [
+        "Air/Mixed Air Dual Path.xaml",
+        "Air/Mixed Air Single Path (Staged Coils).xaml"
+      ],
+      "equipment_device_type": "fan",
+      "output_svg_path": "/projecthub/ggt-symbols/return-fan.svg",
+      "ontology_ids": ["return_fan_command", "return_fan_status"],
+      "notes": "Secondary fan symbol derived from ReturnFanAdapter hosts."
+    },
+    {
+      "symbol_id": "exhaust_fan",
+      "source_xaml": [
+        "Air/Outdoor Air Single Path.xaml",
+        "Air/Mixed Air Single Path (Modulated with Heat Recovery).xaml"
+      ],
+      "equipment_device_type": "fan",
+      "output_svg_path": "/projecthub/ggt-symbols/exhaust-fan.svg",
+      "ontology_ids": ["exhaust_air_flow"],
+      "notes": "Used for exhaust and relief fan placement and related flow indications."
+    },
+    {
+      "symbol_id": "damper",
+      "source_xaml": [
+        "Air/Mixed Air Dual Path.xaml",
+        "Air/Mixed Air Single Path (Modulated Heating-Cooling).xaml",
+        "Air/Outdoor Air Single Path.xaml"
+      ],
+      "equipment_device_type": "damper",
+      "output_svg_path": "/projecthub/ggt-symbols/damper.svg",
+      "ontology_ids": ["mixed_air_damper_position", "prefilter_status", "damper_position"],
+      "notes": "Covers the mixed-air, outdoor-air, and return/exhaust damper family."
+    },
+    {
+      "symbol_id": "filter",
+      "source_xaml": [
+        "Air/Outdoor Air Single Path.xaml",
+        "Air/Mixed Air Single Path (Modulated Coils).xaml",
+        "Air/Fan Coil (Modulated Coils).xaml"
+      ],
+      "equipment_device_type": "filter",
+      "output_svg_path": "/projecthub/ggt-symbols/filter.svg",
+      "ontology_ids": ["prefilter_status", "final_filter_status"],
+      "notes": "Reusable pre-filter/final-filter glyph from the GGT air-side layouts."
+    },
+    {
+      "symbol_id": "heating_coil",
+      "source_xaml": [
+        "Air/Mixed Air Single Path (Modulated Heating-Cooling).xaml",
+        "Air/Mixed Air Single Path (Modulated with Heat Recovery).xaml",
+        "Air/Outdoor Air Single Path.xaml",
+        "Air/VAV Single Duct (Modulated Heat).xaml"
+      ],
+      "equipment_device_type": "heating_coil",
+      "output_svg_path": "/projecthub/ggt-symbols/heating-coil.svg",
+      "ontology_ids": ["heating_output", "preheat_output", "heating_cooling_output"],
+      "notes": "Coil geometry for preheat, heating, and mixed heating/cooling stages."
+    },
+    {
+      "symbol_id": "cooling_coil",
+      "source_xaml": [
+        "Air/Mixed Air Single Path (Modulated Heating-Cooling).xaml",
+        "Air/Mixed Air Single Path (Modulated with Heat Recovery).xaml",
+        "Air/Fan Coil (Modulated Coils).xaml",
+        "Air/Outdoor Air Single Path.xaml"
+      ],
+      "equipment_device_type": "cooling_coil",
+      "output_svg_path": "/projecthub/ggt-symbols/cooling-coil.svg",
+      "ontology_ids": ["cooling_output", "heating_cooling_output"],
+      "notes": "Cooling-stage coil extracted from the GGT air-system templates."
+    },
+    {
+      "symbol_id": "valve_two_way",
+      "source_xaml": [
+        "Water/Steam Heat Exchanger.xaml",
+        "Water/Hot Water Boiler.xaml",
+        "Water/Water Cooled Chiller.xaml"
+      ],
+      "equipment_device_type": "valve",
+      "output_svg_path": "/projecthub/ggt-symbols/valve-two-way.svg",
+      "ontology_ids": ["valve_command", "chilled_water_isolation_valve_command", "boiler_isolation_valve_command"],
+      "notes": "Two-way valve symbol derived from water-side valve adapters and isolation valve placements."
+    },
+    {
+      "symbol_id": "valve_three_way",
+      "source_xaml": [
+        "Air/Outdoor Air Single Path.xaml",
+        "Water/Hot Water Heat Exchanger.xaml"
+      ],
+      "equipment_device_type": "valve",
+      "output_svg_path": "/projecthub/ggt-symbols/valve-three-way.svg",
+      "ontology_ids": ["valve_command", "boiler_isolation_valve_command"],
+      "notes": "Three-way valve glyph used for bypass and mixing applications."
+    },
+    {
+      "symbol_id": "vfd_panel",
+      "source_xaml": [
+        "Water/Hot Water Boiler Plant (3 Boilers 4 Pumps).xaml",
+        "Water/Air Cooled Chiller Plant (2 Chillers 3 Pumps).xaml",
+        "Air/Mixed Air Single Path (Staged Coils).xaml"
+      ],
+      "equipment_device_type": "panel",
+      "output_svg_path": "/projecthub/ggt-symbols/vfd-panel.svg",
+      "ontology_ids": ["vfd_fault", "supply_fan_status", "supply_fan_command"],
+      "notes": "No dedicated VFD icon class was isolated; this is a panel-style drive glyph derived from the GGT control widgets."
+    },
+    {
+      "symbol_id": "temp_sensor",
+      "source_xaml": [
+        "Air/Mixed Air Single Path (Modulated Heating-Cooling).xaml",
+        "Air/Outdoor Air Single Path.xaml",
+        "Air/VAV Single Duct.xaml",
+        "Water/Water Cooled Chiller.xaml",
+        "Water/Hot Water Boiler.xaml"
+      ],
+      "equipment_device_type": "temp_sensor",
+      "output_svg_path": "/projecthub/ggt-symbols/temp-sensor.svg",
+      "ontology_ids": ["mixed_air_temperature", "outdoor_air_temperature", "supply_air_temperature"],
+      "notes": "Temperature sensor glyph. Covers air and water temperature probes used in the GGT templates."
+    },
+    {
+      "symbol_id": "humidity_sensor",
+      "source_xaml": [
+        "Air/Outdoor Air Single Path.xaml",
+        "Air/Mixed Air Single Path (Modulated Heating-Cooling).xaml",
+        "Air/Fan Coil (Heating-Cooling Coils).xaml",
+        "Water/Cooling Tower.xaml"
+      ],
+      "equipment_device_type": "humidity_sensor",
+      "output_svg_path": "/projecthub/ggt-symbols/humidity-sensor.svg",
+      "ontology_ids": ["outdoor_air_humidity"],
+      "notes": "Humidity sensor glyph derived from the OATAndHumidityAdapter family."
+    },
+    {
+      "symbol_id": "pressure_sensor",
+      "source_xaml": [
+        "Air/Mixed Air Dual Path.xaml",
+        "Air/Outdoor Air Single Path.xaml",
+        "Water/Water Cooled Chiller Plant (2 Chillers 3 Pumps).xaml",
+        "Water/Hot Water Heat Exchanger.xaml"
+      ],
+      "equipment_device_type": "pressure_sensor",
+      "output_svg_path": "/projecthub/ggt-symbols/pressure-sensor.svg",
+      "ontology_ids": ["cold_deck_pressure", "hot_deck_pressure", "chilled_water_differential_pressure", "discharge_air_pressure_setpoint"],
+      "notes": "Generic pressure glyph. Air-side pressure semantics are split across multiple GGT templates, so manual cleanup may still be needed."
+    },
+    {
+      "symbol_id": "airflow_sensor",
+      "source_xaml": [
+        "Air/Outdoor Air Single Path.xaml",
+        "Air/Mixed Air Single Path (Modulated with Heat Recovery).xaml",
+        "Air/VAV Single Duct.xaml"
+      ],
+      "equipment_device_type": "flow_sensor",
+      "output_svg_path": "/projecthub/ggt-symbols/airflow-sensor.svg",
+      "ontology_ids": ["supply_air_flow", "return_air_flow", "exhaust_air_flow", "supply_air_flow_setpoint"],
+      "notes": "Flow-meter style glyph from the GGT airflow adapters."
+    },
+    {
+      "symbol_id": "controller_panel",
+      "source_xaml": [
+        "Air/VAV Single Duct.xaml",
+        "Air/VAV Parallel Fan.xaml",
+        "Air/Mixed Air Single Path (Modulated Heating-Cooling).xaml",
+        "Air/Fan Coil (Heating-Cooling Coils).xaml",
+        "Network/N2 Devices.xaml"
+      ],
+      "equipment_device_type": "controller",
+      "output_svg_path": "/projecthub/ggt-symbols/controller-panel.svg",
+      "ontology_ids": ["application_mode", "system_mode", "unit_mode"],
+      "notes": "Composite control-panel glyph derived from StaticRoomControlModule, KeyDataWidget, and N2 controller templates. Manual cleanup may be needed for drive-specific use cases."
+    }
+  ]
+}

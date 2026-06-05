@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import { GgtMixedAirPoc } from '@/components/system-graphic/GgtMixedAirPoc';
 import { SystemGraphicViewer } from '@/components/system-graphic';
 import {
   buildSystemMetadata,
@@ -26,11 +27,24 @@ export default function SystemPreviewPage() {
   return (
     <div style={{ padding: 24, fontFamily: 'system-ui, sans-serif', maxWidth: 1400 }}>
       <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4, color: '#1e293b' }}>
-        Ontology-Backed System Graphic Preview
+        ProjectHub Graphics Preview
       </h1>
       <p style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>
-        ProjectHub demo route using ontology_id selection, linked SVG element highlighting, and overlay fallback support.
+        The top section shows the GGT-symbol mixed-air proof of concept. The lower section keeps the existing
+        ontology-backed linked SVG preview for the established system catalog.
       </p>
+
+      <section style={{ marginBottom: 28 }}>
+        <div style={{ marginBottom: 10 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4, color: '#0f172a' }}>
+            GGT Symbol AHU Mixed Air POC
+          </h2>
+          <p style={{ fontSize: 12, color: '#64748b' }}>
+            Built from reusable GGT/XAML-derived SVG symbols. Checkboxes hide or mute the devices and point markers.
+          </p>
+        </div>
+        <GgtMixedAirPoc />
+      </section>
 
       <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <label style={{ fontSize: 13, fontWeight: 500 }}>System:</label>
