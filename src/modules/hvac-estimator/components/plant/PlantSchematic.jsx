@@ -4,6 +4,8 @@ import { useEstimate } from "../../shared/EstimateContext.jsx";
 import { UnitEditorPage } from "../../shared/UnitEditorPage.jsx";
 import { PlantFlowDiagram } from "./PlantFlowDiagram.jsx";
 import { PLANT_TYPES, PLANT_COMPS } from "./plantData.js";
+import { ProjectHubOntologyGraphicPanel } from "../../shared/ProjectHubOntologyGraphicPanel";
+import { resolveProjectHubGraphicsSource } from "../../shared/projecthubGraphics";
 
 function PlantTypeSelector({ onSelect, onBack }) {
   return (
@@ -127,9 +129,20 @@ export default function PlantSchematic() {
           ← Change Type
         </button>
       )}
-      flowNode={(selected, toggle) => (
-        <PlantFlowDiagram plantType={plantType.id} selected={selected} onToggle={toggle} />
-      )}
+      flowNode={(selected, toggle) => {
+        const graphicsSource = resolveProjectHubGraphicsSource("plant", { plantType: plantType.id }, selected);
+        if (graphicsSource) {
+          return (
+            <ProjectHubOntologyGraphicPanel
+              type="plant"
+              cfg={{ plantType: plantType.id }}
+              selected={selected}
+            />
+          );
+        }
+
+        return <PlantFlowDiagram plantType={plantType.id} selected={selected} onToggle={toggle} />;
+      }}
       assemblyTitle="Add Plant Assembly"
       assemblyDescription="Select from the available central plant assemblies for this plant type. This uses the current assembly pricing and adds it as an extra line item."
       assemblyEmptyText="No plant assemblies match that search."

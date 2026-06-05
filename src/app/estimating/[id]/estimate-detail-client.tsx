@@ -6,7 +6,6 @@ import { Fragment, useEffect, useMemo, useState, type CSSProperties, type ReactN
 import { calcEstimate, calcItem, COMPS_MAP, TYPE_META } from "@/modules/hvac-estimator/components/estimate/estimateCalc";
 import { AddEquipButtons } from "@/modules/hvac-estimator/components/estimate/AddEquipButtons";
 import { AiTakeoffModal } from "@/modules/hvac-estimator/components/estimate/AiTakeoffModal";
-import { EstimateDetail } from "@/modules/hvac-estimator/components/estimate/EstimateDetail";
 import { EstimateEditorWorkspace } from "@/modules/hvac-estimator/components/estimate/EstimateEditorWorkspace";
 import ConduitFillPage from "@/modules/hvac-estimator/components/conduitFill/ConduitFillPage";
 import { ProjectSettingsPanel } from "@/modules/hvac-estimator/components/estimate/ProjectSettingsPanel";
@@ -25,8 +24,9 @@ import { ProjectHubEstimateProvider, useEstimate } from "@/modules/hvac-estimato
 import { CONDUIT_FILL_RESTORE_KEY } from "@/modules/hvac-estimator/shared/conduitFill";
 import { getCustomComponentOptions } from "@/modules/hvac-estimator/shared/componentCatalog";
 import { UnitaryFlowDiagram } from "@/modules/hvac-estimator/shared/UnitaryFlowDiagram";
-import { PLANT_COMPS, PLANT_TYPES } from "@/modules/hvac-estimator/components/plant/plantData";
 import { applyImportedScopeImportToEstimate } from "@/modules/hvac-estimator/ai/scopeImportToEstimate";
+import { ProjectHubOntologyGraphicPanel } from "@/modules/hvac-estimator/shared/ProjectHubOntologyGraphicPanel";
+import { resolveProjectHubGraphicsSource } from "@/modules/hvac-estimator/shared/projecthubGraphics";
 import type { EstimateRecord, EstimateStatus } from "@/types/database";
 
 type Props = {
@@ -407,10 +407,6 @@ function buildItemFromForm(form: AddItemForm): EstimateItem {
   };
 }
 
-function normalizeLookup(value: string) {
-  return String(value || "").trim().toLowerCase();
-}
-
 export function EstimateDetailClient({ estimate }: Props) {
   const router = useRouter();
   const initialEstimateState = getInitialEstimateState(estimate);
@@ -450,6 +446,10 @@ export function EstimateDetailClient({ estimate }: Props) {
   );
 
   const addFormComponents = getVisibleComponentsForType(addForm.type, addForm.cfg);
+  const addFormGraphicsSource = useMemo(
+    () => resolveProjectHubGraphicsSource(addForm.type, addForm.cfg, addForm.selected),
+    [addForm.cfg, addForm.selected, addForm.type]
+  );
 
   function updateBody(patch: Partial<EstimateBody>) {
     setBody((current) => ({
@@ -993,7 +993,15 @@ export function EstimateDetailClient({ estimate }: Props) {
               </label>
             </div>
 
-            {diagramSupportedEquipmentTypes.has(addForm.type) && (
+            {addFormGraphicsSource ? (
+              <LegacyDiagramPanel className="mt-4">
+                <ProjectHubOntologyGraphicPanel
+                  type={addForm.type}
+                  cfg={addForm.cfg}
+                  selected={addForm.selected}
+                />
+              </LegacyDiagramPanel>
+            ) : diagramSupportedEquipmentTypes.has(addForm.type) ? (
               <LegacyDiagramPanel className="mt-4">
                 <UnitaryFlowDiagram
                   kind={addForm.type}
@@ -1001,7 +1009,7 @@ export function EstimateDetailClient({ estimate }: Props) {
                   onToggle={toggleSelectedComponent}
                 />
               </LegacyDiagramPanel>
-            )}
+            ) : null}
 
             {addForm.type === "custom" ? (
               <div className="mt-4 rounded-xl border border-border-default bg-surface-overlay p-4">
@@ -1101,6 +1109,7 @@ export function EstimateDetailClient({ estimate }: Props) {
                     const itemComponents = getVisibleComponentsForType(item.type, item.cfg ?? {});
                     const selectedById = new Map(item.selected.map((component) => [component.id, component.qty]));
                     const editingThisItem = editingComponentsFor === item.id;
+                    const itemGraphicsSource = resolveProjectHubGraphicsSource(item.type, item.cfg ?? {}, item.selected);
                     return (
                       <Fragment key={item.id}>
                         <tr className="hover:bg-surface-overlay/60">
@@ -1165,7 +1174,15 @@ export function EstimateDetailClient({ estimate }: Props) {
                         {editingThisItem && (
                           <tr>
                             <td colSpan={6} className="border-t border-border-default bg-surface-overlay/50 px-4 py-4">
-                              {diagramSupportedEquipmentTypes.has(item.type) && (
+                              {itemGraphicsSource ? (
+                                <LegacyDiagramPanel className="mb-4">
+                                  <ProjectHubOntologyGraphicPanel
+                                    type={item.type}
+                                    cfg={item.cfg ?? {}}
+                                    selected={item.selected}
+                                  />
+                                </LegacyDiagramPanel>
+                              ) : diagramSupportedEquipmentTypes.has(item.type) ? (
                                 <LegacyDiagramPanel className="mb-4">
                                   <UnitaryFlowDiagram
                                     kind={item.type}
@@ -1173,7 +1190,7 @@ export function EstimateDetailClient({ estimate }: Props) {
                                     onToggle={(componentId: string) => toggleItemComponent(item.id, componentId)}
                                   />
                                 </LegacyDiagramPanel>
-                              )}
+                              ) : null}
                               {item.type === "custom" ? (
                                 <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
                                   <label>
@@ -1431,47 +1448,5 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
       <dt className="text-text-tertiary">{label}</dt>
       <dd className="mt-0.5 break-words text-text-secondary">{value}</dd>
     </div>
-  );
-}
-
-function NumberSetting({
-  label,
-  value,
-  step = 1,
-  onChange,
-}: {
-  label: string;
-  value: unknown;
-  step?: number;
-  onChange: (value: number) => void;
-}) {
-  return (
-    <label>
-      <span className={labelClassName}>{label}</span>
-      <input
-        type="number"
-        step={step}
-        value={asNumber(value, 0)}
-        onChange={(event) => onChange(asNumber(event.target.value, 0))}
-        className={inputClassName}
-      />
-    </label>
-  );
-}
-
-function BooleanSetting({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (value: boolean) => void;
-}) {
-  return (
-    <label className="flex items-center gap-2 rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-secondary">
-      <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
-      <span>{label}</span>
-    </label>
   );
 }
