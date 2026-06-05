@@ -72,6 +72,7 @@ export async function updateSession(request: NextRequest) {
     "/auth/confirm",
     "/status",
     "/share",
+    "/system-preview",
   ];
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));
 
