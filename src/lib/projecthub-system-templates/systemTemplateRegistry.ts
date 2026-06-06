@@ -4,7 +4,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import registryData from '@/data/projecthub/system-templates/projecthub_system_template_registry.json';
-import mixedAirSingleDuctVisibilityData from '@/data/projecthub/system-templates/mixed_air_single_duct_point_visibility.json';
 import type {
   ProjectHubSystemTemplateMatchResult,
   ProjectHubSystemTemplatePointManifestEntry,
@@ -16,10 +15,7 @@ import type {
 } from './types';
 
 const WORKSPACE_ROOT = process.cwd();
-const REGISTRY = registryData as ProjectHubSystemTemplateRegistryFile;
-const VISIBILITY_MANIFESTS: Record<string, ProjectHubSystemTemplateVisibilityManifestFile> = {
-  mixed_air_single_duct: mixedAirSingleDuctVisibilityData as ProjectHubSystemTemplateVisibilityManifestFile,
-};
+const REGISTRY = registryData as unknown as ProjectHubSystemTemplateRegistryFile;
 
 const VIRTUAL_ASSET_ROOT = '/api/system-template-preview/assets';
 const DEFAULT_TEMPLATE_ID = 'mixed_air_single_duct';
@@ -49,8 +45,13 @@ function resolvePrivateFilePath(entry: ProjectHubSystemTemplateRegistryEntry, re
   return path.resolve(bundlePath, relativePath);
 }
 
+function readJsonFile<T>(filePath: string): T | null {
+  if (!fs.existsSync(filePath)) return null;
+  return JSON.parse(fs.readFileSync(filePath, 'utf8')) as T;
+}
+
 export function listSystemTemplates() {
-  return [...REGISTRY.templates];
+  return [...REGISTRY.templates].sort((a, b) => a.display_name.localeCompare(b.display_name));
 }
 
 export function getTemplateForSystemType(systemType: string): ProjectHubSystemTemplateRegistryEntry | null {
@@ -90,9 +91,10 @@ export function getPointManifest(templateId: string): ProjectHubSystemTemplatePo
   if (!template) return null;
 
   const manifestPath = resolvePrivateFilePath(template, 'point_manifest.json');
-  if (!manifestPath || !fs.existsSync(manifestPath)) return null;
+  if (!manifestPath) return null;
 
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as ProjectHubSystemTemplatePointManifestFile;
+  const manifest = readJsonFile<ProjectHubSystemTemplatePointManifestFile>(manifestPath);
+  if (!manifest) return null;
   return manifest.points ?? [];
 }
 
@@ -100,7 +102,10 @@ export function getTemplateVisibilityRules(templateId: string): ProjectHubSystem
   const template = findTemplate(templateId);
   if (!template) return null;
 
-  const manifest = VISIBILITY_MANIFESTS[template.template_id];
+  const manifestPath = resolvePrivateFilePath(template, 'point_visibility.json');
+  if (!manifestPath) return null;
+
+  const manifest = readJsonFile<ProjectHubSystemTemplateVisibilityManifestFile>(manifestPath);
   return manifest?.rules?.length ? manifest.rules : null;
 }
 
@@ -109,9 +114,9 @@ export function getTemplateManifestFile(templateId: string): ProjectHubSystemTem
   if (!template) return null;
 
   const manifestPath = resolvePrivateFilePath(template, 'point_manifest.json');
-  if (!manifestPath || !fs.existsSync(manifestPath)) return null;
+  if (!manifestPath) return null;
 
-  return JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as ProjectHubSystemTemplatePointManifestFile;
+  return readJsonFile<ProjectHubSystemTemplatePointManifestFile>(manifestPath);
 }
 
 export function loadNormalizedTemplateMarkup(templateId: string): string | null {

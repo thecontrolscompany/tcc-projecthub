@@ -19,6 +19,8 @@ export type {
   ProjectHubSystemTemplatePointManifestFile,
   ProjectHubSystemTemplateRegistryEntry,
   ProjectHubSystemTemplateRegistryFile,
+  ProjectHubTemplatePointAliasEntry,
+  ProjectHubTemplatePointAliasFile,
   ProjectHubSystemTemplateVisibilityManifestFile,
   ProjectHubSystemTemplateVisibilityMode,
   ProjectHubSystemTemplateVisibilityRule,

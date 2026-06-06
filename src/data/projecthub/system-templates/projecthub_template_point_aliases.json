@@ -1,0 +1,1455 @@
+{
+  "generated_at": "2026-06-06T12:28:58.030Z",
+  "aliases": [
+    {
+      "source_short_name": "CC-T",
+      "normalized_alias": "cc_t",
+      "display_label": "CC-T",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "CCWE-T",
+      "normalized_alias": "ccwe_t",
+      "display_label": "CCWE-T",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "CCWL-T",
+      "normalized_alias": "ccwl_t",
+      "display_label": "CCWL-T",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "CH1-EN",
+      "normalized_alias": "ch1_en",
+      "display_label": "CH1-EN",
+      "candidate_ontology_id": "chiller_enable",
+      "candidate_ontology_ids": [
+        "chiller_enable"
+      ],
+      "estimator_point_role": "chiller_enable",
+      "equipment_family": "central_plant",
+      "templates_seen_in": [
+        "air_cooled_chiller_plant_one_chiller_two_pumps"
+      ],
+      "confidence": 0.96,
+      "notes": "matched to chiller enable concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "CH1-S",
+      "normalized_alias": "ch1_s",
+      "display_label": "CH1-S",
+      "candidate_ontology_id": "chiller_status",
+      "candidate_ontology_ids": [
+        "chiller_status"
+      ],
+      "estimator_point_role": "chiller_status",
+      "equipment_family": "central_plant",
+      "templates_seen_in": [
+        "air_cooled_chiller_plant_one_chiller_two_pumps"
+      ],
+      "confidence": 0.96,
+      "notes": "matched to chiller status concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "CLG-O",
+      "normalized_alias": "clg_o",
+      "display_label": "CLG-O",
+      "candidate_ontology_id": "cooling_stage_1_command",
+      "candidate_ontology_ids": [
+        "cooling_stage_1_command",
+        "cooling_stage_2_command",
+        "cooling_stage_3_command"
+      ],
+      "estimator_point_role": "cooling_stage_1_command",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct",
+        "vav_single_duct"
+      ],
+      "confidence": 0.55,
+      "notes": "cooling valve/position semantics need manual review",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "CLG-POS",
+      "normalized_alias": "clg_pos",
+      "display_label": "CLG-POS",
+      "candidate_ontology_id": "cooling_stage_1_command",
+      "candidate_ontology_ids": [
+        "cooling_stage_1_command"
+      ],
+      "estimator_point_role": "cooling_stage_1_command",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.55,
+      "notes": "cooling valve/position semantics need manual review",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "CLG1-C",
+      "normalized_alias": "clg1_c",
+      "display_label": "CLG1-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "CLG2-C",
+      "normalized_alias": "clg2_c",
+      "display_label": "CLG2-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "CLG3-C",
+      "normalized_alias": "clg3_c",
+      "display_label": "CLG3-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "CLG4-C",
+      "normalized_alias": "clg4_c",
+      "display_label": "CLG4-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "CLG5-C",
+      "normalized_alias": "clg5_c",
+      "display_label": "CLG5-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "CLG6-C",
+      "normalized_alias": "clg6_c",
+      "display_label": "CLG6-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "CLG7-C",
+      "normalized_alias": "clg7_c",
+      "display_label": "CLG7-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "CLG8-C",
+      "normalized_alias": "clg8_c",
+      "display_label": "CLG8-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "DA-SD",
+      "normalized_alias": "da_sd",
+      "display_label": "DA-SD",
+      "candidate_ontology_id": "supply_air_flow",
+      "candidate_ontology_ids": [
+        "supply_air_flow"
+      ],
+      "estimator_point_role": "supply_air_flow",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.65,
+      "notes": "damper setpoint/position semantics are approximate",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "DA-T",
+      "normalized_alias": "da_t",
+      "display_label": "DA-T",
+      "candidate_ontology_id": "discharge_air_temperature",
+      "candidate_ontology_ids": [
+        "discharge_air_temperature"
+      ],
+      "estimator_point_role": "discharge_air_temperature",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct",
+        "vav_single_duct"
+      ],
+      "confidence": 0.93,
+      "notes": "matched to discharge air temperature concept",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "DA1-P",
+      "normalized_alias": "da1_p",
+      "display_label": "DA1-P",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "DAP-SP",
+      "normalized_alias": "dap_sp",
+      "display_label": "DAP-SP",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "DAPHI-A",
+      "normalized_alias": "daphi_a",
+      "display_label": "DAPHI-A",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "DAT-SP",
+      "normalized_alias": "dat_sp",
+      "display_label": "DAT-SP",
+      "candidate_ontology_id": "discharge_air_temperature_setpoint",
+      "candidate_ontology_ids": [
+        "discharge_air_temperature_setpoint"
+      ],
+      "estimator_point_role": "discharge_air_temperature_setpoint",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.92,
+      "notes": "matched to discharge air temperature setpoint concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "DPR-O",
+      "normalized_alias": "dpr_o",
+      "display_label": "DPR-O",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "discharge_air_pressure",
+      "equipment_family": "vav",
+      "templates_seen_in": [
+        "vav_single_duct"
+      ],
+      "confidence": 0.35,
+      "notes": "pressure output not directly mapped in ontology",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "FFILT-S",
+      "normalized_alias": "ffilt_s",
+      "display_label": "FFILT-S",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "GEF-C",
+      "normalized_alias": "gef_c",
+      "display_label": "GEF-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "GEF-S",
+      "normalized_alias": "gef_s",
+      "display_label": "GEF-S",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "HC-O",
+      "normalized_alias": "hc_o",
+      "display_label": "HC-O",
+      "candidate_ontology_id": "heating_stage_1_command",
+      "candidate_ontology_ids": [
+        "heating_stage_1_command"
+      ],
+      "estimator_point_role": "heating_stage_1_command",
+      "equipment_family": "vav",
+      "templates_seen_in": [
+        "vav_single_duct"
+      ],
+      "confidence": 0.55,
+      "notes": "heating output semantics need manual review",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "HTG-O",
+      "normalized_alias": "htg_o",
+      "display_label": "HTG-O",
+      "candidate_ontology_id": "heating_stage_1_command",
+      "candidate_ontology_ids": [
+        "heating_stage_1_command",
+        "supplemental_heating_command"
+      ],
+      "estimator_point_role": "supplemental_heating_command",
+      "equipment_family": "vav",
+      "templates_seen_in": [
+        "vav_single_duct"
+      ],
+      "confidence": 0.55,
+      "notes": "heating output semantics are ambiguous",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "HTG1-C",
+      "normalized_alias": "htg1_c",
+      "display_label": "HTG1-C",
+      "candidate_ontology_id": "heating_stage_1_command",
+      "candidate_ontology_ids": [
+        "heating_stage_1_command"
+      ],
+      "estimator_point_role": "heating_stage_1_command",
+      "equipment_family": "vav",
+      "templates_seen_in": [
+        "vav_single_duct"
+      ],
+      "confidence": 0.95,
+      "notes": "matched to heating stage 1 command concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "HTG2-C",
+      "normalized_alias": "htg2_c",
+      "display_label": "HTG2-C",
+      "candidate_ontology_id": "heating_stage_2_command",
+      "candidate_ontology_ids": [
+        "heating_stage_2_command"
+      ],
+      "estimator_point_role": "heating_stage_2_command",
+      "equipment_family": "vav",
+      "templates_seen_in": [
+        "vav_single_duct"
+      ],
+      "confidence": 0.95,
+      "notes": "matched to heating stage 2 command concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "HTG3-C",
+      "normalized_alias": "htg3_c",
+      "display_label": "HTG3-C",
+      "candidate_ontology_id": "heating_stage_3_command",
+      "candidate_ontology_ids": [
+        "heating_stage_3_command"
+      ],
+      "estimator_point_role": "heating_stage_3_command",
+      "equipment_family": "vav",
+      "templates_seen_in": [
+        "vav_single_duct"
+      ],
+      "confidence": 0.95,
+      "notes": "matched to heating stage 3 command concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "LT-A",
+      "normalized_alias": "lt_a",
+      "display_label": "LT-A",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "MA-T",
+      "normalized_alias": "ma_t",
+      "display_label": "MA-T",
+      "candidate_ontology_id": "mixed_air_temperature",
+      "candidate_ontology_ids": [
+        "mixed_air_temperature"
+      ],
+      "estimator_point_role": "mixed_air_temperature",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.94,
+      "notes": "matched to mixed air temperature concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "MAD-O",
+      "normalized_alias": "mad_o",
+      "display_label": "MAD-O",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "MOA-F",
+      "normalized_alias": "moa_f",
+      "display_label": "MOA-F",
+      "candidate_ontology_id": "supply_air_flow",
+      "candidate_ontology_ids": [
+        "supply_air_flow"
+      ],
+      "estimator_point_role": "supply_air_flow",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.45,
+      "notes": "airflow semantics are approximate and should be reviewed",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "MOAD-C",
+      "normalized_alias": "moad_c",
+      "display_label": "MOAD-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "MOAD-S",
+      "normalized_alias": "moad_s",
+      "display_label": "MOAD-S",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "OA-F",
+      "normalized_alias": "oa_f",
+      "display_label": "OA-F",
+      "candidate_ontology_id": "supply_air_flow",
+      "candidate_ontology_ids": [
+        "supply_air_flow"
+      ],
+      "estimator_point_role": "supply_air_flow",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.45,
+      "notes": "airflow semantics are approximate and should be reviewed",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "PCHWP1-C",
+      "normalized_alias": "pchwp1_c",
+      "display_label": "PCHWP1-C",
+      "candidate_ontology_id": "primary_chilled_water_pump_command",
+      "candidate_ontology_ids": [
+        "primary_chilled_water_pump_command"
+      ],
+      "estimator_point_role": "primary_chilled_water_pump_command",
+      "equipment_family": "central_plant",
+      "templates_seen_in": [
+        "air_cooled_chiller_plant_one_chiller_two_pumps"
+      ],
+      "confidence": 0.96,
+      "notes": "matched to primary chilled water pump command",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "PCHWP1-S",
+      "normalized_alias": "pchwp1_s",
+      "display_label": "PCHWP1-S",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "primary_chilled_water_pump_output",
+      "equipment_family": "central_plant",
+      "templates_seen_in": [
+        "air_cooled_chiller_plant_one_chiller_two_pumps"
+      ],
+      "confidence": 0.95,
+      "notes": "matched to primary chilled water pump output",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "PCHWP2-C",
+      "normalized_alias": "pchwp2_c",
+      "display_label": "PCHWP2-C",
+      "candidate_ontology_id": "primary_chilled_water_pump_command",
+      "candidate_ontology_ids": [
+        "primary_chilled_water_pump_command"
+      ],
+      "estimator_point_role": "primary_chilled_water_pump_command",
+      "equipment_family": "central_plant",
+      "templates_seen_in": [
+        "air_cooled_chiller_plant_one_chiller_two_pumps"
+      ],
+      "confidence": 0.96,
+      "notes": "matched to primary chilled water pump command",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "PCHWP2-S",
+      "normalized_alias": "pchwp2_s",
+      "display_label": "PCHWP2-S",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "primary_chilled_water_pump_output",
+      "equipment_family": "central_plant",
+      "templates_seen_in": [
+        "air_cooled_chiller_plant_one_chiller_two_pumps"
+      ],
+      "confidence": 0.95,
+      "notes": "matched to primary chilled water pump output",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "PCHWR-T",
+      "normalized_alias": "pchwr_t",
+      "display_label": "PCHWR-T",
+      "candidate_ontology_id": "primary_chilled_water_return_temperature",
+      "candidate_ontology_ids": [
+        "primary_chilled_water_return_temperature"
+      ],
+      "estimator_point_role": "primary_chilled_water_return_temperature",
+      "equipment_family": "central_plant",
+      "templates_seen_in": [
+        "air_cooled_chiller_plant_one_chiller_two_pumps"
+      ],
+      "confidence": 0.97,
+      "notes": "matched to primary chilled water return temperature",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "PCHWS-T",
+      "normalized_alias": "pchws_t",
+      "display_label": "PCHWS-T",
+      "candidate_ontology_id": "primary_chilled_water_supply_temperature",
+      "candidate_ontology_ids": [
+        "primary_chilled_water_supply_temperature"
+      ],
+      "estimator_point_role": "primary_chilled_water_supply_temperature",
+      "equipment_family": "central_plant",
+      "templates_seen_in": [
+        "air_cooled_chiller_plant_one_chiller_two_pumps"
+      ],
+      "confidence": 0.97,
+      "notes": "matched to primary chilled water supply temperature",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "PFILT-S",
+      "normalized_alias": "pfilt_s",
+      "display_label": "PFILT-S",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "PH-O",
+      "normalized_alias": "ph_o",
+      "display_label": "PH-O",
+      "candidate_ontology_id": "preheat_temperature",
+      "candidate_ontology_ids": [
+        "preheat_temperature"
+      ],
+      "estimator_point_role": "preheat_temperature",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.55,
+      "notes": "preheat valve semantics are not directly represented in ontology",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "PH-POS",
+      "normalized_alias": "ph_pos",
+      "display_label": "PH-POS",
+      "candidate_ontology_id": "preheat_temperature",
+      "candidate_ontology_ids": [
+        "preheat_temperature"
+      ],
+      "estimator_point_role": "preheat_temperature",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.55,
+      "notes": "preheat valve semantics are not directly represented in ontology",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "PH-T",
+      "normalized_alias": "ph_t",
+      "display_label": "PH-T",
+      "candidate_ontology_id": "preheat_temperature",
+      "candidate_ontology_ids": [
+        "preheat_temperature"
+      ],
+      "estimator_point_role": "preheat_temperature",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.9,
+      "notes": "matched to preheat temperature concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "PH1-C",
+      "normalized_alias": "ph1_c",
+      "display_label": "PH1-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "PH2-C",
+      "normalized_alias": "ph2_c",
+      "display_label": "PH2-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "PH3-C",
+      "normalized_alias": "ph3_c",
+      "display_label": "PH3-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "PH4-C",
+      "normalized_alias": "ph4_c",
+      "display_label": "PH4-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "PH5-C",
+      "normalized_alias": "ph5_c",
+      "display_label": "PH5-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "PH6-C",
+      "normalized_alias": "ph6_c",
+      "display_label": "PH6-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "PH7-C",
+      "normalized_alias": "ph7_c",
+      "display_label": "PH7-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "PH8-C",
+      "normalized_alias": "ph8_c",
+      "display_label": "PH8-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "PHWE-T",
+      "normalized_alias": "phwe_t",
+      "display_label": "PHWE-T",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "PHWL-T",
+      "normalized_alias": "phwl_t",
+      "display_label": "PHWL-T",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RA-F",
+      "normalized_alias": "ra_f",
+      "display_label": "RA-F",
+      "candidate_ontology_id": "return_air_flow",
+      "candidate_ontology_ids": [
+        "return_air_flow"
+      ],
+      "estimator_point_role": "return_air_flow",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.85,
+      "notes": "matched to return air flow concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "RA-H",
+      "normalized_alias": "ra_h",
+      "display_label": "RA-H",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "return_air_humidity",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.35,
+      "notes": "humidity concept not directly exposed in ontology for this template",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RA-P",
+      "normalized_alias": "ra_p",
+      "display_label": "RA-P",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "return_air_pressure",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.35,
+      "notes": "pressure concept not directly exposed in ontology for this template",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RA-SD",
+      "normalized_alias": "ra_sd",
+      "display_label": "RA-SD",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "return_air_smoke_detector",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.25,
+      "notes": "no direct ontology id exists for the return air smoke detector concept",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RA-T",
+      "normalized_alias": "ra_t",
+      "display_label": "RA-T",
+      "candidate_ontology_id": "return_air_temperature",
+      "candidate_ontology_ids": [
+        "return_air_temperature"
+      ],
+      "estimator_point_role": "return_air_temperature",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.93,
+      "notes": "matched to return air temperature concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "RAH-SP",
+      "normalized_alias": "rah_sp",
+      "display_label": "RAH-SP",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "return_air_humidity",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.35,
+      "notes": "humidity concept not directly exposed in ontology for this template",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RAP-SP",
+      "normalized_alias": "rap_sp",
+      "display_label": "RAP-SP",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "return_air_pressure",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.35,
+      "notes": "pressure concept not directly exposed in ontology for this template",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RAPLO-A",
+      "normalized_alias": "raplo_a",
+      "display_label": "RAPLO-A",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RAT-SP",
+      "normalized_alias": "rat_sp",
+      "display_label": "RAT-SP",
+      "candidate_ontology_id": "return_air_temperature_setpoint",
+      "candidate_ontology_ids": [
+        "return_air_temperature_setpoint"
+      ],
+      "estimator_point_role": "return_air_temperature_setpoint",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.93,
+      "notes": "matched to return air temperature concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "RF-C",
+      "normalized_alias": "rf_c",
+      "display_label": "RF-C",
+      "candidate_ontology_id": "return_fan_command",
+      "candidate_ontology_ids": [
+        "return_fan_command"
+      ],
+      "estimator_point_role": "return_fan_command",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.88,
+      "notes": "closest return fan control concept; status/output semantics require review",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RF-O",
+      "normalized_alias": "rf_o",
+      "display_label": "RF-O",
+      "candidate_ontology_id": "return_fan_command",
+      "candidate_ontology_ids": [
+        "return_fan_command"
+      ],
+      "estimator_point_role": "return_fan_command",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.7,
+      "notes": "output semantics bridged to return fan command pending manual review",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RF-S",
+      "normalized_alias": "rf_s",
+      "display_label": "RF-S",
+      "candidate_ontology_id": "return_fan_command",
+      "candidate_ontology_ids": [
+        "return_fan_command"
+      ],
+      "estimator_point_role": "return_fan_command",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.76,
+      "notes": "closest return fan concept available in ontology; source suffix suggests status semantics",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RH-O",
+      "normalized_alias": "rh_o",
+      "display_label": "RH-O",
+      "candidate_ontology_id": "supplemental_heating_command",
+      "candidate_ontology_ids": [
+        "supplemental_heating_command"
+      ],
+      "estimator_point_role": "supplemental_heating_command",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.55,
+      "notes": "reheat valve semantics need manual review",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RH-POS",
+      "normalized_alias": "rh_pos",
+      "display_label": "RH-POS",
+      "candidate_ontology_id": "supplemental_heating_command",
+      "candidate_ontology_ids": [
+        "supplemental_heating_command"
+      ],
+      "estimator_point_role": "supplemental_heating_command",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.55,
+      "notes": "reheat valve semantics need manual review",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RH1-C",
+      "normalized_alias": "rh1_c",
+      "display_label": "RH1-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RH2-C",
+      "normalized_alias": "rh2_c",
+      "display_label": "RH2-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RH3-C",
+      "normalized_alias": "rh3_c",
+      "display_label": "RH3-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RH4-C",
+      "normalized_alias": "rh4_c",
+      "display_label": "RH4-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RH5-C",
+      "normalized_alias": "rh5_c",
+      "display_label": "RH5-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RH6-C",
+      "normalized_alias": "rh6_c",
+      "display_label": "RH6-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RH7-C",
+      "normalized_alias": "rh7_c",
+      "display_label": "RH7-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RH8-C",
+      "normalized_alias": "rh8_c",
+      "display_label": "RH8-C",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RHC-T",
+      "normalized_alias": "rhc_t",
+      "display_label": "RHC-T",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RHWE-T",
+      "normalized_alias": "rhwe_t",
+      "display_label": "RHWE-T",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "RHWL-T",
+      "normalized_alias": "rhwl_t",
+      "display_label": "RHWL-T",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "SA-F",
+      "normalized_alias": "sa_f",
+      "display_label": "SA-F",
+      "candidate_ontology_id": "supply_air_flow",
+      "candidate_ontology_ids": [
+        "supply_air_flow"
+      ],
+      "estimator_point_role": "supply_air_flow",
+      "equipment_family": "vav",
+      "templates_seen_in": [
+        "vav_single_duct"
+      ],
+      "confidence": 0.96,
+      "notes": "matched to supply air flow concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "SAFLOW-SP",
+      "normalized_alias": "saflow_sp",
+      "display_label": "SAFLOW-SP",
+      "candidate_ontology_id": "supply_air_flow_setpoint",
+      "candidate_ontology_ids": [
+        "supply_air_flow_setpoint"
+      ],
+      "estimator_point_role": "supply_air_flow_setpoint",
+      "equipment_family": "vav",
+      "templates_seen_in": [
+        "vav_single_duct"
+      ],
+      "confidence": 0.96,
+      "notes": "matched to supply air flow setpoint concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "SF-C",
+      "normalized_alias": "sf_c",
+      "display_label": "SF-C",
+      "candidate_ontology_id": "supply_fan_command",
+      "candidate_ontology_ids": [
+        "supply_fan_command"
+      ],
+      "estimator_point_role": "supply_fan_command",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct",
+        "vav_single_duct"
+      ],
+      "confidence": 0.96,
+      "notes": "matched to supply fan command concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "SF-FB",
+      "normalized_alias": "sf_fb",
+      "display_label": "SF-FB",
+      "candidate_ontology_id": null,
+      "candidate_ontology_ids": [],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "vav",
+      "templates_seen_in": [
+        "vav_single_duct"
+      ],
+      "confidence": 0.1,
+      "notes": "no direct ontology match in current snapshot",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "SF-O",
+      "normalized_alias": "sf_o",
+      "display_label": "SF-O",
+      "candidate_ontology_id": "supply_fan_status",
+      "candidate_ontology_ids": [
+        "supply_fan_status",
+        "supply_fan_command"
+      ],
+      "estimator_point_role": "unmapped",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct",
+        "vav_single_duct"
+      ],
+      "confidence": 0.7,
+      "notes": "output semantics are ambiguous between command and status",
+      "manual_review_required": true
+    },
+    {
+      "source_short_name": "SF-S",
+      "normalized_alias": "sf_s",
+      "display_label": "SF-S",
+      "candidate_ontology_id": "supply_fan_status",
+      "candidate_ontology_ids": [
+        "supply_fan_status"
+      ],
+      "estimator_point_role": "supply_fan_status",
+      "equipment_family": "ahu",
+      "templates_seen_in": [
+        "mixed_air_single_duct",
+        "vav_single_duct"
+      ],
+      "confidence": 0.96,
+      "notes": "matched to supply fan status concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "SUMWIN-C",
+      "normalized_alias": "sumwin_c",
+      "display_label": "SUMWIN-C",
+      "candidate_ontology_id": "warm_cool_command",
+      "candidate_ontology_ids": [
+        "warm_cool_command"
+      ],
+      "estimator_point_role": "warm_cool_command",
+      "equipment_family": "vav",
+      "templates_seen_in": [
+        "vav_single_duct"
+      ],
+      "confidence": 0.9,
+      "notes": "matched to warm/cool command concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "SUPHTG-C",
+      "normalized_alias": "suphtg_c",
+      "display_label": "SUPHTG-C",
+      "candidate_ontology_id": "supplemental_heating_command",
+      "candidate_ontology_ids": [
+        "supplemental_heating_command"
+      ],
+      "estimator_point_role": "supplemental_heating_command",
+      "equipment_family": "vav",
+      "templates_seen_in": [
+        "vav_single_duct"
+      ],
+      "confidence": 0.95,
+      "notes": "matched to supplemental heating command concept",
+      "manual_review_required": false
+    },
+    {
+      "source_short_name": "SUPHTG-O",
+      "normalized_alias": "suphtg_o",
+      "display_label": "SUPHTG-O",
+      "candidate_ontology_id": "supplemental_heating_command",
+      "candidate_ontology_ids": [
+        "supplemental_heating_command"
+      ],
+      "estimator_point_role": "supplemental_heating_command",
+      "equipment_family": "vav",
+      "templates_seen_in": [
+        "vav_single_duct"
+      ],
+      "confidence": 0.7,
+      "notes": "output semantics should be reviewed",
+      "manual_review_required": true
+    }
+  ]
+}

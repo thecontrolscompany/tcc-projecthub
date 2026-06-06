@@ -1,15 +1,19 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import type {
   ProjectHubSystemTemplatePointManifestEntry,
+  ProjectHubTemplatePointAliasEntry,
   ProjectHubSystemTemplateRegistryEntry,
   ProjectHubSystemTemplateVisibilityRule,
 } from '@/lib/projecthub-system-templates';
 
 type SystemTemplatePreviewProps = {
   template: ProjectHubSystemTemplateRegistryEntry;
+  availableTemplates: ProjectHubSystemTemplateRegistryEntry[];
+  pointAliases: ProjectHubTemplatePointAliasEntry[];
   pointManifest: ProjectHubSystemTemplatePointManifestEntry[];
   visibilityRules: ProjectHubSystemTemplateVisibilityRule[];
   svgMarkup: string;
@@ -51,6 +55,16 @@ function collectRuleNodes(root: ParentNode, rule: ProjectHubSystemTemplateVisibi
     if (node) nodes.add(node);
   });
 
+  rule.value_group_ids?.forEach((id) => {
+    const node = document.getElementById(id);
+    if (node) nodes.add(node);
+  });
+
+  rule.related_node_ids?.forEach((id) => {
+    const node = document.getElementById(id);
+    if (node) nodes.add(node);
+  });
+
   rule.image_selectors.forEach((selector) => addMatchedNodes(root, selector, nodes));
   rule.fallback_selectors.forEach((selector) => addMatchedNodes(root, selector, nodes));
 
@@ -76,11 +90,16 @@ function collectRuleNodes(root: ParentNode, rule: ProjectHubSystemTemplateVisibi
 
 export function SystemTemplatePreview({
   template,
+  availableTemplates,
+  pointAliases,
   pointManifest,
   visibilityRules,
   svgMarkup,
   assetBaseUrl,
 }: SystemTemplatePreviewProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState('');
   const [highlightMode, setHighlightMode] = useState<HighlightMode>('highlight');
   const [selectedRuleIds, setSelectedRuleIds] = useState<Set<string>>(
@@ -90,6 +109,17 @@ export function SystemTemplatePreview({
     () => visibilityRules[0]?.ontology_id || visibilityRules[0]?.source_short_name || ''
   );
   const [renderVersion, setRenderVersion] = useState(0);
+  const aliasByShortName = useMemo(
+    () => new Map(pointAliases.map((alias) => [alias.source_short_name, alias])),
+    [pointAliases]
+  );
+
+  useEffect(() => {
+    setSelectedRuleIds(new Set(visibilityRules.map((rule) => rule.ontology_id || rule.source_short_name)));
+    setActiveSelectionId(visibilityRules[0]?.ontology_id || visibilityRules[0]?.source_short_name || '');
+    setQuery('');
+    setHighlightMode('highlight');
+  }, [template.template_id, visibilityRules]);
 
   const visibilityOptions = useMemo(() => {
     return uniqueBy(
@@ -181,7 +211,7 @@ export function SystemTemplatePreview({
 
     const handleClick = (event: MouseEvent) => {
       const target = event.target as Element | null;
-      const interactive = target?.closest('[data-template-selection-id], [short-name], [data-filter]');
+      const interactive = target?.closest('[data-template-selection-id], [short-name], [data-filter], [data-shortname], [sname], [data-point-short-name]');
       if (!interactive || !root.contains(interactive)) return;
 
       const sourceShortName =
@@ -237,6 +267,12 @@ export function SystemTemplatePreview({
     setSelectedRuleIds(new Set());
   }
 
+  function selectTemplate(nextTemplateId: string) {
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
+    params.set('templateId', nextTemplateId);
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto max-w-[1600px] px-6 py-6">
@@ -253,6 +289,22 @@ export function SystemTemplatePreview({
                   rules driving label and glyph visibility against the visibility manifest.
                 </p>
               </div>
+              <label className="block max-w-md">
+                <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                  Template
+                </span>
+                <select
+                  value={template.template_id}
+                  onChange={(event) => selectTemplate(event.target.value)}
+                  className="w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none ring-0 focus:border-cyan-400/60"
+                >
+                  {availableTemplates.map((option) => (
+                    <option key={option.template_id} value={option.template_id}>
+                      {option.display_name}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
 
             <div className="grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
@@ -404,6 +456,7 @@ export function SystemTemplatePreview({
                       (rule) => (rule.ontology_id || rule.source_short_name) === activeSelectionId
                     ) ?? visibilityRules[0];
                   if (!activeRule) return <div className="text-slate-500">No rule selected.</div>;
+                  const alias = aliasByShortName.get(activeRule.source_short_name);
                   return (
                     <div className="space-y-2 leading-5">
                       <div>
@@ -414,15 +467,35 @@ export function SystemTemplatePreview({
                         {activeRule.ontology_id || 'n/a'}
                       </div>
                       <div>
-                        <span className="text-slate-400">Matched labels:</span>{' '}
+                        <span className="text-slate-400">Label node count:</span>{' '}
                         {activeRule.label_group_ids.length}
                       </div>
                       <div>
-                        <span className="text-slate-400">Matched glyphs:</span>{' '}
+                        <span className="text-slate-400">Value node count:</span>{' '}
+                        {activeRule.value_group_ids?.length ?? 0}
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Glyph node count:</span>{' '}
                         {activeRule.device_group_ids.length + activeRule.image_selectors.length}
                       </div>
                       <div>
                         <span className="text-slate-400">Confidence:</span> {activeRule.confidence.toFixed(2)}
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Manual review:</span>{' '}
+                        {alias ? String(alias.manual_review_required) : 'unknown'}
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Alias role:</span>{' '}
+                        {alias?.estimator_point_role || 'n/a'}
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Alias confidence:</span>{' '}
+                        {alias ? alias.confidence.toFixed(2) : 'n/a'}
+                      </div>
+                      <div>
+                        <span className="text-slate-400">Alias ontology:</span>{' '}
+                        {alias?.candidate_ontology_id || 'n/a'}
                       </div>
                     </div>
                   );
@@ -438,6 +511,15 @@ export function SystemTemplatePreview({
                 </ul>
                 <div className="mt-4 text-slate-400">
                   Replacement ready: <span className="font-semibold text-slate-200">{String(template.replacement_ready)}</span>
+                </div>
+                <div className="mt-4 grid gap-2 rounded-2xl border border-slate-800 bg-slate-950/70 p-3">
+                  <div className="font-semibold uppercase tracking-[0.18em] text-slate-400">Debug metadata</div>
+                  <div className="text-slate-300">Normalized path: {template.normalized_template_path}</div>
+                  <div className="text-slate-300">Asset base: {template.asset_base_path}</div>
+                  <div className="text-slate-300">Point manifest: {template.point_manifest_path}</div>
+                  <div className="text-slate-300">Visibility manifest: {template.visibility_manifest_path}</div>
+                  <div className="text-slate-300">Ontology ids: {template.supported_ontology_ids.length}</div>
+                  <div className="text-slate-300">Unmapped points: {template.unmapped_source_points.length}</div>
                 </div>
               </div>
             </div>

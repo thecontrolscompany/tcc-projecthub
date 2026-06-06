@@ -27,8 +27,13 @@ export type ProjectHubSystemTemplatePointManifestEntry = {
   label: string;
   svg_group_id: string;
   candidate_ontology_id: string;
+  candidate_ontology_ids: string[];
   x?: number | null;
   y?: number | null;
+  width?: number | null;
+  height?: number | null;
+  source_attributes?: Record<string, string>;
+  confidence?: number;
   notes?: string;
   data_filter?: string;
 };
@@ -44,11 +49,14 @@ export type ProjectHubSystemTemplateVisibilityMode = 'hide_when_unselected' | 'h
 export type ProjectHubSystemTemplateVisibilityRule = {
   source_short_name: string;
   ontology_id: string | null;
+  candidate_ontology_ids?: string[];
   label: string;
   label_group_ids: string[];
+  value_group_ids?: string[];
   device_group_ids: string[];
   image_selectors: string[];
   fallback_selectors: string[];
+  related_node_ids?: string[];
   visibility_mode: ProjectHubSystemTemplateVisibilityMode;
   notes: string;
   confidence: number;
@@ -66,4 +74,23 @@ export type ProjectHubSystemTemplateMatchResult = {
   matchedOntologyIds: string[];
   unmatchedOntologyIds: string[];
   score: number;
+};
+
+export type ProjectHubTemplatePointAliasEntry = {
+  source_short_name: string;
+  normalized_alias: string;
+  display_label: string;
+  candidate_ontology_id: string | null;
+  candidate_ontology_ids: string[];
+  estimator_point_role: string;
+  equipment_family: string;
+  templates_seen_in: string[];
+  confidence: number;
+  notes: string;
+  manual_review_required: boolean;
+};
+
+export type ProjectHubTemplatePointAliasFile = {
+  generated_at: string;
+  aliases: ProjectHubTemplatePointAliasEntry[];
 };

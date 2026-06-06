@@ -3,11 +3,13 @@
   "$id": "projecthub_system_template_registry.schema.json",
   "title": "ProjectHub System Template Registry",
   "type": "object",
-  "required": ["generated_at", "templates"],
+  "required": [
+    "generated_at",
+    "templates"
+  ],
   "properties": {
     "generated_at": {
-      "type": "string",
-      "description": "UTC timestamp for registry generation."
+      "type": "string"
     },
     "templates": {
       "type": "array",
@@ -50,20 +52,16 @@
           "type": "string"
         },
         "normalized_template_path": {
-          "type": "string",
-          "description": "Neutral runtime path for the normalized HTML template."
+          "type": "string"
         },
         "asset_base_path": {
-          "type": "string",
-          "description": "Neutral runtime base path for template assets."
+          "type": "string"
         },
         "point_manifest_path": {
-          "type": "string",
-          "description": "Neutral runtime path for the point manifest."
+          "type": "string"
         },
         "visibility_manifest_path": {
-          "type": "string",
-          "description": "Neutral runtime path for the point visibility manifest."
+          "type": "string"
         },
         "supported_ontology_ids": {
           "type": "array",
@@ -108,8 +106,7 @@
           }
         },
         "private_source_bundle_path": {
-          "type": "string",
-          "description": "Private investigation bundle path used only by local loaders and previews."
+          "type": "string"
         }
       },
       "additionalProperties": false

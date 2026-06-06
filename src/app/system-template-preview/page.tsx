@@ -8,21 +8,25 @@ import {
   getTemplateForSystemType,
   getTemplateVisibilityRules,
   extractTemplateSvgMarkup,
+  listSystemTemplates,
 } from '@/lib/projecthub-system-templates';
+import pointAliasesData from '@/data/projecthub/system-templates/projecthub_template_point_aliases.json';
 
 export const runtime = 'nodejs';
 
 type PageProps = {
-  searchParams?: { systemType?: string } | Promise<{ systemType?: string }>;
+  searchParams?: { templateId?: string; systemType?: string } | Promise<{ templateId?: string; systemType?: string }>;
 };
 
 export default async function SystemTemplatePreviewPage({ searchParams }: PageProps) {
   const resolvedSearchParams = await Promise.resolve(searchParams ?? {});
-  const requestedSystemType = typeof resolvedSearchParams.systemType === 'string'
-    ? resolvedSearchParams.systemType
-    : 'mixed_air_single_duct_ahu';
+  const requestedTemplateId = typeof resolvedSearchParams.templateId === 'string'
+    ? resolvedSearchParams.templateId
+    : typeof resolvedSearchParams.systemType === 'string'
+      ? resolvedSearchParams.systemType
+      : 'mixed_air_single_duct';
   const template =
-    getTemplateForSystemType(requestedSystemType) ??
+    getTemplateForSystemType(requestedTemplateId) ??
     getDefaultSystemTemplate();
 
   if (!template) {
@@ -49,6 +53,8 @@ export default async function SystemTemplatePreviewPage({ searchParams }: PagePr
   return (
     <SystemTemplatePreview
       template={template}
+      availableTemplates={listSystemTemplates()}
+      pointAliases={pointAliasesData.aliases}
       pointManifest={pointManifest}
       visibilityRules={visibilityRules}
       svgMarkup={rewrittenSvg}
