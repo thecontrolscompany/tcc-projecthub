@@ -1,9 +1,10 @@
 'use client';
 
+import { normalizeAhuCfg } from '@/modules/hvac-estimator/components/ahu/ahuData';
 import { resolveProjectHubGraphicsSource, type EstimatorSelectionEntry } from './projecthubGraphics';
 
 export const PROJECTHUB_TEMPLATE_GRAPHICS_PREVIEW_FLAG = 'NEXT_PUBLIC_PROJECTHUB_TEMPLATE_GRAPHICS_PREVIEW';
-export const PROJECTHUB_TEMPLATE_GRAPHICS_TRIAL_TEMPLATE_ID = 'five_chiller_secondary_loop';
+export const PROJECTHUB_TEMPLATE_GRAPHICS_TRIAL_TEMPLATE_ID = 'mixed_air_single_duct';
 
 export type ProjectHubTemplateGraphicsTrial = {
   templateId: string;
@@ -24,13 +25,13 @@ export function resolveProjectHubTemplateGraphicsTrial(
   selected: EstimatorSelectionEntry[]
 ): ProjectHubTemplateGraphicsTrial | null {
   if (!isEnabled()) return null;
-  if (type !== 'plant') return null;
+  if (type !== 'ahu') return null;
 
   const graphicsSource = resolveProjectHubGraphicsSource(type, cfg, selected);
   if (!graphicsSource) return null;
 
-  const plantType = String(cfg?.plantType || '');
-  if (plantType !== 'chiller-water') return null;
+  const normalized = normalizeAhuCfg(cfg);
+  if (normalized.ahuType !== 'mixed') return null;
 
   return {
     templateId: PROJECTHUB_TEMPLATE_GRAPHICS_TRIAL_TEMPLATE_ID,
