@@ -20,8 +20,22 @@ export type {
   ProjectHubSystemTemplateRegistryEntry,
   ProjectHubSystemTemplateRegistryFile,
   ProjectHubTemplatePointAliasEntry,
+  TemplatePointAlias,
+  TemplatePointAliasConfidence,
+  TemplatePointAliasLookupOptions,
+  TemplatePointAliasLookupResult,
+  TemplatePointAliasRole,
   ProjectHubTemplatePointAliasFile,
   ProjectHubSystemTemplateVisibilityManifestFile,
   ProjectHubSystemTemplateVisibilityMode,
   ProjectHubSystemTemplateVisibilityRule,
 } from './types';
+export {
+  getAliasForSourceShortName,
+  getAliasesForOntologyId,
+  getAliasesForTemplate,
+  getEstimatorRoleForSourceShortName,
+  getVisibilityKeysForOntologyId,
+  listTemplatePointAliases,
+  listTemplatesWithAliasCoverage,
+} from './pointAliases';

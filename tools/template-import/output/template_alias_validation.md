@@ -1,0 +1,107 @@
+# Template Alias Validation
+
+- Total aliases: 91
+- Aliases with exact ontology match: 21
+- Aliases with candidate-only ontology match: 17
+- Aliases requiring manual review: 68
+
+## Aliases by Template
+- air_cooled_chiller_plant_one_chiller_two_pumps: 8
+- air_cooled_chiller_plant_two_chillers_three_pumps: 0
+- blower_coil_unit: 0
+- critical_room_air_conditioner: 0
+- fan_coil_unit_horizontal: 0
+- fan_coil_unit_in_ceiling: 0
+- fan_coil_unit_vertical: 0
+- five_chiller_secondary_loop: 0
+- five_tower_condenser_loop: 0
+- heat_recovery_unit: 0
+- hot_water_boiler_plant_four_boilers_four_pumps: 0
+- hot_water_heat_exchanger_plate: 0
+- hot_water_heat_exchanger_shell_and_tube: 0
+- makeup_air_unit: 0
+- mixed_air_dual_duct: 0
+- mixed_air_single_duct: 71
+- multizone_mixed_air_dual_duct: 0
+- outdoor_air_dual_duct: 0
+- outdoor_air_single_duct: 0
+- packaged_rooftop_unit: 0
+- rooftop_unit: 0
+- steam_boiler_plant_three_boilers: 0
+- three_chiller_three_tower_plant: 0
+- unit_ventilator: 0
+- vav_dual_duct: 0
+- vav_single_duct: 17
+- zone_dampers_dual_duct: 0
+- zone_dampers_single_duct: 0
+
+## Ontology IDs With Multiple Source Short Name Candidates
+- cooling_stage_1_command: CLG-O, CLG-POS
+- heating_stage_1_command: HC-O, HTG-O, HTG1-C
+- preheat_temperature: PH-O, PH-POS, PH-T
+- primary_chilled_water_pump_command: PCHWP1-C, PCHWP2-C
+- return_fan_command: RF-C, RF-O, RF-S
+- supplemental_heating_command: HTG-O, RH-O, RH-POS, SUPHTG-C, SUPHTG-O
+- supply_air_flow: DA-SD, MOA-F, OA-F, SA-F
+- supply_fan_command: SF-C, SF-O
+- supply_fan_status: SF-O, SF-S
+
+## Source Short Names With No Ontology Candidate
+- CC-T
+- CCWE-T
+- CCWL-T
+- CLG1-C
+- CLG2-C
+- CLG3-C
+- CLG4-C
+- CLG5-C
+- CLG6-C
+- CLG7-C
+- CLG8-C
+- DA1-P
+- DAP-SP
+- DAPHI-A
+- DPR-O
+- FFILT-S
+- GEF-C
+- GEF-S
+- LT-A
+- MAD-O
+- MOAD-C
+- MOAD-S
+- PCHWP1-S
+- PCHWP2-S
+- PFILT-S
+- PH1-C
+- PH2-C
+- PH3-C
+- PH4-C
+- PH5-C
+- PH6-C
+- PH7-C
+- PH8-C
+- PHWE-T
+- PHWL-T
+- RA-H
+- RA-P
+- RA-SD
+- RAH-SP
+- RAP-SP
+- RAPLO-A
+- RH1-C
+- RH2-C
+- RH3-C
+- RH4-C
+- RH5-C
+- RH6-C
+- RH7-C
+- RH8-C
+- RHC-T
+- RHWE-T
+- RHWL-T
+- SF-FB
+
+## Notes
+- Exact matches are aliases with a single ontology candidate and no manual review flag.
+- Candidate-only matches include ambiguous or manual-review aliases that still have one or more candidate ontology IDs.
+- No ontology candidate means the alias remains a source-short-name-only bridge entry for now.

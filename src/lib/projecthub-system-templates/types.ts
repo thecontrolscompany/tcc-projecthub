@@ -94,3 +94,26 @@ export type ProjectHubTemplatePointAliasFile = {
   generated_at: string;
   aliases: ProjectHubTemplatePointAliasEntry[];
 };
+
+export type TemplatePointAlias = ProjectHubTemplatePointAliasEntry;
+
+export type TemplatePointAliasConfidence = number;
+
+export type TemplatePointAliasRole = string;
+
+export type TemplatePointAliasLookupOptions = {
+  templateId?: string;
+  includeManualReview?: boolean;
+};
+
+export type TemplatePointAliasLookupResult = {
+  alias: TemplatePointAlias | null;
+  source_short_name: string;
+  ontology_id: string | null;
+  candidate_ontology_ids: string[];
+  estimator_point_role: TemplatePointAliasRole;
+  confidence: TemplatePointAliasConfidence;
+  manual_review_required: boolean;
+  template_ids: string[];
+  visibility_keys: string[];
+};
