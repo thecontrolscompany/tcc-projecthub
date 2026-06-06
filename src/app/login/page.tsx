@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getProjectHubAppUrl } from "@/lib/auth/app-url";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function LoginPage() {
       provider: "azure",
       options: {
         scopes: "openid email profile offline_access Files.ReadWrite Mail.ReadWrite Sites.ReadWrite.All",
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+        redirectTo: `${getProjectHubAppUrl()}/auth/callback?next=${encodeURIComponent(nextPath)}`,
       },
     });
     if (error) {
@@ -59,7 +60,7 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/confirm?next=/reset-password`,
+      redirectTo: `${getProjectHubAppUrl()}/auth/confirm?next=/reset-password`,
     });
     if (error) {
       setError(error.message);
