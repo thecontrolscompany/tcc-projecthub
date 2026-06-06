@@ -5,6 +5,8 @@ import { SystemGraphic } from '@/components/system-graphic';
 import type { DeviceConfig, DeviceType, SystemMetadata } from '@/components/system-graphic/types';
 import { buildSystemMetadata, getSystemPreviewLabel, getSystemSvgUrl } from '@/data/projecthub/projecthub-data';
 import { resolveProjectHubGraphicsSource, type EstimatorSelectionEntry, type ProjectHubGraphicsSource } from './projecthubGraphics';
+import { ProjectHubTemplateGraphicPanel } from './ProjectHubTemplateGraphicPanel';
+import { resolveProjectHubTemplateGraphicsTrial } from './projecthubTemplateGraphics';
 
 type Props = {
   type: string;
@@ -54,8 +56,33 @@ export function ProjectHubOntologyGraphicPanel({ type, cfg, selected, className,
   );
 
   const devices = useMemo(() => (metadata ? buildDevices(metadata) : []), [metadata]);
+  const templateTrial = useMemo(
+    () => resolveProjectHubTemplateGraphicsTrial(type, cfg, selected),
+    [type, cfg, selected]
+  );
 
   if (!source || !metadata) return null;
+
+  const fallbackGraphic = (
+    <SystemGraphic
+      metadata={metadata}
+      svgUrl={getSystemSvgUrl(source.systemKey)}
+      devices={devices}
+      selectedOntologyIds={source.selectedOntologyIds}
+    />
+  );
+
+  if (templateTrial) {
+    return (
+      <div className={className} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <ProjectHubTemplateGraphicPanel
+          templateId={templateTrial.templateId}
+          selectedOntologyIds={templateTrial.selectedOntologyIds}
+          fallback={fallbackGraphic}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={className} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -67,12 +94,7 @@ export function ProjectHubOntologyGraphicPanel({ type, cfg, selected, className,
           </span>
         </div>
       )}
-      <SystemGraphic
-        metadata={metadata}
-        svgUrl={getSystemSvgUrl(source.systemKey)}
-        devices={devices}
-        selectedOntologyIds={source.selectedOntologyIds}
-      />
+      {fallbackGraphic}
     </div>
   );
 }

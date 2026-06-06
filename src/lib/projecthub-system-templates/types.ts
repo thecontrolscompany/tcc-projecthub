@@ -69,6 +69,52 @@ export type ProjectHubSystemTemplateVisibilityManifestFile = {
   rules: ProjectHubSystemTemplateVisibilityRule[];
 };
 
+export type ProjectHubTemplateGraphicPackage = {
+  template: {
+    template_id: string;
+    display_name: string;
+    equipment_family: string;
+    system_type: string;
+    notes: string[];
+    replacement_ready: boolean;
+  };
+  svg_markup: string;
+  visibility_rules: ProjectHubSystemTemplateVisibilityRule[];
+  cleanup_rules: ProjectHubSystemTemplateCleanupRule[];
+  selection_keys_by_ontology_id: Record<string, string[]>;
+};
+
+export type ProjectHubSystemTemplateCleanupMode = 'hide' | 'show';
+
+export type ProjectHubSystemTemplateCleanupAttributeMatch = {
+  name: string;
+  contains: string;
+};
+
+export type ProjectHubSystemTemplateCleanupRule = {
+  rule_id: string;
+  description: string;
+  mode: ProjectHubSystemTemplateCleanupMode;
+  selectors?: string[];
+  text_matches?: string[];
+  attribute_matches?: ProjectHubSystemTemplateCleanupAttributeMatch[];
+  ancestor_selectors?: string[];
+  hide_descendants?: boolean;
+  template_ids?: string[];
+  exclude_template_ids?: string[];
+  manual_review_required?: boolean;
+  notes?: string;
+};
+
+export type ProjectHubSystemTemplateCleanupConfig = {
+  generated_at?: string;
+  rules: ProjectHubSystemTemplateCleanupRule[];
+  template_overrides?: {
+    template_id: string;
+    rule_ids: string[];
+  }[];
+};
+
 export type ProjectHubSystemTemplateMatchResult = {
   template: ProjectHubSystemTemplateRegistryEntry | null;
   matchedOntologyIds: string[];

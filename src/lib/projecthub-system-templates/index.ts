@@ -2,21 +2,32 @@ export {
   buildTemplateAssetUrl,
   getDefaultSystemTemplate,
   getPointManifest,
+  getCleanupConfig,
   getTemplateAssetFilePath,
   getTemplateForOntologyIds,
   getTemplateForSystemType,
   getTemplateManifestFile,
   getTemplatePreviewTitle,
+  getTemplateCleanupRules,
   getTemplateVisibilityRules,
   listSystemTemplates,
   loadNormalizedTemplateMarkup,
   extractTemplateSvgMarkup,
   PROJECTHUB_SYSTEM_TEMPLATE_REGISTRY,
 } from './systemTemplateRegistry';
+export {
+  extractTemplateAssetReferences,
+  normalizeTemplateAssetPath,
+  rewriteTemplateAssetReferences,
+} from './templateAssetReferences';
 export type {
   ProjectHubSystemTemplateMatchResult,
   ProjectHubSystemTemplatePointManifestEntry,
   ProjectHubSystemTemplatePointManifestFile,
+  ProjectHubSystemTemplateCleanupAttributeMatch,
+  ProjectHubSystemTemplateCleanupConfig,
+  ProjectHubSystemTemplateCleanupMode,
+  ProjectHubSystemTemplateCleanupRule,
   ProjectHubSystemTemplateRegistryEntry,
   ProjectHubSystemTemplateRegistryFile,
   ProjectHubTemplatePointAliasEntry,
@@ -29,6 +40,7 @@ export type {
   ProjectHubSystemTemplateVisibilityManifestFile,
   ProjectHubSystemTemplateVisibilityMode,
   ProjectHubSystemTemplateVisibilityRule,
+  ProjectHubTemplateGraphicPackage,
 } from './types';
 export {
   getAliasForSourceShortName,
@@ -39,3 +51,4 @@ export {
   listTemplatePointAliases,
   listTemplatesWithAliasCoverage,
 } from './pointAliases';
+export { buildTemplateGraphicPackage } from './templateGraphicPackage';
