@@ -3,9 +3,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { roleHome } from "@/lib/auth/role-routes";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import { resolveOrgFromRequest, ORG_HEADERS } from "@/lib/tenant/context";
+import { isLocalhostDevelopmentRequest } from "@/lib/auth/dev-access";
 
 export async function updateSession(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
+  const isDevPreviewRoute =
+    process.env.NODE_ENV === "development" &&
+    (pathname === "/symbol-renderer-preview" || pathname === "/system-template-preview");
 
   // ── 1. Resolve tenant from host ──────────────────────────────────────────
   const host = request.headers.get("host") ?? "";
@@ -29,6 +33,16 @@ export async function updateSession(request: NextRequest) {
     request.headers.set(ORG_HEADERS.slug, org.slug);
     request.headers.set(ORG_HEADERS.name, org.name);
     request.headers.set(ORG_HEADERS.isDemo, String(org.is_demo));
+  }
+
+  if (isLocalhostDevelopmentRequest(host)) {
+    return supabaseResponse;
+  }
+
+  // The mixed-air preview is a local-only review surface and should not
+  // participate in auth redirects or role enforcement.
+  if (isDevPreviewRoute) {
+    return supabaseResponse;
   }
 
   // ── 2. Supabase session refresh ──────────────────────────────────────────
@@ -73,6 +87,8 @@ export async function updateSession(request: NextRequest) {
     "/status",
     "/share",
     "/system-preview",
+    "/system-template-preview",
+    "/api/system-template-preview",
   ];
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));
 

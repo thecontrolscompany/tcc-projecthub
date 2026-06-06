@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { OpportunityHubSubnav } from "@/components/opportunity-hub-subnav";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import { canReadEstimates, ESTIMATE_SELECT } from "@/lib/estimates/api";
+import { isLocalhostDevelopmentRequest } from "@/lib/auth/dev-access";
 import type { EstimateRecord } from "@/types/database";
 import { EstimateDetailClient } from "./estimate-detail-client";
 
@@ -14,15 +17,26 @@ export default async function EstimateDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const host = (await headers()).get("host");
+  const isLocalPublic = isLocalhostDevelopmentRequest(host);
+  const supabase = isLocalPublic
+    ? createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
+    : await createClient();
 
-  if (!user) notFound();
+  let profile = null;
+  if (!isLocalPublic) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const profile = await resolveUserRole(user);
-  if (!canReadEstimates(profile?.role ?? "")) notFound();
+    if (!user) notFound();
+
+    profile = await resolveUserRole(user);
+    if (!canReadEstimates(profile?.role ?? "")) notFound();
+  }
 
   const { data: estimate, error } = await supabase
     .from("estimates")
