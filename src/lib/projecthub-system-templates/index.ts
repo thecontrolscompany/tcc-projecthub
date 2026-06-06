@@ -1,0 +1,25 @@
+export {
+  buildTemplateAssetUrl,
+  getDefaultSystemTemplate,
+  getPointManifest,
+  getTemplateAssetFilePath,
+  getTemplateForOntologyIds,
+  getTemplateForSystemType,
+  getTemplateManifestFile,
+  getTemplatePreviewTitle,
+  getTemplateVisibilityRules,
+  listSystemTemplates,
+  loadNormalizedTemplateMarkup,
+  extractTemplateSvgMarkup,
+  PROJECTHUB_SYSTEM_TEMPLATE_REGISTRY,
+} from './systemTemplateRegistry';
+export type {
+  ProjectHubSystemTemplateMatchResult,
+  ProjectHubSystemTemplatePointManifestEntry,
+  ProjectHubSystemTemplatePointManifestFile,
+  ProjectHubSystemTemplateRegistryEntry,
+  ProjectHubSystemTemplateRegistryFile,
+  ProjectHubSystemTemplateVisibilityManifestFile,
+  ProjectHubSystemTemplateVisibilityMode,
+  ProjectHubSystemTemplateVisibilityRule,
+} from './types';

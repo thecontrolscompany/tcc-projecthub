@@ -1,0 +1,3015 @@
+{
+  "template_id": "mixed_air_single_duct",
+  "generated_at": "2026-06-06T04:21:13.081Z",
+  "source_file": "tools/template-import/output/mixed_air_single_duct/normalized_template.html",
+  "rules": [
+    {
+      "source_short_name": "RF-C",
+      "ontology_id": "rf_c",
+      "label": "RF-C",
+      "label_group_ids": [
+        "svg_122_6"
+      ],
+      "device_group_ids": [
+        "svg_538"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RF-C\"]",
+        "[short-name=\"RF-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RF-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RF-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "MAD-O",
+      "ontology_id": "mad_o",
+      "label": "MAD-O",
+      "label_group_ids": [
+        "svg_102_6"
+      ],
+      "device_group_ids": [
+        "svg_73",
+        "svg_75",
+        "svg_77"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"MAD-O\"]",
+        "[short-name=\"MAD-O\"]",
+        "use[key-data-attr*=\"pointShortName':'MAD-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MAD-O\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RF-S",
+      "ontology_id": "rf_s",
+      "label": "RF-S",
+      "label_group_ids": [
+        "svg_116_6"
+      ],
+      "device_group_ids": [
+        "svg_538"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RF-S\"]",
+        "[short-name=\"RF-S\"]",
+        "use[key-data-attr*=\"pointShortName':'RF-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RF-S\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RF-O",
+      "ontology_id": "rf_o",
+      "label": "RF-O",
+      "label_group_ids": [
+        "svg_170_6"
+      ],
+      "device_group_ids": [
+        "svg_538"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RF-O\"]",
+        "[short-name=\"RF-O\"]",
+        "use[key-data-attr*=\"pointShortName':'RF-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RF-O\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RAPLO-A",
+      "ontology_id": "raplo_a",
+      "label": "RAPLO-A",
+      "label_group_ids": [
+        "svg_197_6"
+      ],
+      "device_group_ids": [
+        "svg_137"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RAPLO-A\"]",
+        "[short-name=\"RAPLO-A\"]",
+        "use[key-data-attr*=\"pointShortName':'RAPLO-A'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RAPLO-A\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RA-SD",
+      "ontology_id": "ra_sd",
+      "label": "RA-SD",
+      "label_group_ids": [
+        "svg_251_6"
+      ],
+      "device_group_ids": [
+        "svg_139"
+      ],
+      "image_selectors": [
+        "svg[jci-id=\"smoke_detector\"]",
+        "image[xlink\\:href*=\"Smoke_Detector.png\"]",
+        "svg[jci-id=\"smoke_detector\"] image",
+        "svg[jci-id=\"smoke_detector\"] path",
+        "svg[jci-id=\"smoke_detector\"] circle",
+        "svg[jci-id=\"smoke_detector\"] rect",
+        "svg[jci-id=\"smoke_detector\"] polygon"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-SD\"]",
+        "[short-name=\"RA-SD\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-SD'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-SD\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName. Smoke detector glyph is rendered as an independent svg asset, not a point-bound use node.",
+      "confidence": 0.99
+    },
+    {
+      "source_short_name": "RA-T",
+      "ontology_id": "ra_t",
+      "label": "RA-T",
+      "label_group_ids": [
+        "svg_266_6"
+      ],
+      "device_group_ids": [
+        "svg_5"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-T\"]",
+        "[short-name=\"RA-T\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RAT-SP",
+      "ontology_id": "rat_sp",
+      "label": "RAT-SP",
+      "label_group_ids": [
+        "svg_328_6"
+      ],
+      "device_group_ids": [
+        "svg_5"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RAT-SP\"]",
+        "[short-name=\"RAT-SP\"]",
+        "use[key-data-attr*=\"pointShortName':'RAT-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RAT-SP\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RA-H",
+      "ontology_id": "ra_h",
+      "label": "RA-H",
+      "label_group_ids": [
+        "svg_331_6"
+      ],
+      "device_group_ids": [
+        "svg_5"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-H\"]",
+        "[short-name=\"RA-H\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-H'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-H\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RAH-SP",
+      "ontology_id": "rah_sp",
+      "label": "RAH-SP",
+      "label_group_ids": [
+        "svg_337_6"
+      ],
+      "device_group_ids": [
+        "svg_5"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RAH-SP\"]",
+        "[short-name=\"RAH-SP\"]",
+        "use[key-data-attr*=\"pointShortName':'RAH-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RAH-SP\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RA-P",
+      "ontology_id": "ra_p",
+      "label": "RA-P",
+      "label_group_ids": [
+        "svg_348_6"
+      ],
+      "device_group_ids": [
+        "svg_495"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-P\"]",
+        "[short-name=\"RA-P\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-P'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-P\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RAP-SP",
+      "ontology_id": "rap_sp",
+      "label": "RAP-SP",
+      "label_group_ids": [
+        "svg_352_6"
+      ],
+      "device_group_ids": [
+        "svg_495"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RAP-SP\"]",
+        "[short-name=\"RAP-SP\"]",
+        "use[key-data-attr*=\"pointShortName':'RAP-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RAP-SP\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "MOAD-S",
+      "ontology_id": "moad_s",
+      "label": "MOAD-S",
+      "label_group_ids": [
+        "svg_354_6"
+      ],
+      "device_group_ids": [
+        "svg_122"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"MOAD-S\"]",
+        "[short-name=\"MOAD-S\"]",
+        "use[key-data-attr*=\"pointShortName':'MOAD-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MOAD-S\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "MOAD-C",
+      "ontology_id": "moad_c",
+      "label": "MOAD-C",
+      "label_group_ids": [
+        "svg_357_6"
+      ],
+      "device_group_ids": [
+        "svg_122"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"MOAD-C\"]",
+        "[short-name=\"MOAD-C\"]",
+        "use[key-data-attr*=\"pointShortName':'MOAD-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MOAD-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "GEF-C",
+      "ontology_id": "gef_c",
+      "label": "GEF-C",
+      "label_group_ids": [
+        "svg_374_6"
+      ],
+      "device_group_ids": [
+        "svg_576"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"GEF-C\"]",
+        "[short-name=\"GEF-C\"]",
+        "use[key-data-attr*=\"pointShortName':'GEF-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"GEF-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "GEF-S",
+      "ontology_id": "gef_s",
+      "label": "GEF-S",
+      "label_group_ids": [
+        "svg_391_6"
+      ],
+      "device_group_ids": [
+        "svg_576"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"GEF-S\"]",
+        "[short-name=\"GEF-S\"]",
+        "use[key-data-attr*=\"pointShortName':'GEF-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"GEF-S\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PFILT-S",
+      "ontology_id": "pfilt_s",
+      "label": "PFILT-S",
+      "label_group_ids": [
+        "svg_32_6"
+      ],
+      "device_group_ids": [
+        "svg_147",
+        "svg_435"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PFILT-S\"]",
+        "[short-name=\"PFILT-S\"]",
+        "use[key-data-attr*=\"pointShortName':'PFILT-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PFILT-S\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "MA-T",
+      "ontology_id": "ma_t",
+      "label": "MA-T",
+      "label_group_ids": [
+        "svg_272_6"
+      ],
+      "device_group_ids": [
+        "svg_149"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"MA-T\"]",
+        "[short-name=\"MA-T\"]",
+        "use[key-data-attr*=\"pointShortName':'MA-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MA-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH-O",
+      "ontology_id": "ph_o",
+      "label": "PH-O",
+      "label_group_ids": [
+        "svg_368_6"
+      ],
+      "device_group_ids": [
+        "svg_155",
+        "svg_151"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH-O\"]",
+        "[short-name=\"PH-O\"]",
+        "use[key-data-attr*=\"pointShortName':'PH-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH-O\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH-POS",
+      "ontology_id": "ph_pos",
+      "label": "PH-POS",
+      "label_group_ids": [
+        "svg_370_6"
+      ],
+      "device_group_ids": [
+        "svg_155",
+        "svg_151"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH-POS\"]",
+        "[short-name=\"PH-POS\"]",
+        "use[key-data-attr*=\"pointShortName':'PH-POS'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH-POS\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH-T",
+      "ontology_id": "ph_t",
+      "label": "PH-T",
+      "label_group_ids": [
+        "svg_384_6"
+      ],
+      "device_group_ids": [
+        "svg_254"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH-T\"]",
+        "[short-name=\"PH-T\"]",
+        "use[key-data-attr*=\"pointShortName':'PH-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG-O",
+      "ontology_id": "clg_o",
+      "label": "CLG-O",
+      "label_group_ids": [
+        "svg_120_6"
+      ],
+      "device_group_ids": [
+        "svg_264",
+        "svg_260"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG-O\"]",
+        "[short-name=\"CLG-O\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG-O\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG-POS",
+      "ontology_id": "clg_pos",
+      "label": "CLG-POS",
+      "label_group_ids": [
+        "svg_132_6"
+      ],
+      "device_group_ids": [
+        "svg_264",
+        "svg_260"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG-POS\"]",
+        "[short-name=\"CLG-POS\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG-POS'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG-POS\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CC-T",
+      "ontology_id": "cc_t",
+      "label": "CC-T",
+      "label_group_ids": [
+        "svg_194_6"
+      ],
+      "device_group_ids": [
+        "svg_276"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CC-T\"]",
+        "[short-name=\"CC-T\"]",
+        "use[key-data-attr*=\"pointShortName':'CC-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CC-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH-O",
+      "ontology_id": "rh_o",
+      "label": "RH-O",
+      "label_group_ids": [
+        "svg_204_6"
+      ],
+      "device_group_ids": [
+        "svg_272",
+        "svg_266"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH-O\"]",
+        "[short-name=\"RH-O\"]",
+        "use[key-data-attr*=\"pointShortName':'RH-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH-O\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH-POS",
+      "ontology_id": "rh_pos",
+      "label": "RH-POS",
+      "label_group_ids": [
+        "svg_208_6"
+      ],
+      "device_group_ids": [
+        "svg_272",
+        "svg_266"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH-POS\"]",
+        "[short-name=\"RH-POS\"]",
+        "use[key-data-attr*=\"pointShortName':'RH-POS'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH-POS\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RHC-T",
+      "ontology_id": "rhc_t",
+      "label": "RHC-T",
+      "label_group_ids": [
+        "svg_227_6"
+      ],
+      "device_group_ids": [
+        "svg_280"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RHC-T\"]",
+        "[short-name=\"RHC-T\"]",
+        "use[key-data-attr*=\"pointShortName':'RHC-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RHC-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "DAPHI-A",
+      "ontology_id": "daphi_a",
+      "label": "DAPHI-A",
+      "label_group_ids": [
+        "svg_394_6"
+      ],
+      "device_group_ids": [
+        "svg_337"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"DAPHI-A\"]",
+        "[short-name=\"DAPHI-A\"]",
+        "use[key-data-attr*=\"pointShortName':'DAPHI-A'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DAPHI-A\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "FFILT-S",
+      "ontology_id": "ffilt_s",
+      "label": "FFILT-S",
+      "label_group_ids": [
+        "svg_443_6"
+      ],
+      "device_group_ids": [
+        "svg_147_290",
+        "svg_656"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"FFILT-S\"]",
+        "[short-name=\"FFILT-S\"]",
+        "use[key-data-attr*=\"pointShortName':'FFILT-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"FFILT-S\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "DA-SD",
+      "ontology_id": "da_sd",
+      "label": "DA-SD",
+      "label_group_ids": [
+        "svg_445_6"
+      ],
+      "device_group_ids": [
+        "svg_292"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"DA-SD\"]",
+        "[short-name=\"DA-SD\"]",
+        "use[key-data-attr*=\"pointShortName':'DA-SD'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DA-SD\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "DA-T",
+      "ontology_id": "da_t",
+      "label": "DA-T",
+      "label_group_ids": [
+        "svg_449_6"
+      ],
+      "device_group_ids": [
+        "svg_296"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"DA-T\"]",
+        "[short-name=\"DA-T\"]",
+        "use[key-data-attr*=\"pointShortName':'DA-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DA-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "DAT-SP",
+      "ontology_id": "dat_sp",
+      "label": "DAT-SP",
+      "label_group_ids": [
+        "svg_452_6"
+      ],
+      "device_group_ids": [
+        "svg_276",
+        "svg_296"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"DAT-SP\"]",
+        "[short-name=\"DAT-SP\"]",
+        "use[key-data-attr*=\"pointShortName':'DAT-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DAT-SP\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG7-C",
+      "ontology_id": "clg7_c",
+      "label": "CLG7-C",
+      "label_group_ids": [
+        "svg_335_6"
+      ],
+      "device_group_ids": [
+        "svg_262"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG7-C\"]",
+        "[short-name=\"CLG7-C\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG7-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG7-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG8-C",
+      "ontology_id": "clg8_c",
+      "label": "CLG8-C",
+      "label_group_ids": [
+        "svg_382_6"
+      ],
+      "device_group_ids": [
+        "svg_262"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG8-C\"]",
+        "[short-name=\"CLG8-C\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG8-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG8-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG6-C",
+      "ontology_id": "clg6_c",
+      "label": "CLG6-C",
+      "label_group_ids": [
+        "svg_389_6"
+      ],
+      "device_group_ids": [
+        "svg_262"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG6-C\"]",
+        "[short-name=\"CLG6-C\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG6-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG6-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG5-C",
+      "ontology_id": "clg5_c",
+      "label": "CLG5-C",
+      "label_group_ids": [
+        "svg_615_6"
+      ],
+      "device_group_ids": [
+        "svg_262"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG5-C\"]",
+        "[short-name=\"CLG5-C\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG5-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG5-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG4-C",
+      "ontology_id": "clg4_c",
+      "label": "CLG4-C",
+      "label_group_ids": [
+        "svg_620_6"
+      ],
+      "device_group_ids": [
+        "svg_262"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG4-C\"]",
+        "[short-name=\"CLG4-C\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG4-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG4-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG3-C",
+      "ontology_id": "clg3_c",
+      "label": "CLG3-C",
+      "label_group_ids": [
+        "svg_622_6"
+      ],
+      "device_group_ids": [
+        "svg_262"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG3-C\"]",
+        "[short-name=\"CLG3-C\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG3-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG3-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG2-C",
+      "ontology_id": "clg2_c",
+      "label": "CLG2-C",
+      "label_group_ids": [
+        "svg_625_6"
+      ],
+      "device_group_ids": [
+        "svg_262"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG2-C\"]",
+        "[short-name=\"CLG2-C\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG2-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG2-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG1-C",
+      "ontology_id": "clg1_c",
+      "label": "CLG1-C",
+      "label_group_ids": [
+        "svg_627_6"
+      ],
+      "device_group_ids": [
+        "svg_262"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG1-C\"]",
+        "[short-name=\"CLG1-C\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG1-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG1-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH1-C",
+      "ontology_id": "rh1_c",
+      "label": "RH1-C",
+      "label_group_ids": [
+        "svg_72_6"
+      ],
+      "device_group_ids": [
+        "svg_270"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH1-C\"]",
+        "[short-name=\"RH1-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RH1-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH1-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH2-C",
+      "ontology_id": "rh2_c",
+      "label": "RH2-C",
+      "label_group_ids": [
+        "svg_98_6"
+      ],
+      "device_group_ids": [
+        "svg_270"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH2-C\"]",
+        "[short-name=\"RH2-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RH2-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH2-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH3-C",
+      "ontology_id": "rh3_c",
+      "label": "RH3-C",
+      "label_group_ids": [
+        "svg_100_6"
+      ],
+      "device_group_ids": [
+        "svg_270"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH3-C\"]",
+        "[short-name=\"RH3-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RH3-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH3-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH4-C",
+      "ontology_id": "rh4_c",
+      "label": "RH4-C",
+      "label_group_ids": [
+        "svg_284_6"
+      ],
+      "device_group_ids": [
+        "svg_270"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH4-C\"]",
+        "[short-name=\"RH4-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RH4-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH4-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH6-C",
+      "ontology_id": "rh6_c",
+      "label": "RH6-C",
+      "label_group_ids": [
+        "svg_286_6"
+      ],
+      "device_group_ids": [
+        "svg_270"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH6-C\"]",
+        "[short-name=\"RH6-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RH6-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH6-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH7-C",
+      "ontology_id": "rh7_c",
+      "label": "RH7-C",
+      "label_group_ids": [
+        "svg_288_6"
+      ],
+      "device_group_ids": [
+        "svg_270"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH7-C\"]",
+        "[short-name=\"RH7-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RH7-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH7-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH8-C",
+      "ontology_id": "rh8_c",
+      "label": "RH8-C",
+      "label_group_ids": [
+        "svg_290_6"
+      ],
+      "device_group_ids": [
+        "svg_270"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH8-C\"]",
+        "[short-name=\"RH8-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RH8-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH8-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH5-C",
+      "ontology_id": "rh5_c",
+      "label": "RH5-C",
+      "label_group_ids": [
+        "svg_292_6"
+      ],
+      "device_group_ids": [
+        "svg_270"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH5-C\"]",
+        "[short-name=\"RH5-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RH5-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH5-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RA-F",
+      "ontology_id": "ra_f",
+      "label": "RA-F",
+      "label_group_ids": [
+        "svg_11_6"
+      ],
+      "device_group_ids": [
+        "svg_135"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-F\"]",
+        "[short-name=\"RA-F\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-F'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-F\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "MOA-F",
+      "ontology_id": "moa_f",
+      "label": "MOA-F",
+      "label_group_ids": [
+        "svg_361_6"
+      ],
+      "device_group_ids": [
+        "svg_124"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"MOA-F\"]",
+        "[short-name=\"MOA-F\"]",
+        "use[key-data-attr*=\"pointShortName':'MOA-F'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MOA-F\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH1-C",
+      "ontology_id": "ph1_c",
+      "label": "PH1-C",
+      "label_group_ids": [
+        "svg_35_6"
+      ],
+      "device_group_ids": [
+        "svg_153"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH1-C\"]",
+        "[short-name=\"PH1-C\"]",
+        "use[key-data-attr*=\"pointShortName':'PH1-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH1-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH2-C",
+      "ontology_id": "ph2_c",
+      "label": "PH2-C",
+      "label_group_ids": [
+        "svg_37_6"
+      ],
+      "device_group_ids": [
+        "svg_153"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH2-C\"]",
+        "[short-name=\"PH2-C\"]",
+        "use[key-data-attr*=\"pointShortName':'PH2-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH2-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH3-C",
+      "ontology_id": "ph3_c",
+      "label": "PH3-C",
+      "label_group_ids": [
+        "svg_39_6"
+      ],
+      "device_group_ids": [
+        "svg_153"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH3-C\"]",
+        "[short-name=\"PH3-C\"]",
+        "use[key-data-attr*=\"pointShortName':'PH3-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH3-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH4-C",
+      "ontology_id": "ph4_c",
+      "label": "PH4-C",
+      "label_group_ids": [
+        "svg_41_6"
+      ],
+      "device_group_ids": [
+        "svg_153"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH4-C\"]",
+        "[short-name=\"PH4-C\"]",
+        "use[key-data-attr*=\"pointShortName':'PH4-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH4-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH5-C",
+      "ontology_id": "ph5_c",
+      "label": "PH5-C",
+      "label_group_ids": [
+        "svg_194_6"
+      ],
+      "device_group_ids": [
+        "svg_153"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH5-C\"]",
+        "[short-name=\"PH5-C\"]",
+        "use[key-data-attr*=\"pointShortName':'PH5-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH5-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH6-C",
+      "ontology_id": "ph6_c",
+      "label": "PH6-C",
+      "label_group_ids": [
+        "svg_212_6"
+      ],
+      "device_group_ids": [
+        "svg_153"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH6-C\"]",
+        "[short-name=\"PH6-C\"]",
+        "use[key-data-attr*=\"pointShortName':'PH6-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH6-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH7-C",
+      "ontology_id": "ph7_c",
+      "label": "PH7-C",
+      "label_group_ids": [
+        "svg_214_6"
+      ],
+      "device_group_ids": [
+        "svg_153"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH7-C\"]",
+        "[short-name=\"PH7-C\"]",
+        "use[key-data-attr*=\"pointShortName':'PH7-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH7-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH8-C",
+      "ontology_id": "ph8_c",
+      "label": "PH8-C",
+      "label_group_ids": [
+        "svg_216_6"
+      ],
+      "device_group_ids": [
+        "svg_153"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH8-C\"]",
+        "[short-name=\"PH8-C\"]",
+        "use[key-data-attr*=\"pointShortName':'PH8-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH8-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "OA-F",
+      "ontology_id": "oa_f",
+      "label": "OA-F",
+      "label_group_ids": [
+        "svg_55_6"
+      ],
+      "device_group_ids": [
+        "svg_114"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"OA-F\"]",
+        "[short-name=\"OA-F\"]",
+        "use[key-data-attr*=\"pointShortName':'OA-F'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"OA-F\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PHWL-T",
+      "ontology_id": "phwl_t",
+      "label": "PHWL-T",
+      "label_group_ids": [
+        "svg_299_6"
+      ],
+      "device_group_ids": [
+        "svg_155"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PHWL-T\"]",
+        "[short-name=\"PHWL-T\"]",
+        "use[key-data-attr*=\"pointShortName':'PHWL-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PHWL-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PHWE-T",
+      "ontology_id": "phwe_t",
+      "label": "PHWE-T",
+      "label_group_ids": [
+        "svg_303_6"
+      ],
+      "device_group_ids": [
+        "svg_155"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PHWE-T\"]",
+        "[short-name=\"PHWE-T\"]",
+        "use[key-data-attr*=\"pointShortName':'PHWE-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PHWE-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CCWL-T",
+      "ontology_id": "ccwl_t",
+      "label": "CCWL-T",
+      "label_group_ids": [
+        "svg_491_6"
+      ],
+      "device_group_ids": [
+        "svg_264"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CCWL-T\"]",
+        "[short-name=\"CCWL-T\"]",
+        "use[key-data-attr*=\"pointShortName':'CCWL-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CCWL-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CCWE-T",
+      "ontology_id": "ccwe_t",
+      "label": "CCWE-T",
+      "label_group_ids": [
+        "svg_498_6"
+      ],
+      "device_group_ids": [
+        "svg_264"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CCWE-T\"]",
+        "[short-name=\"CCWE-T\"]",
+        "use[key-data-attr*=\"pointShortName':'CCWE-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CCWE-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RHWL-T",
+      "ontology_id": "rhwl_t",
+      "label": "RHWL-T",
+      "label_group_ids": [
+        "svg_561_6"
+      ],
+      "device_group_ids": [
+        "svg_272"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RHWL-T\"]",
+        "[short-name=\"RHWL-T\"]",
+        "use[key-data-attr*=\"pointShortName':'RHWL-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RHWL-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RHWE-T",
+      "ontology_id": "rhwe_t",
+      "label": "RHWE-T",
+      "label_group_ids": [
+        "svg_563_6"
+      ],
+      "device_group_ids": [
+        "svg_272"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RHWE-T\"]",
+        "[short-name=\"RHWE-T\"]",
+        "use[key-data-attr*=\"pointShortName':'RHWE-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RHWE-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "DA1-P",
+      "ontology_id": "da1_p",
+      "label": "DA1-P",
+      "label_group_ids": [
+        "svg_119_6"
+      ],
+      "device_group_ids": [
+        "svg_555"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"DA1-P\"]",
+        "[short-name=\"DA1-P\"]",
+        "use[key-data-attr*=\"pointShortName':'DA1-P'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DA1-P\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "DAP-SP",
+      "ontology_id": "dap_sp",
+      "label": "DAP-SP",
+      "label_group_ids": [
+        "svg_203_6"
+      ],
+      "device_group_ids": [
+        "svg_555"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"DAP-SP\"]",
+        "[short-name=\"DAP-SP\"]",
+        "use[key-data-attr*=\"pointShortName':'DAP-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DAP-SP\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "SF-S",
+      "ontology_id": "sf_s",
+      "label": "SF-S",
+      "label_group_ids": [
+        "svg_265_6"
+      ],
+      "device_group_ids": [
+        "svg_672"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"SF-S\"]",
+        "[short-name=\"SF-S\"]",
+        "use[key-data-attr*=\"pointShortName':'SF-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"SF-S\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "SF-C",
+      "ontology_id": "sf_c",
+      "label": "SF-C",
+      "label_group_ids": [
+        "svg_407_6"
+      ],
+      "device_group_ids": [
+        "svg_672"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"SF-C\"]",
+        "[short-name=\"SF-C\"]",
+        "use[key-data-attr*=\"pointShortName':'SF-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"SF-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "SF-O",
+      "ontology_id": "sf_o",
+      "label": "SF-O",
+      "label_group_ids": [
+        "svg_409_6"
+      ],
+      "device_group_ids": [
+        "svg_672"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"SF-O\"]",
+        "[short-name=\"SF-O\"]",
+        "use[key-data-attr*=\"pointShortName':'SF-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"SF-O\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "LT-A",
+      "ontology_id": "lt_a",
+      "label": "LT-A",
+      "label_group_ids": [
+        "svg_465_6"
+      ],
+      "device_group_ids": [
+        "svg_258"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"LT-A\"]",
+        "[short-name=\"LT-A\"]",
+        "use[key-data-attr*=\"pointShortName':'LT-A'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"LT-A\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "MAD-O",
+      "ontology_id": "mad_o",
+      "label": "MAD-O",
+      "label_group_ids": [
+        "svg_34"
+      ],
+      "device_group_ids": [
+        "svg_73",
+        "svg_75",
+        "svg_77"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"MAD-O\"]",
+        "[short-name=\"MAD-O\"]",
+        "use[key-data-attr*=\"pointShortName':'MAD-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MAD-O\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "OA-F",
+      "ontology_id": "oa_f",
+      "label": "OA-F",
+      "label_group_ids": [
+        "svg_157"
+      ],
+      "device_group_ids": [
+        "svg_114"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"OA-F\"]",
+        "[short-name=\"OA-F\"]",
+        "use[key-data-attr*=\"pointShortName':'OA-F'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"OA-F\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "MOAD-S",
+      "ontology_id": "moad_s",
+      "label": "MOAD-S",
+      "label_group_ids": [
+        "svg_169"
+      ],
+      "device_group_ids": [
+        "svg_122"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"MOAD-S\"]",
+        "[short-name=\"MOAD-S\"]",
+        "use[key-data-attr*=\"pointShortName':'MOAD-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MOAD-S\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "MOAD-C",
+      "ontology_id": "moad_c",
+      "label": "MOAD-C",
+      "label_group_ids": [
+        "svg_171"
+      ],
+      "device_group_ids": [
+        "svg_122"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"MOAD-C\"]",
+        "[short-name=\"MOAD-C\"]",
+        "use[key-data-attr*=\"pointShortName':'MOAD-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MOAD-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "MOA-F",
+      "ontology_id": "moa_f",
+      "label": "MOA-F",
+      "label_group_ids": [
+        "svg_173"
+      ],
+      "device_group_ids": [
+        "svg_124"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"MOA-F\"]",
+        "[short-name=\"MOA-F\"]",
+        "use[key-data-attr*=\"pointShortName':'MOA-F'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MOA-F\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "MA-T",
+      "ontology_id": "ma_t",
+      "label": "MA-T",
+      "label_group_ids": [
+        "svg_378"
+      ],
+      "device_group_ids": [
+        "svg_149"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"MA-T\"]",
+        "[short-name=\"MA-T\"]",
+        "use[key-data-attr*=\"pointShortName':'MA-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MA-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH1-C",
+      "ontology_id": "ph1_c",
+      "label": "PH1-C",
+      "label_group_ids": [
+        "svg_380"
+      ],
+      "device_group_ids": [
+        "svg_153"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH1-C\"]",
+        "[short-name=\"PH1-C\"]",
+        "use[key-data-attr*=\"pointShortName':'PH1-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH1-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH2-C",
+      "ontology_id": "ph2_c",
+      "label": "PH2-C",
+      "label_group_ids": [
+        "svg_382"
+      ],
+      "device_group_ids": [
+        "svg_153"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH2-C\"]",
+        "[short-name=\"PH2-C\"]",
+        "use[key-data-attr*=\"pointShortName':'PH2-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH2-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH3-C",
+      "ontology_id": "ph3_c",
+      "label": "PH3-C",
+      "label_group_ids": [
+        "svg_384"
+      ],
+      "device_group_ids": [
+        "svg_153"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH3-C\"]",
+        "[short-name=\"PH3-C\"]",
+        "use[key-data-attr*=\"pointShortName':'PH3-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH3-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH4-C",
+      "ontology_id": "ph4_c",
+      "label": "PH4-C",
+      "label_group_ids": [
+        "svg_386"
+      ],
+      "device_group_ids": [
+        "svg_153"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH4-C\"]",
+        "[short-name=\"PH4-C\"]",
+        "use[key-data-attr*=\"pointShortName':'PH4-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH4-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH5-C",
+      "ontology_id": "ph5_c",
+      "label": "PH5-C",
+      "label_group_ids": [
+        "svg_388"
+      ],
+      "device_group_ids": [
+        "svg_153"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH5-C\"]",
+        "[short-name=\"PH5-C\"]",
+        "use[key-data-attr*=\"pointShortName':'PH5-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH5-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH6-C",
+      "ontology_id": "ph6_c",
+      "label": "PH6-C",
+      "label_group_ids": [
+        "svg_390"
+      ],
+      "device_group_ids": [
+        "svg_153"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH6-C\"]",
+        "[short-name=\"PH6-C\"]",
+        "use[key-data-attr*=\"pointShortName':'PH6-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH6-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH7-C",
+      "ontology_id": "ph7_c",
+      "label": "PH7-C",
+      "label_group_ids": [
+        "svg_392"
+      ],
+      "device_group_ids": [
+        "svg_153"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH7-C\"]",
+        "[short-name=\"PH7-C\"]",
+        "use[key-data-attr*=\"pointShortName':'PH7-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH7-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH8-C",
+      "ontology_id": "ph8_c",
+      "label": "PH8-C",
+      "label_group_ids": [
+        "svg_394"
+      ],
+      "device_group_ids": [
+        "svg_153"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH8-C\"]",
+        "[short-name=\"PH8-C\"]",
+        "use[key-data-attr*=\"pointShortName':'PH8-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH8-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH-T",
+      "ontology_id": "ph_t",
+      "label": "PH-T",
+      "label_group_ids": [
+        "svg_375"
+      ],
+      "device_group_ids": [
+        "svg_254"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH-T\"]",
+        "[short-name=\"PH-T\"]",
+        "use[key-data-attr*=\"pointShortName':'PH-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "LT-A",
+      "ontology_id": "lt_a",
+      "label": "LT-A",
+      "label_group_ids": [
+        "svg_434"
+      ],
+      "device_group_ids": [
+        "svg_258"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"LT-A\"]",
+        "[short-name=\"LT-A\"]",
+        "use[key-data-attr*=\"pointShortName':'LT-A'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"LT-A\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG1-C",
+      "ontology_id": "clg1_c",
+      "label": "CLG1-C",
+      "label_group_ids": [
+        "svg_438"
+      ],
+      "device_group_ids": [
+        "svg_262"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG1-C\"]",
+        "[short-name=\"CLG1-C\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG1-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG1-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG2-C",
+      "ontology_id": "clg2_c",
+      "label": "CLG2-C",
+      "label_group_ids": [
+        "svg_440"
+      ],
+      "device_group_ids": [
+        "svg_262"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG2-C\"]",
+        "[short-name=\"CLG2-C\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG2-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG2-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG3-C",
+      "ontology_id": "clg3_c",
+      "label": "CLG3-C",
+      "label_group_ids": [
+        "svg_442"
+      ],
+      "device_group_ids": [
+        "svg_262"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG3-C\"]",
+        "[short-name=\"CLG3-C\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG3-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG3-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG4-C",
+      "ontology_id": "clg4_c",
+      "label": "CLG4-C",
+      "label_group_ids": [
+        "svg_444"
+      ],
+      "device_group_ids": [
+        "svg_262"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG4-C\"]",
+        "[short-name=\"CLG4-C\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG4-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG4-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG5-C",
+      "ontology_id": "clg5_c",
+      "label": "CLG5-C",
+      "label_group_ids": [
+        "svg_446"
+      ],
+      "device_group_ids": [
+        "svg_262"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG5-C\"]",
+        "[short-name=\"CLG5-C\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG5-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG5-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG6-C",
+      "ontology_id": "clg6_c",
+      "label": "CLG6-C",
+      "label_group_ids": [
+        "svg_448"
+      ],
+      "device_group_ids": [
+        "svg_262"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG6-C\"]",
+        "[short-name=\"CLG6-C\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG6-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG6-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG7-C",
+      "ontology_id": "clg7_c",
+      "label": "CLG7-C",
+      "label_group_ids": [
+        "svg_450"
+      ],
+      "device_group_ids": [
+        "svg_262"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG7-C\"]",
+        "[short-name=\"CLG7-C\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG7-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG7-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG8-C",
+      "ontology_id": "clg8_c",
+      "label": "CLG8-C",
+      "label_group_ids": [
+        "svg_452"
+      ],
+      "device_group_ids": [
+        "svg_262"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG8-C\"]",
+        "[short-name=\"CLG8-C\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG8-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG8-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH1-C",
+      "ontology_id": "rh1_c",
+      "label": "RH1-C",
+      "label_group_ids": [
+        "svg_454"
+      ],
+      "device_group_ids": [
+        "svg_270"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH1-C\"]",
+        "[short-name=\"RH1-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RH1-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH1-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH2-C",
+      "ontology_id": "rh2_c",
+      "label": "RH2-C",
+      "label_group_ids": [
+        "svg_456"
+      ],
+      "device_group_ids": [
+        "svg_270"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH2-C\"]",
+        "[short-name=\"RH2-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RH2-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH2-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH3-C",
+      "ontology_id": "rh3_c",
+      "label": "RH3-C",
+      "label_group_ids": [
+        "svg_458"
+      ],
+      "device_group_ids": [
+        "svg_270"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH3-C\"]",
+        "[short-name=\"RH3-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RH3-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH3-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH4-C",
+      "ontology_id": "rh4_c",
+      "label": "RH4-C",
+      "label_group_ids": [
+        "svg_460"
+      ],
+      "device_group_ids": [
+        "svg_270"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH4-C\"]",
+        "[short-name=\"RH4-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RH4-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH4-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH5-C",
+      "ontology_id": "rh5_c",
+      "label": "RH5-C",
+      "label_group_ids": [
+        "svg_462"
+      ],
+      "device_group_ids": [
+        "svg_270"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH5-C\"]",
+        "[short-name=\"RH5-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RH5-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH5-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH6-C",
+      "ontology_id": "rh6_c",
+      "label": "RH6-C",
+      "label_group_ids": [
+        "svg_464"
+      ],
+      "device_group_ids": [
+        "svg_270"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH6-C\"]",
+        "[short-name=\"RH6-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RH6-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH6-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH7-C",
+      "ontology_id": "rh7_c",
+      "label": "RH7-C",
+      "label_group_ids": [
+        "svg_466"
+      ],
+      "device_group_ids": [
+        "svg_270"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH7-C\"]",
+        "[short-name=\"RH7-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RH7-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH7-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH8-C",
+      "ontology_id": "rh8_c",
+      "label": "RH8-C",
+      "label_group_ids": [
+        "svg_468"
+      ],
+      "device_group_ids": [
+        "svg_270"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH8-C\"]",
+        "[short-name=\"RH8-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RH8-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH8-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CC-T",
+      "ontology_id": "cc_t",
+      "label": "CC-T",
+      "label_group_ids": [
+        "svg_497"
+      ],
+      "device_group_ids": [
+        "svg_276"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CC-T\"]",
+        "[short-name=\"CC-T\"]",
+        "use[key-data-attr*=\"pointShortName':'CC-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CC-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RHC-T",
+      "ontology_id": "rhc_t",
+      "label": "RHC-T",
+      "label_group_ids": [
+        "svg_499"
+      ],
+      "device_group_ids": [
+        "svg_280"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RHC-T\"]",
+        "[short-name=\"RHC-T\"]",
+        "use[key-data-attr*=\"pointShortName':'RHC-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RHC-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH-O",
+      "ontology_id": "ph_o",
+      "label": "PH-O",
+      "label_group_ids": [
+        "svg_501"
+      ],
+      "device_group_ids": [
+        "svg_155",
+        "svg_151"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH-O\"]",
+        "[short-name=\"PH-O\"]",
+        "use[key-data-attr*=\"pointShortName':'PH-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH-O\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PH-POS",
+      "ontology_id": "ph_pos",
+      "label": "PH-POS",
+      "label_group_ids": [
+        "svg_503"
+      ],
+      "device_group_ids": [
+        "svg_155",
+        "svg_151"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PH-POS\"]",
+        "[short-name=\"PH-POS\"]",
+        "use[key-data-attr*=\"pointShortName':'PH-POS'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH-POS\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG-POS",
+      "ontology_id": "clg_pos",
+      "label": "CLG-POS",
+      "label_group_ids": [
+        "svg_505"
+      ],
+      "device_group_ids": [
+        "svg_264",
+        "svg_260"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG-POS\"]",
+        "[short-name=\"CLG-POS\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG-POS'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG-POS\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CLG-O",
+      "ontology_id": "clg_o",
+      "label": "CLG-O",
+      "label_group_ids": [
+        "svg_507"
+      ],
+      "device_group_ids": [
+        "svg_264",
+        "svg_260"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG-O\"]",
+        "[short-name=\"CLG-O\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG-O\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RAPLO-A",
+      "ontology_id": "raplo_a",
+      "label": "RAPLO-A",
+      "label_group_ids": [
+        "svg_490"
+      ],
+      "device_group_ids": [
+        "svg_137"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RAPLO-A\"]",
+        "[short-name=\"RAPLO-A\"]",
+        "use[key-data-attr*=\"pointShortName':'RAPLO-A'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RAPLO-A\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RA-SD",
+      "ontology_id": "ra_sd",
+      "label": "RA-SD",
+      "label_group_ids": [
+        "svg_522"
+      ],
+      "device_group_ids": [
+        "svg_139"
+      ],
+      "image_selectors": [
+        "svg[jci-id=\"smoke_detector\"]",
+        "image[xlink\\:href*=\"Smoke_Detector.png\"]",
+        "svg[jci-id=\"smoke_detector\"] image",
+        "svg[jci-id=\"smoke_detector\"] path",
+        "svg[jci-id=\"smoke_detector\"] circle",
+        "svg[jci-id=\"smoke_detector\"] rect",
+        "svg[jci-id=\"smoke_detector\"] polygon"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-SD\"]",
+        "[short-name=\"RA-SD\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-SD'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-SD\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName. Smoke detector glyph is rendered as an independent svg asset, not a point-bound use node.",
+      "confidence": 0.99
+    },
+    {
+      "source_short_name": "FFILT-S",
+      "ontology_id": "ffilt_s",
+      "label": "FFILT-S",
+      "label_group_ids": [
+        "svg_556"
+      ],
+      "device_group_ids": [
+        "svg_147_290",
+        "svg_656"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"FFILT-S\"]",
+        "[short-name=\"FFILT-S\"]",
+        "use[key-data-attr*=\"pointShortName':'FFILT-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"FFILT-S\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RA-F",
+      "ontology_id": "ra_f",
+      "label": "RA-F",
+      "label_group_ids": [
+        "svg_563"
+      ],
+      "device_group_ids": [
+        "svg_135"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-F\"]",
+        "[short-name=\"RA-F\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-F'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-F\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "DA-SD",
+      "ontology_id": "da_sd",
+      "label": "DA-SD",
+      "label_group_ids": [
+        "svg_577"
+      ],
+      "device_group_ids": [
+        "svg_292"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"DA-SD\"]",
+        "[short-name=\"DA-SD\"]",
+        "use[key-data-attr*=\"pointShortName':'DA-SD'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DA-SD\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "DA-T",
+      "ontology_id": "da_t",
+      "label": "DA-T",
+      "label_group_ids": [
+        "svg_583"
+      ],
+      "device_group_ids": [
+        "svg_296"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"DA-T\"]",
+        "[short-name=\"DA-T\"]",
+        "use[key-data-attr*=\"pointShortName':'DA-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DA-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "DAT-SP",
+      "ontology_id": "dat_sp",
+      "label": "DAT-SP",
+      "label_group_ids": [
+        "svg_585"
+      ],
+      "device_group_ids": [
+        "svg_276",
+        "svg_296"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"DAT-SP\"]",
+        "[short-name=\"DAT-SP\"]",
+        "use[key-data-attr*=\"pointShortName':'DAT-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DAT-SP\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "DA1-P",
+      "ontology_id": "da1_p",
+      "label": "DA1-P",
+      "label_group_ids": [
+        "svg_587"
+      ],
+      "device_group_ids": [
+        "svg_555"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"DA1-P\"]",
+        "[short-name=\"DA1-P\"]",
+        "use[key-data-attr*=\"pointShortName':'DA1-P'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DA1-P\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "DAP-SP",
+      "ontology_id": "dap_sp",
+      "label": "DAP-SP",
+      "label_group_ids": [
+        "svg_589"
+      ],
+      "device_group_ids": [
+        "svg_555"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"DAP-SP\"]",
+        "[short-name=\"DAP-SP\"]",
+        "use[key-data-attr*=\"pointShortName':'DAP-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DAP-SP\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "DAPHI-A",
+      "ontology_id": "daphi_a",
+      "label": "DAPHI-A",
+      "label_group_ids": [
+        "svg_591"
+      ],
+      "device_group_ids": [
+        "svg_337"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"DAPHI-A\"]",
+        "[short-name=\"DAPHI-A\"]",
+        "use[key-data-attr*=\"pointShortName':'DAPHI-A'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DAPHI-A\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PHWE-T",
+      "ontology_id": "phwe_t",
+      "label": "PHWE-T",
+      "label_group_ids": [
+        "svg_601"
+      ],
+      "device_group_ids": [
+        "svg_155"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PHWE-T\"]",
+        "[short-name=\"PHWE-T\"]",
+        "use[key-data-attr*=\"pointShortName':'PHWE-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PHWE-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PHWL-T",
+      "ontology_id": "phwl_t",
+      "label": "PHWL-T",
+      "label_group_ids": [
+        "svg_603"
+      ],
+      "device_group_ids": [
+        "svg_155"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PHWL-T\"]",
+        "[short-name=\"PHWL-T\"]",
+        "use[key-data-attr*=\"pointShortName':'PHWL-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PHWL-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CCWL-T",
+      "ontology_id": "ccwl_t",
+      "label": "CCWL-T",
+      "label_group_ids": [
+        "svg_605"
+      ],
+      "device_group_ids": [
+        "svg_264"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CCWL-T\"]",
+        "[short-name=\"CCWL-T\"]",
+        "use[key-data-attr*=\"pointShortName':'CCWL-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CCWL-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "CCWE-T",
+      "ontology_id": "ccwe_t",
+      "label": "CCWE-T",
+      "label_group_ids": [
+        "svg_607"
+      ],
+      "device_group_ids": [
+        "svg_264"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"CCWE-T\"]",
+        "[short-name=\"CCWE-T\"]",
+        "use[key-data-attr*=\"pointShortName':'CCWE-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CCWE-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RHWL-T",
+      "ontology_id": "rhwl_t",
+      "label": "RHWL-T",
+      "label_group_ids": [
+        "svg_609"
+      ],
+      "device_group_ids": [
+        "svg_272"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RHWL-T\"]",
+        "[short-name=\"RHWL-T\"]",
+        "use[key-data-attr*=\"pointShortName':'RHWL-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RHWL-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RHWE-T",
+      "ontology_id": "rhwe_t",
+      "label": "RHWE-T",
+      "label_group_ids": [
+        "svg_611"
+      ],
+      "device_group_ids": [
+        "svg_272"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RHWE-T\"]",
+        "[short-name=\"RHWE-T\"]",
+        "use[key-data-attr*=\"pointShortName':'RHWE-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RHWE-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH-O",
+      "ontology_id": "rh_o",
+      "label": "RH-O",
+      "label_group_ids": [
+        "svg_660"
+      ],
+      "device_group_ids": [
+        "svg_272",
+        "svg_266"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH-O\"]",
+        "[short-name=\"RH-O\"]",
+        "use[key-data-attr*=\"pointShortName':'RH-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH-O\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RH-POS",
+      "ontology_id": "rh_pos",
+      "label": "RH-POS",
+      "label_group_ids": [
+        "svg_662"
+      ],
+      "device_group_ids": [
+        "svg_272",
+        "svg_266"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RH-POS\"]",
+        "[short-name=\"RH-POS\"]",
+        "use[key-data-attr*=\"pointShortName':'RH-POS'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH-POS\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "PFILT-S",
+      "ontology_id": "pfilt_s",
+      "label": "PFILT-S",
+      "label_group_ids": [
+        "svg_60"
+      ],
+      "device_group_ids": [
+        "svg_147",
+        "svg_435"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"PFILT-S\"]",
+        "[short-name=\"PFILT-S\"]",
+        "use[key-data-attr*=\"pointShortName':'PFILT-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PFILT-S\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RF-S",
+      "ontology_id": "rf_s",
+      "label": "RF-S",
+      "label_group_ids": [
+        "svg_176"
+      ],
+      "device_group_ids": [
+        "svg_538"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RF-S\"]",
+        "[short-name=\"RF-S\"]",
+        "use[key-data-attr*=\"pointShortName':'RF-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RF-S\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RF-C",
+      "ontology_id": "rf_c",
+      "label": "RF-C",
+      "label_group_ids": [
+        "svg_178"
+      ],
+      "device_group_ids": [
+        "svg_538"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RF-C\"]",
+        "[short-name=\"RF-C\"]",
+        "use[key-data-attr*=\"pointShortName':'RF-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RF-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RF-O",
+      "ontology_id": "rf_o",
+      "label": "RF-O",
+      "label_group_ids": [
+        "svg_283"
+      ],
+      "device_group_ids": [
+        "svg_538"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RF-O\"]",
+        "[short-name=\"RF-O\"]",
+        "use[key-data-attr*=\"pointShortName':'RF-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RF-O\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "SF-S",
+      "ontology_id": "sf_s",
+      "label": "SF-S",
+      "label_group_ids": [
+        "svg_470"
+      ],
+      "device_group_ids": [
+        "svg_672"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"SF-S\"]",
+        "[short-name=\"SF-S\"]",
+        "use[key-data-attr*=\"pointShortName':'SF-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"SF-S\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "SF-C",
+      "ontology_id": "sf_c",
+      "label": "SF-C",
+      "label_group_ids": [
+        "svg_473"
+      ],
+      "device_group_ids": [
+        "svg_672"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"SF-C\"]",
+        "[short-name=\"SF-C\"]",
+        "use[key-data-attr*=\"pointShortName':'SF-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"SF-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "SF-O",
+      "ontology_id": "sf_o",
+      "label": "SF-O",
+      "label_group_ids": [
+        "svg_475"
+      ],
+      "device_group_ids": [
+        "svg_672"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"SF-O\"]",
+        "[short-name=\"SF-O\"]",
+        "use[key-data-attr*=\"pointShortName':'SF-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"SF-O\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "GEF-S",
+      "ontology_id": "gef_s",
+      "label": "GEF-S",
+      "label_group_ids": [
+        "svg_141"
+      ],
+      "device_group_ids": [
+        "svg_576"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"GEF-S\"]",
+        "[short-name=\"GEF-S\"]",
+        "use[key-data-attr*=\"pointShortName':'GEF-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"GEF-S\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "GEF-C",
+      "ontology_id": "gef_c",
+      "label": "GEF-C",
+      "label_group_ids": [
+        "svg_145"
+      ],
+      "device_group_ids": [
+        "svg_576"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"GEF-C\"]",
+        "[short-name=\"GEF-C\"]",
+        "use[key-data-attr*=\"pointShortName':'GEF-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"GEF-C\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RA-T",
+      "ontology_id": "ra_t",
+      "label": "RA-T",
+      "label_group_ids": [],
+      "device_group_ids": [
+        "svg_5"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-T\"]",
+        "[short-name=\"RA-T\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-T\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RAT-SP",
+      "ontology_id": "rat_sp",
+      "label": "RAT-SP",
+      "label_group_ids": [],
+      "device_group_ids": [
+        "svg_5"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RAT-SP\"]",
+        "[short-name=\"RAT-SP\"]",
+        "use[key-data-attr*=\"pointShortName':'RAT-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RAT-SP\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RA-H",
+      "ontology_id": "ra_h",
+      "label": "RA-H",
+      "label_group_ids": [],
+      "device_group_ids": [
+        "svg_5"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-H\"]",
+        "[short-name=\"RA-H\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-H'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-H\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RAH-SP",
+      "ontology_id": "rah_sp",
+      "label": "RAH-SP",
+      "label_group_ids": [],
+      "device_group_ids": [
+        "svg_5"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RAH-SP\"]",
+        "[short-name=\"RAH-SP\"]",
+        "use[key-data-attr*=\"pointShortName':'RAH-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RAH-SP\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RA-P",
+      "ontology_id": "ra_p",
+      "label": "RA-P",
+      "label_group_ids": [],
+      "device_group_ids": [
+        "svg_495"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-P\"]",
+        "[short-name=\"RA-P\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-P'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-P\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    },
+    {
+      "source_short_name": "RAP-SP",
+      "ontology_id": "rap_sp",
+      "label": "RAP-SP",
+      "label_group_ids": [],
+      "device_group_ids": [
+        "svg_495"
+      ],
+      "image_selectors": [],
+      "fallback_selectors": [
+        "g[data-filter=\"RAP-SP\"]",
+        "[short-name=\"RAP-SP\"]",
+        "use[key-data-attr*=\"pointShortName':'RAP-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RAP-SP\\\"\"]"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "Matched against bound symbol use nodes via pointShortName.",
+      "confidence": 0.93
+    }
+  ]
+}

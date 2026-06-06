@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "projecthub_system_template_registry.schema.json",
+  "title": "ProjectHub System Template Registry",
+  "type": "object",
+  "required": ["generated_at", "templates"],
+  "properties": {
+    "generated_at": {
+      "type": "string",
+      "description": "UTC timestamp for registry generation."
+    },
+    "templates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/templateEntry"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "templateEntry": {
+      "type": "object",
+      "required": [
+        "template_id",
+        "display_name",
+        "equipment_family",
+        "system_type",
+        "normalized_template_path",
+        "asset_base_path",
+        "point_manifest_path",
+        "visibility_manifest_path",
+        "supported_ontology_ids",
+        "ontology_crosswalk",
+        "unmapped_source_points",
+        "fallback_symbol_roles",
+        "replacement_ready",
+        "notes"
+      ],
+      "properties": {
+        "template_id": {
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "equipment_family": {
+          "type": "string"
+        },
+        "system_type": {
+          "type": "string"
+        },
+        "normalized_template_path": {
+          "type": "string",
+          "description": "Neutral runtime path for the normalized HTML template."
+        },
+        "asset_base_path": {
+          "type": "string",
+          "description": "Neutral runtime base path for template assets."
+        },
+        "point_manifest_path": {
+          "type": "string",
+          "description": "Neutral runtime path for the point manifest."
+        },
+        "visibility_manifest_path": {
+          "type": "string",
+          "description": "Neutral runtime path for the point visibility manifest."
+        },
+        "supported_ontology_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ontology_crosswalk": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "unmapped_source_points": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fallback_symbol_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fallback_symbol_overlays": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "replacement_ready": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "private_source_bundle_path": {
+          "type": "string",
+          "description": "Private investigation bundle path used only by local loaders and previews."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
