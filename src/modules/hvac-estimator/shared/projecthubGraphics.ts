@@ -1,4 +1,4 @@
-import { normalizeAhuCfg } from "@/modules/hvac-estimator/components/ahu/ahuData";
+import { AHU_COMPS, AHU_COMPANION_POINTS, normalizeAhuCfg } from "@/modules/hvac-estimator/components/ahu/ahuData";
 import { normalizeVavCfg } from "@/modules/hvac-estimator/components/vav/vavData";
 import type { ProjectHubSystemKey } from "@/data/projecthub/projecthub-data";
 
@@ -10,9 +10,31 @@ export type EstimatorSelectionEntry = {
 export type ProjectHubGraphicsSource = {
   systemKey: ProjectHubSystemKey;
   selectedOntologyIds: string[];
+  selectedSelectionIds: string[];
+  selectedSelectionLabelsById: Record<string, string>;
+  selectedSelectionRolesById: Record<string, string>;
+  selectedTemplateKeysBySelectionId: Record<string, string[]>;
 };
 
 const unique = (values: string[]) => Array.from(new Set(values.filter(Boolean)));
+
+function toDisplayLabel(value: string) {
+  const tokens = value
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  return tokens
+    .map((token) => {
+      const upper = token.toUpperCase();
+      if (/^(VFD|OA|RA|EA|SA|DA|CHW|HW|PH|CLG|RH|MAD|MOAD|GEF|RAT|DAT|DAP|RAP|CWS|CWR|CHWS|CHWR|FB)$/i.test(upper)) {
+        return upper;
+      }
+      return upper.slice(0, 1) + upper.slice(1).toLowerCase();
+    })
+    .join(" ");
+}
 
 const VAV_ONTOLOGY_BY_COMPONENT: Record<string, string[]> = {
   "vav-act": ["damper_position"],
@@ -61,6 +83,67 @@ const AHU_ONTOLOGY_BY_COMPONENT: Record<string, string[]> = {
   "vfd-rf": ["return_fan_command"],
 };
 
+const AHU_COMPANION_TEMPLATE_KEYS_BY_COMPONENT: Record<string, string[]> = {
+  "htg-valve-position": ["PH-POS"],
+  "clg-valve-position": ["CLG-POS"],
+  "rh-valve-position": ["RH-POS"],
+  "mixed-air-damper-position": ["MOAD-C"],
+};
+
+const AHU_TEMPLATE_KEYS_BY_SELECTION_ID: Record<string, string[]> = {
+  "oa-temp": ["CC-T"],
+  "ma-temp": ["MA-T"],
+  "sa-temp": ["DA-T", "DAT-SP"],
+  "ra-temp": ["RA-T", "RAT-SP"],
+  "hw-sup-t": ["PHWL-T"],
+  "hw-ret-t": ["PHWE-T"],
+  "chw-sup-t": ["CCWE-T"],
+  "chw-ret-t": ["CCWL-T"],
+  "oa-rh": ["RH-O"],
+  "ra-rh": ["RA-H", "RAH-SP"],
+  "sa-static": ["DAP-SP"],
+  "ra-static": ["RAP-SP"],
+  "oa-damper": ["MOAD-S", "MOAD-C"],
+  "ra-damper": ["MAD-O"],
+  "ea-damper": ["GEF-S"],
+  "min-oa-d": ["MOAD-S", "MOAD-C"],
+  "filter-dp": ["PFILT-S", "FFILT-S"],
+  "ph-valve": ["PH-O"],
+  "ph-valve-2pos": ["PH-O"],
+  "ph-steam-valve": ["PH-O"],
+  "htg-valve": ["PH-O"],
+  "htg-valve-2pos": ["PH-O"],
+  "htg-valve-incr": ["PH-O"],
+  "htg-steam-valve": ["PH-O"],
+  "rh-valve": ["RH-O"],
+  "rh-valve-2pos": ["RH-O"],
+  "rh-valve-incr": ["RH-O"],
+  "rh-elec-heat": ["RH-O"],
+  "clg-valve": ["CLG-O", "CLG-POS", "CC-T"],
+  "clg-valve-2pos": ["CLG-O", "CLG-POS", "CC-T"],
+  "clg-dx-staged": [],
+  "vfd-sf": ["SF-C", "SF-S", "SF-O"],
+  "sf-starter": ["SF-C", "SF-S", "SF-O"],
+  "vfd-rf": ["RF-C", "RF-S", "RF-O"],
+  "rf-starter": ["RF-C", "RF-S", "RF-O"],
+  "smoke-sa": ["DA-SD"],
+  "smoke-ra": ["RA-SD"],
+  "htg-valve-position": ["PH-POS"],
+  "clg-valve-position": ["CLG-POS"],
+  "rh-valve-position": ["RH-POS"],
+  "mixed-air-damper-position": ["MOAD-C"],
+};
+
+const AHU_SELECTION_LABELS_BY_ID: Record<string, string> = Object.fromEntries([
+  ...AHU_COMPS.map((comp) => [comp.id, comp.name]),
+  ...AHU_COMPANION_POINTS.map((point) => [point.companionPointId, point.companionLabel]),
+]);
+
+const AHU_SELECTION_ROLES_BY_ID: Record<string, string> = Object.fromEntries([
+  ...AHU_COMPS.map((comp) => [comp.id, comp.cat || ""]),
+  ...AHU_COMPANION_POINTS.map((point) => [point.companionPointId, point.companionRole]),
+]);
+
 const FCU_ONTOLOGY_BY_COMPONENT: Record<string, string[]> = {
   "fcu-ctrl": ["zone_setpoint"],
   "fcu-tec": ["zone_setpoint"],
@@ -105,7 +188,15 @@ export function resolveProjectHubGraphicsSource(type: string, cfg: Record<string
       ...normalizedSelected.flatMap((id) => VAV_ONTOLOGY_BY_COMPONENT[id] || []),
       ...(normalized.fanType === "parallel" ? ["supply_fan_status"] : []),
     ]);
-    return { systemKey, selectedOntologyIds };
+    const selectedSelectionIds = normalizedSelected;
+    return {
+      systemKey,
+      selectedOntologyIds,
+      selectedSelectionIds,
+      selectedSelectionLabelsById: Object.fromEntries(selectedSelectionIds.map((id) => [id, toDisplayLabel(id)])),
+      selectedSelectionRolesById: Object.fromEntries(selectedSelectionIds.map((id) => [id, ""])),
+      selectedTemplateKeysBySelectionId: Object.fromEntries(selectedSelectionIds.map((id) => [id, []])),
+    };
   }
 
   if (type === "ahu") {
@@ -118,9 +209,26 @@ export function resolveProjectHubGraphicsSource(type: string, cfg: Record<string
         ? "mixed_air_dual_point_ahu"
         : "mixed_air_single_point_ahu";
     const selectedOntologyIds = unique(
-      normalizedSelected.flatMap((id) => AHU_ONTOLOGY_BY_COMPONENT[id] || [])
+      [
+        ...normalizedSelected.flatMap((id) => AHU_ONTOLOGY_BY_COMPONENT[id] || []),
+        ...normalizedSelected.flatMap((id) => AHU_COMPANION_TEMPLATE_KEYS_BY_COMPONENT[id] || []),
+      ]
     );
-    return { systemKey, selectedOntologyIds };
+    const selectedSelectionIds = normalizedSelected;
+    return {
+      systemKey,
+      selectedOntologyIds,
+      selectedSelectionIds,
+      selectedSelectionLabelsById: Object.fromEntries(
+        selectedSelectionIds.map((id) => [id, AHU_SELECTION_LABELS_BY_ID[id] || toDisplayLabel(id)])
+      ),
+      selectedSelectionRolesById: Object.fromEntries(
+        selectedSelectionIds.map((id) => [id, AHU_SELECTION_ROLES_BY_ID[id] || ""])
+      ),
+      selectedTemplateKeysBySelectionId: Object.fromEntries(
+        selectedSelectionIds.map((id) => [id, unique(AHU_TEMPLATE_KEYS_BY_SELECTION_ID[id] || [])])
+      ),
+    };
   }
 
   if (type === "fcu") {
@@ -128,7 +236,15 @@ export function resolveProjectHubGraphicsSource(type: string, cfg: Record<string
     const selectedOntologyIds = unique(
       normalizedSelected.flatMap((id) => FCU_ONTOLOGY_BY_COMPONENT[id] || [])
     );
-    return { systemKey, selectedOntologyIds };
+    const selectedSelectionIds = normalizedSelected;
+    return {
+      systemKey,
+      selectedOntologyIds,
+      selectedSelectionIds,
+      selectedSelectionLabelsById: Object.fromEntries(selectedSelectionIds.map((id) => [id, toDisplayLabel(id)])),
+      selectedSelectionRolesById: Object.fromEntries(selectedSelectionIds.map((id) => [id, ""])),
+      selectedTemplateKeysBySelectionId: Object.fromEntries(selectedSelectionIds.map((id) => [id, []])),
+    };
   }
 
   if (type === "plant") {
@@ -147,7 +263,15 @@ export function resolveProjectHubGraphicsSource(type: string, cfg: Record<string
     const selectedOntologyIds = unique(
       normalizedSelected.flatMap((id) => (PLANT_ONTOLOGY_BY_COMPONENT[plantType]?.[id] || []))
     );
-    return { systemKey, selectedOntologyIds };
+    const selectedSelectionIds = normalizedSelected;
+    return {
+      systemKey,
+      selectedOntologyIds,
+      selectedSelectionIds,
+      selectedSelectionLabelsById: Object.fromEntries(selectedSelectionIds.map((id) => [id, toDisplayLabel(id)])),
+      selectedSelectionRolesById: Object.fromEntries(selectedSelectionIds.map((id) => [id, ""])),
+      selectedTemplateKeysBySelectionId: Object.fromEntries(selectedSelectionIds.map((id) => [id, []])),
+    };
   }
 
   return null;

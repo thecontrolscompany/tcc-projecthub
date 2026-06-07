@@ -78,6 +78,10 @@ export function ProjectHubOntologyGraphicPanel({ type, cfg, selected, className,
         <ProjectHubTemplateGraphicPanel
           templateId={templateTrial.templateId}
           selectedOntologyIds={templateTrial.selectedOntologyIds}
+          selectedSelectionIds={templateTrial.selectedSelectionIds}
+          selectedSelectionLabelsById={templateTrial.selectedSelectionLabelsById}
+          selectedSelectionRolesById={templateTrial.selectedSelectionRolesById}
+          selectedTemplateKeysBySelectionId={templateTrial.selectedTemplateKeysBySelectionId}
           fallback={fallbackGraphic}
         />
       </div>

@@ -191,6 +191,93 @@ export const AHU_COMPONENT_GROUPS = [
 export const getAhuGroup = (groupId, groups = AHU_COMPONENT_GROUPS) =>
   groups.find(group => group.groupId === groupId) || null;
 
+export const AHU_COMPANION_POINTS = [
+  {
+    parentPointId: "htg-valve",
+    parentPointIds: ["htg-valve", "htg-valve-2pos", "htg-valve-incr", "htg-steam-valve"],
+    companionPointId: "htg-valve-position",
+    companionLabel: "Heating Valve Position",
+    companionRole: "heating-valve-position-feedback",
+    ontologyId: null,
+    ontologyGapNote: "No canonical heating valve feedback ontology found in the current repo.",
+    defaultPresent: false,
+    pricingBehavior: "no_price",
+    visibilityBehavior: "selected_points_only",
+  },
+  {
+    parentPointId: "clg-valve",
+    parentPointIds: ["clg-valve", "clg-valve-2pos"],
+    companionPointId: "clg-valve-position",
+    companionLabel: "Cooling Valve Position",
+    companionRole: "cooling-valve-position-feedback",
+    ontologyId: null,
+    ontologyGapNote: "No canonical cooling valve feedback ontology found in the current repo.",
+    defaultPresent: false,
+    pricingBehavior: "no_price",
+    visibilityBehavior: "selected_points_only",
+  },
+  {
+    parentPointId: "rh-valve",
+    parentPointIds: ["rh-valve", "rh-valve-2pos", "rh-valve-incr"],
+    companionPointId: "rh-valve-position",
+    companionLabel: "Reheat Valve Position",
+    companionRole: "reheat-valve-position-feedback",
+    ontologyId: null,
+    ontologyGapNote: "No canonical reheat valve feedback ontology found in the current repo.",
+    defaultPresent: false,
+    pricingBehavior: "no_price",
+    visibilityBehavior: "selected_points_only",
+  },
+  {
+    parentPointId: "oa-damper",
+    parentPointIds: ["oa-damper"],
+    companionPointId: "oa-damper-position",
+    companionLabel: "OA Damper Position",
+    companionRole: "outside-air-damper-position-feedback",
+    ontologyId: null,
+    ontologyGapNote: "No canonical outside-air damper feedback ontology found in the current repo.",
+    defaultPresent: false,
+    pricingBehavior: "no_price",
+    visibilityBehavior: "selected_points_only",
+  },
+  {
+    parentPointId: "ra-damper",
+    parentPointIds: ["ra-damper"],
+    companionPointId: "ra-damper-position",
+    companionLabel: "RA Damper Position",
+    companionRole: "return-air-damper-position-feedback",
+    ontologyId: null,
+    ontologyGapNote: "No canonical return-air damper feedback ontology found in the current repo.",
+    defaultPresent: false,
+    pricingBehavior: "no_price",
+    visibilityBehavior: "selected_points_only",
+  },
+  {
+    parentPointId: "min-oa-d",
+    parentPointIds: ["min-oa-d"],
+    companionPointId: "mixed-air-damper-position",
+    companionLabel: "Mixed Air Damper Position",
+    companionRole: "mixed-air-damper-position-feedback",
+    ontologyId: null,
+    ontologyGapNote: "No canonical mixed-air damper feedback ontology found in the current repo.",
+    defaultPresent: false,
+    pricingBehavior: "no_price",
+    visibilityBehavior: "selected_points_only",
+  },
+  {
+    parentPointId: "ea-damper",
+    parentPointIds: ["ea-damper"],
+    companionPointId: "exhaust-relief-damper-position",
+    companionLabel: "Exhaust/Relief Damper Position",
+    companionRole: "exhaust-relief-damper-position-feedback",
+    ontologyId: null,
+    ontologyGapNote: "No canonical exhaust/relief damper feedback ontology found in the current repo.",
+    defaultPresent: false,
+    pricingBehavior: "no_price",
+    visibilityBehavior: "selected_points_only",
+  },
+];
+
 const hasGroupSelection = (selected, groupId, comps) =>
   selected.some(entry => comps.some(comp => comp.id === entry.id && comp.groupId === groupId));
 
@@ -199,6 +286,26 @@ export const isAhuComponentVisible = (comp, cfg) =>
 
 export const getVisibleAhuComponents = (cfg, comps = AHU_COMPS) =>
   comps.filter(comp => isAhuComponentVisible(comp, cfg));
+
+export const getVisibleAhuCompanionPoints = (cfg, comps = AHU_COMPS, companionPoints = AHU_COMPANION_POINTS) => {
+  const visibleParentIds = new Set(getVisibleAhuComponents(cfg, comps).map(comp => comp.id));
+  return companionPoints.filter(point => {
+    const parentIds = point.parentPointIds || [point.parentPointId];
+    return parentIds.some(parentId => visibleParentIds.has(parentId));
+  });
+};
+
+export const getAhuCompanionPointsForParent = (parentPointId, cfg, comps = AHU_COMPS, companionPoints = AHU_COMPANION_POINTS) =>
+  getVisibleAhuCompanionPoints(cfg, comps, companionPoints).filter(point => {
+    const parentIds = point.parentPointIds || [point.parentPointId];
+    return parentIds.includes(parentPointId);
+  });
+
+export const getAhuCompanionPointById = (companionPointId, companionPoints = AHU_COMPANION_POINTS) =>
+  companionPoints.find(point => point.companionPointId === companionPointId) || null;
+
+export const isAhuCompanionPoint = (companionPointId, companionPoints = AHU_COMPANION_POINTS) =>
+  Boolean(getAhuCompanionPointById(companionPointId, companionPoints));
 
 export const applyAhuDefaultSelections = (selected, cfg, options = {}) => {
   const normalizedCfg = normalizeAhuCfg(cfg);
@@ -231,13 +338,32 @@ export const reconcileAhuSelected = (selected, cfg, options = {}) => {
   const normalizedCfg = normalizeAhuCfg(cfg);
   const comps = options.components || AHU_COMPS;
   const groups = options.groups || AHU_COMPONENT_GROUPS;
+  const companionPoints = options.companionPoints || AHU_COMPANION_POINTS;
   const visibleComponents = getVisibleAhuComponents(normalizedCfg, comps);
   const visibleIds = new Set(visibleComponents.map(comp => comp.id));
   const compById = new Map(comps.map(comp => [comp.id, comp]));
+  const companionById = new Map(companionPoints.map(point => [point.companionPointId, point]));
+  const visibleCompanionIds = new Set(
+    getVisibleAhuCompanionPoints(normalizedCfg, comps, companionPoints).map(point => point.companionPointId)
+  );
+  const selectedParentIds = new Set(
+    (selected || [])
+      .map(entry => entry.id)
+      .filter(id => visibleIds.has(id) && !companionById.has(id))
+  );
   const takenExclusiveGroups = new Set();
   const next = [];
 
   for (const entry of selected || []) {
+    const companionPoint = companionById.get(entry.id);
+    if (companionPoint) {
+      if (!visibleCompanionIds.has(entry.id)) continue;
+      const parentIds = companionPoint.parentPointIds || [companionPoint.parentPointId];
+      if (!parentIds.some(parentId => selectedParentIds.has(parentId))) continue;
+      next.push(entry);
+      continue;
+    }
+
     if (!visibleIds.has(entry.id)) continue;
     const comp = compById.get(entry.id);
 
@@ -259,13 +385,32 @@ export const reconcileAhuSelected = (selected, cfg, options = {}) => {
     blockedIds: options.blockedIds,
     components: visibleComponents,
     groups,
+    companionPoints,
   });
 };
 
 export const toggleAhuComponentSelection = (selected, componentId, options = {}) => {
   const comps = options.components || AHU_COMPS;
   const groups = options.groups || AHU_COMPONENT_GROUPS;
+  const companionPoints = options.companionPoints || AHU_COMPANION_POINTS;
   const comp = comps.find(entry => entry.id === componentId);
+  const companionPoint = getAhuCompanionPointById(componentId, companionPoints);
+
+  if (companionPoint) {
+    const parentSelected = selected.some(entry => {
+      const parentIds = companionPoint.parentPointIds || [companionPoint.parentPointId];
+      return parentIds.some(parentId => parentId === entry.id);
+    });
+
+    if (!parentSelected) {
+      return selected.filter(entry => entry.id !== componentId);
+    }
+
+    const isSelected = selected.some(entry => entry.id === componentId);
+    return isSelected
+      ? selected.filter(entry => entry.id !== componentId)
+      : [...selected, { id: componentId, qty: 1 }];
+  }
 
   if (!comp) return selected;
 
@@ -280,13 +425,21 @@ export const toggleAhuComponentSelection = (selected, componentId, options = {})
   const groupMemberIds = new Set(
     comps.filter(entry => entry.groupId === comp.groupId).map(entry => entry.id)
   );
+  const companionIdsForParent = new Set(
+    companionPoints
+      .filter(point => {
+        const parentIds = point.parentPointIds || [point.parentPointId];
+        return parentIds.includes(comp.id);
+      })
+      .map(point => point.companionPointId)
+  );
 
   if (isSelected) {
     const selectedGroupMembers = selected.filter(entry => groupMemberIds.has(entry.id));
     if (group?.required && selectedGroupMembers.length === 1) {
       return selected;
     }
-    return selected.filter(entry => entry.id !== componentId);
+    return selected.filter(entry => entry.id !== componentId && !companionIdsForParent.has(entry.id));
   }
 
   return [

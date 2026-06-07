@@ -16,7 +16,9 @@ import {
   AHU_PREHEAT_TYPES,
   AHU_RETURN_FAN_TYPES,
   AHU_SUPPLY_FAN_TYPES,
+  getAhuCompanionPointsForParent,
   getVisibleAhuComponents,
+  getVisibleAhuCompanionPoints,
   normalizeAhuCfg,
   reconcileAhuSelected,
   toggleAhuComponentSelection,
@@ -30,12 +32,46 @@ import { DiagramViewer } from "../../shared/DiagramViewer.jsx";
 import { PointsList } from "../../shared/PointsList.jsx";
 import { resolveProjectHubGraphicsSource } from "../../shared/projecthubGraphics";
 import {
+  isProjectHubTemplateGraphicsPreviewEnabled,
+  resolveProjectHubTemplateGraphicsTrial,
+} from "../../shared/projecthubTemplateGraphics";
+import { ProjectHubTemplateGraphicPanel } from "../../shared/ProjectHubTemplateGraphicPanel";
+import {
   buildCableBundleFromPoints,
   CONDUIT_FILL_BUNDLE_KEY,
   CONDUIT_FILL_CONTEXT_KEY,
   findHomeRunComponentId,
 } from "../../shared/conduitFill.js";
 import { GgtMixedAirPoc } from "../../../../components/system-graphic/GgtMixedAirPoc";
+const STAGED_AHU_POINT_ID_RE = /^(PH|CLG|RH)\d+-C$/i;
+const TEMPORARY_HIDDEN_AHU_COMPONENT_IDS = new Set([
+  "ph-valve",
+  "ph-valve-2pos",
+  "ph-steam-valve",
+  "htg-valve",
+  "htg-valve-2pos",
+  "htg-valve-incr",
+  "htg-steam-valve",
+  "rh-valve",
+  "rh-valve-2pos",
+  "rh-valve-incr",
+  "rh-elec-heat",
+  "clg-dx-staged",
+]);
+
+function isStagedAhuPointId(id) {
+  return STAGED_AHU_POINT_ID_RE.test(id);
+}
+
+function isTemporaryHiddenAhuComponentId(id) {
+  return TEMPORARY_HIDDEN_AHU_COMPONENT_IDS.has(id);
+}
+
+function getTrialVisibleAhuComponents(cfg) {
+  return getVisibleAhuComponents(cfg).filter(
+    comp => !isStagedAhuPointId(comp.id) && !isTemporaryHiddenAhuComponentId(comp.id)
+  );
+}
 
 const DuctWall = ({x,y,w,h}) => (
   <g>
@@ -610,7 +646,7 @@ function AhuConfigLauncher({ cfg, onCfgChange, onStart }) {
 }
 
 
-function CompPanel({cfg, visibleComponents, selected,onToggle,onSetCompQty,custom,onAddCust,onRemoveCust,installType,setIT,qty,setQty}) {
+function CompPanel({cfg, visibleComponents, visibleCompanionPoints, selected,setSel,onToggle,onSetCompQty,custom,onAddCust,onRemoveCust,installType,setIT,qty,setQty}) {
   const [filterCat,setFC]   = useState("All");
   const [expanded,setExp]   = useState(null);
   const [modal,setModal]    = useState(false);
@@ -677,7 +713,7 @@ function CompPanel({cfg, visibleComponents, selected,onToggle,onSetCompQty,custo
         })}
         <div style={{marginLeft:"auto",display:"flex",gap:3}}>
           <button onClick={()=>setSel(sel=>{const next=[...sel];for(const c of visible){if(!next.some(s=>s.id===c.id))next.push({id:c.id,qty:1});}return next;})} style={{padding:"2px 7px",borderRadius:10,fontSize:9.5,fontFamily:T.mono,cursor:"pointer",border:"1px solid "+T.border,background:"transparent",color:T.muted}}>All</button>
-          <button onClick={()=>setSel(sel=>sel.filter(s=>!visible.some(c=>c.id===s.id)))} style={{padding:"2px 7px",borderRadius:10,fontSize:9.5,fontFamily:T.mono,cursor:"pointer",border:"1px solid "+T.border,background:"transparent",color:T.muted}}>None</button>
+          <button onClick={()=>setSel(sel=>sel.filter(s=>!visible.some(c=>c.id===s.id) && !visibleCompanionPoints.some(point => point.companionPointId===s.id)))} style={{padding:"2px 7px",borderRadius:10,fontSize:9.5,fontFamily:T.mono,cursor:"pointer",border:"1px solid "+T.border,background:"transparent",color:T.muted}}>None</button>
         </div>
       </div>
 
@@ -724,6 +760,58 @@ function CompPanel({cfg, visibleComponents, selected,onToggle,onSetCompQty,custo
                   </button>
                 )}
               </div>
+
+              {isOn && (
+                <div style={{padding:"0 13px 8px 27px", borderTop:"1px solid "+color+"18", background:color+"03"}}>
+                  {getAhuCompanionPointsForParent(comp.id, cfg).map(point => {
+                    const pointOn = selected.some(s => s.id === point.companionPointId);
+                    return (
+                      <div
+                        key={point.companionPointId}
+                        style={{
+                          marginTop:6,
+                          padding:"5px 7px",
+                          borderRadius:5,
+                          display:"flex",
+                          alignItems:"center",
+                          gap:7,
+                          cursor:"pointer",
+                          border:"1px solid "+(pointOn ? color+"44" : T.border2),
+                          background:pointOn ? color+"08" : T.surface,
+                        }}
+                        onClick={()=>onToggle(point.companionPointId)}
+                      >
+                        <div
+                          style={{
+                            width:12,
+                            height:12,
+                            borderRadius:3,
+                            flexShrink:0,
+                            background:pointOn ? color : "transparent",
+                            border:"1.5px solid "+(pointOn ? color : T.border2),
+                            display:"flex",
+                            alignItems:"center",
+                            justifyContent:"center",
+                          }}
+                        >
+                          {pointOn && <span style={{color:"#fff",fontSize:8,fontWeight:900,lineHeight:1}}>✓</span>}
+                        </div>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:11,color:pointOn?T.text:T.muted,fontWeight:pointOn?600:400}}>
+                            {point.companionLabel}
+                          </div>
+                          <div style={{fontSize:9,color:T.dim,fontFamily:T.mono,marginTop:1}}>
+                            {point.companionRole}
+                          </div>
+                        </div>
+                        <div style={{flexShrink:0,fontSize:9,color:T.dim,fontFamily:T.mono,background:T.faint,padding:"2px 5px",borderRadius:3}}>
+                          No price
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               {isOn && isExp && cost.items.length>0 && (
                 <div style={{background:color+"06",borderTop:"1px solid "+color+"20",padding:"4px 8px 8px 8px"}}>
@@ -843,7 +931,10 @@ export default function AHUPage() {
     reconcileAhuSelected(
       isEditing ? (editingItem.selected || []) : [],
       nextCfg,
-      { components: getVisibleAhuComponents(nextCfg) }
+      {
+        components: getTrialVisibleAhuComponents(nextCfg),
+        companionPoints: getVisibleAhuCompanionPoints(nextCfg),
+      }
     )
   );
 
@@ -858,20 +949,29 @@ export default function AHUPage() {
   const [isLauncherMode, setIsLauncherMode] = useState(() => !isEditing);
 
   const visibleComponents = useMemo(
-    () => (cfg ? getVisibleAhuComponents(cfg) : []),
+    () => (cfg ? getTrialVisibleAhuComponents(cfg) : []),
+    [cfg]
+  );
+  const visibleCompanionPoints = useMemo(
+    () => (cfg ? getVisibleAhuCompanionPoints(cfg) : []),
     [cfg]
   );
   const graphicsSource = useMemo(
     () => resolveProjectHubGraphicsSource("ahu", cfg, selected),
     [cfg, selected]
   );
+  const templateTrial = useMemo(
+    () => resolveProjectHubTemplateGraphicsTrial("ahu", cfg, selected),
+    [cfg, selected]
+  );
+  const useTemplateTrial = isProjectHubTemplateGraphicsPreviewEnabled() && cfg?.ahuType === "mixed";
 
   const reconcileRanOnce = useRef(false);
   useEffect(() => {
     if (!cfg) return;
     if (!reconcileRanOnce.current) { reconcileRanOnce.current = true; return; }
-    setSel(current => reconcileAhuSelected(current, cfg, { components: visibleComponents, blockedIds }));
-  }, [cfg, visibleComponents, blockedIds]);
+    setSel(current => reconcileAhuSelected(current, cfg, { components: visibleComponents, blockedIds, companionPoints: visibleCompanionPoints }));
+  }, [cfg, visibleComponents, visibleCompanionPoints, blockedIds]);
 
   useEffect(() => {
     const nextCfg = buildInitialCfg();
@@ -884,6 +984,7 @@ export default function AHUPage() {
     setTag(isEditing ? editingItem.tag : "AHU");
     setLoc(isEditing ? editingItem.location : "Mechanical Room");
     setIsLauncherMode(!isEditing);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only when switching the edited item
   }, [editingItem?.id, isEditing, quoteDefault]);
 
   useEffect(() => {
@@ -919,7 +1020,7 @@ export default function AHUPage() {
       return prev;
     });
 
-    return toggleAhuComponentSelection(current, id, { components: visibleComponents, cfg });
+    return toggleAhuComponentSelection(current, id, { components: visibleComponents, cfg, companionPoints: visibleCompanionPoints });
   });
   const getSelectedQty = id => selected.find(s => s.id === id)?.qty ?? 1;
 
@@ -980,7 +1081,18 @@ export default function AHUPage() {
               <div style={{flex:1,background:T.surface,borderRadius:8,border:"1px solid "+T.border,
                 overflow:"hidden",minHeight:0}}>
                 <SchematicTabs>{{
-                  flow: graphicsSource ? (
+                  flow: useTemplateTrial ? (
+                    <ProjectHubTemplateGraphicPanel
+                      templateId={templateTrial?.templateId ?? "mixed_air_single_duct"}
+                      selectedOntologyIds={templateTrial?.selectedOntologyIds ?? []}
+                      selectedSelectionIds={templateTrial?.selectedSelectionIds ?? []}
+                      selectedSelectionLabelsById={templateTrial?.selectedSelectionLabelsById ?? {}}
+                      selectedSelectionRolesById={templateTrial?.selectedSelectionRolesById ?? {}}
+                      selectedTemplateKeysBySelectionId={templateTrial?.selectedTemplateKeysBySelectionId ?? {}}
+                      fallback={<div style={{width:"100%",height:"100%"}} />}
+                      className="h-full w-full"
+                    />
+                  ) : graphicsSource ? (
                     <GgtMixedAirPoc
                       selectedOntologyIds={graphicsSource.selectedOntologyIds}
                       systemKey={graphicsSource.systemKey}
@@ -1055,7 +1167,7 @@ export default function AHUPage() {
               </div>
             </div>
             )} sidebar={(
-              <CompPanel cfg={cfg} visibleComponents={visibleComponents} selected={selected} onToggle={toggle} onSetCompQty={setCompQty}
+              <CompPanel cfg={cfg} visibleComponents={visibleComponents} visibleCompanionPoints={visibleCompanionPoints} selected={selected} setSel={setSel} onToggle={toggle} onSetCompQty={setCompQty}
                 custom={custom} onAddCust={c=>setCustom(cs=>[...cs,c])}
                 onRemoveCust={id=>setCustom(cs=>cs.filter(c=>c.id!==id))}
                 installType={installType} setIT={setIT} qty={qty} setQty={setQty}/>

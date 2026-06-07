@@ -229,19 +229,25 @@ function clearLocalDraft(estimateId: string) {
   }
 }
 
-function getInitialEstimateState(estimate: EstimateRecord): { body: EstimateBody; status: EstimateStatus; recovered: boolean } {
+function getInitialEstimateState(estimate: EstimateRecord): { body: EstimateBody; status: EstimateStatus } {
+  return {
+    body: normalizeBody(estimate),
+    status: estimate.status,
+  };
+}
+
+function getRecoveredEstimateState(estimate: EstimateRecord): { body: EstimateBody; status: EstimateStatus } | null {
   const serverBody = normalizeBody(estimate);
-  const serverStatus = estimate.status;
   const draft = readLocalDraft(estimate.id);
-  if (!draft) return { body: serverBody, status: serverStatus, recovered: false };
+  if (!draft) return null;
 
   const draftTime = new Date(draft.body.updatedAt || draft.savedAt || "").getTime();
   const serverTime = new Date(estimate.updated_at).getTime();
   if (!Number.isFinite(draftTime) || !Number.isFinite(serverTime) || draftTime <= serverTime) {
-    return { body: serverBody, status: serverStatus, recovered: false };
+    return null;
   }
 
-  return { body: mergeRecoveredBodies(serverBody, draft.body), status: draft.status, recovered: true };
+  return { body: mergeRecoveredBodies(serverBody, draft.body), status: draft.status };
 }
 
 function getTypeMeta(type: string) {
@@ -420,8 +426,8 @@ export function EstimateDetailClient({ estimate }: Props) {
   const [editingComponentsFor, setEditingComponentsFor] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [dirty, setDirty] = useState(() => initialEstimateState.recovered);
-  const [message, setMessage] = useState<string | null>(() => (initialEstimateState.recovered ? "Recovered unsaved local draft." : null));
+  const [dirty, setDirty] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const opportunityNumber = asString(body.platformContext?.opportunityNumber);
@@ -431,6 +437,17 @@ export function EstimateDetailClient({ estimate }: Props) {
     asString((estimate as unknown as Record<string, unknown>).organization_id) ||
     asString(body.platformContext?.organizationId) ||
     asString(body.platformContext?.organization_id);
+
+  useEffect(() => {
+    const recovered = getRecoveredEstimateState(estimate);
+    if (!recovered) return;
+
+    setBody(recovered.body);
+    setStatus(recovered.status);
+    setDirty(true);
+    setMessage("Recovered unsaved local draft.");
+  }, [estimate]);
+
   const rawTotals = useMemo(() => calcEstimate(body) as { mtl: number; lbrHrs: number }, [body]);
   const costs = useMemo(
     () =>
@@ -698,11 +715,12 @@ export function EstimateDetailClient({ estimate }: Props) {
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {(message || error) && (
-                <span className={`text-sm ${error ? "text-status-danger" : "text-status-success"}`}>
-                  {error ?? message}
-                </span>
-              )}
+              <span
+                className={`min-h-5 text-sm ${error ? "text-status-danger" : message ? "text-status-success" : "text-transparent"}`}
+                aria-live="polite"
+              >
+                {error ?? message ?? " "}
+              </span>
               <select
                 value={status}
                 onChange={(event) => {
