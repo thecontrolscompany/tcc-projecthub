@@ -2,10 +2,10 @@
 
 - Total point labels found: 142
 - Total point-like controls found in template markup: 164
-- Total glyph targets found: 43
+- Total glyph targets found: 42
 - Point labels linked to glyphs: 142
 - Point labels without glyphs: 0
-- Ambiguous mappings: 20
+- Ambiguous mappings: 24
 
 ## Mapped examples
 
@@ -19,6 +19,6 @@
 - Points with label-only visibility:
   - 
 - Confidence below 0.80:
-  - MAD-O (0.93), PFILT-S (0.93), PH-O (0.93), PH-POS (0.93), CLG-O (0.93), CLG-POS (0.93), RH-O (0.93), RH-POS (0.93), FFILT-S (0.93), DAT-SP (0.93), MAD-O (0.93), PH-O (0.93), PH-POS (0.93), CLG-POS (0.93), CLG-O (0.93)
+  - MAD-O (0.93), RA-SD (0.97), PFILT-S (0.93), PH-O (0.93), PH-POS (0.93), CLG-O (0.93), CLG-POS (0.93), RH-O (0.93), RH-POS (0.93), FFILT-S (0.93), DA-SD (0.97), DAT-SP (0.93), MAD-O (0.93), PH-O (0.93), PH-POS (0.93)
 - Smoke detector rule:
   - confirmed

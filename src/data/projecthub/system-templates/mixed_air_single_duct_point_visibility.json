@@ -1,6 +1,6 @@
 {
   "template_id": "mixed_air_single_duct",
-  "generated_at": "2026-06-06T04:21:13.081Z",
+  "generated_at": "2026-06-07T02:11:30.738Z",
   "source_file": "tools/template-import/output/mixed_air_single_duct/normalized_template.html",
   "rules": [
     {
@@ -118,17 +118,12 @@
         "svg_251_6"
       ],
       "device_group_ids": [
-        "svg_139"
+        "svg_139",
+        "svg_123_6",
+        "svg_173_6",
+        "svg_174_6"
       ],
-      "image_selectors": [
-        "svg[jci-id=\"smoke_detector\"]",
-        "image[xlink\\:href*=\"Smoke_Detector.png\"]",
-        "svg[jci-id=\"smoke_detector\"] image",
-        "svg[jci-id=\"smoke_detector\"] path",
-        "svg[jci-id=\"smoke_detector\"] circle",
-        "svg[jci-id=\"smoke_detector\"] rect",
-        "svg[jci-id=\"smoke_detector\"] polygon"
-      ],
+      "image_selectors": [],
       "fallback_selectors": [
         "g[data-filter=\"RA-SD\"]",
         "[short-name=\"RA-SD\"]",
@@ -136,8 +131,8 @@
         "use[key-data-attr*=\"pointShortName:\\\"RA-SD\\\"\"]"
       ],
       "visibility_mode": "hide_when_unselected",
-      "notes": "Matched against bound symbol use nodes via pointShortName. Smoke detector glyph is rendered as an independent svg asset, not a point-bound use node.",
-      "confidence": 0.99
+      "notes": "Matched against bound symbol use nodes via pointShortName. Resolved exact \"smoke_detector\" glyph instance svg_123_6 via spatial nearest-neighbor matching (label-to-glyph distance 151.8px against 4 same-component-id instance(s)). A shared selector such as svg[jci-id=\"smoke_detector\"] was deliberately avoided because it cannot distinguish between repeated instances of the same imported component id (see the RA-SD / DA-SD smoke detector collision in mixed_air_instance_mapping_audit.md).",
+      "confidence": 0.97
     },
     {
       "source_short_name": "RA-T",
@@ -638,7 +633,10 @@
         "svg_445_6"
       ],
       "device_group_ids": [
-        "svg_292"
+        "svg_292",
+        "svg_198_6",
+        "svg_233_6",
+        "svg_234_6"
       ],
       "image_selectors": [],
       "fallback_selectors": [
@@ -648,8 +646,8 @@
         "use[key-data-attr*=\"pointShortName:\\\"DA-SD\\\"\"]"
       ],
       "visibility_mode": "hide_when_unselected",
-      "notes": "Matched against bound symbol use nodes via pointShortName.",
-      "confidence": 0.93
+      "notes": "Matched against bound symbol use nodes via pointShortName. Resolved exact \"smoke_detector\" glyph instance svg_198_6 via spatial nearest-neighbor matching (label-to-glyph distance 289.1px against 4 same-component-id instance(s)). A shared selector such as svg[jci-id=\"smoke_detector\"] was deliberately avoided because it cannot distinguish between repeated instances of the same imported component id (see the RA-SD / DA-SD smoke detector collision in mixed_air_instance_mapping_audit.md).",
+      "confidence": 0.97
     },
     {
       "source_short_name": "DA-T",
@@ -2346,17 +2344,12 @@
         "svg_522"
       ],
       "device_group_ids": [
-        "svg_139"
+        "svg_139",
+        "svg_123_6",
+        "svg_173_6",
+        "svg_174_6"
       ],
-      "image_selectors": [
-        "svg[jci-id=\"smoke_detector\"]",
-        "image[xlink\\:href*=\"Smoke_Detector.png\"]",
-        "svg[jci-id=\"smoke_detector\"] image",
-        "svg[jci-id=\"smoke_detector\"] path",
-        "svg[jci-id=\"smoke_detector\"] circle",
-        "svg[jci-id=\"smoke_detector\"] rect",
-        "svg[jci-id=\"smoke_detector\"] polygon"
-      ],
+      "image_selectors": [],
       "fallback_selectors": [
         "g[data-filter=\"RA-SD\"]",
         "[short-name=\"RA-SD\"]",
@@ -2364,8 +2357,8 @@
         "use[key-data-attr*=\"pointShortName:\\\"RA-SD\\\"\"]"
       ],
       "visibility_mode": "hide_when_unselected",
-      "notes": "Matched against bound symbol use nodes via pointShortName. Smoke detector glyph is rendered as an independent svg asset, not a point-bound use node.",
-      "confidence": 0.99
+      "notes": "Matched against bound symbol use nodes via pointShortName. Resolved exact \"smoke_detector\" glyph instance svg_123_6 via spatial nearest-neighbor matching (label-to-glyph distance 194.8px against 4 same-component-id instance(s)). A shared selector such as svg[jci-id=\"smoke_detector\"] was deliberately avoided because it cannot distinguish between repeated instances of the same imported component id (see the RA-SD / DA-SD smoke detector collision in mixed_air_instance_mapping_audit.md).",
+      "confidence": 0.97
     },
     {
       "source_short_name": "FFILT-S",
@@ -2418,7 +2411,10 @@
         "svg_577"
       ],
       "device_group_ids": [
-        "svg_292"
+        "svg_292",
+        "svg_198_6",
+        "svg_233_6",
+        "svg_234_6"
       ],
       "image_selectors": [],
       "fallback_selectors": [
@@ -2428,8 +2424,8 @@
         "use[key-data-attr*=\"pointShortName:\\\"DA-SD\\\"\"]"
       ],
       "visibility_mode": "hide_when_unselected",
-      "notes": "Matched against bound symbol use nodes via pointShortName.",
-      "confidence": 0.93
+      "notes": "Matched against bound symbol use nodes via pointShortName. Resolved exact \"smoke_detector\" glyph instance svg_198_6 via spatial nearest-neighbor matching (label-to-glyph distance 375.2px against 4 same-component-id instance(s)). A shared selector such as svg[jci-id=\"smoke_detector\"] was deliberately avoided because it cannot distinguish between repeated instances of the same imported component id (see the RA-SD / DA-SD smoke detector collision in mixed_air_instance_mapping_audit.md).",
+      "confidence": 0.97
     },
     {
       "source_short_name": "DA-T",

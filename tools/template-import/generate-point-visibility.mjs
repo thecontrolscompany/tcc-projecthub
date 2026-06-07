@@ -59,14 +59,92 @@ const useNodes = [...templateHtml.matchAll(/<use\b([^>]*)>/g)].map((match) => ({
   raw: match[0],
 }));
 
-const smokeDetectorSvgIds = [...templateHtml.matchAll(/<svg\b[^>]*jci-id="smoke_detector"[^>]*id="([^"]+)"/g)].map(
-  (match) => match[1]
-);
-
 function getAttributeValue(attrs, attributeName) {
   const match = attrs.match(new RegExp(`${attributeName}="([^"]*)"`));
   return match ? match[1] : null;
 }
+
+// Strict attribute lookup for full opening tags: requires the attribute name to
+// be preceded by whitespace so e.g. looking up `id` cannot accidentally match
+// inside `jci-id="..."`.
+function getTagAttributeValue(tag, attributeName) {
+  const match = tag.match(new RegExp(`[\\s<]${escapeRegExp(attributeName)}="([^"]*)"`));
+  return match ? match[1] : null;
+}
+
+/**
+ * Imported templates can place the same vendor component id (`jci-id`) on more
+ * than one glyph instance (e.g. two `smoke_detector` SVGs in this template,
+ * one for RA-SD and one for DA-SD, plus decorative legend duplicates). Broad
+ * selectors such as `svg[jci-id="smoke_detector"]` cannot distinguish between
+ * these instances and will toggle all of them together when only one point is
+ * (de)selected — see the RA-SD / DA-SD collision documented in
+ * tools/template-import/output/mixed_air_instance_mapping_audit.md.
+ *
+ * REPEATED_GLYPH_FAMILIES names component ids known to repeat in this template
+ * along with a predicate identifying which points bind to that family. The
+ * exact glyph instance for each matching point is then resolved by spatial
+ * nearest-neighbor distance between the point's label coordinates and each
+ * candidate instance's coordinates (see resolveNearestGlyphInstance), and only
+ * that single instance's exact node ids are recorded — never a shared selector.
+ */
+const REPEATED_GLYPH_FAMILIES = [
+  {
+    componentId: 'smoke_detector',
+    matchesPoint: (shortName) => /-SD$/i.test(shortName),
+  },
+];
+
+function collectGlyphFamilyInstances(componentId) {
+  const svgTags = [...templateHtml.matchAll(/<svg\b[^>]*>/g)];
+  const instances = [];
+
+  for (let i = 0; i < svgTags.length; i += 1) {
+    const tag = svgTags[i][0];
+    if (getTagAttributeValue(tag, 'jci-id') !== componentId) continue;
+
+    const svgId = getTagAttributeValue(tag, 'id');
+    const x = Number(getTagAttributeValue(tag, 'x'));
+    const y = Number(getTagAttributeValue(tag, 'y'));
+    if (!svgId || !Number.isFinite(x) || !Number.isFinite(y)) continue;
+
+    const start = svgTags[i].index + tag.length;
+    const end = svgTags[i + 1] ? svgTags[i + 1].index : templateHtml.length;
+    const innerMarkup = templateHtml.slice(start, end);
+    const groupTag = innerMarkup.match(/<g\b[^>]*>/)?.[0] ?? null;
+    const imageTag = innerMarkup.match(/<image\b[^>]*>/)?.[0] ?? null;
+
+    instances.push({
+      svgId,
+      x,
+      y,
+      descendantIds: uniq([
+        groupTag ? getTagAttributeValue(groupTag, 'id') : null,
+        imageTag ? getTagAttributeValue(imageTag, 'id') : null,
+      ]),
+      assetHref: imageTag ? getTagAttributeValue(imageTag, 'xlink:href') : null,
+    });
+  }
+
+  return instances;
+}
+
+function resolveNearestGlyphInstance(point, instances) {
+  if (typeof point.x !== 'number' || typeof point.y !== 'number') return null;
+
+  let nearest = null;
+  for (const instance of instances) {
+    const distance = Math.hypot(point.x - instance.x, point.y - instance.y);
+    if (!nearest || distance < nearest.distance) {
+      nearest = { ...instance, distance };
+    }
+  }
+  return nearest;
+}
+
+const glyphFamilyInstancesByComponentId = new Map(
+  REPEATED_GLYPH_FAMILIES.map((family) => [family.componentId, collectGlyphFamilyInstances(family.componentId)])
+);
 
 const pointShortNameToUseIds = new Map();
 const pointShortNameToUseRaw = new Map();
@@ -93,7 +171,6 @@ for (const useNode of useNodes) {
 
 function buildRule(point) {
   const shortName = point.source_short_name;
-  const selectionId = point.candidate_ontology_id || shortName;
   const labelGroupIds = point.svg_group_id ? [point.svg_group_id] : [];
   const deviceGroupIds = uniq([...(pointShortNameToUseIds.get(shortName) || [])]);
   const imageSelectors = [];
@@ -113,19 +190,28 @@ function buildRule(point) {
     notes.push('No bound glyph found in the normalized template; label only or special-case asset.');
   }
 
-  if (shortName === 'RA-SD') {
-    imageSelectors.push(
-      'svg[jci-id="smoke_detector"]',
-      'image[xlink\\:href*="Smoke_Detector.png"]',
-      'svg[jci-id="smoke_detector"] image',
-      'svg[jci-id="smoke_detector"] path',
-      'svg[jci-id="smoke_detector"] circle',
-      'svg[jci-id="smoke_detector"] rect',
-      'svg[jci-id="smoke_detector"] polygon'
-    );
-    deviceGroupIds.push(...smokeDetectorSvgIds);
-    confidence = 0.99;
-    notes.push('Smoke detector glyph is rendered as an independent svg asset, not a point-bound use node.');
+  const repeatedFamily = REPEATED_GLYPH_FAMILIES.find((family) => family.matchesPoint(shortName));
+  if (repeatedFamily) {
+    const instances = glyphFamilyInstancesByComponentId.get(repeatedFamily.componentId) || [];
+    const nearest = resolveNearestGlyphInstance(point, instances);
+
+    if (nearest) {
+      deviceGroupIds.push(nearest.svgId, ...nearest.descendantIds);
+      confidence = Math.max(confidence, 0.97);
+      notes.push(
+        `Resolved exact "${repeatedFamily.componentId}" glyph instance ${nearest.svgId} via spatial ` +
+        `nearest-neighbor matching (label-to-glyph distance ${nearest.distance.toFixed(1)}px against ` +
+        `${instances.length} same-component-id instance(s)). A shared selector such as ` +
+        `svg[jci-id="${repeatedFamily.componentId}"] was deliberately avoided because it cannot ` +
+        'distinguish between repeated instances of the same imported component id (see the RA-SD / ' +
+        'DA-SD smoke detector collision in mixed_air_instance_mapping_audit.md).'
+      );
+    } else {
+      notes.push(
+        `Point short name matches the "${repeatedFamily.componentId}" repeated-glyph family, but no ` +
+        'instance coordinates were available to resolve an exact glyph; manual review required.'
+      );
+    }
   }
 
   const visibility_mode = 'hide_when_unselected';
