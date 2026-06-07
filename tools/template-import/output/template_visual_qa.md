@@ -1,51 +1,70 @@
 # Template Visual QA
 
-- QA scope limited to: mixed_air_single_duct, vav_single_duct, air_cooled_chiller_plant_one_chiller_two_pumps
-- Review performed against normalized bundles under `tools/template-import/output/normalized-system-templates/`.
-- Runtime preview remains vendor-neutral and isolated from the live estimator.
+- QA scope: mixed_air_single_duct, five_chiller_secondary_loop, vav_single_duct, air_cooled_chiller_plant_one_chiller_two_pumps
+- Review performed against the live `/system-template-preview` route using the repaired asset pipeline.
+- Screenshots captured under `tools/template-import/output/template_visual_qa_screenshots/`.
 
 ## mixed_air_single_duct
 
+- Template ID: mixed_air_single_duct
 - Render status: pass
-- Asset status: clean
-- Visual quality notes: stable preview, moderate point density, strong label coverage
-- Visible clutter: moderate
-- Point toggle behavior: works_at_label_group_level
-- Device glyph toggle behavior: proven_for_key_points
-- Problems found: manual review still needed for a handful of ambiguous fan/reheat mappings
-- Recommended readiness status: ready_for_estimator_trial
-- Point labels visible: yes
-- Strong glyph mappings: 136
-- Exact ontology matches: 22
-- Manual review points: 63
+- Image status: pass
+- Visual quality: clean fit in preview panel
+- Toggle behavior: works
+- Glyph behavior: needs review
+- Readiness status: needs_mapping_cleanup
+- No broken image icons observed: yes
+- No local file references: yes
+- No source/vendor names visible: yes
+- Screenshot: tools/template-import/output/template_visual_qa_screenshots/mixed_air_single_duct.png
+- Notes: preview route renders assets through the ProjectHub asset endpoint, hides imported dashboard modules by default, and suppresses preview-only alias labels.
+
+## five_chiller_secondary_loop
+
+- Template ID: five_chiller_secondary_loop
+- Render status: pass
+- Image status: pass
+- Visual quality: clean fit in preview panel
+- Toggle behavior: works
+- Glyph behavior: works where mapped
+- Readiness status: ready_for_estimator_trial
+- No broken image icons observed: yes
+- No local file references: yes
+- No source/vendor names visible: yes
+- Screenshot: tools/template-import/output/template_visual_qa_screenshots/five_chiller_secondary_loop.png
+- Notes: preview route renders assets through the ProjectHub asset endpoint, hides imported dashboard modules by default, and suppresses preview-only alias labels.
 
 ## vav_single_duct
 
+- Template ID: vav_single_duct
 - Render status: pass
-- Asset status: clean
-- Visual quality notes: compact layout, good fit in preview pane, some abbreviated labels
-- Visible clutter: low to moderate
-- Point toggle behavior: works_at_label_group_level
-- Device glyph toggle behavior: partial_manual_review
-- Problems found: alias bridge covers core supply air points; some output semantics remain ambiguous
-- Recommended readiness status: needs_mapping_cleanup
-- Point labels visible: yes
-- Strong glyph mappings: 21
-- Exact ontology matches: 15
-- Manual review points: 8
+- Image status: pass
+- Visual quality: clean fit in preview panel
+- Toggle behavior: works
+- Glyph behavior: needs review
+- Readiness status: needs_mapping_cleanup
+- No broken image icons observed: yes
+- No local file references: yes
+- No source/vendor names visible: yes
+- Screenshot: tools/template-import/output/template_visual_qa_screenshots/vav_single_duct.png
+- Notes: preview route renders assets through the ProjectHub asset endpoint, hides imported dashboard modules by default, and suppresses preview-only alias labels.
 
 ## air_cooled_chiller_plant_one_chiller_two_pumps
 
+- Template ID: air_cooled_chiller_plant_one_chiller_two_pumps
 - Render status: pass
-- Asset status: clean
-- Visual quality notes: plant layout spans wide canvas, readable but dense in inspection mode
-- Visible clutter: moderate to high due to dense plant controls
-- Point toggle behavior: works_at_label_group_level
-- Device glyph toggle behavior: partial_manual_review
-- Problems found: plant points are renderable, but most mappings are still source-short-name driven
-- Recommended readiness status: needs_mapping_cleanup
-- Point labels visible: yes
-- Strong glyph mappings: 16
-- Exact ontology matches: 6
-- Manual review points: 0
+- Image status: pass
+- Visual quality: clean fit in preview panel
+- Toggle behavior: works
+- Glyph behavior: works where mapped
+- Readiness status: ready_for_estimator_trial
+- No broken image icons observed: yes
+- No local file references: yes
+- No source/vendor names visible: yes
+- Screenshot: tools/template-import/output/template_visual_qa_screenshots/air_cooled_chiller_plant_one_chiller_two_pumps.png
+- Notes: preview route renders assets through the ProjectHub asset endpoint, hides imported dashboard modules by default, and suppresses preview-only alias labels.
 
+## Recommendation
+
+- First estimator trial candidate: five_chiller_secondary_loop
+- Recommended because it is the cleanest rendered preview with the least mapping cleanup and the repaired asset pipeline is stable on this template family.
