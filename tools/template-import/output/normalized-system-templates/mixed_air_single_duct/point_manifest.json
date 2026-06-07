@@ -1,0 +1,2704 @@
+{
+  "generated_at": "2026-06-06T12:48:44.506Z",
+  "source_file": "C:\\Program Files (x86)\\Johnson Controls\\UI Offline\\API\\Templates\\AHUTemplates\\MixedAirSingleDuct.html",
+  "points": [
+    {
+      "source_short_name": "RF-C",
+      "label": "RF-C",
+      "svg_group_id": "svg_122_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 424.0000043947204,
+      "y": 83.37038383948254,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RF-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_122_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RF-C"
+    },
+    {
+      "source_short_name": "MAD-O",
+      "label": "MAD-O",
+      "svg_group_id": "svg_102_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 145.08064880666842,
+      "y": 486.2654959533893,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "MAD-O",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_102_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "MAD-O"
+    },
+    {
+      "source_short_name": "RF-S",
+      "label": "RF-S",
+      "svg_group_id": "svg_116_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 424.0000043947204,
+      "y": 138.37038383948254,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RF-S",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_116_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RF-S"
+    },
+    {
+      "source_short_name": "RF-O",
+      "label": "RF-O",
+      "svg_group_id": "svg_170_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 424.0000043947204,
+      "y": 28.370383839482542,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RF-O",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_170_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RF-O"
+    },
+    {
+      "source_short_name": "RAPLO-A",
+      "label": "RAPLO-A",
+      "svg_group_id": "svg_197_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 878.0178580317242,
+      "y": 235.31158725944857,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RAPLO-A",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_197_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RAPLO-A"
+    },
+    {
+      "source_short_name": "RA-SD",
+      "label": "RA-SD",
+      "svg_group_id": "svg_251_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1005.6255272018909,
+      "y": 267.0050629213846,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RA-SD",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_251_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RA-SD"
+    },
+    {
+      "source_short_name": "RA-T",
+      "label": "RA-T",
+      "svg_group_id": "svg_266_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1139.5020875680643,
+      "y": 254.59637013775534,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RA-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_266_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RA-T"
+    },
+    {
+      "source_short_name": "RAT-SP",
+      "label": "RAT-SP",
+      "svg_group_id": "svg_328_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1139.5020875680643,
+      "y": 199.59637013775534,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RAT-SP",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_328_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RAT-SP"
+    },
+    {
+      "source_short_name": "RA-H",
+      "label": "RA-H",
+      "svg_group_id": "svg_331_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1139.5020875680643,
+      "y": 144.59637013775534,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RA-H",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_331_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RA-H"
+    },
+    {
+      "source_short_name": "RAH-SP",
+      "label": "RAH-SP",
+      "svg_group_id": "svg_337_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1139.5020875680643,
+      "y": 89.59637013775534,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RAH-SP",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_337_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RAH-SP"
+    },
+    {
+      "source_short_name": "RA-P",
+      "label": "RA-P",
+      "svg_group_id": "svg_348_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1292.059343093953,
+      "y": 268.1390268691372,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RA-P",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_348_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RA-P"
+    },
+    {
+      "source_short_name": "RAP-SP",
+      "label": "RAP-SP",
+      "svg_group_id": "svg_352_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1292.059343093953,
+      "y": 213.13902686913718,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RAP-SP",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_352_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RAP-SP"
+    },
+    {
+      "source_short_name": "MOAD-S",
+      "label": "MOAD-S",
+      "svg_group_id": "svg_354_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 131.7701000243198,
+      "y": 657.6932845909678,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "MOAD-S",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_354_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "MOAD-S"
+    },
+    {
+      "source_short_name": "MOAD-C",
+      "label": "MOAD-C",
+      "svg_group_id": "svg_357_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 131.7701000243198,
+      "y": 602.6932845909678,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "MOAD-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_357_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "MOAD-C"
+    },
+    {
+      "source_short_name": "GEF-C",
+      "label": "GEF-C",
+      "svg_group_id": "svg_374_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 170.45876709520905,
+      "y": 778.2430028845212,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "GEF-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_374_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "GEF-C"
+    },
+    {
+      "source_short_name": "GEF-S",
+      "label": "GEF-S",
+      "svg_group_id": "svg_391_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 170.45876709520905,
+      "y": 833.2430028845212,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "GEF-S",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_391_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "GEF-S"
+    },
+    {
+      "source_short_name": "PFILT-S",
+      "label": "PFILT-S",
+      "svg_group_id": "svg_32_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 527.8421604053408,
+      "y": 511.1895118809797,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PFILT-S",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_32_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PFILT-S"
+    },
+    {
+      "source_short_name": "MA-T",
+      "label": "MA-T",
+      "svg_group_id": "svg_272_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 600.6440447875093,
+      "y": 496.32378372104404,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "MA-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_272_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "MA-T"
+    },
+    {
+      "source_short_name": "PH-O",
+      "label": "PH-O",
+      "svg_group_id": "svg_368_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 658.761027009485,
+      "y": 519.8776464156647,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH-O",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_368_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH-O"
+    },
+    {
+      "source_short_name": "PH-POS",
+      "label": "PH-POS",
+      "svg_group_id": "svg_370_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 658.761027009485,
+      "y": 464.8776464156647,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH-POS",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_370_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH-POS"
+    },
+    {
+      "source_short_name": "PH-T",
+      "label": "PH-T",
+      "svg_group_id": "svg_384_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 770.2620772224568,
+      "y": 507.6671758265488,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_384_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH-T"
+    },
+    {
+      "source_short_name": "CLG-O",
+      "label": "CLG-O",
+      "svg_group_id": "svg_120_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 938.953774621873,
+      "y": 538.3739383277557,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG-O",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_120_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG-O"
+    },
+    {
+      "source_short_name": "CLG-POS",
+      "label": "CLG-POS",
+      "svg_group_id": "svg_132_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 938.953774621873,
+      "y": 483.3739383277557,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG-POS",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_132_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG-POS"
+    },
+    {
+      "source_short_name": "CC-T",
+      "label": "CC-T",
+      "svg_group_id": "svg_194_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1046.3544885596243,
+      "y": 526.8338600637389,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CC-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_194_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CC-T"
+    },
+    {
+      "source_short_name": "RH-O",
+      "label": "RH-O",
+      "svg_group_id": "svg_204_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1115.768034634923,
+      "y": 550.2408593120001,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH-O",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_204_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH-O"
+    },
+    {
+      "source_short_name": "RH-POS",
+      "label": "RH-POS",
+      "svg_group_id": "svg_208_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1115.768034634923,
+      "y": 495.2408593120001,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH-POS",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_208_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH-POS"
+    },
+    {
+      "source_short_name": "RHC-T",
+      "label": "RHC-T",
+      "svg_group_id": "svg_227_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1046.3544885596243,
+      "y": 526.8338600637389,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RHC-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_227_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RHC-T"
+    },
+    {
+      "source_short_name": "DAPHI-A",
+      "label": "DAPHI-A",
+      "svg_group_id": "svg_394_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1337.541701796983,
+      "y": 541.8418306860099,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "DAPHI-A",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_394_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "DAPHI-A"
+    },
+    {
+      "source_short_name": "FFILT-S",
+      "label": "FFILT-S",
+      "svg_group_id": "svg_443_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1429.7991879283375,
+      "y": 571.4143622680599,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "FFILT-S",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_443_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "FFILT-S"
+    },
+    {
+      "source_short_name": "DA-SD",
+      "label": "DA-SD",
+      "svg_group_id": "svg_445_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1499.3684058720658,
+      "y": 576.3936431036527,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "DA-SD",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_445_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "DA-SD"
+    },
+    {
+      "source_short_name": "DA-T",
+      "label": "DA-T",
+      "svg_group_id": "svg_449_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1560.6164494212405,
+      "y": 560.9154790042044,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "DA-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_449_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "DA-T"
+    },
+    {
+      "source_short_name": "DAT-SP",
+      "label": "DAT-SP",
+      "svg_group_id": "svg_452_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1560.6164494212405,
+      "y": 505.91547900420437,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "DAT-SP",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_452_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "DAT-SP"
+    },
+    {
+      "source_short_name": "CLG7-C",
+      "label": "CLG7-C",
+      "svg_group_id": "svg_335_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 937.4301645798573,
+      "y": 208.27339302074267,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG7-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_335_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG7-C"
+    },
+    {
+      "source_short_name": "CLG8-C",
+      "label": "CLG8-C",
+      "svg_group_id": "svg_382_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 937.4301645798573,
+      "y": 153.27339302074267,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG8-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_382_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG8-C"
+    },
+    {
+      "source_short_name": "CLG6-C",
+      "label": "CLG6-C",
+      "svg_group_id": "svg_389_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 937.4301645798573,
+      "y": 263.2733930207427,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG6-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_389_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG6-C"
+    },
+    {
+      "source_short_name": "CLG5-C",
+      "label": "CLG5-C",
+      "svg_group_id": "svg_615_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 937.4301645798573,
+      "y": 318.2733930207427,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG5-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_615_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG5-C"
+    },
+    {
+      "source_short_name": "CLG4-C",
+      "label": "CLG4-C",
+      "svg_group_id": "svg_620_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 937.4301645798573,
+      "y": 373.2733930207427,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG4-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_620_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG4-C"
+    },
+    {
+      "source_short_name": "CLG3-C",
+      "label": "CLG3-C",
+      "svg_group_id": "svg_622_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 937.4301645798573,
+      "y": 428.2733930207427,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG3-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_622_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG3-C"
+    },
+    {
+      "source_short_name": "CLG2-C",
+      "label": "CLG2-C",
+      "svg_group_id": "svg_625_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 937.4301645798573,
+      "y": 483.2733930207427,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG2-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_625_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG2-C"
+    },
+    {
+      "source_short_name": "CLG1-C",
+      "label": "CLG1-C",
+      "svg_group_id": "svg_627_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 937.4301645798573,
+      "y": 538.2733930207427,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG1-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_627_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG1-C"
+    },
+    {
+      "source_short_name": "RH1-C",
+      "label": "RH1-C",
+      "svg_group_id": "svg_72_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1108.697120734981,
+      "y": 550.2677174335072,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH1-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_72_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH1-C"
+    },
+    {
+      "source_short_name": "RH2-C",
+      "label": "RH2-C",
+      "svg_group_id": "svg_98_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1108.697120734981,
+      "y": 495.2677174335072,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH2-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_98_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH2-C"
+    },
+    {
+      "source_short_name": "RH3-C",
+      "label": "RH3-C",
+      "svg_group_id": "svg_100_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1108.697120734981,
+      "y": 440.2677174335072,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH3-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_100_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH3-C"
+    },
+    {
+      "source_short_name": "RH4-C",
+      "label": "RH4-C",
+      "svg_group_id": "svg_284_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1108.697120734981,
+      "y": 385.2677174335072,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH4-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_284_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH4-C"
+    },
+    {
+      "source_short_name": "RH6-C",
+      "label": "RH6-C",
+      "svg_group_id": "svg_286_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1108.697120734981,
+      "y": 275.2677174335072,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH6-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_286_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH6-C"
+    },
+    {
+      "source_short_name": "RH7-C",
+      "label": "RH7-C",
+      "svg_group_id": "svg_288_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1108.697120734981,
+      "y": 220.2677174335072,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH7-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_288_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH7-C"
+    },
+    {
+      "source_short_name": "RH8-C",
+      "label": "RH8-C",
+      "svg_group_id": "svg_290_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1108.697120734981,
+      "y": 165.2677174335072,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH8-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_290_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH8-C"
+    },
+    {
+      "source_short_name": "RH5-C",
+      "label": "RH5-C",
+      "svg_group_id": "svg_292_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1108.697120734981,
+      "y": 330.2677174335072,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH5-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_292_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH5-C"
+    },
+    {
+      "source_short_name": "RA-F",
+      "label": "RA-F",
+      "svg_group_id": "svg_11_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 750.7811579609731,
+      "y": 250.14781106116789,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RA-F",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_11_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RA-F"
+    },
+    {
+      "source_short_name": "MOA-F",
+      "label": "MOA-F",
+      "svg_group_id": "svg_361_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 185.4457732007511,
+      "y": 661.3564183252684,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "MOA-F",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_361_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "MOA-F"
+    },
+    {
+      "source_short_name": "PH1-C",
+      "label": "PH1-C",
+      "svg_group_id": "svg_35_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 726.6644787442485,
+      "y": 400.4344578124577,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH1-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_35_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH1-C"
+    },
+    {
+      "source_short_name": "PH2-C",
+      "label": "PH2-C",
+      "svg_group_id": "svg_37_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 726.6644787442485,
+      "y": 345.4344578124577,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH2-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_37_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH2-C"
+    },
+    {
+      "source_short_name": "PH3-C",
+      "label": "PH3-C",
+      "svg_group_id": "svg_39_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 726.6644787442485,
+      "y": 290.4344578124577,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH3-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_39_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH3-C"
+    },
+    {
+      "source_short_name": "PH4-C",
+      "label": "PH4-C",
+      "svg_group_id": "svg_41_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 726.6644787442485,
+      "y": 235.4344578124577,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH4-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_41_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH4-C"
+    },
+    {
+      "source_short_name": "PH5-C",
+      "label": "PH5-C",
+      "svg_group_id": "svg_194_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 726.6644787442485,
+      "y": 180.4344578124577,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH5-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_194_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH5-C"
+    },
+    {
+      "source_short_name": "PH6-C",
+      "label": "PH6-C",
+      "svg_group_id": "svg_212_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 726.6644787442485,
+      "y": 125.43445781245771,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH6-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_212_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH6-C"
+    },
+    {
+      "source_short_name": "PH7-C",
+      "label": "PH7-C",
+      "svg_group_id": "svg_214_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 726.6644787442485,
+      "y": 70.43445781245771,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH7-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_214_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH7-C"
+    },
+    {
+      "source_short_name": "PH8-C",
+      "label": "PH8-C",
+      "svg_group_id": "svg_216_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 726.6644787442485,
+      "y": 15.434457812457708,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH8-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_216_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH8-C"
+    },
+    {
+      "source_short_name": "OA-F",
+      "label": "OA-F",
+      "svg_group_id": "svg_55_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 166,
+      "y": 489,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "OA-F",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_55_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "OA-F"
+    },
+    {
+      "source_short_name": "PHWL-T",
+      "label": "PHWL-T",
+      "svg_group_id": "svg_299_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 827,
+      "y": 482,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PHWL-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_299_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PHWL-T"
+    },
+    {
+      "source_short_name": "PHWE-T",
+      "label": "PHWE-T",
+      "svg_group_id": "svg_303_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 827,
+      "y": 427,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PHWE-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_303_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PHWE-T"
+    },
+    {
+      "source_short_name": "CCWL-T",
+      "label": "CCWL-T",
+      "svg_group_id": "svg_491_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 633,
+      "y": 550,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CCWL-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_491_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CCWL-T"
+    },
+    {
+      "source_short_name": "CCWE-T",
+      "label": "CCWE-T",
+      "svg_group_id": "svg_498_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 633,
+      "y": 495,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CCWE-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_498_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CCWE-T"
+    },
+    {
+      "source_short_name": "RHWL-T",
+      "label": "RHWL-T",
+      "svg_group_id": "svg_561_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1555,
+      "y": 606,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RHWL-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_561_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RHWL-T"
+    },
+    {
+      "source_short_name": "RHWE-T",
+      "label": "RHWE-T",
+      "svg_group_id": "svg_563_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1555,
+      "y": 551,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RHWE-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_563_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RHWE-T"
+    },
+    {
+      "source_short_name": "DA1-P",
+      "label": "DA1-P",
+      "svg_group_id": "svg_119_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1926,
+      "y": 541,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "DA1-P",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_119_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "DA1-P"
+    },
+    {
+      "source_short_name": "DAP-SP",
+      "label": "DAP-SP",
+      "svg_group_id": "svg_203_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1926,
+      "y": 486,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "DAP-SP",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_203_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "DAP-SP"
+    },
+    {
+      "source_short_name": "SF-S",
+      "label": "SF-S",
+      "svg_group_id": "svg_265_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1207,
+      "y": 557,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "SF-S",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_265_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "SF-S"
+    },
+    {
+      "source_short_name": "SF-C",
+      "label": "SF-C",
+      "svg_group_id": "svg_407_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1207,
+      "y": 502,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "SF-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_407_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "SF-C"
+    },
+    {
+      "source_short_name": "SF-O",
+      "label": "SF-O",
+      "svg_group_id": "svg_409_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1207,
+      "y": 447,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "SF-O",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_409_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "SF-O"
+    },
+    {
+      "source_short_name": "LT-A",
+      "label": "LT-A",
+      "svg_group_id": "svg_465_6",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 837,
+      "y": 516,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "LT-A",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_465_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "LT-A"
+    },
+    {
+      "source_short_name": "MAD-O",
+      "label": "MAD-O",
+      "svg_group_id": "svg_34",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 390,
+      "y": 388,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "MAD-O",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_102_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "MAD-O"
+    },
+    {
+      "source_short_name": "OA-F",
+      "label": "OA-F",
+      "svg_group_id": "svg_157",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 162,
+      "y": 488,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "OA-F",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_55_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "OA-F"
+    },
+    {
+      "source_short_name": "MOAD-S",
+      "label": "MOAD-S",
+      "svg_group_id": "svg_169",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 98,
+      "y": 679,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "MOAD-S",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_354_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "MOAD-S"
+    },
+    {
+      "source_short_name": "MOAD-C",
+      "label": "MOAD-C",
+      "svg_group_id": "svg_171",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 98,
+      "y": 624,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "MOAD-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_357_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "MOAD-C"
+    },
+    {
+      "source_short_name": "MOA-F",
+      "label": "MOA-F",
+      "svg_group_id": "svg_173",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 157,
+      "y": 683,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "MOA-F",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_361_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "MOA-F"
+    },
+    {
+      "source_short_name": "MA-T",
+      "label": "MA-T",
+      "svg_group_id": "svg_378",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 659,
+      "y": 424,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "MA-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_272_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "MA-T"
+    },
+    {
+      "source_short_name": "PH1-C",
+      "label": "PH1-C",
+      "svg_group_id": "svg_380",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 690,
+      "y": 446,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH1-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_35_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH1-C"
+    },
+    {
+      "source_short_name": "PH2-C",
+      "label": "PH2-C",
+      "svg_group_id": "svg_382",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 690,
+      "y": 391,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH2-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_37_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH2-C"
+    },
+    {
+      "source_short_name": "PH3-C",
+      "label": "PH3-C",
+      "svg_group_id": "svg_384",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 690,
+      "y": 336,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH3-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_39_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH3-C"
+    },
+    {
+      "source_short_name": "PH4-C",
+      "label": "PH4-C",
+      "svg_group_id": "svg_386",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 690,
+      "y": 281,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH4-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_41_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH4-C"
+    },
+    {
+      "source_short_name": "PH5-C",
+      "label": "PH5-C",
+      "svg_group_id": "svg_388",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 690,
+      "y": 226,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH5-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_194_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH5-C"
+    },
+    {
+      "source_short_name": "PH6-C",
+      "label": "PH6-C",
+      "svg_group_id": "svg_390",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 690,
+      "y": 171,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH6-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_212_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH6-C"
+    },
+    {
+      "source_short_name": "PH7-C",
+      "label": "PH7-C",
+      "svg_group_id": "svg_392",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 690,
+      "y": 116,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH7-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_214_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH7-C"
+    },
+    {
+      "source_short_name": "PH8-C",
+      "label": "PH8-C",
+      "svg_group_id": "svg_394",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 690,
+      "y": 61,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH8-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_216_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH8-C"
+    },
+    {
+      "source_short_name": "PH-T",
+      "label": "PH-T",
+      "svg_group_id": "svg_375",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 756,
+      "y": 430,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_384_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH-T"
+    },
+    {
+      "source_short_name": "LT-A",
+      "label": "LT-A",
+      "svg_group_id": "svg_434",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 804,
+      "y": 436,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "LT-A",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_465_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "LT-A"
+    },
+    {
+      "source_short_name": "CLG1-C",
+      "label": "CLG1-C",
+      "svg_group_id": "svg_438",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 863,
+      "y": 457,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG1-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_627_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG1-C"
+    },
+    {
+      "source_short_name": "CLG2-C",
+      "label": "CLG2-C",
+      "svg_group_id": "svg_440",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 863,
+      "y": 402,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG2-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_625_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG2-C"
+    },
+    {
+      "source_short_name": "CLG3-C",
+      "label": "CLG3-C",
+      "svg_group_id": "svg_442",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 863,
+      "y": 347,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG3-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_622_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG3-C"
+    },
+    {
+      "source_short_name": "CLG4-C",
+      "label": "CLG4-C",
+      "svg_group_id": "svg_444",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 863,
+      "y": 292,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG4-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_620_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG4-C"
+    },
+    {
+      "source_short_name": "CLG5-C",
+      "label": "CLG5-C",
+      "svg_group_id": "svg_446",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 863,
+      "y": 237,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG5-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_615_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG5-C"
+    },
+    {
+      "source_short_name": "CLG6-C",
+      "label": "CLG6-C",
+      "svg_group_id": "svg_448",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 863,
+      "y": 182,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG6-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_389_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG6-C"
+    },
+    {
+      "source_short_name": "CLG7-C",
+      "label": "CLG7-C",
+      "svg_group_id": "svg_450",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 863,
+      "y": 127,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG7-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_335_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG7-C"
+    },
+    {
+      "source_short_name": "CLG8-C",
+      "label": "CLG8-C",
+      "svg_group_id": "svg_452",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 863,
+      "y": 72,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG8-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_382_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG8-C"
+    },
+    {
+      "source_short_name": "RH1-C",
+      "label": "RH1-C",
+      "svg_group_id": "svg_454",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 978,
+      "y": 465,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH1-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_72_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH1-C"
+    },
+    {
+      "source_short_name": "RH2-C",
+      "label": "RH2-C",
+      "svg_group_id": "svg_456",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 978,
+      "y": 410,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH2-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_98_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH2-C"
+    },
+    {
+      "source_short_name": "RH3-C",
+      "label": "RH3-C",
+      "svg_group_id": "svg_458",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 978,
+      "y": 355,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH3-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_100_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH3-C"
+    },
+    {
+      "source_short_name": "RH4-C",
+      "label": "RH4-C",
+      "svg_group_id": "svg_460",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 978,
+      "y": 300,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH4-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_284_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH4-C"
+    },
+    {
+      "source_short_name": "RH5-C",
+      "label": "RH5-C",
+      "svg_group_id": "svg_462",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 978,
+      "y": 245,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH5-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_292_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH5-C"
+    },
+    {
+      "source_short_name": "RH6-C",
+      "label": "RH6-C",
+      "svg_group_id": "svg_464",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 978,
+      "y": 190,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH6-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_286_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH6-C"
+    },
+    {
+      "source_short_name": "RH7-C",
+      "label": "RH7-C",
+      "svg_group_id": "svg_466",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 978,
+      "y": 135,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH7-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_288_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH7-C"
+    },
+    {
+      "source_short_name": "RH8-C",
+      "label": "RH8-C",
+      "svg_group_id": "svg_468",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 978,
+      "y": 80,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH8-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_290_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH8-C"
+    },
+    {
+      "source_short_name": "CC-T",
+      "label": "CC-T",
+      "svg_group_id": "svg_497",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 941,
+      "y": 444,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CC-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_194_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CC-T"
+    },
+    {
+      "source_short_name": "RHC-T",
+      "label": "RHC-T",
+      "svg_group_id": "svg_499",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1048,
+      "y": 451,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RHC-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_227_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RHC-T"
+    },
+    {
+      "source_short_name": "PH-O",
+      "label": "PH-O",
+      "svg_group_id": "svg_501",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 697,
+      "y": 446,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH-O",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_368_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH-O"
+    },
+    {
+      "source_short_name": "PH-POS",
+      "label": "PH-POS",
+      "svg_group_id": "svg_503",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 697,
+      "y": 391,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PH-POS",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_370_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PH-POS"
+    },
+    {
+      "source_short_name": "CLG-POS",
+      "label": "CLG-POS",
+      "svg_group_id": "svg_505",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 874,
+      "y": 458,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG-POS",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_132_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG-POS"
+    },
+    {
+      "source_short_name": "CLG-O",
+      "label": "CLG-O",
+      "svg_group_id": "svg_507",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 874,
+      "y": 403,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CLG-O",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_120_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CLG-O"
+    },
+    {
+      "source_short_name": "RAPLO-A",
+      "label": "RAPLO-A",
+      "svg_group_id": "svg_490",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 901,
+      "y": 161,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RAPLO-A",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_197_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RAPLO-A"
+    },
+    {
+      "source_short_name": "RA-SD",
+      "label": "RA-SD",
+      "svg_group_id": "svg_522",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1015,
+      "y": 192,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RA-SD",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_251_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RA-SD"
+    },
+    {
+      "source_short_name": "FFILT-S",
+      "label": "FFILT-S",
+      "svg_group_id": "svg_556",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1353,
+      "y": 490,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "FFILT-S",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_443_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "FFILT-S"
+    },
+    {
+      "source_short_name": "RA-F",
+      "label": "RA-F",
+      "svg_group_id": "svg_563",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 776,
+      "y": 176,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RA-F",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_11_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RA-F"
+    },
+    {
+      "source_short_name": "DA-SD",
+      "label": "DA-SD",
+      "svg_group_id": "svg_577",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1433,
+      "y": 495,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "DA-SD",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_445_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "DA-SD"
+    },
+    {
+      "source_short_name": "DA-T",
+      "label": "DA-T",
+      "svg_group_id": "svg_583",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1511,
+      "y": 481,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "DA-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_449_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "DA-T"
+    },
+    {
+      "source_short_name": "DAT-SP",
+      "label": "DAT-SP",
+      "svg_group_id": "svg_585",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1511,
+      "y": 426,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "DAT-SP",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_452_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "DAT-SP"
+    },
+    {
+      "source_short_name": "DA1-P",
+      "label": "DA1-P",
+      "svg_group_id": "svg_587",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1657,
+      "y": 437,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "DA1-P",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_119_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "DA1-P"
+    },
+    {
+      "source_short_name": "DAP-SP",
+      "label": "DAP-SP",
+      "svg_group_id": "svg_589",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1657,
+      "y": 492,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "DAP-SP",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_203_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "DAP-SP"
+    },
+    {
+      "source_short_name": "DAPHI-A",
+      "label": "DAPHI-A",
+      "svg_group_id": "svg_591",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1252,
+      "y": 460,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "DAPHI-A",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_394_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "DAPHI-A"
+    },
+    {
+      "source_short_name": "PHWE-T",
+      "label": "PHWE-T",
+      "svg_group_id": "svg_601",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 698,
+      "y": 528,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PHWE-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_303_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PHWE-T"
+    },
+    {
+      "source_short_name": "PHWL-T",
+      "label": "PHWL-T",
+      "svg_group_id": "svg_603",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 698,
+      "y": 473,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PHWL-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_299_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PHWL-T"
+    },
+    {
+      "source_short_name": "CCWL-T",
+      "label": "CCWL-T",
+      "svg_group_id": "svg_605",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 920,
+      "y": 544,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CCWL-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_491_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CCWL-T"
+    },
+    {
+      "source_short_name": "CCWE-T",
+      "label": "CCWE-T",
+      "svg_group_id": "svg_607",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 920,
+      "y": 489,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "CCWE-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_498_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "CCWE-T"
+    },
+    {
+      "source_short_name": "RHWL-T",
+      "label": "RHWL-T",
+      "svg_group_id": "svg_609",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1070,
+      "y": 442,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RHWL-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_561_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RHWL-T"
+    },
+    {
+      "source_short_name": "RHWE-T",
+      "label": "RHWE-T",
+      "svg_group_id": "svg_611",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1070,
+      "y": 387,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RHWE-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_563_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RHWE-T"
+    },
+    {
+      "source_short_name": "RH-O",
+      "label": "RH-O",
+      "svg_group_id": "svg_660",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1070,
+      "y": 541,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH-O",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_204_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH-O"
+    },
+    {
+      "source_short_name": "RH-POS",
+      "label": "RH-POS",
+      "svg_group_id": "svg_662",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 1070,
+      "y": 486,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RH-POS",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_208_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RH-POS"
+    },
+    {
+      "source_short_name": "PFILT-S",
+      "label": "PFILT-S",
+      "svg_group_id": "svg_60",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 543,
+      "y": 508,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "PFILT-S",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_32_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "PFILT-S"
+    },
+    {
+      "source_short_name": "RF-S",
+      "label": "RF-S",
+      "svg_group_id": "svg_176",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 0,
+      "y": 0,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RF-S",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_116_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RF-S"
+    },
+    {
+      "source_short_name": "RF-C",
+      "label": "RF-C",
+      "svg_group_id": "svg_178",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 0,
+      "y": 0,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RF-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_122_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RF-C"
+    },
+    {
+      "source_short_name": "RF-O",
+      "label": "RF-O",
+      "svg_group_id": "svg_283",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 0,
+      "y": 0,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RF-O",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_170_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RF-O"
+    },
+    {
+      "source_short_name": "SF-S",
+      "label": "SF-S",
+      "svg_group_id": "svg_470",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 0,
+      "y": 0,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "SF-S",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_265_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "SF-S"
+    },
+    {
+      "source_short_name": "SF-C",
+      "label": "SF-C",
+      "svg_group_id": "svg_473",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 0,
+      "y": 0,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "SF-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_407_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "SF-C"
+    },
+    {
+      "source_short_name": "SF-O",
+      "label": "SF-O",
+      "svg_group_id": "svg_475",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 0,
+      "y": 0,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "SF-O",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_409_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "SF-O"
+    },
+    {
+      "source_short_name": "GEF-S",
+      "label": "GEF-S",
+      "svg_group_id": "svg_141",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 0,
+      "y": 0,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "GEF-S",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_391_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "GEF-S"
+    },
+    {
+      "source_short_name": "GEF-C",
+      "label": "GEF-C",
+      "svg_group_id": "svg_145",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 0,
+      "y": 0,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "GEF-C",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_374_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "GEF-C"
+    },
+    {
+      "source_short_name": "RA-T",
+      "label": "RA-T",
+      "svg_group_id": "",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 0,
+      "y": 0,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RA-T",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_266_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RA-T"
+    },
+    {
+      "source_short_name": "RAT-SP",
+      "label": "RAT-SP",
+      "svg_group_id": "",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 0,
+      "y": 0,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RAT-SP",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_328_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RAT-SP"
+    },
+    {
+      "source_short_name": "RA-H",
+      "label": "RA-H",
+      "svg_group_id": "",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 0,
+      "y": 0,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RA-H",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_331_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RA-H"
+    },
+    {
+      "source_short_name": "RAH-SP",
+      "label": "RAH-SP",
+      "svg_group_id": "",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 0,
+      "y": 0,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RAH-SP",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_337_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RAH-SP"
+    },
+    {
+      "source_short_name": "RA-P",
+      "label": "RA-P",
+      "svg_group_id": "",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 0,
+      "y": 0,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RA-P",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_348_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RA-P"
+    },
+    {
+      "source_short_name": "RAP-SP",
+      "label": "RAP-SP",
+      "svg_group_id": "",
+      "candidate_ontology_id": "",
+      "candidate_ontology_ids": [],
+      "x": 0,
+      "y": 0,
+      "width": null,
+      "height": null,
+      "source_attributes": {
+        "data-filter": "RAP-SP",
+        "class": "bas-floor-graphics-display-point",
+        "id": "svg_352_6"
+      },
+      "confidence": 0.12,
+      "notes": "no canonical ontology alias match found",
+      "data_filter": "RAP-SP"
+    }
+  ]
+}

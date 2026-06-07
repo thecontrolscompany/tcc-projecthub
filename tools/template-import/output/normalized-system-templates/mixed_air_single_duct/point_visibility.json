@@ -1,0 +1,5395 @@
+{
+  "template_id": "mixed_air_single_duct",
+  "generated_at": "2026-06-06T12:48:44.509Z",
+  "source_file": "tools\\template-import\\output\\normalized-system-templates\\mixed_air_single_duct\\normalized_template.html",
+  "rules": [
+    {
+      "source_short_name": "RF-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RF-C",
+      "label_group_ids": [
+        "svg_122_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_122_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RF-C\"]",
+        "image[xlink\\:href*=\"RF-C\"]",
+        "image[href*=\"RF-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RF-C\"]",
+        "[short-name=\"RF-C\"]",
+        "[sname=\"RF-C\"]",
+        "[data-shortname=\"RF-C\"]",
+        "[data-point-short-name=\"RF-C\"]",
+        "[data-filter*=\"RF-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RF-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RF-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_122_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "MAD-O",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "MAD-O",
+      "label_group_ids": [
+        "svg_102_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_102_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"MAD-O\"]",
+        "image[xlink\\:href*=\"MAD-O\"]",
+        "image[href*=\"MAD-O\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"MAD-O\"]",
+        "[short-name=\"MAD-O\"]",
+        "[sname=\"MAD-O\"]",
+        "[data-shortname=\"MAD-O\"]",
+        "[data-point-short-name=\"MAD-O\"]",
+        "[data-filter*=\"MAD-O\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'MAD-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MAD-O\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_102_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RF-S",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RF-S",
+      "label_group_ids": [
+        "svg_116_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_116_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RF-S\"]",
+        "image[xlink\\:href*=\"RF-S\"]",
+        "image[href*=\"RF-S\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RF-S\"]",
+        "[short-name=\"RF-S\"]",
+        "[sname=\"RF-S\"]",
+        "[data-shortname=\"RF-S\"]",
+        "[data-point-short-name=\"RF-S\"]",
+        "[data-filter*=\"RF-S\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RF-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RF-S\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_116_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RF-O",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RF-O",
+      "label_group_ids": [
+        "svg_170_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_170_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RF-O\"]",
+        "image[xlink\\:href*=\"RF-O\"]",
+        "image[href*=\"RF-O\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RF-O\"]",
+        "[short-name=\"RF-O\"]",
+        "[sname=\"RF-O\"]",
+        "[data-shortname=\"RF-O\"]",
+        "[data-point-short-name=\"RF-O\"]",
+        "[data-filter*=\"RF-O\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RF-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RF-O\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_170_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RAPLO-A",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RAPLO-A",
+      "label_group_ids": [
+        "svg_197_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_197_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RAPLO-A\"]",
+        "image[xlink\\:href*=\"RAPLO-A\"]",
+        "image[href*=\"RAPLO-A\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RAPLO-A\"]",
+        "[short-name=\"RAPLO-A\"]",
+        "[sname=\"RAPLO-A\"]",
+        "[data-shortname=\"RAPLO-A\"]",
+        "[data-point-short-name=\"RAPLO-A\"]",
+        "[data-filter*=\"RAPLO-A\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RAPLO-A'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RAPLO-A\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_197_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RA-SD",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RA-SD",
+      "label_group_ids": [
+        "svg_251_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_251_6",
+        "svg_123_6"
+      ],
+      "image_selectors": [
+        "svg#svg_123_6",
+        "#svg_123_6",
+        "svg#svg_123_6 image",
+        "svg#svg_123_6 path",
+        "svg#svg_123_6 circle",
+        "svg#svg_123_6 rect",
+        "svg#svg_123_6 polygon",
+        "#svg_173_6",
+        "#svg_174_6"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-SD\"]",
+        "[short-name=\"RA-SD\"]",
+        "[sname=\"RA-SD\"]",
+        "[data-shortname=\"RA-SD\"]",
+        "[data-point-short-name=\"RA-SD\"]",
+        "[data-filter*=\"RA-SD\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-SD'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-SD\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_251_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RA-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RA-T",
+      "label_group_ids": [
+        "svg_266_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_266_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RA-T\"]",
+        "image[xlink\\:href*=\"RA-T\"]",
+        "image[href*=\"RA-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-T\"]",
+        "[short-name=\"RA-T\"]",
+        "[sname=\"RA-T\"]",
+        "[data-shortname=\"RA-T\"]",
+        "[data-point-short-name=\"RA-T\"]",
+        "[data-filter*=\"RA-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_266_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RAT-SP",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RAT-SP",
+      "label_group_ids": [
+        "svg_328_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_328_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RAT-SP\"]",
+        "image[xlink\\:href*=\"RAT-SP\"]",
+        "image[href*=\"RAT-SP\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RAT-SP\"]",
+        "[short-name=\"RAT-SP\"]",
+        "[sname=\"RAT-SP\"]",
+        "[data-shortname=\"RAT-SP\"]",
+        "[data-point-short-name=\"RAT-SP\"]",
+        "[data-filter*=\"RAT-SP\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RAT-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RAT-SP\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_328_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RA-H",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RA-H",
+      "label_group_ids": [
+        "svg_331_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_331_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RA-H\"]",
+        "image[xlink\\:href*=\"RA-H\"]",
+        "image[href*=\"RA-H\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-H\"]",
+        "[short-name=\"RA-H\"]",
+        "[sname=\"RA-H\"]",
+        "[data-shortname=\"RA-H\"]",
+        "[data-point-short-name=\"RA-H\"]",
+        "[data-filter*=\"RA-H\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-H'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-H\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_331_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RAH-SP",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RAH-SP",
+      "label_group_ids": [
+        "svg_337_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_337_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RAH-SP\"]",
+        "image[xlink\\:href*=\"RAH-SP\"]",
+        "image[href*=\"RAH-SP\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RAH-SP\"]",
+        "[short-name=\"RAH-SP\"]",
+        "[sname=\"RAH-SP\"]",
+        "[data-shortname=\"RAH-SP\"]",
+        "[data-point-short-name=\"RAH-SP\"]",
+        "[data-filter*=\"RAH-SP\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RAH-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RAH-SP\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_337_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RA-P",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RA-P",
+      "label_group_ids": [
+        "svg_348_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_348_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RA-P\"]",
+        "image[xlink\\:href*=\"RA-P\"]",
+        "image[href*=\"RA-P\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-P\"]",
+        "[short-name=\"RA-P\"]",
+        "[sname=\"RA-P\"]",
+        "[data-shortname=\"RA-P\"]",
+        "[data-point-short-name=\"RA-P\"]",
+        "[data-filter*=\"RA-P\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-P'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-P\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_348_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RAP-SP",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RAP-SP",
+      "label_group_ids": [
+        "svg_352_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_352_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RAP-SP\"]",
+        "image[xlink\\:href*=\"RAP-SP\"]",
+        "image[href*=\"RAP-SP\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RAP-SP\"]",
+        "[short-name=\"RAP-SP\"]",
+        "[sname=\"RAP-SP\"]",
+        "[data-shortname=\"RAP-SP\"]",
+        "[data-point-short-name=\"RAP-SP\"]",
+        "[data-filter*=\"RAP-SP\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RAP-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RAP-SP\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_352_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "MOAD-S",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "MOAD-S",
+      "label_group_ids": [
+        "svg_354_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_354_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"MOAD-S\"]",
+        "image[xlink\\:href*=\"MOAD-S\"]",
+        "image[href*=\"MOAD-S\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"MOAD-S\"]",
+        "[short-name=\"MOAD-S\"]",
+        "[sname=\"MOAD-S\"]",
+        "[data-shortname=\"MOAD-S\"]",
+        "[data-point-short-name=\"MOAD-S\"]",
+        "[data-filter*=\"MOAD-S\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'MOAD-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MOAD-S\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_354_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "MOAD-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "MOAD-C",
+      "label_group_ids": [
+        "svg_357_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_357_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"MOAD-C\"]",
+        "image[xlink\\:href*=\"MOAD-C\"]",
+        "image[href*=\"MOAD-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"MOAD-C\"]",
+        "[short-name=\"MOAD-C\"]",
+        "[sname=\"MOAD-C\"]",
+        "[data-shortname=\"MOAD-C\"]",
+        "[data-point-short-name=\"MOAD-C\"]",
+        "[data-filter*=\"MOAD-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'MOAD-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MOAD-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_357_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "GEF-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "GEF-C",
+      "label_group_ids": [
+        "svg_374_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_374_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"GEF-C\"]",
+        "image[xlink\\:href*=\"GEF-C\"]",
+        "image[href*=\"GEF-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"GEF-C\"]",
+        "[short-name=\"GEF-C\"]",
+        "[sname=\"GEF-C\"]",
+        "[data-shortname=\"GEF-C\"]",
+        "[data-point-short-name=\"GEF-C\"]",
+        "[data-filter*=\"GEF-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'GEF-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"GEF-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_374_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "GEF-S",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "GEF-S",
+      "label_group_ids": [
+        "svg_391_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_391_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"GEF-S\"]",
+        "image[xlink\\:href*=\"GEF-S\"]",
+        "image[href*=\"GEF-S\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"GEF-S\"]",
+        "[short-name=\"GEF-S\"]",
+        "[sname=\"GEF-S\"]",
+        "[data-shortname=\"GEF-S\"]",
+        "[data-point-short-name=\"GEF-S\"]",
+        "[data-filter*=\"GEF-S\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'GEF-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"GEF-S\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_391_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PFILT-S",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PFILT-S",
+      "label_group_ids": [
+        "svg_32_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_32_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"PFILT-S\"]",
+        "image[xlink\\:href*=\"PFILT-S\"]",
+        "image[href*=\"PFILT-S\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PFILT-S\"]",
+        "[short-name=\"PFILT-S\"]",
+        "[sname=\"PFILT-S\"]",
+        "[data-shortname=\"PFILT-S\"]",
+        "[data-point-short-name=\"PFILT-S\"]",
+        "[data-filter*=\"PFILT-S\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PFILT-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PFILT-S\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_32_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "MA-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "MA-T",
+      "label_group_ids": [
+        "svg_272_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_272_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"MA-T\"]",
+        "image[xlink\\:href*=\"MA-T\"]",
+        "image[href*=\"MA-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"MA-T\"]",
+        "[short-name=\"MA-T\"]",
+        "[sname=\"MA-T\"]",
+        "[data-shortname=\"MA-T\"]",
+        "[data-point-short-name=\"MA-T\"]",
+        "[data-filter*=\"MA-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'MA-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MA-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_272_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH-O",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH-O",
+      "label_group_ids": [
+        "svg_368_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_368_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH-O\"]",
+        "image[xlink\\:href*=\"PH-O\"]",
+        "image[href*=\"PH-O\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH-O\"]",
+        "[short-name=\"PH-O\"]",
+        "[sname=\"PH-O\"]",
+        "[data-shortname=\"PH-O\"]",
+        "[data-point-short-name=\"PH-O\"]",
+        "[data-filter*=\"PH-O\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH-O\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_368_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH-POS",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH-POS",
+      "label_group_ids": [
+        "svg_370_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_370_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH-POS\"]",
+        "image[xlink\\:href*=\"PH-POS\"]",
+        "image[href*=\"PH-POS\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH-POS\"]",
+        "[short-name=\"PH-POS\"]",
+        "[sname=\"PH-POS\"]",
+        "[data-shortname=\"PH-POS\"]",
+        "[data-point-short-name=\"PH-POS\"]",
+        "[data-filter*=\"PH-POS\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH-POS'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH-POS\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_370_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH-T",
+      "label_group_ids": [
+        "svg_384_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_384_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH-T\"]",
+        "image[xlink\\:href*=\"PH-T\"]",
+        "image[href*=\"PH-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH-T\"]",
+        "[short-name=\"PH-T\"]",
+        "[sname=\"PH-T\"]",
+        "[data-shortname=\"PH-T\"]",
+        "[data-point-short-name=\"PH-T\"]",
+        "[data-filter*=\"PH-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_384_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG-O",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG-O",
+      "label_group_ids": [
+        "svg_120_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_120_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG-O\"]",
+        "image[xlink\\:href*=\"CLG-O\"]",
+        "image[href*=\"CLG-O\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG-O\"]",
+        "[short-name=\"CLG-O\"]",
+        "[sname=\"CLG-O\"]",
+        "[data-shortname=\"CLG-O\"]",
+        "[data-point-short-name=\"CLG-O\"]",
+        "[data-filter*=\"CLG-O\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG-O\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_120_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG-POS",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG-POS",
+      "label_group_ids": [
+        "svg_132_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_132_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG-POS\"]",
+        "image[xlink\\:href*=\"CLG-POS\"]",
+        "image[href*=\"CLG-POS\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG-POS\"]",
+        "[short-name=\"CLG-POS\"]",
+        "[sname=\"CLG-POS\"]",
+        "[data-shortname=\"CLG-POS\"]",
+        "[data-point-short-name=\"CLG-POS\"]",
+        "[data-filter*=\"CLG-POS\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG-POS'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG-POS\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_132_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CC-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CC-T",
+      "label_group_ids": [
+        "svg_194_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_194_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"CC-T\"]",
+        "image[xlink\\:href*=\"CC-T\"]",
+        "image[href*=\"CC-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CC-T\"]",
+        "[short-name=\"CC-T\"]",
+        "[sname=\"CC-T\"]",
+        "[data-shortname=\"CC-T\"]",
+        "[data-point-short-name=\"CC-T\"]",
+        "[data-filter*=\"CC-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CC-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CC-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_194_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH-O",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH-O",
+      "label_group_ids": [
+        "svg_204_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_204_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH-O\"]",
+        "image[xlink\\:href*=\"RH-O\"]",
+        "image[href*=\"RH-O\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH-O\"]",
+        "[short-name=\"RH-O\"]",
+        "[sname=\"RH-O\"]",
+        "[data-shortname=\"RH-O\"]",
+        "[data-point-short-name=\"RH-O\"]",
+        "[data-filter*=\"RH-O\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH-O\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_204_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH-POS",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH-POS",
+      "label_group_ids": [
+        "svg_208_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_208_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH-POS\"]",
+        "image[xlink\\:href*=\"RH-POS\"]",
+        "image[href*=\"RH-POS\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH-POS\"]",
+        "[short-name=\"RH-POS\"]",
+        "[sname=\"RH-POS\"]",
+        "[data-shortname=\"RH-POS\"]",
+        "[data-point-short-name=\"RH-POS\"]",
+        "[data-filter*=\"RH-POS\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH-POS'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH-POS\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_208_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RHC-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RHC-T",
+      "label_group_ids": [
+        "svg_227_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_227_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RHC-T\"]",
+        "image[xlink\\:href*=\"RHC-T\"]",
+        "image[href*=\"RHC-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RHC-T\"]",
+        "[short-name=\"RHC-T\"]",
+        "[sname=\"RHC-T\"]",
+        "[data-shortname=\"RHC-T\"]",
+        "[data-point-short-name=\"RHC-T\"]",
+        "[data-filter*=\"RHC-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RHC-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RHC-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_227_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "DAPHI-A",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "DAPHI-A",
+      "label_group_ids": [
+        "svg_394_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_394_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"DAPHI-A\"]",
+        "image[xlink\\:href*=\"DAPHI-A\"]",
+        "image[href*=\"DAPHI-A\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"DAPHI-A\"]",
+        "[short-name=\"DAPHI-A\"]",
+        "[sname=\"DAPHI-A\"]",
+        "[data-shortname=\"DAPHI-A\"]",
+        "[data-point-short-name=\"DAPHI-A\"]",
+        "[data-filter*=\"DAPHI-A\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'DAPHI-A'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DAPHI-A\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_394_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "FFILT-S",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "FFILT-S",
+      "label_group_ids": [
+        "svg_443_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_443_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"FFILT-S\"]",
+        "image[xlink\\:href*=\"FFILT-S\"]",
+        "image[href*=\"FFILT-S\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"FFILT-S\"]",
+        "[short-name=\"FFILT-S\"]",
+        "[sname=\"FFILT-S\"]",
+        "[data-shortname=\"FFILT-S\"]",
+        "[data-point-short-name=\"FFILT-S\"]",
+        "[data-filter*=\"FFILT-S\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'FFILT-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"FFILT-S\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_443_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "DA-SD",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "DA-SD",
+      "label_group_ids": [
+        "svg_445_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_445_6",
+        "svg_198_6"
+      ],
+      "image_selectors": [
+        "svg#svg_198_6",
+        "#svg_198_6",
+        "svg#svg_198_6 image",
+        "svg#svg_198_6 path",
+        "svg#svg_198_6 circle",
+        "svg#svg_198_6 rect",
+        "svg#svg_198_6 polygon",
+        "#svg_233_6",
+        "#svg_234_6"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"DA-SD\"]",
+        "[short-name=\"DA-SD\"]",
+        "[sname=\"DA-SD\"]",
+        "[data-shortname=\"DA-SD\"]",
+        "[data-point-short-name=\"DA-SD\"]",
+        "[data-filter*=\"DA-SD\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'DA-SD'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DA-SD\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_445_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "DA-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "DA-T",
+      "label_group_ids": [
+        "svg_449_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_449_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"DA-T\"]",
+        "image[xlink\\:href*=\"DA-T\"]",
+        "image[href*=\"DA-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"DA-T\"]",
+        "[short-name=\"DA-T\"]",
+        "[sname=\"DA-T\"]",
+        "[data-shortname=\"DA-T\"]",
+        "[data-point-short-name=\"DA-T\"]",
+        "[data-filter*=\"DA-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'DA-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DA-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_449_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "DAT-SP",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "DAT-SP",
+      "label_group_ids": [
+        "svg_452_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_452_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"DAT-SP\"]",
+        "image[xlink\\:href*=\"DAT-SP\"]",
+        "image[href*=\"DAT-SP\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"DAT-SP\"]",
+        "[short-name=\"DAT-SP\"]",
+        "[sname=\"DAT-SP\"]",
+        "[data-shortname=\"DAT-SP\"]",
+        "[data-point-short-name=\"DAT-SP\"]",
+        "[data-filter*=\"DAT-SP\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'DAT-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DAT-SP\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_452_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG7-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG7-C",
+      "label_group_ids": [
+        "svg_335_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_335_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG7-C\"]",
+        "image[xlink\\:href*=\"CLG7-C\"]",
+        "image[href*=\"CLG7-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG7-C\"]",
+        "[short-name=\"CLG7-C\"]",
+        "[sname=\"CLG7-C\"]",
+        "[data-shortname=\"CLG7-C\"]",
+        "[data-point-short-name=\"CLG7-C\"]",
+        "[data-filter*=\"CLG7-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG7-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG7-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_335_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG8-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG8-C",
+      "label_group_ids": [
+        "svg_382_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_382_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG8-C\"]",
+        "image[xlink\\:href*=\"CLG8-C\"]",
+        "image[href*=\"CLG8-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG8-C\"]",
+        "[short-name=\"CLG8-C\"]",
+        "[sname=\"CLG8-C\"]",
+        "[data-shortname=\"CLG8-C\"]",
+        "[data-point-short-name=\"CLG8-C\"]",
+        "[data-filter*=\"CLG8-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG8-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG8-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_382_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG6-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG6-C",
+      "label_group_ids": [
+        "svg_389_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_389_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG6-C\"]",
+        "image[xlink\\:href*=\"CLG6-C\"]",
+        "image[href*=\"CLG6-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG6-C\"]",
+        "[short-name=\"CLG6-C\"]",
+        "[sname=\"CLG6-C\"]",
+        "[data-shortname=\"CLG6-C\"]",
+        "[data-point-short-name=\"CLG6-C\"]",
+        "[data-filter*=\"CLG6-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG6-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG6-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_389_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG5-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG5-C",
+      "label_group_ids": [
+        "svg_615_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_615_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG5-C\"]",
+        "image[xlink\\:href*=\"CLG5-C\"]",
+        "image[href*=\"CLG5-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG5-C\"]",
+        "[short-name=\"CLG5-C\"]",
+        "[sname=\"CLG5-C\"]",
+        "[data-shortname=\"CLG5-C\"]",
+        "[data-point-short-name=\"CLG5-C\"]",
+        "[data-filter*=\"CLG5-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG5-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG5-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_615_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG4-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG4-C",
+      "label_group_ids": [
+        "svg_620_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_620_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG4-C\"]",
+        "image[xlink\\:href*=\"CLG4-C\"]",
+        "image[href*=\"CLG4-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG4-C\"]",
+        "[short-name=\"CLG4-C\"]",
+        "[sname=\"CLG4-C\"]",
+        "[data-shortname=\"CLG4-C\"]",
+        "[data-point-short-name=\"CLG4-C\"]",
+        "[data-filter*=\"CLG4-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG4-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG4-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_620_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG3-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG3-C",
+      "label_group_ids": [
+        "svg_622_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_622_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG3-C\"]",
+        "image[xlink\\:href*=\"CLG3-C\"]",
+        "image[href*=\"CLG3-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG3-C\"]",
+        "[short-name=\"CLG3-C\"]",
+        "[sname=\"CLG3-C\"]",
+        "[data-shortname=\"CLG3-C\"]",
+        "[data-point-short-name=\"CLG3-C\"]",
+        "[data-filter*=\"CLG3-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG3-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG3-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_622_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG2-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG2-C",
+      "label_group_ids": [
+        "svg_625_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_625_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG2-C\"]",
+        "image[xlink\\:href*=\"CLG2-C\"]",
+        "image[href*=\"CLG2-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG2-C\"]",
+        "[short-name=\"CLG2-C\"]",
+        "[sname=\"CLG2-C\"]",
+        "[data-shortname=\"CLG2-C\"]",
+        "[data-point-short-name=\"CLG2-C\"]",
+        "[data-filter*=\"CLG2-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG2-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG2-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_625_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG1-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG1-C",
+      "label_group_ids": [
+        "svg_627_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_627_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG1-C\"]",
+        "image[xlink\\:href*=\"CLG1-C\"]",
+        "image[href*=\"CLG1-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG1-C\"]",
+        "[short-name=\"CLG1-C\"]",
+        "[sname=\"CLG1-C\"]",
+        "[data-shortname=\"CLG1-C\"]",
+        "[data-point-short-name=\"CLG1-C\"]",
+        "[data-filter*=\"CLG1-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG1-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG1-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_627_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH1-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH1-C",
+      "label_group_ids": [
+        "svg_72_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_72_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH1-C\"]",
+        "image[xlink\\:href*=\"RH1-C\"]",
+        "image[href*=\"RH1-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH1-C\"]",
+        "[short-name=\"RH1-C\"]",
+        "[sname=\"RH1-C\"]",
+        "[data-shortname=\"RH1-C\"]",
+        "[data-point-short-name=\"RH1-C\"]",
+        "[data-filter*=\"RH1-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH1-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH1-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_72_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH2-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH2-C",
+      "label_group_ids": [
+        "svg_98_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_98_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH2-C\"]",
+        "image[xlink\\:href*=\"RH2-C\"]",
+        "image[href*=\"RH2-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH2-C\"]",
+        "[short-name=\"RH2-C\"]",
+        "[sname=\"RH2-C\"]",
+        "[data-shortname=\"RH2-C\"]",
+        "[data-point-short-name=\"RH2-C\"]",
+        "[data-filter*=\"RH2-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH2-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH2-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_98_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH3-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH3-C",
+      "label_group_ids": [
+        "svg_100_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_100_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH3-C\"]",
+        "image[xlink\\:href*=\"RH3-C\"]",
+        "image[href*=\"RH3-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH3-C\"]",
+        "[short-name=\"RH3-C\"]",
+        "[sname=\"RH3-C\"]",
+        "[data-shortname=\"RH3-C\"]",
+        "[data-point-short-name=\"RH3-C\"]",
+        "[data-filter*=\"RH3-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH3-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH3-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_100_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH4-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH4-C",
+      "label_group_ids": [
+        "svg_284_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_284_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH4-C\"]",
+        "image[xlink\\:href*=\"RH4-C\"]",
+        "image[href*=\"RH4-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH4-C\"]",
+        "[short-name=\"RH4-C\"]",
+        "[sname=\"RH4-C\"]",
+        "[data-shortname=\"RH4-C\"]",
+        "[data-point-short-name=\"RH4-C\"]",
+        "[data-filter*=\"RH4-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH4-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH4-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_284_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH6-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH6-C",
+      "label_group_ids": [
+        "svg_286_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_286_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH6-C\"]",
+        "image[xlink\\:href*=\"RH6-C\"]",
+        "image[href*=\"RH6-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH6-C\"]",
+        "[short-name=\"RH6-C\"]",
+        "[sname=\"RH6-C\"]",
+        "[data-shortname=\"RH6-C\"]",
+        "[data-point-short-name=\"RH6-C\"]",
+        "[data-filter*=\"RH6-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH6-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH6-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_286_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH7-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH7-C",
+      "label_group_ids": [
+        "svg_288_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_288_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH7-C\"]",
+        "image[xlink\\:href*=\"RH7-C\"]",
+        "image[href*=\"RH7-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH7-C\"]",
+        "[short-name=\"RH7-C\"]",
+        "[sname=\"RH7-C\"]",
+        "[data-shortname=\"RH7-C\"]",
+        "[data-point-short-name=\"RH7-C\"]",
+        "[data-filter*=\"RH7-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH7-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH7-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_288_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH8-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH8-C",
+      "label_group_ids": [
+        "svg_290_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_290_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH8-C\"]",
+        "image[xlink\\:href*=\"RH8-C\"]",
+        "image[href*=\"RH8-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH8-C\"]",
+        "[short-name=\"RH8-C\"]",
+        "[sname=\"RH8-C\"]",
+        "[data-shortname=\"RH8-C\"]",
+        "[data-point-short-name=\"RH8-C\"]",
+        "[data-filter*=\"RH8-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH8-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH8-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_290_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH5-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH5-C",
+      "label_group_ids": [
+        "svg_292_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_292_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH5-C\"]",
+        "image[xlink\\:href*=\"RH5-C\"]",
+        "image[href*=\"RH5-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH5-C\"]",
+        "[short-name=\"RH5-C\"]",
+        "[sname=\"RH5-C\"]",
+        "[data-shortname=\"RH5-C\"]",
+        "[data-point-short-name=\"RH5-C\"]",
+        "[data-filter*=\"RH5-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH5-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH5-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_292_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RA-F",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RA-F",
+      "label_group_ids": [
+        "svg_11_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_11_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RA-F\"]",
+        "image[xlink\\:href*=\"RA-F\"]",
+        "image[href*=\"RA-F\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-F\"]",
+        "[short-name=\"RA-F\"]",
+        "[sname=\"RA-F\"]",
+        "[data-shortname=\"RA-F\"]",
+        "[data-point-short-name=\"RA-F\"]",
+        "[data-filter*=\"RA-F\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-F'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-F\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_11_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "MOA-F",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "MOA-F",
+      "label_group_ids": [
+        "svg_361_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_361_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"MOA-F\"]",
+        "image[xlink\\:href*=\"MOA-F\"]",
+        "image[href*=\"MOA-F\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"MOA-F\"]",
+        "[short-name=\"MOA-F\"]",
+        "[sname=\"MOA-F\"]",
+        "[data-shortname=\"MOA-F\"]",
+        "[data-point-short-name=\"MOA-F\"]",
+        "[data-filter*=\"MOA-F\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'MOA-F'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MOA-F\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_361_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH1-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH1-C",
+      "label_group_ids": [
+        "svg_35_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_35_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH1-C\"]",
+        "image[xlink\\:href*=\"PH1-C\"]",
+        "image[href*=\"PH1-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH1-C\"]",
+        "[short-name=\"PH1-C\"]",
+        "[sname=\"PH1-C\"]",
+        "[data-shortname=\"PH1-C\"]",
+        "[data-point-short-name=\"PH1-C\"]",
+        "[data-filter*=\"PH1-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH1-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH1-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_35_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH2-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH2-C",
+      "label_group_ids": [
+        "svg_37_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_37_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH2-C\"]",
+        "image[xlink\\:href*=\"PH2-C\"]",
+        "image[href*=\"PH2-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH2-C\"]",
+        "[short-name=\"PH2-C\"]",
+        "[sname=\"PH2-C\"]",
+        "[data-shortname=\"PH2-C\"]",
+        "[data-point-short-name=\"PH2-C\"]",
+        "[data-filter*=\"PH2-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH2-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH2-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_37_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH3-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH3-C",
+      "label_group_ids": [
+        "svg_39_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_39_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH3-C\"]",
+        "image[xlink\\:href*=\"PH3-C\"]",
+        "image[href*=\"PH3-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH3-C\"]",
+        "[short-name=\"PH3-C\"]",
+        "[sname=\"PH3-C\"]",
+        "[data-shortname=\"PH3-C\"]",
+        "[data-point-short-name=\"PH3-C\"]",
+        "[data-filter*=\"PH3-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH3-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH3-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_39_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH4-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH4-C",
+      "label_group_ids": [
+        "svg_41_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_41_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH4-C\"]",
+        "image[xlink\\:href*=\"PH4-C\"]",
+        "image[href*=\"PH4-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH4-C\"]",
+        "[short-name=\"PH4-C\"]",
+        "[sname=\"PH4-C\"]",
+        "[data-shortname=\"PH4-C\"]",
+        "[data-point-short-name=\"PH4-C\"]",
+        "[data-filter*=\"PH4-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH4-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH4-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_41_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH5-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH5-C",
+      "label_group_ids": [
+        "svg_194_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_194_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH5-C\"]",
+        "image[xlink\\:href*=\"PH5-C\"]",
+        "image[href*=\"PH5-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH5-C\"]",
+        "[short-name=\"PH5-C\"]",
+        "[sname=\"PH5-C\"]",
+        "[data-shortname=\"PH5-C\"]",
+        "[data-point-short-name=\"PH5-C\"]",
+        "[data-filter*=\"PH5-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH5-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH5-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_194_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH6-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH6-C",
+      "label_group_ids": [
+        "svg_212_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_212_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH6-C\"]",
+        "image[xlink\\:href*=\"PH6-C\"]",
+        "image[href*=\"PH6-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH6-C\"]",
+        "[short-name=\"PH6-C\"]",
+        "[sname=\"PH6-C\"]",
+        "[data-shortname=\"PH6-C\"]",
+        "[data-point-short-name=\"PH6-C\"]",
+        "[data-filter*=\"PH6-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH6-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH6-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_212_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH7-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH7-C",
+      "label_group_ids": [
+        "svg_214_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_214_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH7-C\"]",
+        "image[xlink\\:href*=\"PH7-C\"]",
+        "image[href*=\"PH7-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH7-C\"]",
+        "[short-name=\"PH7-C\"]",
+        "[sname=\"PH7-C\"]",
+        "[data-shortname=\"PH7-C\"]",
+        "[data-point-short-name=\"PH7-C\"]",
+        "[data-filter*=\"PH7-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH7-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH7-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_214_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH8-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH8-C",
+      "label_group_ids": [
+        "svg_216_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_216_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH8-C\"]",
+        "image[xlink\\:href*=\"PH8-C\"]",
+        "image[href*=\"PH8-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH8-C\"]",
+        "[short-name=\"PH8-C\"]",
+        "[sname=\"PH8-C\"]",
+        "[data-shortname=\"PH8-C\"]",
+        "[data-point-short-name=\"PH8-C\"]",
+        "[data-filter*=\"PH8-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH8-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH8-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_216_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "OA-F",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "OA-F",
+      "label_group_ids": [
+        "svg_55_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_55_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"OA-F\"]",
+        "image[xlink\\:href*=\"OA-F\"]",
+        "image[href*=\"OA-F\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"OA-F\"]",
+        "[short-name=\"OA-F\"]",
+        "[sname=\"OA-F\"]",
+        "[data-shortname=\"OA-F\"]",
+        "[data-point-short-name=\"OA-F\"]",
+        "[data-filter*=\"OA-F\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'OA-F'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"OA-F\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_55_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PHWL-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PHWL-T",
+      "label_group_ids": [
+        "svg_299_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_299_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"PHWL-T\"]",
+        "image[xlink\\:href*=\"PHWL-T\"]",
+        "image[href*=\"PHWL-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PHWL-T\"]",
+        "[short-name=\"PHWL-T\"]",
+        "[sname=\"PHWL-T\"]",
+        "[data-shortname=\"PHWL-T\"]",
+        "[data-point-short-name=\"PHWL-T\"]",
+        "[data-filter*=\"PHWL-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PHWL-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PHWL-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_299_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PHWE-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PHWE-T",
+      "label_group_ids": [
+        "svg_303_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_303_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"PHWE-T\"]",
+        "image[xlink\\:href*=\"PHWE-T\"]",
+        "image[href*=\"PHWE-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PHWE-T\"]",
+        "[short-name=\"PHWE-T\"]",
+        "[sname=\"PHWE-T\"]",
+        "[data-shortname=\"PHWE-T\"]",
+        "[data-point-short-name=\"PHWE-T\"]",
+        "[data-filter*=\"PHWE-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PHWE-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PHWE-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_303_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CCWL-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CCWL-T",
+      "label_group_ids": [
+        "svg_491_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_491_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"CCWL-T\"]",
+        "image[xlink\\:href*=\"CCWL-T\"]",
+        "image[href*=\"CCWL-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CCWL-T\"]",
+        "[short-name=\"CCWL-T\"]",
+        "[sname=\"CCWL-T\"]",
+        "[data-shortname=\"CCWL-T\"]",
+        "[data-point-short-name=\"CCWL-T\"]",
+        "[data-filter*=\"CCWL-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CCWL-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CCWL-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_491_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CCWE-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CCWE-T",
+      "label_group_ids": [
+        "svg_498_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_498_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"CCWE-T\"]",
+        "image[xlink\\:href*=\"CCWE-T\"]",
+        "image[href*=\"CCWE-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CCWE-T\"]",
+        "[short-name=\"CCWE-T\"]",
+        "[sname=\"CCWE-T\"]",
+        "[data-shortname=\"CCWE-T\"]",
+        "[data-point-short-name=\"CCWE-T\"]",
+        "[data-filter*=\"CCWE-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CCWE-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CCWE-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_498_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RHWL-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RHWL-T",
+      "label_group_ids": [
+        "svg_561_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_561_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RHWL-T\"]",
+        "image[xlink\\:href*=\"RHWL-T\"]",
+        "image[href*=\"RHWL-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RHWL-T\"]",
+        "[short-name=\"RHWL-T\"]",
+        "[sname=\"RHWL-T\"]",
+        "[data-shortname=\"RHWL-T\"]",
+        "[data-point-short-name=\"RHWL-T\"]",
+        "[data-filter*=\"RHWL-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RHWL-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RHWL-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_561_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RHWE-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RHWE-T",
+      "label_group_ids": [
+        "svg_563_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_563_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"RHWE-T\"]",
+        "image[xlink\\:href*=\"RHWE-T\"]",
+        "image[href*=\"RHWE-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RHWE-T\"]",
+        "[short-name=\"RHWE-T\"]",
+        "[sname=\"RHWE-T\"]",
+        "[data-shortname=\"RHWE-T\"]",
+        "[data-point-short-name=\"RHWE-T\"]",
+        "[data-filter*=\"RHWE-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RHWE-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RHWE-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_563_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "DA1-P",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "DA1-P",
+      "label_group_ids": [
+        "svg_119_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_119_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"DA1-P\"]",
+        "image[xlink\\:href*=\"DA1-P\"]",
+        "image[href*=\"DA1-P\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"DA1-P\"]",
+        "[short-name=\"DA1-P\"]",
+        "[sname=\"DA1-P\"]",
+        "[data-shortname=\"DA1-P\"]",
+        "[data-point-short-name=\"DA1-P\"]",
+        "[data-filter*=\"DA1-P\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'DA1-P'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DA1-P\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_119_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "DAP-SP",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "DAP-SP",
+      "label_group_ids": [
+        "svg_203_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_203_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"DAP-SP\"]",
+        "image[xlink\\:href*=\"DAP-SP\"]",
+        "image[href*=\"DAP-SP\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"DAP-SP\"]",
+        "[short-name=\"DAP-SP\"]",
+        "[sname=\"DAP-SP\"]",
+        "[data-shortname=\"DAP-SP\"]",
+        "[data-point-short-name=\"DAP-SP\"]",
+        "[data-filter*=\"DAP-SP\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'DAP-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DAP-SP\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_203_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "SF-S",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "SF-S",
+      "label_group_ids": [
+        "svg_265_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_265_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"SF-S\"]",
+        "image[xlink\\:href*=\"SF-S\"]",
+        "image[href*=\"SF-S\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"SF-S\"]",
+        "[short-name=\"SF-S\"]",
+        "[sname=\"SF-S\"]",
+        "[data-shortname=\"SF-S\"]",
+        "[data-point-short-name=\"SF-S\"]",
+        "[data-filter*=\"SF-S\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'SF-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"SF-S\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_265_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "SF-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "SF-C",
+      "label_group_ids": [
+        "svg_407_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_407_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"SF-C\"]",
+        "image[xlink\\:href*=\"SF-C\"]",
+        "image[href*=\"SF-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"SF-C\"]",
+        "[short-name=\"SF-C\"]",
+        "[sname=\"SF-C\"]",
+        "[data-shortname=\"SF-C\"]",
+        "[data-point-short-name=\"SF-C\"]",
+        "[data-filter*=\"SF-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'SF-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"SF-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_407_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "SF-O",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "SF-O",
+      "label_group_ids": [
+        "svg_409_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_409_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"SF-O\"]",
+        "image[xlink\\:href*=\"SF-O\"]",
+        "image[href*=\"SF-O\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"SF-O\"]",
+        "[short-name=\"SF-O\"]",
+        "[sname=\"SF-O\"]",
+        "[data-shortname=\"SF-O\"]",
+        "[data-point-short-name=\"SF-O\"]",
+        "[data-filter*=\"SF-O\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'SF-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"SF-O\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_409_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "LT-A",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "LT-A",
+      "label_group_ids": [
+        "svg_465_6"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_465_6"
+      ],
+      "image_selectors": [
+        "image[href*=\"LT-A\"]",
+        "image[xlink\\:href*=\"LT-A\"]",
+        "image[href*=\"LT-A\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"LT-A\"]",
+        "[short-name=\"LT-A\"]",
+        "[sname=\"LT-A\"]",
+        "[data-shortname=\"LT-A\"]",
+        "[data-point-short-name=\"LT-A\"]",
+        "[data-filter*=\"LT-A\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'LT-A'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"LT-A\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_465_6"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "MAD-O",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "MAD-O",
+      "label_group_ids": [
+        "svg_34"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_34"
+      ],
+      "image_selectors": [
+        "image[href*=\"MAD-O\"]",
+        "image[xlink\\:href*=\"MAD-O\"]",
+        "image[href*=\"MAD-O\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"MAD-O\"]",
+        "[short-name=\"MAD-O\"]",
+        "[sname=\"MAD-O\"]",
+        "[data-shortname=\"MAD-O\"]",
+        "[data-point-short-name=\"MAD-O\"]",
+        "[data-filter*=\"MAD-O\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'MAD-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MAD-O\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_34"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "OA-F",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "OA-F",
+      "label_group_ids": [
+        "svg_157"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_157"
+      ],
+      "image_selectors": [
+        "image[href*=\"OA-F\"]",
+        "image[xlink\\:href*=\"OA-F\"]",
+        "image[href*=\"OA-F\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"OA-F\"]",
+        "[short-name=\"OA-F\"]",
+        "[sname=\"OA-F\"]",
+        "[data-shortname=\"OA-F\"]",
+        "[data-point-short-name=\"OA-F\"]",
+        "[data-filter*=\"OA-F\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'OA-F'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"OA-F\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_157"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "MOAD-S",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "MOAD-S",
+      "label_group_ids": [
+        "svg_169"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_169"
+      ],
+      "image_selectors": [
+        "image[href*=\"MOAD-S\"]",
+        "image[xlink\\:href*=\"MOAD-S\"]",
+        "image[href*=\"MOAD-S\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"MOAD-S\"]",
+        "[short-name=\"MOAD-S\"]",
+        "[sname=\"MOAD-S\"]",
+        "[data-shortname=\"MOAD-S\"]",
+        "[data-point-short-name=\"MOAD-S\"]",
+        "[data-filter*=\"MOAD-S\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'MOAD-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MOAD-S\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_169"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "MOAD-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "MOAD-C",
+      "label_group_ids": [
+        "svg_171"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_171"
+      ],
+      "image_selectors": [
+        "image[href*=\"MOAD-C\"]",
+        "image[xlink\\:href*=\"MOAD-C\"]",
+        "image[href*=\"MOAD-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"MOAD-C\"]",
+        "[short-name=\"MOAD-C\"]",
+        "[sname=\"MOAD-C\"]",
+        "[data-shortname=\"MOAD-C\"]",
+        "[data-point-short-name=\"MOAD-C\"]",
+        "[data-filter*=\"MOAD-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'MOAD-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MOAD-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_171"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "MOA-F",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "MOA-F",
+      "label_group_ids": [
+        "svg_173"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_173"
+      ],
+      "image_selectors": [
+        "image[href*=\"MOA-F\"]",
+        "image[xlink\\:href*=\"MOA-F\"]",
+        "image[href*=\"MOA-F\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"MOA-F\"]",
+        "[short-name=\"MOA-F\"]",
+        "[sname=\"MOA-F\"]",
+        "[data-shortname=\"MOA-F\"]",
+        "[data-point-short-name=\"MOA-F\"]",
+        "[data-filter*=\"MOA-F\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'MOA-F'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MOA-F\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_173"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "MA-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "MA-T",
+      "label_group_ids": [
+        "svg_378"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_378"
+      ],
+      "image_selectors": [
+        "image[href*=\"MA-T\"]",
+        "image[xlink\\:href*=\"MA-T\"]",
+        "image[href*=\"MA-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"MA-T\"]",
+        "[short-name=\"MA-T\"]",
+        "[sname=\"MA-T\"]",
+        "[data-shortname=\"MA-T\"]",
+        "[data-point-short-name=\"MA-T\"]",
+        "[data-filter*=\"MA-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'MA-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"MA-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_378"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH1-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH1-C",
+      "label_group_ids": [
+        "svg_380"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_380"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH1-C\"]",
+        "image[xlink\\:href*=\"PH1-C\"]",
+        "image[href*=\"PH1-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH1-C\"]",
+        "[short-name=\"PH1-C\"]",
+        "[sname=\"PH1-C\"]",
+        "[data-shortname=\"PH1-C\"]",
+        "[data-point-short-name=\"PH1-C\"]",
+        "[data-filter*=\"PH1-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH1-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH1-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_380"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH2-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH2-C",
+      "label_group_ids": [
+        "svg_382"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_382"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH2-C\"]",
+        "image[xlink\\:href*=\"PH2-C\"]",
+        "image[href*=\"PH2-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH2-C\"]",
+        "[short-name=\"PH2-C\"]",
+        "[sname=\"PH2-C\"]",
+        "[data-shortname=\"PH2-C\"]",
+        "[data-point-short-name=\"PH2-C\"]",
+        "[data-filter*=\"PH2-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH2-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH2-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_382"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH3-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH3-C",
+      "label_group_ids": [
+        "svg_384"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_384"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH3-C\"]",
+        "image[xlink\\:href*=\"PH3-C\"]",
+        "image[href*=\"PH3-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH3-C\"]",
+        "[short-name=\"PH3-C\"]",
+        "[sname=\"PH3-C\"]",
+        "[data-shortname=\"PH3-C\"]",
+        "[data-point-short-name=\"PH3-C\"]",
+        "[data-filter*=\"PH3-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH3-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH3-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_384"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH4-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH4-C",
+      "label_group_ids": [
+        "svg_386"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_386"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH4-C\"]",
+        "image[xlink\\:href*=\"PH4-C\"]",
+        "image[href*=\"PH4-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH4-C\"]",
+        "[short-name=\"PH4-C\"]",
+        "[sname=\"PH4-C\"]",
+        "[data-shortname=\"PH4-C\"]",
+        "[data-point-short-name=\"PH4-C\"]",
+        "[data-filter*=\"PH4-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH4-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH4-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_386"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH5-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH5-C",
+      "label_group_ids": [
+        "svg_388"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_388"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH5-C\"]",
+        "image[xlink\\:href*=\"PH5-C\"]",
+        "image[href*=\"PH5-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH5-C\"]",
+        "[short-name=\"PH5-C\"]",
+        "[sname=\"PH5-C\"]",
+        "[data-shortname=\"PH5-C\"]",
+        "[data-point-short-name=\"PH5-C\"]",
+        "[data-filter*=\"PH5-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH5-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH5-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_388"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH6-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH6-C",
+      "label_group_ids": [
+        "svg_390"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_390"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH6-C\"]",
+        "image[xlink\\:href*=\"PH6-C\"]",
+        "image[href*=\"PH6-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH6-C\"]",
+        "[short-name=\"PH6-C\"]",
+        "[sname=\"PH6-C\"]",
+        "[data-shortname=\"PH6-C\"]",
+        "[data-point-short-name=\"PH6-C\"]",
+        "[data-filter*=\"PH6-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH6-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH6-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_390"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH7-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH7-C",
+      "label_group_ids": [
+        "svg_392"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_392"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH7-C\"]",
+        "image[xlink\\:href*=\"PH7-C\"]",
+        "image[href*=\"PH7-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH7-C\"]",
+        "[short-name=\"PH7-C\"]",
+        "[sname=\"PH7-C\"]",
+        "[data-shortname=\"PH7-C\"]",
+        "[data-point-short-name=\"PH7-C\"]",
+        "[data-filter*=\"PH7-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH7-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH7-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_392"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH8-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH8-C",
+      "label_group_ids": [
+        "svg_394"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_394"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH8-C\"]",
+        "image[xlink\\:href*=\"PH8-C\"]",
+        "image[href*=\"PH8-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH8-C\"]",
+        "[short-name=\"PH8-C\"]",
+        "[sname=\"PH8-C\"]",
+        "[data-shortname=\"PH8-C\"]",
+        "[data-point-short-name=\"PH8-C\"]",
+        "[data-filter*=\"PH8-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH8-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH8-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_394"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH-T",
+      "label_group_ids": [
+        "svg_375"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_375"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH-T\"]",
+        "image[xlink\\:href*=\"PH-T\"]",
+        "image[href*=\"PH-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH-T\"]",
+        "[short-name=\"PH-T\"]",
+        "[sname=\"PH-T\"]",
+        "[data-shortname=\"PH-T\"]",
+        "[data-point-short-name=\"PH-T\"]",
+        "[data-filter*=\"PH-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_375"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "LT-A",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "LT-A",
+      "label_group_ids": [
+        "svg_434"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_434"
+      ],
+      "image_selectors": [
+        "image[href*=\"LT-A\"]",
+        "image[xlink\\:href*=\"LT-A\"]",
+        "image[href*=\"LT-A\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"LT-A\"]",
+        "[short-name=\"LT-A\"]",
+        "[sname=\"LT-A\"]",
+        "[data-shortname=\"LT-A\"]",
+        "[data-point-short-name=\"LT-A\"]",
+        "[data-filter*=\"LT-A\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'LT-A'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"LT-A\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_434"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG1-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG1-C",
+      "label_group_ids": [
+        "svg_438"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_438"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG1-C\"]",
+        "image[xlink\\:href*=\"CLG1-C\"]",
+        "image[href*=\"CLG1-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG1-C\"]",
+        "[short-name=\"CLG1-C\"]",
+        "[sname=\"CLG1-C\"]",
+        "[data-shortname=\"CLG1-C\"]",
+        "[data-point-short-name=\"CLG1-C\"]",
+        "[data-filter*=\"CLG1-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG1-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG1-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_438"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG2-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG2-C",
+      "label_group_ids": [
+        "svg_440"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_440"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG2-C\"]",
+        "image[xlink\\:href*=\"CLG2-C\"]",
+        "image[href*=\"CLG2-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG2-C\"]",
+        "[short-name=\"CLG2-C\"]",
+        "[sname=\"CLG2-C\"]",
+        "[data-shortname=\"CLG2-C\"]",
+        "[data-point-short-name=\"CLG2-C\"]",
+        "[data-filter*=\"CLG2-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG2-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG2-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_440"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG3-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG3-C",
+      "label_group_ids": [
+        "svg_442"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_442"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG3-C\"]",
+        "image[xlink\\:href*=\"CLG3-C\"]",
+        "image[href*=\"CLG3-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG3-C\"]",
+        "[short-name=\"CLG3-C\"]",
+        "[sname=\"CLG3-C\"]",
+        "[data-shortname=\"CLG3-C\"]",
+        "[data-point-short-name=\"CLG3-C\"]",
+        "[data-filter*=\"CLG3-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG3-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG3-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_442"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG4-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG4-C",
+      "label_group_ids": [
+        "svg_444"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_444"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG4-C\"]",
+        "image[xlink\\:href*=\"CLG4-C\"]",
+        "image[href*=\"CLG4-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG4-C\"]",
+        "[short-name=\"CLG4-C\"]",
+        "[sname=\"CLG4-C\"]",
+        "[data-shortname=\"CLG4-C\"]",
+        "[data-point-short-name=\"CLG4-C\"]",
+        "[data-filter*=\"CLG4-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG4-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG4-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_444"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG5-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG5-C",
+      "label_group_ids": [
+        "svg_446"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_446"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG5-C\"]",
+        "image[xlink\\:href*=\"CLG5-C\"]",
+        "image[href*=\"CLG5-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG5-C\"]",
+        "[short-name=\"CLG5-C\"]",
+        "[sname=\"CLG5-C\"]",
+        "[data-shortname=\"CLG5-C\"]",
+        "[data-point-short-name=\"CLG5-C\"]",
+        "[data-filter*=\"CLG5-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG5-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG5-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_446"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG6-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG6-C",
+      "label_group_ids": [
+        "svg_448"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_448"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG6-C\"]",
+        "image[xlink\\:href*=\"CLG6-C\"]",
+        "image[href*=\"CLG6-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG6-C\"]",
+        "[short-name=\"CLG6-C\"]",
+        "[sname=\"CLG6-C\"]",
+        "[data-shortname=\"CLG6-C\"]",
+        "[data-point-short-name=\"CLG6-C\"]",
+        "[data-filter*=\"CLG6-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG6-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG6-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_448"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG7-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG7-C",
+      "label_group_ids": [
+        "svg_450"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_450"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG7-C\"]",
+        "image[xlink\\:href*=\"CLG7-C\"]",
+        "image[href*=\"CLG7-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG7-C\"]",
+        "[short-name=\"CLG7-C\"]",
+        "[sname=\"CLG7-C\"]",
+        "[data-shortname=\"CLG7-C\"]",
+        "[data-point-short-name=\"CLG7-C\"]",
+        "[data-filter*=\"CLG7-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG7-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG7-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_450"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG8-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG8-C",
+      "label_group_ids": [
+        "svg_452"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_452"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG8-C\"]",
+        "image[xlink\\:href*=\"CLG8-C\"]",
+        "image[href*=\"CLG8-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG8-C\"]",
+        "[short-name=\"CLG8-C\"]",
+        "[sname=\"CLG8-C\"]",
+        "[data-shortname=\"CLG8-C\"]",
+        "[data-point-short-name=\"CLG8-C\"]",
+        "[data-filter*=\"CLG8-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG8-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG8-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_452"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH1-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH1-C",
+      "label_group_ids": [
+        "svg_454"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_454"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH1-C\"]",
+        "image[xlink\\:href*=\"RH1-C\"]",
+        "image[href*=\"RH1-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH1-C\"]",
+        "[short-name=\"RH1-C\"]",
+        "[sname=\"RH1-C\"]",
+        "[data-shortname=\"RH1-C\"]",
+        "[data-point-short-name=\"RH1-C\"]",
+        "[data-filter*=\"RH1-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH1-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH1-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_454"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH2-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH2-C",
+      "label_group_ids": [
+        "svg_456"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_456"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH2-C\"]",
+        "image[xlink\\:href*=\"RH2-C\"]",
+        "image[href*=\"RH2-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH2-C\"]",
+        "[short-name=\"RH2-C\"]",
+        "[sname=\"RH2-C\"]",
+        "[data-shortname=\"RH2-C\"]",
+        "[data-point-short-name=\"RH2-C\"]",
+        "[data-filter*=\"RH2-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH2-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH2-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_456"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH3-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH3-C",
+      "label_group_ids": [
+        "svg_458"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_458"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH3-C\"]",
+        "image[xlink\\:href*=\"RH3-C\"]",
+        "image[href*=\"RH3-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH3-C\"]",
+        "[short-name=\"RH3-C\"]",
+        "[sname=\"RH3-C\"]",
+        "[data-shortname=\"RH3-C\"]",
+        "[data-point-short-name=\"RH3-C\"]",
+        "[data-filter*=\"RH3-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH3-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH3-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_458"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH4-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH4-C",
+      "label_group_ids": [
+        "svg_460"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_460"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH4-C\"]",
+        "image[xlink\\:href*=\"RH4-C\"]",
+        "image[href*=\"RH4-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH4-C\"]",
+        "[short-name=\"RH4-C\"]",
+        "[sname=\"RH4-C\"]",
+        "[data-shortname=\"RH4-C\"]",
+        "[data-point-short-name=\"RH4-C\"]",
+        "[data-filter*=\"RH4-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH4-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH4-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_460"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH5-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH5-C",
+      "label_group_ids": [
+        "svg_462"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_462"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH5-C\"]",
+        "image[xlink\\:href*=\"RH5-C\"]",
+        "image[href*=\"RH5-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH5-C\"]",
+        "[short-name=\"RH5-C\"]",
+        "[sname=\"RH5-C\"]",
+        "[data-shortname=\"RH5-C\"]",
+        "[data-point-short-name=\"RH5-C\"]",
+        "[data-filter*=\"RH5-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH5-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH5-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_462"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH6-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH6-C",
+      "label_group_ids": [
+        "svg_464"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_464"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH6-C\"]",
+        "image[xlink\\:href*=\"RH6-C\"]",
+        "image[href*=\"RH6-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH6-C\"]",
+        "[short-name=\"RH6-C\"]",
+        "[sname=\"RH6-C\"]",
+        "[data-shortname=\"RH6-C\"]",
+        "[data-point-short-name=\"RH6-C\"]",
+        "[data-filter*=\"RH6-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH6-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH6-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_464"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH7-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH7-C",
+      "label_group_ids": [
+        "svg_466"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_466"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH7-C\"]",
+        "image[xlink\\:href*=\"RH7-C\"]",
+        "image[href*=\"RH7-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH7-C\"]",
+        "[short-name=\"RH7-C\"]",
+        "[sname=\"RH7-C\"]",
+        "[data-shortname=\"RH7-C\"]",
+        "[data-point-short-name=\"RH7-C\"]",
+        "[data-filter*=\"RH7-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH7-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH7-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_466"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH8-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH8-C",
+      "label_group_ids": [
+        "svg_468"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_468"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH8-C\"]",
+        "image[xlink\\:href*=\"RH8-C\"]",
+        "image[href*=\"RH8-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH8-C\"]",
+        "[short-name=\"RH8-C\"]",
+        "[sname=\"RH8-C\"]",
+        "[data-shortname=\"RH8-C\"]",
+        "[data-point-short-name=\"RH8-C\"]",
+        "[data-filter*=\"RH8-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH8-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH8-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_468"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CC-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CC-T",
+      "label_group_ids": [
+        "svg_497"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_497"
+      ],
+      "image_selectors": [
+        "image[href*=\"CC-T\"]",
+        "image[xlink\\:href*=\"CC-T\"]",
+        "image[href*=\"CC-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CC-T\"]",
+        "[short-name=\"CC-T\"]",
+        "[sname=\"CC-T\"]",
+        "[data-shortname=\"CC-T\"]",
+        "[data-point-short-name=\"CC-T\"]",
+        "[data-filter*=\"CC-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CC-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CC-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_497"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RHC-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RHC-T",
+      "label_group_ids": [
+        "svg_499"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_499"
+      ],
+      "image_selectors": [
+        "image[href*=\"RHC-T\"]",
+        "image[xlink\\:href*=\"RHC-T\"]",
+        "image[href*=\"RHC-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RHC-T\"]",
+        "[short-name=\"RHC-T\"]",
+        "[sname=\"RHC-T\"]",
+        "[data-shortname=\"RHC-T\"]",
+        "[data-point-short-name=\"RHC-T\"]",
+        "[data-filter*=\"RHC-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RHC-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RHC-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_499"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH-O",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH-O",
+      "label_group_ids": [
+        "svg_501"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_501"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH-O\"]",
+        "image[xlink\\:href*=\"PH-O\"]",
+        "image[href*=\"PH-O\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH-O\"]",
+        "[short-name=\"PH-O\"]",
+        "[sname=\"PH-O\"]",
+        "[data-shortname=\"PH-O\"]",
+        "[data-point-short-name=\"PH-O\"]",
+        "[data-filter*=\"PH-O\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH-O\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_501"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PH-POS",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PH-POS",
+      "label_group_ids": [
+        "svg_503"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_503"
+      ],
+      "image_selectors": [
+        "image[href*=\"PH-POS\"]",
+        "image[xlink\\:href*=\"PH-POS\"]",
+        "image[href*=\"PH-POS\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PH-POS\"]",
+        "[short-name=\"PH-POS\"]",
+        "[sname=\"PH-POS\"]",
+        "[data-shortname=\"PH-POS\"]",
+        "[data-point-short-name=\"PH-POS\"]",
+        "[data-filter*=\"PH-POS\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PH-POS'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PH-POS\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_503"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG-POS",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG-POS",
+      "label_group_ids": [
+        "svg_505"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_505"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG-POS\"]",
+        "image[xlink\\:href*=\"CLG-POS\"]",
+        "image[href*=\"CLG-POS\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG-POS\"]",
+        "[short-name=\"CLG-POS\"]",
+        "[sname=\"CLG-POS\"]",
+        "[data-shortname=\"CLG-POS\"]",
+        "[data-point-short-name=\"CLG-POS\"]",
+        "[data-filter*=\"CLG-POS\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG-POS'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG-POS\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_505"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CLG-O",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CLG-O",
+      "label_group_ids": [
+        "svg_507"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_507"
+      ],
+      "image_selectors": [
+        "image[href*=\"CLG-O\"]",
+        "image[xlink\\:href*=\"CLG-O\"]",
+        "image[href*=\"CLG-O\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CLG-O\"]",
+        "[short-name=\"CLG-O\"]",
+        "[sname=\"CLG-O\"]",
+        "[data-shortname=\"CLG-O\"]",
+        "[data-point-short-name=\"CLG-O\"]",
+        "[data-filter*=\"CLG-O\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CLG-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CLG-O\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_507"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RAPLO-A",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RAPLO-A",
+      "label_group_ids": [
+        "svg_490"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_490"
+      ],
+      "image_selectors": [
+        "image[href*=\"RAPLO-A\"]",
+        "image[xlink\\:href*=\"RAPLO-A\"]",
+        "image[href*=\"RAPLO-A\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RAPLO-A\"]",
+        "[short-name=\"RAPLO-A\"]",
+        "[sname=\"RAPLO-A\"]",
+        "[data-shortname=\"RAPLO-A\"]",
+        "[data-point-short-name=\"RAPLO-A\"]",
+        "[data-filter*=\"RAPLO-A\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RAPLO-A'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RAPLO-A\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_490"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RA-SD",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RA-SD",
+      "label_group_ids": [
+        "svg_522"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_522",
+        "svg_123_6"
+      ],
+      "image_selectors": [
+        "svg#svg_123_6",
+        "#svg_123_6",
+        "svg#svg_123_6 image",
+        "svg#svg_123_6 path",
+        "svg#svg_123_6 circle",
+        "svg#svg_123_6 rect",
+        "svg#svg_123_6 polygon",
+        "#svg_173_6",
+        "#svg_174_6"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-SD\"]",
+        "[short-name=\"RA-SD\"]",
+        "[sname=\"RA-SD\"]",
+        "[data-shortname=\"RA-SD\"]",
+        "[data-point-short-name=\"RA-SD\"]",
+        "[data-filter*=\"RA-SD\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-SD'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-SD\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_522"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "FFILT-S",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "FFILT-S",
+      "label_group_ids": [
+        "svg_556"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_556"
+      ],
+      "image_selectors": [
+        "image[href*=\"FFILT-S\"]",
+        "image[xlink\\:href*=\"FFILT-S\"]",
+        "image[href*=\"FFILT-S\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"FFILT-S\"]",
+        "[short-name=\"FFILT-S\"]",
+        "[sname=\"FFILT-S\"]",
+        "[data-shortname=\"FFILT-S\"]",
+        "[data-point-short-name=\"FFILT-S\"]",
+        "[data-filter*=\"FFILT-S\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'FFILT-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"FFILT-S\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_556"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RA-F",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RA-F",
+      "label_group_ids": [
+        "svg_563"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_563"
+      ],
+      "image_selectors": [
+        "image[href*=\"RA-F\"]",
+        "image[xlink\\:href*=\"RA-F\"]",
+        "image[href*=\"RA-F\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-F\"]",
+        "[short-name=\"RA-F\"]",
+        "[sname=\"RA-F\"]",
+        "[data-shortname=\"RA-F\"]",
+        "[data-point-short-name=\"RA-F\"]",
+        "[data-filter*=\"RA-F\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-F'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-F\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_563"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "DA-SD",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "DA-SD",
+      "label_group_ids": [
+        "svg_577"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_577",
+        "svg_198_6"
+      ],
+      "image_selectors": [
+        "svg#svg_198_6",
+        "#svg_198_6",
+        "svg#svg_198_6 image",
+        "svg#svg_198_6 path",
+        "svg#svg_198_6 circle",
+        "svg#svg_198_6 rect",
+        "svg#svg_198_6 polygon",
+        "#svg_233_6",
+        "#svg_234_6"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"DA-SD\"]",
+        "[short-name=\"DA-SD\"]",
+        "[sname=\"DA-SD\"]",
+        "[data-shortname=\"DA-SD\"]",
+        "[data-point-short-name=\"DA-SD\"]",
+        "[data-filter*=\"DA-SD\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'DA-SD'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DA-SD\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_577"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "DA-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "DA-T",
+      "label_group_ids": [
+        "svg_583"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_583"
+      ],
+      "image_selectors": [
+        "image[href*=\"DA-T\"]",
+        "image[xlink\\:href*=\"DA-T\"]",
+        "image[href*=\"DA-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"DA-T\"]",
+        "[short-name=\"DA-T\"]",
+        "[sname=\"DA-T\"]",
+        "[data-shortname=\"DA-T\"]",
+        "[data-point-short-name=\"DA-T\"]",
+        "[data-filter*=\"DA-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'DA-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DA-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_583"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "DAT-SP",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "DAT-SP",
+      "label_group_ids": [
+        "svg_585"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_585"
+      ],
+      "image_selectors": [
+        "image[href*=\"DAT-SP\"]",
+        "image[xlink\\:href*=\"DAT-SP\"]",
+        "image[href*=\"DAT-SP\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"DAT-SP\"]",
+        "[short-name=\"DAT-SP\"]",
+        "[sname=\"DAT-SP\"]",
+        "[data-shortname=\"DAT-SP\"]",
+        "[data-point-short-name=\"DAT-SP\"]",
+        "[data-filter*=\"DAT-SP\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'DAT-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DAT-SP\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_585"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "DA1-P",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "DA1-P",
+      "label_group_ids": [
+        "svg_587"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_587"
+      ],
+      "image_selectors": [
+        "image[href*=\"DA1-P\"]",
+        "image[xlink\\:href*=\"DA1-P\"]",
+        "image[href*=\"DA1-P\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"DA1-P\"]",
+        "[short-name=\"DA1-P\"]",
+        "[sname=\"DA1-P\"]",
+        "[data-shortname=\"DA1-P\"]",
+        "[data-point-short-name=\"DA1-P\"]",
+        "[data-filter*=\"DA1-P\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'DA1-P'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DA1-P\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_587"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "DAP-SP",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "DAP-SP",
+      "label_group_ids": [
+        "svg_589"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_589"
+      ],
+      "image_selectors": [
+        "image[href*=\"DAP-SP\"]",
+        "image[xlink\\:href*=\"DAP-SP\"]",
+        "image[href*=\"DAP-SP\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"DAP-SP\"]",
+        "[short-name=\"DAP-SP\"]",
+        "[sname=\"DAP-SP\"]",
+        "[data-shortname=\"DAP-SP\"]",
+        "[data-point-short-name=\"DAP-SP\"]",
+        "[data-filter*=\"DAP-SP\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'DAP-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DAP-SP\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_589"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "DAPHI-A",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "DAPHI-A",
+      "label_group_ids": [
+        "svg_591"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_591"
+      ],
+      "image_selectors": [
+        "image[href*=\"DAPHI-A\"]",
+        "image[xlink\\:href*=\"DAPHI-A\"]",
+        "image[href*=\"DAPHI-A\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"DAPHI-A\"]",
+        "[short-name=\"DAPHI-A\"]",
+        "[sname=\"DAPHI-A\"]",
+        "[data-shortname=\"DAPHI-A\"]",
+        "[data-point-short-name=\"DAPHI-A\"]",
+        "[data-filter*=\"DAPHI-A\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'DAPHI-A'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"DAPHI-A\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_591"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PHWE-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PHWE-T",
+      "label_group_ids": [
+        "svg_601"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_601"
+      ],
+      "image_selectors": [
+        "image[href*=\"PHWE-T\"]",
+        "image[xlink\\:href*=\"PHWE-T\"]",
+        "image[href*=\"PHWE-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PHWE-T\"]",
+        "[short-name=\"PHWE-T\"]",
+        "[sname=\"PHWE-T\"]",
+        "[data-shortname=\"PHWE-T\"]",
+        "[data-point-short-name=\"PHWE-T\"]",
+        "[data-filter*=\"PHWE-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PHWE-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PHWE-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_601"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PHWL-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PHWL-T",
+      "label_group_ids": [
+        "svg_603"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_603"
+      ],
+      "image_selectors": [
+        "image[href*=\"PHWL-T\"]",
+        "image[xlink\\:href*=\"PHWL-T\"]",
+        "image[href*=\"PHWL-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PHWL-T\"]",
+        "[short-name=\"PHWL-T\"]",
+        "[sname=\"PHWL-T\"]",
+        "[data-shortname=\"PHWL-T\"]",
+        "[data-point-short-name=\"PHWL-T\"]",
+        "[data-filter*=\"PHWL-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PHWL-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PHWL-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_603"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CCWL-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CCWL-T",
+      "label_group_ids": [
+        "svg_605"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_605"
+      ],
+      "image_selectors": [
+        "image[href*=\"CCWL-T\"]",
+        "image[xlink\\:href*=\"CCWL-T\"]",
+        "image[href*=\"CCWL-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CCWL-T\"]",
+        "[short-name=\"CCWL-T\"]",
+        "[sname=\"CCWL-T\"]",
+        "[data-shortname=\"CCWL-T\"]",
+        "[data-point-short-name=\"CCWL-T\"]",
+        "[data-filter*=\"CCWL-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CCWL-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CCWL-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_605"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "CCWE-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "CCWE-T",
+      "label_group_ids": [
+        "svg_607"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_607"
+      ],
+      "image_selectors": [
+        "image[href*=\"CCWE-T\"]",
+        "image[xlink\\:href*=\"CCWE-T\"]",
+        "image[href*=\"CCWE-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"CCWE-T\"]",
+        "[short-name=\"CCWE-T\"]",
+        "[sname=\"CCWE-T\"]",
+        "[data-shortname=\"CCWE-T\"]",
+        "[data-point-short-name=\"CCWE-T\"]",
+        "[data-filter*=\"CCWE-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'CCWE-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"CCWE-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_607"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RHWL-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RHWL-T",
+      "label_group_ids": [
+        "svg_609"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_609"
+      ],
+      "image_selectors": [
+        "image[href*=\"RHWL-T\"]",
+        "image[xlink\\:href*=\"RHWL-T\"]",
+        "image[href*=\"RHWL-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RHWL-T\"]",
+        "[short-name=\"RHWL-T\"]",
+        "[sname=\"RHWL-T\"]",
+        "[data-shortname=\"RHWL-T\"]",
+        "[data-point-short-name=\"RHWL-T\"]",
+        "[data-filter*=\"RHWL-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RHWL-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RHWL-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_609"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RHWE-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RHWE-T",
+      "label_group_ids": [
+        "svg_611"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_611"
+      ],
+      "image_selectors": [
+        "image[href*=\"RHWE-T\"]",
+        "image[xlink\\:href*=\"RHWE-T\"]",
+        "image[href*=\"RHWE-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RHWE-T\"]",
+        "[short-name=\"RHWE-T\"]",
+        "[sname=\"RHWE-T\"]",
+        "[data-shortname=\"RHWE-T\"]",
+        "[data-point-short-name=\"RHWE-T\"]",
+        "[data-filter*=\"RHWE-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RHWE-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RHWE-T\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_611"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH-O",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH-O",
+      "label_group_ids": [
+        "svg_660"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_660"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH-O\"]",
+        "image[xlink\\:href*=\"RH-O\"]",
+        "image[href*=\"RH-O\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH-O\"]",
+        "[short-name=\"RH-O\"]",
+        "[sname=\"RH-O\"]",
+        "[data-shortname=\"RH-O\"]",
+        "[data-point-short-name=\"RH-O\"]",
+        "[data-filter*=\"RH-O\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH-O\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_660"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RH-POS",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RH-POS",
+      "label_group_ids": [
+        "svg_662"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_662"
+      ],
+      "image_selectors": [
+        "image[href*=\"RH-POS\"]",
+        "image[xlink\\:href*=\"RH-POS\"]",
+        "image[href*=\"RH-POS\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RH-POS\"]",
+        "[short-name=\"RH-POS\"]",
+        "[sname=\"RH-POS\"]",
+        "[data-shortname=\"RH-POS\"]",
+        "[data-point-short-name=\"RH-POS\"]",
+        "[data-filter*=\"RH-POS\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RH-POS'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RH-POS\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_662"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "PFILT-S",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "PFILT-S",
+      "label_group_ids": [
+        "svg_60"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_60"
+      ],
+      "image_selectors": [
+        "image[href*=\"PFILT-S\"]",
+        "image[xlink\\:href*=\"PFILT-S\"]",
+        "image[href*=\"PFILT-S\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"PFILT-S\"]",
+        "[short-name=\"PFILT-S\"]",
+        "[sname=\"PFILT-S\"]",
+        "[data-shortname=\"PFILT-S\"]",
+        "[data-point-short-name=\"PFILT-S\"]",
+        "[data-filter*=\"PFILT-S\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'PFILT-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"PFILT-S\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_60"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RF-S",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RF-S",
+      "label_group_ids": [
+        "svg_176"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_176"
+      ],
+      "image_selectors": [
+        "image[href*=\"RF-S\"]",
+        "image[xlink\\:href*=\"RF-S\"]",
+        "image[href*=\"RF-S\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RF-S\"]",
+        "[short-name=\"RF-S\"]",
+        "[sname=\"RF-S\"]",
+        "[data-shortname=\"RF-S\"]",
+        "[data-point-short-name=\"RF-S\"]",
+        "[data-filter*=\"RF-S\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RF-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RF-S\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_176"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RF-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RF-C",
+      "label_group_ids": [
+        "svg_178"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_178"
+      ],
+      "image_selectors": [
+        "image[href*=\"RF-C\"]",
+        "image[xlink\\:href*=\"RF-C\"]",
+        "image[href*=\"RF-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RF-C\"]",
+        "[short-name=\"RF-C\"]",
+        "[sname=\"RF-C\"]",
+        "[data-shortname=\"RF-C\"]",
+        "[data-point-short-name=\"RF-C\"]",
+        "[data-filter*=\"RF-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RF-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RF-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_178"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RF-O",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RF-O",
+      "label_group_ids": [
+        "svg_283"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_283"
+      ],
+      "image_selectors": [
+        "image[href*=\"RF-O\"]",
+        "image[xlink\\:href*=\"RF-O\"]",
+        "image[href*=\"RF-O\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RF-O\"]",
+        "[short-name=\"RF-O\"]",
+        "[sname=\"RF-O\"]",
+        "[data-shortname=\"RF-O\"]",
+        "[data-point-short-name=\"RF-O\"]",
+        "[data-filter*=\"RF-O\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RF-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RF-O\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_283"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "SF-S",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "SF-S",
+      "label_group_ids": [
+        "svg_470"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_470"
+      ],
+      "image_selectors": [
+        "image[href*=\"SF-S\"]",
+        "image[xlink\\:href*=\"SF-S\"]",
+        "image[href*=\"SF-S\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"SF-S\"]",
+        "[short-name=\"SF-S\"]",
+        "[sname=\"SF-S\"]",
+        "[data-shortname=\"SF-S\"]",
+        "[data-point-short-name=\"SF-S\"]",
+        "[data-filter*=\"SF-S\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'SF-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"SF-S\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_470"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "SF-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "SF-C",
+      "label_group_ids": [
+        "svg_473"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_473"
+      ],
+      "image_selectors": [
+        "image[href*=\"SF-C\"]",
+        "image[xlink\\:href*=\"SF-C\"]",
+        "image[href*=\"SF-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"SF-C\"]",
+        "[short-name=\"SF-C\"]",
+        "[sname=\"SF-C\"]",
+        "[data-shortname=\"SF-C\"]",
+        "[data-point-short-name=\"SF-C\"]",
+        "[data-filter*=\"SF-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'SF-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"SF-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_473"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "SF-O",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "SF-O",
+      "label_group_ids": [
+        "svg_475"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_475"
+      ],
+      "image_selectors": [
+        "image[href*=\"SF-O\"]",
+        "image[xlink\\:href*=\"SF-O\"]",
+        "image[href*=\"SF-O\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"SF-O\"]",
+        "[short-name=\"SF-O\"]",
+        "[sname=\"SF-O\"]",
+        "[data-shortname=\"SF-O\"]",
+        "[data-point-short-name=\"SF-O\"]",
+        "[data-filter*=\"SF-O\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'SF-O'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"SF-O\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_475"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "GEF-S",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "GEF-S",
+      "label_group_ids": [
+        "svg_141"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_141"
+      ],
+      "image_selectors": [
+        "image[href*=\"GEF-S\"]",
+        "image[xlink\\:href*=\"GEF-S\"]",
+        "image[href*=\"GEF-S\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"GEF-S\"]",
+        "[short-name=\"GEF-S\"]",
+        "[sname=\"GEF-S\"]",
+        "[data-shortname=\"GEF-S\"]",
+        "[data-point-short-name=\"GEF-S\"]",
+        "[data-filter*=\"GEF-S\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'GEF-S'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"GEF-S\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_141"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "GEF-C",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "GEF-C",
+      "label_group_ids": [
+        "svg_145"
+      ],
+      "value_group_ids": [],
+      "device_group_ids": [
+        "svg_145"
+      ],
+      "image_selectors": [
+        "image[href*=\"GEF-C\"]",
+        "image[xlink\\:href*=\"GEF-C\"]",
+        "image[href*=\"GEF-C\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"GEF-C\"]",
+        "[short-name=\"GEF-C\"]",
+        "[sname=\"GEF-C\"]",
+        "[data-shortname=\"GEF-C\"]",
+        "[data-point-short-name=\"GEF-C\"]",
+        "[data-filter*=\"GEF-C\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'GEF-C'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"GEF-C\\\"\"]"
+      ],
+      "related_node_ids": [
+        "svg_145"
+      ],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RA-T",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RA-T",
+      "label_group_ids": [],
+      "value_group_ids": [],
+      "device_group_ids": [],
+      "image_selectors": [
+        "image[href*=\"RA-T\"]",
+        "image[xlink\\:href*=\"RA-T\"]",
+        "image[href*=\"RA-T\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-T\"]",
+        "[short-name=\"RA-T\"]",
+        "[sname=\"RA-T\"]",
+        "[data-shortname=\"RA-T\"]",
+        "[data-point-short-name=\"RA-T\"]",
+        "[data-filter*=\"RA-T\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-T'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-T\\\"\"]"
+      ],
+      "related_node_ids": [],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RAT-SP",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RAT-SP",
+      "label_group_ids": [],
+      "value_group_ids": [],
+      "device_group_ids": [],
+      "image_selectors": [
+        "image[href*=\"RAT-SP\"]",
+        "image[xlink\\:href*=\"RAT-SP\"]",
+        "image[href*=\"RAT-SP\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RAT-SP\"]",
+        "[short-name=\"RAT-SP\"]",
+        "[sname=\"RAT-SP\"]",
+        "[data-shortname=\"RAT-SP\"]",
+        "[data-point-short-name=\"RAT-SP\"]",
+        "[data-filter*=\"RAT-SP\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RAT-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RAT-SP\\\"\"]"
+      ],
+      "related_node_ids": [],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RA-H",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RA-H",
+      "label_group_ids": [],
+      "value_group_ids": [],
+      "device_group_ids": [],
+      "image_selectors": [
+        "image[href*=\"RA-H\"]",
+        "image[xlink\\:href*=\"RA-H\"]",
+        "image[href*=\"RA-H\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-H\"]",
+        "[short-name=\"RA-H\"]",
+        "[sname=\"RA-H\"]",
+        "[data-shortname=\"RA-H\"]",
+        "[data-point-short-name=\"RA-H\"]",
+        "[data-filter*=\"RA-H\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-H'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-H\\\"\"]"
+      ],
+      "related_node_ids": [],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RAH-SP",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RAH-SP",
+      "label_group_ids": [],
+      "value_group_ids": [],
+      "device_group_ids": [],
+      "image_selectors": [
+        "image[href*=\"RAH-SP\"]",
+        "image[xlink\\:href*=\"RAH-SP\"]",
+        "image[href*=\"RAH-SP\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RAH-SP\"]",
+        "[short-name=\"RAH-SP\"]",
+        "[sname=\"RAH-SP\"]",
+        "[data-shortname=\"RAH-SP\"]",
+        "[data-point-short-name=\"RAH-SP\"]",
+        "[data-filter*=\"RAH-SP\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RAH-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RAH-SP\\\"\"]"
+      ],
+      "related_node_ids": [],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RA-P",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RA-P",
+      "label_group_ids": [],
+      "value_group_ids": [],
+      "device_group_ids": [],
+      "image_selectors": [
+        "image[href*=\"RA-P\"]",
+        "image[xlink\\:href*=\"RA-P\"]",
+        "image[href*=\"RA-P\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RA-P\"]",
+        "[short-name=\"RA-P\"]",
+        "[sname=\"RA-P\"]",
+        "[data-shortname=\"RA-P\"]",
+        "[data-point-short-name=\"RA-P\"]",
+        "[data-filter*=\"RA-P\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RA-P'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RA-P\\\"\"]"
+      ],
+      "related_node_ids": [],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    },
+    {
+      "source_short_name": "RAP-SP",
+      "ontology_id": null,
+      "candidate_ontology_ids": [],
+      "label": "RAP-SP",
+      "label_group_ids": [],
+      "value_group_ids": [],
+      "device_group_ids": [],
+      "image_selectors": [
+        "image[href*=\"RAP-SP\"]",
+        "image[xlink\\:href*=\"RAP-SP\"]",
+        "image[href*=\"RAP-SP\"]"
+      ],
+      "fallback_selectors": [
+        "g[data-filter=\"RAP-SP\"]",
+        "[short-name=\"RAP-SP\"]",
+        "[sname=\"RAP-SP\"]",
+        "[data-shortname=\"RAP-SP\"]",
+        "[data-point-short-name=\"RAP-SP\"]",
+        "[data-filter*=\"RAP-SP\"]",
+        "[class*=\"bas-floor-graphics-display-point\"]",
+        "[class*=\"graphics-point-label\"]",
+        "[class*=\"graphics-point-value\"]",
+        "[class*=\"graphics-point-notfound\"]",
+        "use[key-data-attr*=\"pointShortName':'RAP-SP'\"]",
+        "use[key-data-attr*=\"pointShortName:\\\"RAP-SP\\\"\"]"
+      ],
+      "related_node_ids": [],
+      "visibility_mode": "hide_when_unselected",
+      "notes": "generated from template point record; ontology mapping unresolved",
+      "confidence": 0.12
+    }
+  ]
+}

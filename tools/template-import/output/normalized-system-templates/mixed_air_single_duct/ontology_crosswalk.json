@@ -1,0 +1,1284 @@
+{
+  "template_id": "mixed_air_single_duct",
+  "generated_at": "2026-06-06T12:48:44.513Z",
+  "rows": [
+    {
+      "source_short_name": "RF-C",
+      "label": "RF-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "MAD-O",
+      "label": "MAD-O",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RF-S",
+      "label": "RF-S",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RF-O",
+      "label": "RF-O",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RAPLO-A",
+      "label": "RAPLO-A",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RA-SD",
+      "label": "RA-SD",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RA-T",
+      "label": "RA-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RAT-SP",
+      "label": "RAT-SP",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RA-H",
+      "label": "RA-H",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RAH-SP",
+      "label": "RAH-SP",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RA-P",
+      "label": "RA-P",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RAP-SP",
+      "label": "RAP-SP",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "MOAD-S",
+      "label": "MOAD-S",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "MOAD-C",
+      "label": "MOAD-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "GEF-C",
+      "label": "GEF-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "GEF-S",
+      "label": "GEF-S",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PFILT-S",
+      "label": "PFILT-S",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "MA-T",
+      "label": "MA-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH-O",
+      "label": "PH-O",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH-POS",
+      "label": "PH-POS",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH-T",
+      "label": "PH-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG-O",
+      "label": "CLG-O",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG-POS",
+      "label": "CLG-POS",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CC-T",
+      "label": "CC-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH-O",
+      "label": "RH-O",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH-POS",
+      "label": "RH-POS",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RHC-T",
+      "label": "RHC-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "DAPHI-A",
+      "label": "DAPHI-A",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "FFILT-S",
+      "label": "FFILT-S",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "DA-SD",
+      "label": "DA-SD",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "DA-T",
+      "label": "DA-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "DAT-SP",
+      "label": "DAT-SP",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG7-C",
+      "label": "CLG7-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG8-C",
+      "label": "CLG8-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG6-C",
+      "label": "CLG6-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG5-C",
+      "label": "CLG5-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG4-C",
+      "label": "CLG4-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG3-C",
+      "label": "CLG3-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG2-C",
+      "label": "CLG2-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG1-C",
+      "label": "CLG1-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH1-C",
+      "label": "RH1-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH2-C",
+      "label": "RH2-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH3-C",
+      "label": "RH3-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH4-C",
+      "label": "RH4-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH6-C",
+      "label": "RH6-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH7-C",
+      "label": "RH7-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH8-C",
+      "label": "RH8-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH5-C",
+      "label": "RH5-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RA-F",
+      "label": "RA-F",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "MOA-F",
+      "label": "MOA-F",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH1-C",
+      "label": "PH1-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH2-C",
+      "label": "PH2-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH3-C",
+      "label": "PH3-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH4-C",
+      "label": "PH4-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH5-C",
+      "label": "PH5-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH6-C",
+      "label": "PH6-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH7-C",
+      "label": "PH7-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH8-C",
+      "label": "PH8-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "OA-F",
+      "label": "OA-F",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PHWL-T",
+      "label": "PHWL-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PHWE-T",
+      "label": "PHWE-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CCWL-T",
+      "label": "CCWL-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CCWE-T",
+      "label": "CCWE-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RHWL-T",
+      "label": "RHWL-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RHWE-T",
+      "label": "RHWE-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "DA1-P",
+      "label": "DA1-P",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "DAP-SP",
+      "label": "DAP-SP",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "SF-S",
+      "label": "SF-S",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "SF-C",
+      "label": "SF-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "SF-O",
+      "label": "SF-O",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "LT-A",
+      "label": "LT-A",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "MAD-O",
+      "label": "MAD-O",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "OA-F",
+      "label": "OA-F",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "MOAD-S",
+      "label": "MOAD-S",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "MOAD-C",
+      "label": "MOAD-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "MOA-F",
+      "label": "MOA-F",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "MA-T",
+      "label": "MA-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH1-C",
+      "label": "PH1-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH2-C",
+      "label": "PH2-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH3-C",
+      "label": "PH3-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH4-C",
+      "label": "PH4-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH5-C",
+      "label": "PH5-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH6-C",
+      "label": "PH6-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH7-C",
+      "label": "PH7-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH8-C",
+      "label": "PH8-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH-T",
+      "label": "PH-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "LT-A",
+      "label": "LT-A",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG1-C",
+      "label": "CLG1-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG2-C",
+      "label": "CLG2-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG3-C",
+      "label": "CLG3-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG4-C",
+      "label": "CLG4-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG5-C",
+      "label": "CLG5-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG6-C",
+      "label": "CLG6-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG7-C",
+      "label": "CLG7-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG8-C",
+      "label": "CLG8-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH1-C",
+      "label": "RH1-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH2-C",
+      "label": "RH2-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH3-C",
+      "label": "RH3-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH4-C",
+      "label": "RH4-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH5-C",
+      "label": "RH5-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH6-C",
+      "label": "RH6-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH7-C",
+      "label": "RH7-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH8-C",
+      "label": "RH8-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CC-T",
+      "label": "CC-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RHC-T",
+      "label": "RHC-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH-O",
+      "label": "PH-O",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PH-POS",
+      "label": "PH-POS",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG-POS",
+      "label": "CLG-POS",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CLG-O",
+      "label": "CLG-O",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RAPLO-A",
+      "label": "RAPLO-A",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RA-SD",
+      "label": "RA-SD",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "FFILT-S",
+      "label": "FFILT-S",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RA-F",
+      "label": "RA-F",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "DA-SD",
+      "label": "DA-SD",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "DA-T",
+      "label": "DA-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "DAT-SP",
+      "label": "DAT-SP",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "DA1-P",
+      "label": "DA1-P",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "DAP-SP",
+      "label": "DAP-SP",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "DAPHI-A",
+      "label": "DAPHI-A",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PHWE-T",
+      "label": "PHWE-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PHWL-T",
+      "label": "PHWL-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CCWL-T",
+      "label": "CCWL-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "CCWE-T",
+      "label": "CCWE-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RHWL-T",
+      "label": "RHWL-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RHWE-T",
+      "label": "RHWE-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH-O",
+      "label": "RH-O",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RH-POS",
+      "label": "RH-POS",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "PFILT-S",
+      "label": "PFILT-S",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RF-S",
+      "label": "RF-S",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RF-C",
+      "label": "RF-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RF-O",
+      "label": "RF-O",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "SF-S",
+      "label": "SF-S",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "SF-C",
+      "label": "SF-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "SF-O",
+      "label": "SF-O",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "GEF-S",
+      "label": "GEF-S",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "GEF-C",
+      "label": "GEF-C",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RA-T",
+      "label": "RA-T",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RAT-SP",
+      "label": "RAT-SP",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RA-H",
+      "label": "RA-H",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RAH-SP",
+      "label": "RAH-SP",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RA-P",
+      "label": "RA-P",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    },
+    {
+      "source_short_name": "RAP-SP",
+      "label": "RAP-SP",
+      "candidate_ontology_ids": [],
+      "selected_ontology_id": "",
+      "confidence": 0.12,
+      "mapped": false,
+      "notes": "unmapped source point"
+    }
+  ]
+}
