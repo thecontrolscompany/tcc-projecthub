@@ -9,6 +9,7 @@ import {
 } from './systemTemplateRegistry';
 import { getVisibilityKeysForOntologyId } from './pointAliases';
 import { rewriteTemplateAssetReferences } from './templateAssetReferences';
+import { neutralizeTemplateMarkupAttributes } from './templateAttributeNeutralization';
 import type { ProjectHubTemplateGraphicPackage } from './types';
 
 function sanitizeNotes(notes: string[]) {
@@ -71,7 +72,9 @@ export function buildTemplateGraphicPackage(templateId: string): ProjectHubTempl
       notes: sanitizeNotes(template.notes),
       replacement_ready: template.replacement_ready,
     },
-    svg_markup: stripAliasText(rewriteTemplateAssetReferences(svgMarkup, template.template_id)),
+    svg_markup: stripAliasText(
+      neutralizeTemplateMarkupAttributes(rewriteTemplateAssetReferences(svgMarkup, template.template_id))
+    ),
     visibility_rules: visibilityRules,
     cleanup_rules: cleanupRules,
     selection_keys_by_ontology_id: selectionKeysByOntologyId,

@@ -1,0 +1,124 @@
+{
+  "generated_at": "2026-06-06T00:00:00.000Z",
+  "rules": [
+    {
+      "rule_id": "hide_imported_dashboard_modules",
+      "description": "Hide imported dashboard, parameter, and key-data modules by default in estimator previews.",
+      "mode": "hide",
+      "selectors": [
+        "[svgkdi='kdi']",
+        "[kdi='kdi']",
+        ".kdm",
+        ".KDMExpanded",
+        ".KDMCollapsed",
+        ".KDIPlaceholder",
+        ".KDIColPlaceholder",
+        ".KDMplaceholdersvg",
+        ".KDMColplaceholdersvg",
+        "#KDMExpanded",
+        "#KDMCollapsed",
+        "#KDIPlaceholder",
+        "#KDIColPlaceholder",
+        "#ButtonToCollapse",
+        "#ButtonToExpand",
+        "[class*='KDMExpWidthRect']",
+        "[class*='KDMExpHeightRect']",
+        "[class*='kdmheader']",
+        "[class*='scrollbar']",
+        "[data-ng-click*='hideShowKeyDataModule']",
+        "[data-filter*='SYSTEM PARAMETERS']",
+        "[data-filter*='SYSTEM SETPOINTS']"
+      ],
+      "text_matches": [
+        "SYSTEM PARAMETERS",
+        "SYSTEM SETPOINTS"
+      ],
+      "attribute_matches": [
+        { "name": "svgkdi", "contains": "kdi" },
+        { "name": "kdi", "contains": "kdi" },
+        { "name": "kdmlabel", "contains": "SYSTEM" },
+        { "name": "data-ng-click", "contains": "hideShowKeyDataModule" }
+      ],
+      "ancestor_selectors": [
+        "[svgkdi='kdi']",
+        "[kdi='kdi']",
+        ".kdm",
+        "#KDMExpanded",
+        "#KDMCollapsed"
+      ],
+      "hide_descendants": true,
+      "notes": "Imported dashboard modules are not estimator graphics and should be hidden unless debugging imported layout behavior."
+    },
+    {
+      "rule_id": "hide_staged_heat_cool_points_for_modulating_config",
+      "description": "Hide staged heating and cooling command labels for the mixed-air modulating trial.",
+      "mode": "hide",
+      "template_ids": [
+        "mixed_air_single_duct"
+      ],
+      "selectors": [
+        "g[data-filter^=\"PH\"][data-filter$=\"-C\"]",
+        "g[data-filter^=\"CLG\"][data-filter$=\"-C\"]",
+        "g[data-filter^=\"RH\"][data-filter$=\"-C\"]"
+      ],
+      "text_matches": [
+        "PH1-C",
+        "PH2-C",
+        "PH3-C",
+        "PH4-C",
+        "PH5-C",
+        "PH6-C",
+        "PH7-C",
+        "PH8-C",
+        "CLG1-C",
+        "CLG2-C",
+        "CLG3-C",
+        "CLG4-C",
+        "CLG5-C",
+        "CLG6-C",
+        "CLG7-C",
+        "CLG8-C",
+        "RH1-C",
+        "RH2-C",
+        "RH3-C",
+        "RH4-C",
+        "RH5-C",
+        "RH6-C",
+        "RH7-C",
+        "RH8-C"
+      ],
+      "ancestor_selectors": [
+        ".bas-floor-graphics-display-point"
+      ],
+      "hide_descendants": true,
+      "notes": "The current mixed-air estimator trial is modulating-only; hide staged command labels and their value/alias text while leaving PH-O, CLG-O, RH-O, PH-POS, CLG-POS, and RH-POS visible."
+    }
+  ],
+  "template_overrides": [
+    {
+      "template_id": "mixed_air_single_duct",
+      "rule_ids": [
+        "hide_imported_dashboard_modules",
+        "hide_staged_heat_cool_points_for_modulating_config"
+      ]
+    },
+    {
+      "template_id": "five_chiller_secondary_loop",
+      "rule_ids": [
+        "hide_imported_dashboard_modules"
+      ]
+    },
+    {
+      "template_id": "vav_single_duct",
+      "rule_ids": [
+        "hide_imported_dashboard_modules"
+      ]
+    },
+    {
+      "template_id": "air_cooled_chiller_plant_one_chiller_two_pumps",
+      "rule_ids": [
+        "hide_imported_dashboard_modules"
+      ]
+    }
+  ]
+}

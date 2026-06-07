@@ -20,6 +20,11 @@ export {
   normalizeTemplateAssetPath,
   rewriteTemplateAssetReferences,
 } from './templateAssetReferences';
+export {
+  getNeutralTemplateAttributeName,
+  neutralizeTemplateMarkupAttributes,
+  TEMPLATE_NEUTRAL_ATTRIBUTE_NAMES,
+} from './templateAttributeNeutralization';
 export type {
   ProjectHubSystemTemplateMatchResult,
   ProjectHubSystemTemplatePointManifestEntry,
@@ -45,10 +50,25 @@ export type {
 export {
   getAliasForSourceShortName,
   getAliasesForOntologyId,
+  getAliasesForEstimatorSelectionId,
   getAliasesForTemplate,
   getEstimatorRoleForSourceShortName,
   getVisibilityKeysForOntologyId,
+  getVisibilityKeysForEstimatorSelectionId,
   listTemplatePointAliases,
   listTemplatesWithAliasCoverage,
 } from './pointAliases';
+export {
+  applyTemplateCleanupRules,
+  resolveTemplatePointPresentation,
+  installTemplateCleanupObserver,
+  matchesAnySelector,
+  findCleanupContainer,
+  addMatchedNodes,
+  addAttributeMatchedNodes,
+  collectCleanupNodes,
+  collectRuleNodes,
+  appendSelectionIds,
+  isVisibleElement,
+} from './templateCleanup';
 export { buildTemplateGraphicPackage } from './templateGraphicPackage';

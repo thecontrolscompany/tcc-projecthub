@@ -7,6 +7,9 @@
       "display_label": "CC-T",
       "candidate_ontology_id": null,
       "candidate_ontology_ids": [],
+      "estimator_selection_ids": [
+        "oa-temp"
+      ],
       "estimator_point_role": "unmapped",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -22,6 +25,9 @@
       "display_label": "CCWE-T",
       "candidate_ontology_id": null,
       "candidate_ontology_ids": [],
+      "estimator_selection_ids": [
+        "chw-sup-t"
+      ],
       "estimator_point_role": "unmapped",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -37,6 +43,9 @@
       "display_label": "CCWL-T",
       "candidate_ontology_id": null,
       "candidate_ontology_ids": [],
+      "estimator_selection_ids": [
+        "chw-ret-t"
+      ],
       "estimator_point_role": "unmapped",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -90,6 +99,11 @@
         "cooling_stage_2_command",
         "cooling_stage_3_command"
       ],
+      "estimator_selection_ids": [
+        "clg-valve",
+        "clg-valve-2pos",
+        "clg-dx-staged"
+      ],
       "estimator_point_role": "cooling_stage_1_command",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -107,6 +121,9 @@
       "candidate_ontology_id": "cooling_stage_1_command",
       "candidate_ontology_ids": [
         "cooling_stage_1_command"
+      ],
+      "estimator_selection_ids": [
+        "clg-valve-position"
       ],
       "estimator_point_role": "cooling_stage_1_command",
       "equipment_family": "ahu",
@@ -262,6 +279,9 @@
       "candidate_ontology_ids": [
         "discharge_air_temperature"
       ],
+      "estimator_selection_ids": [
+        "sa-temp"
+      ],
       "estimator_point_role": "discharge_air_temperature",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -293,6 +313,9 @@
       "display_label": "DAP-SP",
       "candidate_ontology_id": null,
       "candidate_ontology_ids": [],
+      "estimator_selection_ids": [
+        "sa-static"
+      ],
       "estimator_point_role": "unmapped",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -324,6 +347,9 @@
       "candidate_ontology_id": "discharge_air_temperature_setpoint",
       "candidate_ontology_ids": [
         "discharge_air_temperature_setpoint"
+      ],
+      "estimator_selection_ids": [
+        "sa-temp"
       ],
       "estimator_point_role": "discharge_air_temperature_setpoint",
       "equipment_family": "ahu",
@@ -503,6 +529,9 @@
       "candidate_ontology_ids": [
         "mixed_air_temperature"
       ],
+      "estimator_selection_ids": [
+        "ma-temp"
+      ],
       "estimator_point_role": "mixed_air_temperature",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -550,6 +579,9 @@
       "display_label": "MOAD-C",
       "candidate_ontology_id": null,
       "candidate_ontology_ids": [],
+      "estimator_selection_ids": [
+        "mixed-air-damper-position"
+      ],
       "estimator_point_role": "unmapped",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -565,6 +597,10 @@
       "display_label": "MOAD-S",
       "candidate_ontology_id": null,
       "candidate_ontology_ids": [],
+      "estimator_selection_ids": [
+        "oa-damper",
+        "min-oa-d"
+      ],
       "estimator_point_role": "unmapped",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -712,6 +748,15 @@
       "candidate_ontology_ids": [
         "preheat_temperature"
       ],
+      "estimator_selection_ids": [
+        "ph-valve",
+        "ph-valve-2pos",
+        "ph-steam-valve",
+        "htg-valve",
+        "htg-valve-2pos",
+        "htg-valve-incr",
+        "htg-steam-valve"
+      ],
       "estimator_point_role": "preheat_temperature",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -728,6 +773,9 @@
       "candidate_ontology_id": "preheat_temperature",
       "candidate_ontology_ids": [
         "preheat_temperature"
+      ],
+      "estimator_selection_ids": [
+        "htg-valve-position"
       ],
       "estimator_point_role": "preheat_temperature",
       "equipment_family": "ahu",
@@ -881,6 +929,9 @@
       "display_label": "PHWE-T",
       "candidate_ontology_id": null,
       "candidate_ontology_ids": [],
+      "estimator_selection_ids": [
+        "hw-ret-t"
+      ],
       "estimator_point_role": "unmapped",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -896,6 +947,9 @@
       "display_label": "PHWL-T",
       "candidate_ontology_id": null,
       "candidate_ontology_ids": [],
+      "estimator_selection_ids": [
+        "hw-sup-t"
+      ],
       "estimator_point_role": "unmapped",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -928,6 +982,9 @@
       "display_label": "RA-H",
       "candidate_ontology_id": null,
       "candidate_ontology_ids": [],
+      "estimator_selection_ids": [
+        "ra-rh"
+      ],
       "estimator_point_role": "return_air_humidity",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -975,6 +1032,9 @@
       "candidate_ontology_ids": [
         "return_air_temperature"
       ],
+      "estimator_selection_ids": [
+        "ra-temp"
+      ],
       "estimator_point_role": "return_air_temperature",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -1005,6 +1065,9 @@
       "display_label": "RAP-SP",
       "candidate_ontology_id": null,
       "candidate_ontology_ids": [],
+      "estimator_selection_ids": [
+        "ra-static"
+      ],
       "estimator_point_role": "return_air_pressure",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -1054,6 +1117,10 @@
       "candidate_ontology_ids": [
         "return_fan_command"
       ],
+      "estimator_selection_ids": [
+        "vfd-rf",
+        "rf-starter"
+      ],
       "estimator_point_role": "return_fan_command",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -1070,6 +1137,10 @@
       "candidate_ontology_id": "return_fan_command",
       "candidate_ontology_ids": [
         "return_fan_command"
+      ],
+      "estimator_selection_ids": [
+        "vfd-rf",
+        "rf-starter"
       ],
       "estimator_point_role": "return_fan_command",
       "equipment_family": "ahu",
@@ -1088,6 +1159,10 @@
       "candidate_ontology_ids": [
         "return_fan_command"
       ],
+      "estimator_selection_ids": [
+        "vfd-rf",
+        "rf-starter"
+      ],
       "estimator_point_role": "return_fan_command",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -1105,6 +1180,12 @@
       "candidate_ontology_ids": [
         "supplemental_heating_command"
       ],
+      "estimator_selection_ids": [
+        "rh-valve",
+        "rh-valve-2pos",
+        "rh-valve-incr",
+        "rh-elec-heat"
+      ],
       "estimator_point_role": "supplemental_heating_command",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -1121,6 +1202,9 @@
       "candidate_ontology_id": "supplemental_heating_command",
       "candidate_ontology_ids": [
         "supplemental_heating_command"
+      ],
+      "estimator_selection_ids": [
+        "rh-valve-position"
       ],
       "estimator_point_role": "supplemental_heating_command",
       "equipment_family": "ahu",
@@ -1338,6 +1422,10 @@
       "candidate_ontology_ids": [
         "supply_fan_command"
       ],
+      "estimator_selection_ids": [
+        "vfd-sf",
+        "sf-starter"
+      ],
       "estimator_point_role": "supply_fan_command",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -1372,6 +1460,10 @@
         "supply_fan_status",
         "supply_fan_command"
       ],
+      "estimator_selection_ids": [
+        "vfd-sf",
+        "sf-starter"
+      ],
       "estimator_point_role": "unmapped",
       "equipment_family": "ahu",
       "templates_seen_in": [
@@ -1389,6 +1481,10 @@
       "candidate_ontology_id": "supply_fan_status",
       "candidate_ontology_ids": [
         "supply_fan_status"
+      ],
+      "estimator_selection_ids": [
+        "vfd-sf",
+        "sf-starter"
       ],
       "estimator_point_role": "supply_fan_status",
       "equipment_family": "ahu",

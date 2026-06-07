@@ -43,6 +43,10 @@ function buildVisibilityKeys(rule: ProjectHubSystemTemplateVisibilityRule) {
   ]);
 }
 
+function buildSelectionIds(alias: TemplatePointAlias) {
+  return uniq(alias.estimator_selection_ids ?? []);
+}
+
 function buildLookupResult(alias: TemplatePointAlias | null, options: TemplatePointAliasLookupOptions = {}): TemplatePointAliasLookupResult {
   const templateIds = alias
     ? options.templateId
@@ -67,6 +71,7 @@ function buildLookupResult(alias: TemplatePointAlias | null, options: TemplatePo
     source_short_name: alias?.source_short_name ?? '',
     ontology_id: alias?.candidate_ontology_id ?? null,
     candidate_ontology_ids: alias?.candidate_ontology_ids ?? [],
+    estimator_selection_ids: alias ? buildSelectionIds(alias) : [],
     estimator_point_role: alias?.estimator_point_role ?? 'unmapped',
     confidence: alias?.confidence ?? 0,
     manual_review_required: alias?.manual_review_required ?? true,
@@ -95,6 +100,7 @@ export function getAliasForSourceShortName(
       source_short_name: sourceShortName,
       ontology_id: null,
       candidate_ontology_ids: [],
+      estimator_selection_ids: [],
       estimator_point_role: 'unmapped',
       confidence: 0,
       manual_review_required: true,
@@ -109,6 +115,7 @@ export function getAliasForSourceShortName(
       source_short_name: sourceShortName,
       ontology_id: null,
       candidate_ontology_ids: [],
+      estimator_selection_ids: [],
       estimator_point_role: 'unmapped',
       confidence: 0,
       manual_review_required: true,
@@ -131,6 +138,22 @@ export function getAliasesForOntologyId(
       alias.candidate_ontology_ids.some((candidate) => normalize(candidate) === normalized),
     options
   );
+}
+
+export function getAliasesForEstimatorSelectionId(
+  selectionId: string,
+  options: TemplatePointAliasLookupOptions = {}
+): TemplatePointAliasLookupResult[] {
+  const normalized = normalize(selectionId);
+  return filterAliases(
+    (alias) => buildSelectionIds(alias).some((candidate) => normalize(candidate) === normalized),
+    options
+  );
+}
+
+export function getVisibilityKeysForEstimatorSelectionId(selectionId: string, templateId?: string) {
+  const aliases = getAliasesForEstimatorSelectionId(selectionId, { templateId });
+  return uniq(aliases.flatMap((alias) => alias.visibility_keys.length ? alias.visibility_keys : [alias.source_short_name]));
 }
 
 export function getAliasesForTemplate(templateId: string, options: TemplatePointAliasLookupOptions = {}) {

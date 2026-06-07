@@ -54,6 +54,12 @@
               "type": "string"
             }
           },
+          "estimator_selection_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "estimator_point_role": {
             "type": "string"
           },

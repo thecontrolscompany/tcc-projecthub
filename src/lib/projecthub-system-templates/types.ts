@@ -128,6 +128,7 @@ export type ProjectHubTemplatePointAliasEntry = {
   display_label: string;
   candidate_ontology_id: string | null;
   candidate_ontology_ids: string[];
+  estimator_selection_ids?: string[];
   estimator_point_role: string;
   equipment_family: string;
   templates_seen_in: string[];
@@ -157,6 +158,7 @@ export type TemplatePointAliasLookupResult = {
   source_short_name: string;
   ontology_id: string | null;
   candidate_ontology_ids: string[];
+  estimator_selection_ids: string[];
   estimator_point_role: TemplatePointAliasRole;
   confidence: TemplatePointAliasConfidence;
   manual_review_required: boolean;

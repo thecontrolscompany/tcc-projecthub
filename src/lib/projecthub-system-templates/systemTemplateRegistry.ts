@@ -4,7 +4,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import registryData from '@/data/projecthub/system-templates/projecthub_system_template_registry.json';
+import cleanupRulesData from '@/data/projecthub/system-templates/projecthub_template_cleanup_rules.json';
 import type {
+  ProjectHubSystemTemplateCleanupConfig,
+  ProjectHubSystemTemplateCleanupRule,
   ProjectHubSystemTemplateMatchResult,
   ProjectHubSystemTemplatePointManifestEntry,
   ProjectHubSystemTemplatePointManifestFile,
@@ -16,6 +19,7 @@ import type {
 
 const WORKSPACE_ROOT = process.cwd();
 const REGISTRY = registryData as unknown as ProjectHubSystemTemplateRegistryFile;
+const CLEANUP_RULES = cleanupRulesData as unknown as ProjectHubSystemTemplateCleanupConfig;
 
 const VIRTUAL_ASSET_ROOT = '/api/system-template-preview/assets';
 const DEFAULT_TEMPLATE_ID = 'mixed_air_single_duct';
@@ -107,6 +111,26 @@ export function getTemplateVisibilityRules(templateId: string): ProjectHubSystem
 
   const manifest = readJsonFile<ProjectHubSystemTemplateVisibilityManifestFile>(manifestPath);
   return manifest?.rules?.length ? manifest.rules : null;
+}
+
+export function getTemplateCleanupRules(templateId: string): ProjectHubSystemTemplateCleanupRule[] {
+  const normalizedTemplateId = normalizeSystemType(templateId);
+  const override = CLEANUP_RULES.template_overrides?.find((entry) => normalizeSystemType(entry.template_id) === normalizedTemplateId);
+  const enabledRuleIds = override?.rule_ids ?? CLEANUP_RULES.rules.map((rule) => rule.rule_id);
+
+  return CLEANUP_RULES.rules.filter((rule) => {
+    if (rule.template_ids?.length && !rule.template_ids.map(normalizeSystemType).includes(normalizedTemplateId)) {
+      return false;
+    }
+    if (rule.exclude_template_ids?.length && rule.exclude_template_ids.map(normalizeSystemType).includes(normalizedTemplateId)) {
+      return false;
+    }
+    return enabledRuleIds.includes(rule.rule_id);
+  });
+}
+
+export function getCleanupConfig() {
+  return CLEANUP_RULES;
 }
 
 export function getTemplateManifestFile(templateId: string): ProjectHubSystemTemplatePointManifestFile | null {

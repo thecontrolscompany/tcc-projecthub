@@ -4,11 +4,18 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import type {
+  ProjectHubSystemTemplateCleanupRule,
   ProjectHubSystemTemplatePointManifestEntry,
   ProjectHubTemplatePointAliasEntry,
   ProjectHubSystemTemplateRegistryEntry,
   ProjectHubSystemTemplateVisibilityRule,
-} from '@/lib/projecthub-system-templates';
+} from '@/lib/projecthub-system-templates/types';
+import {
+  appendSelectionIds,
+  collectCleanupNodes,
+  collectRuleNodes,
+  installTemplateCleanupObserver,
+} from '@/lib/projecthub-system-templates/templateCleanup';
 
 type SystemTemplatePreviewProps = {
   template: ProjectHubSystemTemplateRegistryEntry;
@@ -16,6 +23,7 @@ type SystemTemplatePreviewProps = {
   pointAliases: ProjectHubTemplatePointAliasEntry[];
   pointManifest: ProjectHubSystemTemplatePointManifestEntry[];
   visibilityRules: ProjectHubSystemTemplateVisibilityRule[];
+  cleanupRules: ProjectHubSystemTemplateCleanupRule[];
   svgMarkup: string;
   assetBaseUrl: string;
 };
@@ -38,62 +46,13 @@ function getSelectionId(rule: ProjectHubSystemTemplateVisibilityRule) {
   return rule.ontology_id || rule.source_short_name;
 }
 
-function addMatchedNodes(root: ParentNode, selector: string, nodes: Set<Element>) {
-  root.querySelectorAll(selector).forEach((node) => nodes.add(node));
-}
-
-function collectRuleNodes(root: ParentNode, rule: ProjectHubSystemTemplateVisibilityRule) {
-  const nodes = new Set<Element>();
-
-  rule.label_group_ids.forEach((id) => {
-    const node = document.getElementById(id);
-    if (node) nodes.add(node);
-  });
-
-  rule.device_group_ids.forEach((id) => {
-    const node = document.getElementById(id);
-    if (node) nodes.add(node);
-  });
-
-  rule.value_group_ids?.forEach((id) => {
-    const node = document.getElementById(id);
-    if (node) nodes.add(node);
-  });
-
-  rule.related_node_ids?.forEach((id) => {
-    const node = document.getElementById(id);
-    if (node) nodes.add(node);
-  });
-
-  rule.image_selectors.forEach((selector) => addMatchedNodes(root, selector, nodes));
-  rule.fallback_selectors.forEach((selector) => addMatchedNodes(root, selector, nodes));
-
-  const sourceShortName = rule.source_short_name.replace(/"/g, '\\"');
-  addMatchedNodes(
-    root,
-    `g[data-filter="${sourceShortName}"], g[short-name="${sourceShortName}"]`,
-    nodes
-  );
-  addMatchedNodes(
-    root,
-    `use[key-data-attr*="pointShortName':'${sourceShortName}'"]`,
-    nodes
-  );
-  addMatchedNodes(
-    root,
-    `use[key-data-attr*="pointShortName:\\"${sourceShortName}\\""]`,
-    nodes
-  );
-
-  return nodes;
-}
-
 export function SystemTemplatePreview({
   template,
   availableTemplates,
   pointAliases,
   pointManifest,
   visibilityRules,
+  cleanupRules,
   svgMarkup,
   assetBaseUrl,
 }: SystemTemplatePreviewProps) {
@@ -105,6 +64,7 @@ export function SystemTemplatePreview({
   const [selectedRuleIds, setSelectedRuleIds] = useState<Set<string>>(
     () => new Set(visibilityRules.map((rule) => rule.ontology_id || rule.source_short_name))
   );
+  const [showImportedDashboardPanels, setShowImportedDashboardPanels] = useState(false);
   const [activeSelectionId, setActiveSelectionId] = useState<string>(
     () => visibilityRules[0]?.ontology_id || visibilityRules[0]?.source_short_name || ''
   );
@@ -119,6 +79,7 @@ export function SystemTemplatePreview({
     setActiveSelectionId(visibilityRules[0]?.ontology_id || visibilityRules[0]?.source_short_name || '');
     setQuery('');
     setHighlightMode('highlight');
+    setShowImportedDashboardPanels(false);
   }, [template.template_id, visibilityRules]);
 
   const visibilityOptions = useMemo(() => {
@@ -148,6 +109,15 @@ export function SystemTemplatePreview({
     );
   }, [query, visibilityOptions]);
 
+  const visibleNotes = useMemo(() => {
+    return template.notes.flatMap((note) => {
+      if (/source file:/i.test(note) || /program files/i.test(note) || /programdata/i.test(note)) {
+        return ['Private source reference retained in debug metadata.'];
+      }
+      return [note];
+    });
+  }, [template.notes]);
+
   useEffect(() => {
     const root = document.getElementById('system-template-preview-canvas');
     if (!root) return;
@@ -174,6 +144,7 @@ export function SystemTemplatePreview({
 
         node.setAttribute('data-template-selection-id', selectionId);
         node.setAttribute('data-template-source-short-name', rule.source_short_name);
+        appendSelectionIds(node, selectionId);
         styledNode.style.transition = 'opacity 120ms ease, filter 120ms ease';
       });
     });
@@ -203,7 +174,28 @@ export function SystemTemplatePreview({
             ? 'none'
             : 'grayscale(1) saturate(0.35)';
     });
-  }, [highlightMode, renderVersion, selectedRuleIds, visibilityRules]);
+
+    const cleanupTargets = new Set<Element>();
+    cleanupRules.forEach((rule) => {
+      if (rule.mode !== 'hide') return;
+      collectCleanupNodes(root, rule).forEach((node) => cleanupTargets.add(node));
+    });
+
+    cleanupTargets.forEach((node) => {
+      const styledNode = node as SVGElement | HTMLElement;
+      node.setAttribute('data-template-cleanup-hidden', String(!showImportedDashboardPanels));
+      styledNode.style.display = showImportedDashboardPanels ? '' : 'none';
+      styledNode.style.opacity = showImportedDashboardPanels ? '1' : '0';
+      styledNode.style.pointerEvents = showImportedDashboardPanels ? '' : 'none';
+    });
+
+    const cleanupObserver = installTemplateCleanupObserver(root, cleanupRules, {
+      revealCleanupNodes: showImportedDashboardPanels,
+      hideUnlinkedPointGroups: true,
+    });
+
+    return cleanupObserver;
+  }, [cleanupRules, highlightMode, renderVersion, selectedRuleIds, showImportedDashboardPanels, visibilityRules]);
 
   useEffect(() => {
     const root = document.getElementById('system-template-preview-canvas');
@@ -348,6 +340,17 @@ export function SystemTemplatePreview({
                 >
                   Hide
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setShowImportedDashboardPanels((current) => !current)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                    showImportedDashboardPanels
+                      ? 'bg-cyan-400 text-slate-950'
+                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                  }`}
+                >
+                  Show imported dashboard panels
+                </button>
               </div>
             </div>
 
@@ -363,6 +366,14 @@ export function SystemTemplatePreview({
                 dangerouslySetInnerHTML={{ __html: svgMarkup }}
               />
               <style jsx global>{`
+                .projecthub-template-cleanup-hidden,
+                .projecthub-template-cleanup-hidden * {
+                  display: none !important;
+                  opacity: 0 !important;
+                  pointer-events: none !important;
+                  visibility: hidden !important;
+                }
+
                 #system-template-preview-canvas .template-root svg text,
                 #system-template-preview-canvas .template-root svg tspan {
                   fill: #e2e8f0 !important;
@@ -376,6 +387,11 @@ export function SystemTemplatePreview({
 
                 #system-template-preview-canvas .template-root svg .graphics-point-label {
                   fill: #f8fafc !important;
+                }
+
+                #system-template-preview-canvas .template-root svg .graphics-point-notfound,
+                #system-template-preview-canvas .template-root svg [id^='notFound'] {
+                  display: none !important;
                 }
               `}</style>
             </div>
@@ -486,15 +502,15 @@ export function SystemTemplatePreview({
                         {alias ? String(alias.manual_review_required) : 'unknown'}
                       </div>
                       <div>
-                        <span className="text-slate-400">Alias role:</span>{' '}
+                        <span className="text-slate-400">Mapping role:</span>{' '}
                         {alias?.estimator_point_role || 'n/a'}
                       </div>
                       <div>
-                        <span className="text-slate-400">Alias confidence:</span>{' '}
+                        <span className="text-slate-400">Mapping confidence:</span>{' '}
                         {alias ? alias.confidence.toFixed(2) : 'n/a'}
                       </div>
                       <div>
-                        <span className="text-slate-400">Alias ontology:</span>{' '}
+                        <span className="text-slate-400">Candidate ontology:</span>{' '}
                         {alias?.candidate_ontology_id || 'n/a'}
                       </div>
                     </div>
@@ -505,7 +521,7 @@ export function SystemTemplatePreview({
               <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4 text-xs text-slate-300">
                 <div className="mb-2 font-semibold uppercase tracking-[0.18em] text-slate-400">Notes</div>
                 <ul className="space-y-2 leading-5">
-                  {template.notes.map((note) => (
+                  {visibleNotes.map((note) => (
                     <li key={note}>- {note}</li>
                   ))}
                 </ul>
