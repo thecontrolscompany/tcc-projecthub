@@ -17,6 +17,26 @@
 
 # debug
 npm-debug.log*
+/chrome-debug.log
+/dev-*.log
+/patch_response.json
+/response.json
+/*_b64.txt
+/MixedAirSingleDuct.renderable.html
+
+# deferred generated template bundles
+/tools/template-import/output/normalized-system-templates/*
+!/tools/template-import/output/normalized-system-templates/mixed_air_single_duct/
+/tools/template-import/output/normalized-system-templates/mixed_air_single_duct/*
+!/tools/template-import/output/normalized-system-templates/mixed_air_single_duct/normalized_template.html
+!/tools/template-import/output/normalized-system-templates/mixed_air_single_duct/point_manifest.json
+!/tools/template-import/output/normalized-system-templates/mixed_air_single_duct/point_visibility.json
+!/tools/template-import/output/normalized-system-templates/mixed_air_single_duct/assets/
+!/tools/template-import/output/normalized-system-templates/mixed_air_single_duct/assets/**
+
+# deferred symbol renderer asset outputs
+/public/projecthub/symbols/
+/tools/symbol-import/output/
 
 # typescript
 *.tsbuildinfo
