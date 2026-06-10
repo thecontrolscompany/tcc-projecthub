@@ -6,7 +6,7 @@
  */
 
 import { buildItemsWithComps, calcEstimate } from "../estimateCalc.js";
-import { DEFAULT_SETTINGS, computeCosts } from "../projectSettings.js";
+import { DEFAULT_SETTINGS, computeCosts, getEstimateScopeModeLabel, normalizeEstimateScopeMode } from "../projectSettings.js";
 
 const TEMPLATE_PATH = "/report-assets/proposal-template.html";
 const LOGO_PATH = "/report-assets/logo.png";
@@ -33,6 +33,21 @@ const todayStr = () =>
   });
 
 const isoDateStr = () => new Date().toISOString().slice(0, 10);
+
+const SCOPE_MODE_META = {
+  installation: {
+    label: "Installation",
+    intro: "HVAC controls installation",
+  },
+  controls: {
+    label: "Controls",
+    intro: "full HVAC controls scope",
+  },
+  both: {
+    label: "Installation and Controls",
+    intro: "HVAC controls installation and full controls scope",
+  },
+};
 
 function sanitizeFileName(value) {
   return String(value || "proposal")
@@ -104,9 +119,7 @@ function formatEstimateDate(value) {
 }
 
 function getScopeIntro(estimate) {
-  return estimate.name
-    ? `the ${estimate.name} HVAC controls installation`
-    : "the HVAC controls installation";
+  return estimate.name ? estimate.name : "the project described below";
 }
 
 function getAlternateProjectTitle(alternate) {
@@ -301,30 +314,42 @@ function getProposalScopeHtml(settings) {
 }
 
 function getClarificationItems(settings) {
-  return [
+  const mode = normalizeEstimateScopeMode(settings?.estimateScopeMode);
+  const items = [
     "This proposal shall be incorporated into any final contract terms and conditions.",
     "Pricing is based on normal working hours (Monday through Friday). No overtime labor is included in the pricing above.",
     "Overtime policy:",
     "If an accurate construction schedule is provided at contract execution, TCC will absorb any required overtime to meet contractual milestones.",
     "If no accurate schedule is provided, overtime will be billed at 1.5× the burdened labor rate and will be executed only with an approved change order.",
-    "All concealed but accessible wiring shall be installed using plenum-rated cable, following proper installation techniques in a neat and workmanlike manner.",
-    "All exposed or inaccessible wiring shall be installed in EMT conduit.",
-    "Communication wiring between units may be installed using metallic-armored cable (MC) where permitted by the project specifications.",
     "The Controls Company reserves the right to withdraw or revise this proposal in the event of a substantial change in scope.",
-    "Any controls devices provided by others must be delivered to the site and ready for installation prior to TCC's scheduled mobilization.",
-    "Installation labor for controls devices furnished by others; conduit, control and communication wiring; incidental installation material; device mounting and terminations; and normal field coordination required to complete the physical controls installation scope.",
-  ].filter(item => !(isEmtBid(settings) && /plenum-rated cable/i.test(item)));
+  ];
+
+  if (mode === "installation" || mode === "both") {
+    items.push(
+      "All concealed but accessible wiring shall be installed using plenum-rated cable, following proper installation techniques in a neat and workmanlike manner.",
+      "All exposed or inaccessible wiring shall be installed in EMT conduit.",
+      "Communication wiring between units may be installed using metallic-armored cable (MC) where permitted by the project specifications.",
+      "Any controls devices provided by others must be delivered to the site and ready for installation prior to TCC's scheduled mobilization.",
+      "Installation labor for controls devices furnished by others; conduit, control and communication wiring; incidental installation material; device mounting and terminations; and normal field coordination required to complete the physical controls installation scope.",
+    );
+  }
+
+  if (mode === "controls" || mode === "both") {
+    items.push(
+      "Full controls scope includes controllers, panel hardware, enclosure components, control programming, graphics, startup, commissioning support, operator training, and related engineering unless specifically noted otherwise.",
+      "Controls hardware, software, network interfaces, and related documentation will be furnished and coordinated as part of the controls scope unless specifically excluded elsewhere in the proposal.",
+    );
+  }
+
+  return items.filter((item) => !(isEmtBid(settings) && /plenum-rated cable/i.test(item)));
 }
 
-function getExclusionItems() {
-  return [
+function getExclusionItems(settings) {
+  const mode = normalizeEstimateScopeMode(settings?.estimateScopeMode);
+  const items = [
     "All HVAC equipment, VFDs, motor starters, and disconnects not specifically listed in the scope above are by others.",
     "120VAC power wiring to all DDC panels is by the electrical contractor.",
-    "All field devices, including control valves, flow meters, sensors, immersion wells, airflow measuring stations, dampers, and actuators not specifically listed in the scope above, are furnished by others and installed by others unless noted.",
-    "All controls devices, supervisory hardware, enclosure components, and software licenses are by others.",
-    "Programming, graphics, as-built drawings, operator training, startup, commissioning, and TAB support are by others.",
     "Smoke detectors, smoke dampers, combination fire/smoke dampers, fire dampers, and associated actuators and wiring are by others.",
-    "Operator workstation hardware and software are excluded.",
     "After-hour, weekend, or holiday work.",
     "Any 120V power wiring not specifically included above.",
     "Network data drops and IT infrastructure unless noted in the scope above.",
@@ -332,6 +357,30 @@ function getExclusionItems() {
     "Demolition not specifically listed in the scope above.",
     "Additional LEED documentation or third-party commissioning hours incur additional cost.",
   ];
+
+  if (mode === "installation") {
+    items.unshift(
+      "All controls devices, supervisory hardware, enclosure components, software licenses, programming, graphics, startup, commissioning, operator training, and related engineering are by others unless specifically noted.",
+      "All field devices, including control valves, flow meters, sensors, immersion wells, airflow measuring stations, dampers, and actuators not specifically listed in the scope above, are furnished by others and installed by others unless noted.",
+    );
+  }
+
+  if (mode === "controls") {
+    items.unshift(
+      "Physical installation labor for controls devices, conduit, control wiring, communication wiring, and mounting of field devices not specifically included in the controls scope is by others unless noted.",
+      "Any field devices, dampers, valves, and associated installation labor not specifically listed in the scope above are furnished and installed by others unless noted.",
+    );
+  }
+
+  if (mode === "both") {
+    items.splice(
+      2,
+      0,
+      "All field devices, including control valves, flow meters, sensors, immersion wells, airflow measuring stations, dampers, actuators, controllers, supervisory hardware, and software licenses not specifically listed in the scope above are by others unless noted.",
+    );
+  }
+
+  return items;
 }
 
 const TYPE_SCOPE_LABELS = {
@@ -374,19 +423,30 @@ function normalizeAlternates(estimate) {
     .filter(Boolean);
 }
 
-function renderPricingTable(baseScopeName, grandTotal, totalBond, alternates = []) {
-  const baseRows = [
-    `
+function renderPricingTable({ scopeMode, installationTotal, controlsTotal, totalAmount, totalBond, alternates = [] }) {
+  const baseRows = [];
+
+  if (scopeMode === "installation" || scopeMode === "both") {
+    baseRows.push(`
           <tr>
-            <td>${esc(baseScopeName)}</td>
-            <td class="cell-number">${fmtMoney(grandTotal)}</td>
-          </tr>`,
-    `
+            <td><strong>Installation subtotal</strong></td>
+            <td class="cell-number">${fmtMoney(installationTotal)}</td>
+          </tr>`);
+  }
+
+  if (scopeMode === "controls" || scopeMode === "both") {
+    baseRows.push(`
+          <tr>
+            <td><strong>Controls subtotal</strong></td>
+            <td class="cell-number">${fmtMoney(controlsTotal)}</td>
+          </tr>`);
+  }
+
+  baseRows.push(`
           <tr class="row-bond">
             <td><strong>Optional performance and payment bond</strong></td>
             <td class="cell-number">add ${fmtMoney(totalBond || 0)}</td>
-          </tr>`,
-  ];
+          </tr>`);
 
   const alternateRows = alternates.flatMap((alternate) => {
     const alternateTotal = Number(alternate.total || 0);
@@ -405,8 +465,15 @@ function renderPricingTable(baseScopeName, grandTotal, totalBond, alternates = [
     ];
   });
 
-  const totalPrice = [grandTotal || 0, totalBond || 0, ...alternates.map((alternate) => Number(alternate.total || 0) + Number(alternate.bond || 0))]
+  const totalPrice = [totalAmount || 0, totalBond || 0, ...alternates.map((alternate) => Number(alternate.total || 0) + Number(alternate.bond || 0))]
     .reduce((sum, value) => sum + value, 0);
+
+  const totalLabel =
+    scopeMode === "controls"
+      ? "TOTAL CONTROLS ONLY PRICE"
+      : scopeMode === "both"
+      ? "TOTAL TURNKEY PRICE"
+        : "TOTAL INSTALL ONLY PRICE";
 
   return `
       <table>
@@ -420,7 +487,7 @@ function renderPricingTable(baseScopeName, grandTotal, totalBond, alternates = [
 ${baseRows.join("\n")}
 ${alternateRows.join("\n")}
           <tr class="row-total">
-            <td><strong>TOTAL PRICE</strong></td>
+            <td><strong>${totalLabel}</strong></td>
             <td class="cell-number"><strong>${fmtMoney(totalPrice)}</strong></td>
           </tr>
         </tbody>
@@ -443,6 +510,8 @@ function renderAlternateScopeSections(alternates, scopeMode) {
       settings: alternateSettings,
     };
     const alternateScopeMode = alternateSettings.proposalScopeMode === "detailed" ? "detailed" : scopeMode;
+    const alternateEstimateScopeMode = normalizeEstimateScopeMode(alternateSettings.estimateScopeMode);
+    const alternateEstimateScopeMeta = SCOPE_MODE_META[alternateEstimateScopeMode] || SCOPE_MODE_META.installation;
     const useCustomerScope = Boolean(alternateSettings.useCustomerScope && String(alternateSettings.customerScope || "").trim());
     const alternateScope = useCustomerScope
       ? getProposalScopeHtml(alternateSettings)
@@ -453,7 +522,7 @@ function renderAlternateScopeSections(alternates, scopeMode) {
 
     return `
       <div class="section" style="margin-top:20px;">
-        <h2>Scope Of Work - ${esc(projectTitle)}</h2>
+        <h2>Scope Of Work - ${esc(alternateEstimateScopeMeta.label)} ${esc(projectTitle)}</h2>
       </div>
       <div class="callout" style="margin-top:12px;">
         ${alternate.description ? `<div style="margin-bottom:6px; color:var(--muted); font-size:12px;">${esc(alternate.description)}</div>` : ""}
@@ -578,9 +647,17 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   const projectName = estimate.name || "Proposal";
   const versionSuffix = getVersionSuffix(estimate);
   const installedTotal = grandTotal || 0;
-  const totalBond = bondAmount || installedTotal * BOND_RATE;
+  const controlsTotal = Number(settings.controlsSubtotal || 0) || 0;
   const scopeMode = settings.proposalScopeMode === "detailed" ? "detailed" : "brief";
-  const baseScopeName = String(settings.baseScopeName || "Scope").trim() || "Scope";
+  const estimateScopeMode = normalizeEstimateScopeMode(settings.estimateScopeMode);
+  const estimateScopeLabel = getEstimateScopeModeLabel(estimateScopeMode);
+  const totalAmount =
+    estimateScopeMode === "controls"
+      ? controlsTotal
+      : estimateScopeMode === "both"
+        ? installedTotal + controlsTotal
+        : installedTotal;
+  const totalBond = totalAmount > 0 ? totalAmount * BOND_RATE : bondAmount || 0;
   const useCustomerScope = Boolean(settings.useCustomerScope && String(settings.customerScope || "").trim());
   const scopeHtml = useCustomerScope
     ? getProposalScopeHtml(settings)
@@ -604,10 +681,17 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
       bond: displayTotal * BOND_RATE,
     };
   });
-  const pricingHtml = renderPricingTable(baseScopeName, installedTotal, totalBond, alternates);
+  const pricingHtml = renderPricingTable({
+    scopeMode: estimateScopeMode,
+    installationTotal: installedTotal,
+    controlsTotal,
+    totalAmount,
+    totalBond,
+    alternates,
+  });
   const alternateScopeHtml = renderAlternateScopeSections(alternates, scopeMode);
   const clarificationHtml = renderBulletBlock(getClarificationItems(settings));
-  const exclusionHtml = renderBulletBlock(getExclusionItems());
+  const exclusionHtml = renderBulletBlock(getExclusionItems(settings));
 
   const tokens = {
     PAGE_HEADER_PROJECT: `${projectName} | HVAC Controls Estimate`,
@@ -618,12 +702,12 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
     DRAWING_BASIS: getDrawingBasis(settings),
     ESTIMATE_DATE: formatEstimateDate(settings.estimateDate),
     SCOPE_INTRO: getScopeIntro(estimate),
-    BASE_SCOPE_TITLE: `Scope Of Work - ${baseScopeName}`,
-    SECTION_1_LABEL: baseScopeName,
-    SECTION_1_PRICE: fmtMoney(installedTotal),
+    BASE_SCOPE_TITLE: `Scope Of Work - ${estimateScopeLabel}`,
+    SECTION_1_LABEL: estimateScopeLabel,
+    SECTION_1_PRICE: fmtMoney(totalAmount),
     SECTION_1_BOND: fmtMoney(totalBond),
-    GRAND_TOTAL: fmtMoney(installedTotal),
-    GRAND_TOTAL_WITH_BOND: fmtMoney(installedTotal + totalBond),
+    GRAND_TOTAL: fmtMoney(totalAmount),
+    GRAND_TOTAL_WITH_BOND: fmtMoney(totalAmount + totalBond),
     CLARIFICATIONS_HTML: clarificationHtml,
     EXCLUSIONS_HTML: exclusionHtml,
   };

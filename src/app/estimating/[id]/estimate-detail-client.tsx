@@ -11,7 +11,7 @@ import ConduitFillPage from "@/modules/hvac-estimator/components/conduitFill/Con
 import { ProjectSettingsPanel } from "@/modules/hvac-estimator/components/estimate/ProjectSettingsPanel";
 import { ProposalDetailsModal } from "@/modules/hvac-estimator/components/estimate/ProposalDetailsModal";
 import { BidAlternateEditor } from "@/modules/hvac-estimator/components/estimate/BidAlternateEditor";
-import { computeCosts, DEFAULT_SETTINGS } from "@/modules/hvac-estimator/components/estimate/projectSettings";
+import { computeCosts, DEFAULT_SETTINGS, getEstimateScopeModeLabel, normalizeEstimateScopeMode } from "@/modules/hvac-estimator/components/estimate/projectSettings";
 import { applyAhuDefaultSelections, getVisibleAhuComponents, normalizeAhuCfg } from "@/modules/hvac-estimator/components/ahu/ahuData";
 import { applyDxDefaultSelections, getVisibleDxComponents, normalizeDxCfg } from "@/modules/hvac-estimator/components/dx/dxData";
 import { applyFcuDefaultSelections, getVisibleFcuComponents, normalizeFcuCfg } from "@/modules/hvac-estimator/components/fcu/fcuData";
@@ -432,7 +432,7 @@ export function EstimateDetailClient({ estimate }: Props) {
     asString(body.platformContext?.organizationId) ||
     asString(body.platformContext?.organization_id);
   const rawTotals = useMemo(() => calcEstimate(body) as { mtl: number; lbrHrs: number }, [body]);
-  const costs = useMemo(
+  const installationCosts = useMemo(
     () =>
       computeCosts(rawTotals.mtl, rawTotals.lbrHrs, body.settings, body.items) as {
         labor: number;
@@ -444,6 +444,20 @@ export function EstimateDetailClient({ estimate }: Props) {
       },
     [body, rawTotals.lbrHrs, rawTotals.mtl],
   );
+  const estimateScopeMode = normalizeEstimateScopeMode(body.settings.estimateScopeMode);
+  const controlsSubtotal = Number(body.settings.controlsSubtotal || 0) || 0;
+  const totalAmount =
+    estimateScopeMode === "controls"
+      ? controlsSubtotal
+      : estimateScopeMode === "both"
+        ? installationCosts.total + controlsSubtotal
+        : installationCosts.total;
+  const costs = {
+    ...installationCosts,
+    controlsSubtotal,
+    total: totalAmount,
+    bond: totalAmount * 0.04,
+  };
 
   const addFormComponents = getVisibleComponentsForType(addForm.type, addForm.cfg);
   const addFormGraphicsSource = useMemo(
@@ -838,17 +852,25 @@ export function EstimateDetailClient({ estimate }: Props) {
                   Platform-native pricing using the migrated HVAC Estimator cost model.
                 </p>
               </div>
-              <span className="rounded-full bg-surface-overlay px-3 py-1 text-xs font-medium text-text-secondary">
-                {status.replace(/_/g, " ")}
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-brand-primary/20 bg-brand-subtle px-3 py-1 text-xs font-semibold text-brand-primary">
+                  {getEstimateScopeModeLabel(estimateScopeMode)}
+                </span>
+                <span className="rounded-full bg-surface-overlay px-3 py-1 text-xs font-medium text-text-secondary">
+                  {status.replace(/_/g, " ")}
+                </span>
+              </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-5">
+            <div className={`grid gap-3 ${controlsSubtotal > 0 && estimateScopeMode !== "installation" ? "sm:grid-cols-6" : "sm:grid-cols-5"}`}>
               <SummaryMetric label="Material" value={formatCurrency(costs.material)} />
               <SummaryMetric label="Labor" value={formatCurrency(costs.labor)} />
               <SummaryMetric label="Overhead" value={formatCurrency(costs.overhead)} />
               <SummaryMetric label="Profit" value={formatCurrency(costs.profit)} />
-              <SummaryMetric label="Sell Price" value={formatCurrency(costs.total)} emphasized />
+              {controlsSubtotal > 0 && estimateScopeMode !== "installation" && (
+                <SummaryMetric label="Controls Add-On" value={formatCurrency(controlsSubtotal)} />
+              )}
+              <SummaryMetric label={`${getEstimateScopeModeLabel(estimateScopeMode)} Price`} value={formatCurrency(costs.total)} emphasized />
             </div>
           </section>
 
@@ -1297,12 +1319,15 @@ export function EstimateDetailClient({ estimate }: Props) {
           </section>
 
           <section className="rounded-2xl border border-border-default bg-surface-raised p-5">
-            <h2 className="text-lg font-semibold text-text-primary">Raw Inputs</h2>
+            <h2 className="text-lg font-semibold text-text-primary">Calculation Inputs</h2>
             <dl className="mt-4 space-y-3 text-sm">
               <SummaryRow label="Raw material" value={formatCurrency(rawTotals.mtl)} />
               <SummaryRow label="Raw labor hours" value={formatNumber(rawTotals.lbrHrs)} />
               <SummaryRow label="Bond" value={formatCurrency(costs.bond)} />
-              <SummaryRow label="Margin %" value={formatPercent(costs.total > 0 ? costs.profit / costs.total : null)} />
+              <SummaryRow
+                label="Margin %"
+                value={formatPercent(estimateScopeMode === "installation" && costs.total > 0 ? costs.profit / costs.total : null)}
+              />
             </dl>
           </section>
 

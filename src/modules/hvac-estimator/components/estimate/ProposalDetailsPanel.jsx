@@ -1,7 +1,9 @@
 import { T } from "../../shared/tokens.js";
+import { ESTIMATE_SCOPE_MODES, getEstimateScopeModeLabel, normalizeEstimateScopeMode } from "./projectSettings.js";
 
 export function ProposalDetailsPanel({ settings, onChange }) {
   const S = settings;
+  const estimateScopeMode = normalizeEstimateScopeMode(S.estimateScopeMode);
 
   const textField = (key, label, placeholder = "") => (
     <label style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -112,6 +114,9 @@ export function ProposalDetailsPanel({ settings, onChange }) {
       <div style={{ fontSize: 10, color: T.muted }}>
         Used in the exported customer proposal.
       </div>
+      <div style={{ fontSize: 11, color: T.text, background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 6, padding: "6px 8px" }}>
+        Current quote version: <strong>{getEstimateScopeModeLabel(S.estimateScopeMode)}</strong>
+      </div>
       {S.customerScopeImport && (
         <div
           style={{
@@ -129,12 +134,77 @@ export function ProposalDetailsPanel({ settings, onChange }) {
       )}
       {selectField(
         "proposalScopeMode",
-        "Proposal Scope",
+        "Proposal Detail",
         [
           { value: "brief", label: "Brief" },
           { value: "detailed", label: "Detailed" },
         ],
-        "Brief shows tags and quantities only. Detailed includes the selected components for each system.",
+        "Brief shows a short summary. Detailed spells out selected components.",
+      )}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <span style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1 }}>
+          Bid Version
+        </span>
+        <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
+          {ESTIMATE_SCOPE_MODES.map((mode) => {
+            const checked = normalizeEstimateScopeMode(S.estimateScopeMode) === mode.id;
+            return (
+              <label
+                key={mode.id}
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "flex-start",
+                  cursor: "pointer",
+                  border: `1px solid ${checked ? "#2563EB" : T.border2}`,
+                  background: checked ? "#EFF6FF" : T.bg,
+                  borderRadius: 6,
+                  padding: "8px 10px",
+                }}
+              >
+                <input
+                  type="radio"
+                  name="estimateScopeMode"
+                  checked={checked}
+                  onChange={() => onChange({ estimateScopeMode: mode.id })}
+                  style={{ marginTop: 2, accentColor: T.blue, cursor: "pointer" }}
+                />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 12, color: T.text, fontFamily: T.mono }}>{mode.label}</div>
+                  <div style={{ fontSize: 10, color: T.muted, lineHeight: 1.4 }}>{mode.description}</div>
+                </div>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+      {estimateScopeMode !== "installation" && (
+        <label style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <span style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1 }}>
+            Controls Price
+          </span>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={Number(S.controlsSubtotal || 0)}
+            onChange={(e) => onChange({ controlsSubtotal: Number.parseFloat(e.target.value) || 0 })}
+            placeholder="Controls-only price"
+            style={{
+              padding: "5px 8px",
+              border: "1px solid " + T.border2,
+              borderRadius: 4,
+              fontSize: 12,
+              background: T.bg,
+              color: T.text,
+              outline: "none",
+              fontFamily: T.mono,
+            }}
+          />
+          <div style={{ fontSize: 10, color: T.dim }}>
+            Enter the controls price to keep it separate from the installation price.
+          </div>
+        </label>
       )}
       {textField("baseScopeName", "Base Scope Name", "Scope")}
       <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}>
