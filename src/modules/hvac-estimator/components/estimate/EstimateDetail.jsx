@@ -4,7 +4,7 @@ import { generateProposal } from "./export/generateProposal.js";
 import { generateInternalEstimateExport } from "./export/generateInternalEstimateExport.js";
 import { T } from "../../shared/tokens.js";
 import { fmt$, fmtHr } from "../../shared/utils.js";
-import { DEFAULT_SETTINGS, computeCosts } from "./projectSettings.js";
+import { DEFAULT_SETTINGS, computeCosts, getEstimateScopeModeLabel } from "./projectSettings.js";
 import { useEstimate } from "../../shared/EstimateContext.jsx";
 import { getCurrentUser } from "../../shared/currentUser.js";
 import { AHU_TYPES } from "../ahu/ahuData.js";
@@ -95,8 +95,8 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     });
   }, [estimate, onUpdate]);
 
-  const createBidAlternate = useCallback(() => {
-    const defaultName = `Bid Alternate ${alternates.length + 1}`;
+  const createBidAlternate = useCallback((scopeMode = "installation", defaultPrefix = "Bid Alternate") => {
+    const defaultName = `${defaultPrefix} ${alternates.length + 1}`;
     const entered = window.prompt("Name this bid alternate", defaultName);
     const name = String(entered || "").trim();
     if (!name) return;
@@ -104,7 +104,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     const next = {
       id: crypto.randomUUID(),
       name,
-      settings: { ...(estimate.settings || {}) },
+      settings: { ...(estimate.settings || {}), estimateScopeMode: scopeMode },
       items: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -112,7 +112,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
 
     updateAlternates([...alternates, next]);
     setSubPage({ type: "alternate", alternateId: next.id });
-  }, [alternates, setSubPage, updateAlternates]);
+  }, [alternates, estimate.settings, setSubPage, updateAlternates]);
 
   const openBidAlternate = useCallback((alternateId) => {
     setSubPage({ type: "alternate", alternateId });
@@ -306,13 +306,23 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                 />
                 <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
                   {showBidAlternates && (
-                    <button onClick={createBidAlternate}
+                    <button onClick={() => createBidAlternate("installation", "Bid Alternate")}
                       title="Create a new bid alternate"
                       style={{ padding:"7px 10px", border:"1px solid "+T.green,
                         borderRadius:5, background:T.greenFaint || "#F0FDF4",
                         color:T.green, cursor:"pointer", fontSize:12,
                         fontFamily:T.mono, fontWeight:600 }}>
                       + Bid Alternate
+                    </button>
+                  )}
+                  {showBidAlternates && (
+                    <button onClick={() => createBidAlternate("controls", "Controls Bid Alternate")}
+                      title="Create a controls-only bid alternate"
+                      style={{ padding:"7px 10px", border:"1px solid "+T.blue,
+                        borderRadius:5, background:T.blueFaint || "#EFF6FF",
+                        color:T.blue, cursor:"pointer", fontSize:12,
+                        fontFamily:T.mono, fontWeight:600 }}>
+                      + Controls Bid Alternate
                     </button>
                   )}
                   <button onClick={()=>setSubPage({ type:"wizard" })}
@@ -397,11 +407,11 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
             </div>
             <div style={{ padding:"12px 14px", display:"grid", gap:10 }}>
               {alternates.length ? alternates.map((alternate) => (
-                <div key={alternate.id} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap", padding:"10px 12px", border:"1px solid "+T.border, borderRadius:8, background:T.panel }}>
+                  <div key={alternate.id} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap", padding:"10px 12px", border:"1px solid "+T.border, borderRadius:8, background:T.panel }}>
                   <div>
                     <div style={{ fontSize:13, fontWeight:700, color:T.text }}>{alternate.name || "Bid Alternate"}</div>
                     <div style={{ fontSize:11, color:T.dim, fontFamily:T.mono, marginTop:3 }}>
-                      {(alternate.items?.length || 0)} item{(alternate.items?.length || 0) === 1 ? "" : "s"}
+                      {getEstimateScopeModeLabel(alternate.settings?.estimateScopeMode)} · {(alternate.items?.length || 0)} item{(alternate.items?.length || 0) === 1 ? "" : "s"}
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
@@ -421,7 +431,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                 </div>
               )) : (
                 <div style={{ fontSize:12, color:T.muted }}>
-                  No bid alternates yet. Use <strong>+ Bid Alternate</strong> to start one.
+                  No bid alternates yet. Use <strong>+ Bid Alternate</strong> or <strong>+ Controls Bid Alternate</strong> to start one.
                 </div>
               )}
             </div>
@@ -837,5 +847,3 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     </div>
   );
 }
-
-

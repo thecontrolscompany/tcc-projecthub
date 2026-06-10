@@ -3,7 +3,6 @@ import { ESTIMATE_SCOPE_MODES, getEstimateScopeModeLabel, normalizeEstimateScope
 
 export function ProposalDetailsPanel({ settings, onChange }) {
   const S = settings;
-  const estimateScopeMode = normalizeEstimateScopeMode(S.estimateScopeMode);
 
   const textField = (key, label, placeholder = "") => (
     <label style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -115,7 +114,7 @@ export function ProposalDetailsPanel({ settings, onChange }) {
         Used in the exported customer proposal.
       </div>
       <div style={{ fontSize: 11, color: T.text, background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 6, padding: "6px 8px" }}>
-        Current quote version: <strong>{getEstimateScopeModeLabel(S.estimateScopeMode)}</strong>
+        Current bid version: <strong>{getEstimateScopeModeLabel(S.estimateScopeMode)}</strong>
       </div>
       {S.customerScopeImport && (
         <div
@@ -177,35 +176,10 @@ export function ProposalDetailsPanel({ settings, onChange }) {
             );
           })}
         </div>
+        <div style={{ fontSize: 10, color: T.dim, lineHeight: 1.5 }}>
+          Create a separate <strong>Controls Bid Alternate</strong> to price a controls-only scope with its own items and cost model.
+        </div>
       </div>
-      {estimateScopeMode !== "installation" && (
-        <label style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <span style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1 }}>
-            Controls Price
-          </span>
-          <input
-            type="number"
-            min="0"
-            step="1"
-            value={Number(S.controlsSubtotal || 0)}
-            onChange={(e) => onChange({ controlsSubtotal: Number.parseFloat(e.target.value) || 0 })}
-            placeholder="Controls-only price"
-            style={{
-              padding: "5px 8px",
-              border: "1px solid " + T.border2,
-              borderRadius: 4,
-              fontSize: 12,
-              background: T.bg,
-              color: T.text,
-              outline: "none",
-              fontFamily: T.mono,
-            }}
-          />
-          <div style={{ fontSize: 10, color: T.dim }}>
-            Enter the controls price to keep it separate from the installation price.
-          </div>
-        </label>
-      )}
       {textField("baseScopeName", "Base Scope Name", "Scope")}
       <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}>
         <input

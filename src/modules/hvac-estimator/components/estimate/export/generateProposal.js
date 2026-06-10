@@ -423,24 +423,20 @@ function normalizeAlternates(estimate) {
     .filter(Boolean);
 }
 
-function renderPricingTable({ scopeMode, installationTotal, controlsTotal, totalAmount, totalBond, alternates = [] }) {
+function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBond, alternates = [] }) {
   const baseRows = [];
+  const subtotalLabel =
+    scopeMode === "controls"
+      ? "Controls subtotal"
+      : scopeMode === "both"
+        ? "Turnkey subtotal"
+        : "Installation subtotal";
 
-  if (scopeMode === "installation" || scopeMode === "both") {
-    baseRows.push(`
+  baseRows.push(`
           <tr>
-            <td><strong>Installation subtotal</strong></td>
+            <td><strong>${subtotalLabel}</strong></td>
             <td class="cell-number">${fmtMoney(installationTotal)}</td>
           </tr>`);
-  }
-
-  if (scopeMode === "controls" || scopeMode === "both") {
-    baseRows.push(`
-          <tr>
-            <td><strong>Controls subtotal</strong></td>
-            <td class="cell-number">${fmtMoney(controlsTotal)}</td>
-          </tr>`);
-  }
 
   baseRows.push(`
           <tr class="row-bond">
@@ -472,7 +468,7 @@ function renderPricingTable({ scopeMode, installationTotal, controlsTotal, total
     scopeMode === "controls"
       ? "TOTAL CONTROLS ONLY PRICE"
       : scopeMode === "both"
-      ? "TOTAL TURNKEY PRICE"
+        ? "TOTAL TURNKEY PRICE"
         : "TOTAL INSTALL ONLY PRICE";
 
   return `
@@ -647,17 +643,11 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   const projectName = estimate.name || "Proposal";
   const versionSuffix = getVersionSuffix(estimate);
   const installedTotal = grandTotal || 0;
-  const controlsTotal = Number(settings.controlsSubtotal || 0) || 0;
   const scopeMode = settings.proposalScopeMode === "detailed" ? "detailed" : "brief";
   const estimateScopeMode = normalizeEstimateScopeMode(settings.estimateScopeMode);
   const estimateScopeLabel = getEstimateScopeModeLabel(estimateScopeMode);
-  const totalAmount =
-    estimateScopeMode === "controls"
-      ? controlsTotal
-      : estimateScopeMode === "both"
-        ? installedTotal + controlsTotal
-        : installedTotal;
-  const totalBond = totalAmount > 0 ? totalAmount * BOND_RATE : bondAmount || 0;
+  const totalAmount = installedTotal;
+  const totalBond = bondAmount > 0 ? bondAmount : totalAmount > 0 ? totalAmount * BOND_RATE : 0;
   const useCustomerScope = Boolean(settings.useCustomerScope && String(settings.customerScope || "").trim());
   const scopeHtml = useCustomerScope
     ? getProposalScopeHtml(settings)
@@ -684,7 +674,6 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   const pricingHtml = renderPricingTable({
     scopeMode: estimateScopeMode,
     installationTotal: installedTotal,
-    controlsTotal,
     totalAmount,
     totalBond,
     alternates,

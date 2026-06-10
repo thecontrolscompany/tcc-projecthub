@@ -82,25 +82,12 @@ export function summarizeHvacEstimate(body: HvacEstimateBody) {
     total?: number;
     profit?: number;
   };
-  const settings = (body.settings || {}) as Record<string, unknown>;
-  const scopeMode = normalizeEstimateScopeMode(settings.estimateScopeMode);
-  const installationAmount = costs.total ?? 0;
-  const controlsAmount = Number(settings.controlsSubtotal ?? 0) || 0;
-
-  const totalAmount =
-    scopeMode === "controls"
-      ? controlsAmount
-      : scopeMode === "both"
-        ? installationAmount + controlsAmount
-        : installationAmount;
-
-  const grossMarginAmount = scopeMode === "installation" ? costs.profit ?? null : null;
+  const totalAmount = costs.total ?? null;
+  const grossMarginAmount = costs.profit ?? null;
 
   return {
     rawMaterial: raw.mtl,
     rawLaborHours: raw.lbrHrs,
-    installationAmount,
-    controlsAmount,
     totalAmount,
     grossMarginAmount,
     grossMarginPct:

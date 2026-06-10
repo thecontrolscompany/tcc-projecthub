@@ -445,18 +445,10 @@ export function EstimateDetailClient({ estimate }: Props) {
     [body, rawTotals.lbrHrs, rawTotals.mtl],
   );
   const estimateScopeMode = normalizeEstimateScopeMode(body.settings.estimateScopeMode);
-  const controlsSubtotal = Number(body.settings.controlsSubtotal || 0) || 0;
-  const totalAmount =
-    estimateScopeMode === "controls"
-      ? controlsSubtotal
-      : estimateScopeMode === "both"
-        ? installationCosts.total + controlsSubtotal
-        : installationCosts.total;
   const costs = {
     ...installationCosts,
-    controlsSubtotal,
-    total: totalAmount,
-    bond: totalAmount * 0.04,
+    total: installationCosts.total,
+    bond: installationCosts.bond,
   };
 
   const addFormComponents = getVisibleComponentsForType(addForm.type, addForm.cfg);
@@ -862,14 +854,11 @@ export function EstimateDetailClient({ estimate }: Props) {
               </div>
             </div>
 
-            <div className={`grid gap-3 ${controlsSubtotal > 0 && estimateScopeMode !== "installation" ? "sm:grid-cols-6" : "sm:grid-cols-5"}`}>
+            <div className="grid gap-3 sm:grid-cols-5">
               <SummaryMetric label="Material" value={formatCurrency(costs.material)} />
               <SummaryMetric label="Labor" value={formatCurrency(costs.labor)} />
               <SummaryMetric label="Overhead" value={formatCurrency(costs.overhead)} />
               <SummaryMetric label="Profit" value={formatCurrency(costs.profit)} />
-              {controlsSubtotal > 0 && estimateScopeMode !== "installation" && (
-                <SummaryMetric label="Controls Add-On" value={formatCurrency(controlsSubtotal)} />
-              )}
               <SummaryMetric label={`${getEstimateScopeModeLabel(estimateScopeMode)} Price`} value={formatCurrency(costs.total)} emphasized />
             </div>
           </section>
