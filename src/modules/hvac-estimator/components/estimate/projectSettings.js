@@ -15,6 +15,8 @@ export const DEFAULT_SETTINGS = {
   profitPct:      25,      // % of (labor + material + overhead)
   bondPct:         4,      // % of (labor + material + overhead + profit)
   defaultInstallType: "EMT",
+  estimateScopeMode: "installation",
+  controlsSubtotal: 0,
   proposalScopeMode: "brief",
   baseScopeName:    "Scope",
   useCustomerScope: false,
@@ -67,6 +69,33 @@ export const DEFAULT_SETTINGS = {
   trencher:       false,
   coreDrilling:   0,              // number of holes
 };
+
+export const ESTIMATE_SCOPE_MODES = [
+  {
+    id: "installation",
+    label: "Install Only",
+    description: "Bid the installation scope only. This is the physical controls installation price.",
+  },
+  {
+    id: "controls",
+    label: "Controls Only",
+    description: "Bid the controls package only. This is the controls hardware and services price.",
+  },
+  {
+    id: "both",
+    label: "Turnkey",
+    description: "Bid installation plus controls together as one combined turnkey price.",
+  },
+];
+
+export function normalizeEstimateScopeMode(value) {
+  const normalized = String(value || "").toLowerCase();
+  return ESTIMATE_SCOPE_MODES.some((mode) => mode.id === normalized) ? normalized : "installation";
+}
+
+export function getEstimateScopeModeLabel(value) {
+  return ESTIMATE_SCOPE_MODES.find((mode) => mode.id === normalizeEstimateScopeMode(value))?.label || "Install Only";
+}
 
 // Vertical market labor adjustment factors
 export const VERTICAL_MARKETS = [

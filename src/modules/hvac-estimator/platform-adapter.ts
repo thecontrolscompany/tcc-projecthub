@@ -1,5 +1,5 @@
 import { calcEstimate } from "./components/estimate/estimateCalc";
-import { computeCosts, DEFAULT_SETTINGS } from "./components/estimate/projectSettings";
+import { computeCosts, DEFAULT_SETTINGS, normalizeEstimateScopeMode } from "./components/estimate/projectSettings";
 
 export type HvacEstimateStatus = "draft" | "in_progress" | "ready" | "proposal_exported" | "awarded" | "archived";
 
@@ -37,6 +37,7 @@ export type HvacEstimateCreateInput = {
   customerAccountId?: string | null;
   customer?: string | null;
   notes?: string | null;
+  estimateScopeMode?: string | null;
   user?: { id: string; email?: string | null; name?: string | null } | null;
 };
 
@@ -62,7 +63,10 @@ export function buildHvacEstimateBody(input: HvacEstimateCreateInput): HvacEstim
     customer: input.customer ?? "",
     version: "1.0",
     notes: input.notes ?? "",
-    settings: { ...DEFAULT_SETTINGS },
+    settings: {
+      ...DEFAULT_SETTINGS,
+      estimateScopeMode: normalizeEstimateScopeMode(input.estimateScopeMode),
+    },
     alternates: [],
     createdAt: now,
     updatedAt: now,
@@ -78,12 +82,25 @@ export function summarizeHvacEstimate(body: HvacEstimateBody) {
     total?: number;
     profit?: number;
   };
-  const grossMarginAmount = costs.profit ?? null;
-  const totalAmount = costs.total ?? null;
+  const settings = (body.settings || {}) as Record<string, unknown>;
+  const scopeMode = normalizeEstimateScopeMode(settings.estimateScopeMode);
+  const installationAmount = costs.total ?? 0;
+  const controlsAmount = Number(settings.controlsSubtotal ?? 0) || 0;
+
+  const totalAmount =
+    scopeMode === "controls"
+      ? controlsAmount
+      : scopeMode === "both"
+        ? installationAmount + controlsAmount
+        : installationAmount;
+
+  const grossMarginAmount = scopeMode === "installation" ? costs.profit ?? null : null;
 
   return {
     rawMaterial: raw.mtl,
     rawLaborHours: raw.lbrHrs,
+    installationAmount,
+    controlsAmount,
     totalAmount,
     grossMarginAmount,
     grossMarginPct:
