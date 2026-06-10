@@ -861,6 +861,37 @@ export function EstimateDetailClient({ estimate }: Props) {
               <SummaryMetric label="Profit" value={formatCurrency(costs.profit)} />
               <SummaryMetric label={`${getEstimateScopeModeLabel(estimateScopeMode)} Price`} value={formatCurrency(costs.total)} emphasized />
             </div>
+
+            <div className="mt-4 rounded-2xl border border-brand-primary/15 bg-brand-subtle/40 p-4">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold text-text-primary">One equipment selection, two outputs</div>
+                  <div className="mt-1 text-sm text-text-secondary">
+                    The installation estimate is priced from the current equipment selection. The controls estimate is a separate draft until its parts and pieces are defined.
+                  </div>
+                </div>
+                <span className="rounded-full border border-brand-primary/20 bg-surface-raised px-3 py-1 text-xs font-semibold text-brand-primary">
+                  Shared equipment selection
+                </span>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-xl border border-border-default bg-surface-raised p-4">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Installation Estimate</div>
+                  <div className="mt-2 text-2xl font-semibold text-text-primary">{formatCurrency(costs.total)}</div>
+                  <div className="mt-1 text-sm text-text-secondary">
+                    Priced from the selected equipment and the current installation cost model.
+                  </div>
+                </div>
+                <div className="rounded-xl border border-dashed border-border-default bg-surface-overlay p-4">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Controls Estimate</div>
+                  <div className="mt-2 text-2xl font-semibold text-text-primary">Draft</div>
+                  <div className="mt-1 text-sm text-text-secondary">
+                    Seeded from the same equipment selection, then filled in with controls-specific parts and services later.
+                  </div>
+                </div>
+              </div>
+            </div>
           </section>
 
           <section className="overflow-hidden rounded-2xl border border-border-default bg-surface-raised">

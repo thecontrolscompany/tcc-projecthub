@@ -77,8 +77,8 @@ export const ESTIMATE_SCOPE_MODES = [
   },
   {
     id: "controls",
-    label: "Controls Only",
-    description: "Bid the controls package only. This is the controls hardware and services price.",
+    label: "Controls Draft",
+    description: "Seeded from the same equipment selection until the controls parts and services are defined.",
   },
   {
     id: "both",

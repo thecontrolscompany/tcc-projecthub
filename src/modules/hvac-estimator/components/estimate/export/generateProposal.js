@@ -427,7 +427,7 @@ function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBo
   const baseRows = [];
   const subtotalLabel =
     scopeMode === "controls"
-      ? "Controls subtotal"
+      ? "Controls draft subtotal"
       : scopeMode === "both"
         ? "Turnkey subtotal"
         : "Installation subtotal";
@@ -466,7 +466,7 @@ function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBo
 
   const totalLabel =
     scopeMode === "controls"
-      ? "TOTAL CONTROLS ONLY PRICE"
+      ? "TOTAL CONTROLS DRAFT PRICE"
       : scopeMode === "both"
         ? "TOTAL TURNKEY PRICE"
         : "TOTAL INSTALL ONLY PRICE";

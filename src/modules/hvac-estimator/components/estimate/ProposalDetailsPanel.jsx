@@ -177,7 +177,7 @@ export function ProposalDetailsPanel({ settings, onChange }) {
           })}
         </div>
         <div style={{ fontSize: 10, color: T.dim, lineHeight: 1.5 }}>
-          Create a separate <strong>Controls Bid Alternate</strong> to price a controls-only scope with its own items and cost model.
+          The controls estimate should start from the same equipment selection, then get its own controls parts and cost model as that scope is defined.
         </div>
       </div>
       {textField("baseScopeName", "Base Scope Name", "Scope")}

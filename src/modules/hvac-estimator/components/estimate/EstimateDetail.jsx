@@ -95,7 +95,12 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     });
   }, [estimate, onUpdate]);
 
-  const createBidAlternate = useCallback((scopeMode = "installation", defaultPrefix = "Bid Alternate") => {
+  const cloneItems = useCallback((items) => {
+    if (typeof structuredClone === "function") return structuredClone(items);
+    return JSON.parse(JSON.stringify(items || []));
+  }, []);
+
+  const createBidAlternate = useCallback((scopeMode = "installation", defaultPrefix = "Bid Alternate", seedWithCurrentItems = false) => {
     const defaultName = `${defaultPrefix} ${alternates.length + 1}`;
     const entered = window.prompt("Name this bid alternate", defaultName);
     const name = String(entered || "").trim();
@@ -105,14 +110,14 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
       id: crypto.randomUUID(),
       name,
       settings: { ...(estimate.settings || {}), estimateScopeMode: scopeMode },
-      items: [],
+      items: seedWithCurrentItems ? cloneItems(estimate.items || []) : [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
     updateAlternates([...alternates, next]);
     setSubPage({ type: "alternate", alternateId: next.id });
-  }, [alternates, estimate.settings, setSubPage, updateAlternates]);
+  }, [alternates, cloneItems, estimate.items, estimate.settings, setSubPage, updateAlternates]);
 
   const openBidAlternate = useCallback((alternateId) => {
     setSubPage({ type: "alternate", alternateId });
@@ -316,13 +321,13 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                     </button>
                   )}
                   {showBidAlternates && (
-                    <button onClick={() => createBidAlternate("controls", "Controls Bid Alternate")}
-                      title="Create a controls-only bid alternate"
+                    <button onClick={() => createBidAlternate("controls", "Controls Estimate Draft", true)}
+                      title="Create a controls estimate draft from the current equipment selection"
                       style={{ padding:"7px 10px", border:"1px solid "+T.blue,
                         borderRadius:5, background:T.blueFaint || "#EFF6FF",
                         color:T.blue, cursor:"pointer", fontSize:12,
                         fontFamily:T.mono, fontWeight:600 }}>
-                      + Controls Bid Alternate
+                      + Controls Estimate Draft
                     </button>
                   )}
                   <button onClick={()=>setSubPage({ type:"wizard" })}
@@ -401,8 +406,8 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
           <div style={{ border:"1px solid "+T.border, borderRadius:10, background:T.surface, overflow:"hidden" }}>
             <div style={{ padding:"10px 14px", borderBottom:"1px solid "+T.border, display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap" }}>
               <div>
-                <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Bid Alternates</div>
-                <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>Add deducts, adder packages, or separate options without mixing them into the base bid.</div>
+                <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Bid Outputs</div>
+                <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>Pick equipment once, then keep the installation bid and the controls draft separate from the same source selection.</div>
               </div>
             </div>
             <div style={{ padding:"12px 14px", display:"grid", gap:10 }}>
@@ -412,6 +417,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                     <div style={{ fontSize:13, fontWeight:700, color:T.text }}>{alternate.name || "Bid Alternate"}</div>
                     <div style={{ fontSize:11, color:T.dim, fontFamily:T.mono, marginTop:3 }}>
                       {getEstimateScopeModeLabel(alternate.settings?.estimateScopeMode)} · {(alternate.items?.length || 0)} item{(alternate.items?.length || 0) === 1 ? "" : "s"}
+                      {alternate.settings?.estimateScopeMode === "controls" && alternate.items?.length > 0 ? " · seeded from current equipment" : ""}
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
@@ -431,7 +437,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                 </div>
               )) : (
                 <div style={{ fontSize:12, color:T.muted }}>
-                  No bid alternates yet. Use <strong>+ Bid Alternate</strong> or <strong>+ Controls Bid Alternate</strong> to start one.
+                  No bid alternates yet. Use <strong>+ Bid Alternate</strong> or <strong>+ Controls Estimate Draft</strong> to start one.
                 </div>
               )}
             </div>
