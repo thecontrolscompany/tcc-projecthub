@@ -10,18 +10,15 @@ import { getCurrentUser } from "../../shared/currentUser.js";
 import { AHU_TYPES } from "../ahu/ahuData.js";
 import { AddEquipButtons } from "./AddEquipButtons.jsx";
 import { AiTakeoffModal } from "./AiTakeoffModal.jsx";
-import { ProjectSettingsPanel } from "./ProjectSettingsPanel.jsx";
 import { ProposalDetailsModal } from "./ProposalDetailsModal.jsx";
 import { applyImportedScopeImportToEstimate } from "../../ai/scopeImportToEstimate.js";
 import {
   buildEstimateHealthRows,
   buildNeedsReviewIssues,
-  CostCategorySection,
   EstimateCommandCenter,
-  EstimateHealthPanel,
   EstimatorActionBar,
   EstimatorTabs,
-  NeedsReviewPanel,
+  EstimatorTabPanels,
 } from "./estimateUx.jsx";
 import {
   TYPE_META,
@@ -36,9 +33,7 @@ export function EstimateDetail({
   onBack,
   onUpdate,
   onSave = null,
-  onDelete = null,
   saving = false,
-  deleting = false,
   customerMode = false,
   showProjectSettings = true,
   showBidAlternates = true,
@@ -448,7 +443,7 @@ export function EstimateDetail({
         tabs={[
           { id: "estimate", label: "Estimate" },
           { id: "review", label: "Review", badge: reviewBadgeLabel },
-          { id: "cost", label: "Cost Detail" },
+          { id: "costDetail", label: "Cost Detail" },
           { id: "outputs", label: "Outputs" },
           ...(customerMode ? [] : [{ id: "settings", label: "Settings" }]),
         ]}
@@ -460,7 +455,6 @@ export function EstimateDetail({
             customerMode={customerMode}
             exporting={exporting}
             saving={saving}
-            deleting={deleting}
             onGenerateProposal={exportProposal}
             onSave={onSave}
             onInternalReport={exportInternal}
@@ -470,7 +464,6 @@ export function EstimateDetail({
             onAiParser={() => setShowAiParser((value) => !value)}
             onSettings={() => setShowSettings((value) => !value)}
             onAiSettings={openAiSettings}
-            onDelete={onDelete}
             onAddEquipment={(type) => setSubPage({ type })}
             showBidAlternates={showBidAlternates}
             showProjectSettings={showProjectSettings}
@@ -961,174 +954,40 @@ export function EstimateDetail({
           </table>
         )}
 
-        {activeTab === "review" && (
-          <div style={{ display:"grid", gap:12, marginTop:18 }}>
-            <div style={{ border:"1px solid "+T.border, borderRadius:10, background:T.surface, overflow:"hidden", padding:"10px 14px" }}>
-              <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Review</div>
-              <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>
-                Health checks and readiness items stay here so the estimate canvas stays calm.
-              </div>
-            </div>
-            <div style={{ display:"grid", gap:12, gridTemplateColumns:"repeat(auto-fit, minmax(280px, 1fr))" }}>
-              <EstimateHealthPanel rows={healthRows} />
-              <NeedsReviewPanel issues={needsReviewIssues} />
-            </div>
-          </div>
-        )}
-
-        {activeTab === "cost" && (
-          <div style={{ display:"grid", gap:12, marginTop:18 }}>
-            <div style={{ border:"1px solid "+T.border, borderRadius:10, background:T.surface, overflow:"hidden", padding:"10px 14px" }}>
-              <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Cost Detail</div>
-              <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>
-                Open backup only when you need to inspect the supporting cost structure.
-              </div>
-            </div>
-            {!customerMode && settings.estimateScopeMode === "both" && (
-              <div style={{ border:"1px solid "+T.border, borderRadius:10, background:T.surface, overflow:"hidden" }}>
-                <div style={{ padding:"10px 14px", borderBottom:"1px solid "+T.border }}>
-                  <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Turnkey Cost Summary</div>
-                  <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>
-                    Install cost is already captured in the command center above. This panel keeps the DDC infrastructure detail visible without repeating the full totals.
-                  </div>
-                </div>
-                <div style={{ padding:"12px 14px", display:"grid", gap:12 }}>
-                  {ddcInfrastructure.rows.length > 0 && (
-                    <CostCategorySection
-                      id="ddc-infrastructure"
-                      label="DDC Infrastructure"
-                      subtotal={ddcInfrastructure.grandTotal}
-                      laborHours={ddcInfrastructure.rawLbrHrs}
-                      itemCount={ddcInfrastructure.rows.length}
-                      expanded={expandedDdc}
-                      note={`Sized from the selected controls devices. Points AI ${ddcInfrastructure.pointCounts.AI}, AO ${ddcInfrastructure.pointCounts.AO}, BI ${ddcInfrastructure.pointCounts.BI}, BO ${ddcInfrastructure.pointCounts.BO}; controllers ${ddcInfrastructure.controllerCount}; equipment instances ${ddcInfrastructure.equipmentCount}.`}
-                      onToggle={() => setExpandedDdc((value) => !value)}
-                    >
-                      <div style={{ display:"grid", gap:6 }}>
-                        {ddcInfrastructure.rows.map((row) => (
-                          <div key={row.catalogId} style={{ display:"grid", gridTemplateColumns:"minmax(220px, 1fr) 48px 88px 88px", gap:10, alignItems:"center", padding:"6px 8px", border:"1px solid "+T.border, borderRadius:6, background:T.surface }}>
-                            <div style={{ minWidth:0 }}>
-                              <div style={{ fontSize:12, color:T.text }}>{row.description}</div>
-                              <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono }}>{row.catalogId}</div>
-                            </div>
-                            <div style={{ fontSize:11, color:T.text, fontFamily:T.mono, textAlign:"right" }}>x{row.qty}</div>
-                            <div style={{ fontSize:11, color:T.blue, fontFamily:T.mono, textAlign:"right" }}>{fmt$(row.mtlTotal)}</div>
-                            <div style={{ fontSize:11, color:T.purple, fontFamily:T.mono, textAlign:"right" }}>{fmtHr(row.hrsTotal)}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </CostCategorySection>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === "outputs" && (
-          <div style={{ display:"grid", gap:12, marginTop:18 }}>
-            <div style={{ border:"1px solid "+T.border, borderRadius:10, background:T.surface, overflow:"hidden", padding:"10px 14px" }}>
-              <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Outputs</div>
-              <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>
-                Proposal and alternate outputs live here when you are ready to package the estimate.
-              </div>
-            </div>
-            <div style={{ display:"grid", gap:10 }}>
-              <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                <button type="button" onClick={() => setShowProposalDetails(true)} style={{ padding:"8px 12px", border:"1px solid "+T.border2, borderRadius:999, background:T.surface, color:T.text, cursor:"pointer", fontSize:12, fontFamily:T.mono, fontWeight:700 }}>
-                  Proposal Details
-                </button>
-                <button type="button" onClick={exportInternal} style={{ padding:"8px 12px", border:"1px solid "+T.border2, borderRadius:999, background:T.surface, color:T.text, cursor:"pointer", fontSize:12, fontFamily:T.mono, fontWeight:700 }}>
-                  Internal Report
-                </button>
-                {!customerMode && (
-                  <button type="button" onClick={exportProposal} disabled={exporting} style={{ padding:"8px 12px", border:"1px solid "+T.border2, borderRadius:999, background:T.green, color:"#fff", cursor:exporting ? "default" : "pointer", fontSize:12, fontFamily:T.mono, fontWeight:700, opacity:exporting ? 0.8 : 1 }}>
-                    {exporting ? "Generating..." : "Generate Proposal"}
-                  </button>
-                )}
-              </div>
-              {!customerMode && showBidAlternates && (
-                <div style={{ border:"1px solid "+T.border, borderRadius:10, background:T.surface, overflow:"hidden" }}>
-                  <div style={{ padding:"10px 14px", borderBottom:"1px solid "+T.border, display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap" }}>
-                    <div>
-                      <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Bid Outputs</div>
-                      <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>Optional alternates priced separately from the base estimate.</div>
-                    </div>
-                    <button type="button" onClick={() => createBidAlternate("installation", "Bid Alternate")} style={{ padding:"7px 10px", border:"1px solid "+T.border2, borderRadius:999, background:T.surface, color:T.text, cursor:"pointer", fontSize:11, fontFamily:T.mono, fontWeight:700 }}>
-                      + Bid Alternate
-                    </button>
-                  </div>
-                  <div style={{ padding:"12px 14px", display:"grid", gap:10 }}>
-                    {alternatesWithCosts.length ? alternatesWithCosts.map((alternate) => (
-                      <div key={alternate.id} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap", padding:"10px 12px", border:"1px solid "+T.border, borderRadius:8, background:T.panel }}>
-                        <div>
-                          <div style={{ fontSize:13, fontWeight:700, color:T.text }}>{alternate.name || "Bid Alternate"}</div>
-                          <div style={{ fontSize:11, color:T.dim, fontFamily:T.mono, marginTop:3 }}>
-                            {getEstimateScopeModeLabel(alternate.settings?.estimateScopeMode)} · {(alternate.items?.length || 0)} item{(alternate.items?.length || 0) === 1 ? "" : "s"}
-                          </div>
-                          {alternate.altCosts && (
-                            <div style={{ fontSize:11, color:T.dim, fontFamily:T.mono, marginTop:3 }}>
-                              Material: {fmt$(alternate.altCosts.material)} · Labor: {fmtHr(alternate.altRaw.lbrHrs)} · Total: {fmt$(alternate.altCosts.total)}
-                            </div>
-                          )}
-                        </div>
-                        <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                          <button onClick={() => openBidAlternate(alternate.id)}
-                            style={{ padding:"6px 10px", border:"1px solid "+T.blueMid,
-                              borderRadius:5, background:T.blueFaint, color:T.blue,
-                              cursor:"pointer", fontSize:12, fontFamily:T.mono, fontWeight:600 }}>
-                            Edit
-                          </button>
-                          <button onClick={() => removeBidAlternate(alternate.id)}
-                            style={{ padding:"6px 10px", border:"1px solid "+T.border2,
-                              borderRadius:5, background:"none", color:T.muted,
-                              cursor:"pointer", fontSize:12, fontFamily:T.mono, fontWeight:600 }}>
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    )) : (
-                      <div style={{ fontSize:12, color:T.muted, border:"1px dashed "+T.border2, borderRadius:10, padding:"14px 16px" }}>
-                        No bid alternates yet. Use <strong>+ Bid Alternate</strong> to start one.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === "settings" && !customerMode && (
-          <div style={{ display:"grid", gap:12, marginTop:18 }}>
-            <div style={{ border:"1px solid "+T.border, borderRadius:10, background:T.surface, overflow:"hidden", padding:"10px 14px" }}>
-              <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Settings</div>
-              <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>
-                Keep estimator configuration and auxiliary tools here instead of the default canvas.
-              </div>
-            </div>
-            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-              <button type="button" onClick={() => setShowSettings((value) => !value)} style={{ padding:"8px 12px", border:"1px solid "+T.border2, borderRadius:999, background:T.surface, color:T.text, cursor:"pointer", fontSize:12, fontFamily:T.mono, fontWeight:700 }}>
-                {showSettings ? "Hide Project Settings" : "Show Project Settings"}
-              </button>
-              <button type="button" onClick={() => setShowAiParser(true)} style={{ padding:"8px 12px", border:"1px solid "+T.border2, borderRadius:999, background:T.surface, color:T.text, cursor:"pointer", fontSize:12, fontFamily:T.mono, fontWeight:700 }}>
-                AI Parser
-              </button>
-              <button type="button" onClick={openAiSettings} style={{ padding:"8px 12px", border:"1px solid "+T.border2, borderRadius:999, background:T.surface, color:T.text, cursor:"pointer", fontSize:12, fontFamily:T.mono, fontWeight:700 }}>
-                AI Settings
-              </button>
-              <button type="button" onClick={() => setSubPage({ type: "wizard" })} style={{ padding:"8px 12px", border:"1px solid "+T.border2, borderRadius:999, background:T.surface, color:T.text, cursor:"pointer", fontSize:12, fontFamily:T.mono, fontWeight:700 }}>
-                System Wizard
-              </button>
-            </div>
-            {showProjectSettings && showSettings && (
-              <ProjectSettingsPanel settings={settings} onChange={updateSettings}
-                costs={costs} rawLbrHrs={totals.lbrHrs} itemCount={estimate.items?.length || 0}
-                estimateId={estimate.id} onApplyDefaultInstallType={applyDefaultInstallType} />
-            )}
-          </div>
-        )}
       </div>
+
+      <EstimatorTabPanels
+        activeTab={activeTab}
+        customerMode={customerMode}
+        settings={settings}
+        costs={costs}
+        totals={totals}
+        ddcInfrastructure={ddcInfrastructure}
+        expandedDdc={expandedDdc}
+        onToggleDdc={() => setExpandedDdc((value) => !value)}
+        healthRows={healthRows}
+        needsReviewIssues={needsReviewIssues}
+        showBidAlternates={showBidAlternates}
+        showProjectSettings={showProjectSettings}
+        alternatesWithCosts={alternatesWithCosts}
+        exporting={exporting}
+        onOpenProposalDetails={() => setShowProposalDetails(true)}
+        onExportInternal={exportInternal}
+        onExportProposal={exportProposal}
+        onCreateBidAlternate={() => createBidAlternate("installation", "Bid Alternate")}
+        onOpenBidAlternate={openBidAlternate}
+        onRemoveBidAlternate={removeBidAlternate}
+        showSettings={showSettings}
+        onToggleSettings={() => setShowSettings((value) => !value)}
+        onOpenAiParser={() => setShowAiParser(true)}
+        onOpenAiSettings={openAiSettings}
+        onOpenSystemWizard={() => setSubPage({ type: "wizard" })}
+        onUpdateSettings={updateSettings}
+        onApplyDefaultInstallType={applyDefaultInstallType}
+        estimateId={estimate.id}
+        rawLbrHrs={totals.lbrHrs}
+        itemCount={estimate.items?.length || 0}
+      />
     </div>
   );
 }

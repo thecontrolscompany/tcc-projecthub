@@ -1,6 +1,8 @@
 import { AddEquipButtons } from "./AddEquipButtons.jsx";
+import { ProjectSettingsPanel } from "./ProjectSettingsPanel.jsx";
 import { T } from "../../shared/tokens.js";
 import { fmt$, fmtHr } from "../../shared/utils.js";
+import { getEstimateScopeModeLabel } from "./projectSettings.js";
 import { TYPE_META, calcItem } from "./estimateCalc.js";
 
 const HEALTH_WINDOW = 5;
@@ -187,6 +189,7 @@ export function EstimatorTabs({ tabs, activeTab, onChange }) {
       }}
     >
       <div
+        role="tablist"
         style={{
           display: "inline-flex",
           gap: 4,
@@ -206,7 +209,10 @@ export function EstimatorTabs({ tabs, activeTab, onChange }) {
               key={tab.id}
               type="button"
               onClick={() => onChange(tab.id)}
-              aria-pressed={active}
+              role="tab"
+              aria-selected={active}
+              aria-controls={`estimator-panel-${tab.id}`}
+              id={`estimator-tab-${tab.id}`}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -555,12 +561,10 @@ export function EstimatorActionBar({
   customerMode,
   exporting,
   saving,
-  deleting,
   onGenerateProposal,
   onSave,
   onInternalReport,
   onProposalDetails,
-  onDelete,
   onAddEquipment,
 }) {
   return (
@@ -653,27 +657,6 @@ export function EstimatorActionBar({
             >
               Proposal Details
             </button>
-            {onDelete && (
-              <button
-                type="button"
-                onClick={onDelete}
-                disabled={deleting}
-                style={{
-                  padding: "7px 10px",
-                  border: "1px solid " + T.rose,
-                  borderRadius: 999,
-                  background: "#fff",
-                  color: T.rose,
-                  cursor: deleting ? "default" : "pointer",
-                  fontSize: 11,
-                  fontFamily: T.mono,
-                  fontWeight: 700,
-                  opacity: deleting ? 0.75 : 1,
-                }}
-              >
-                {deleting ? "Deleting..." : "Delete"}
-              </button>
-            )}
           </div>
         )}
         <div style={{ marginLeft: "auto" }}>
@@ -746,4 +729,246 @@ export function CostCategorySection({
       )}
     </section>
   );
+}
+
+function panelShell({ id, title, description, children }) {
+  return (
+    <section
+      role="tabpanel"
+      id={`estimator-panel-${id}`}
+      aria-labelledby={`estimator-tab-${id}`}
+      style={{
+        display: "grid",
+        gap: 12,
+        marginTop: 18,
+      }}
+    >
+      <div
+        style={{
+          border: "1px solid " + T.border,
+          borderRadius: 10,
+          background: T.surface,
+          overflow: "hidden",
+          padding: "10px 14px",
+        }}
+      >
+        <div style={{ fontSize: 10, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
+          {title}
+        </div>
+        <div style={{ fontSize: 12, color: T.dim, marginTop: 2 }}>
+          {description}
+        </div>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+export function EstimatorTabPanels({
+  activeTab,
+  customerMode,
+  settings,
+  costs,
+  totals,
+  ddcInfrastructure,
+  expandedDdc,
+  onToggleDdc,
+  healthRows,
+  needsReviewIssues,
+  showBidAlternates,
+  showProjectSettings,
+  alternatesWithCosts,
+  exporting,
+  onOpenProposalDetails,
+  onExportInternal,
+  onExportProposal,
+  onCreateBidAlternate,
+  onOpenBidAlternate,
+  onRemoveBidAlternate,
+  showSettings,
+  onToggleSettings,
+  onOpenAiParser,
+  onOpenAiSettings,
+  onOpenSystemWizard,
+  onUpdateSettings,
+  onApplyDefaultInstallType,
+  estimateId,
+  rawLbrHrs,
+  itemCount,
+}) {
+  if (activeTab === "review") {
+    return panelShell({
+      id: "review",
+      title: "Review",
+      description: "Health checks and readiness items stay here so the estimate canvas stays calm.",
+      children: (
+        <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
+          <EstimateHealthPanel rows={healthRows} />
+          <NeedsReviewPanel issues={needsReviewIssues} />
+        </div>
+      ),
+    });
+  }
+
+  if (activeTab === "costDetail") {
+    return panelShell({
+      id: "costDetail",
+      title: "Cost Detail",
+      description: "Open backup only when you need to inspect the supporting cost structure.",
+      children: (
+        <div style={{ display: "grid", gap: 12 }}>
+          {!customerMode && settings.estimateScopeMode === "both" && (
+            <div style={{ border: "1px solid " + T.border, borderRadius: 10, background: T.surface, overflow: "hidden" }}>
+              <div style={{ padding: "10px 14px", borderBottom: "1px solid " + T.border }}>
+                <div style={{ fontSize: 10, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
+                  Turnkey Cost Summary
+                </div>
+                <div style={{ fontSize: 12, color: T.dim, marginTop: 2 }}>
+                  Install cost is already captured in the command center above. This panel keeps the DDC infrastructure detail visible without repeating the full totals.
+                </div>
+              </div>
+              <div style={{ padding: "12px 14px", display: "grid", gap: 12 }}>
+                {ddcInfrastructure.rows.length > 0 && (
+                  <CostCategorySection
+                    id="ddc-infrastructure"
+                    label="DDC Infrastructure"
+                    subtotal={ddcInfrastructure.grandTotal}
+                    laborHours={ddcInfrastructure.rawLbrHrs}
+                    itemCount={ddcInfrastructure.rows.length}
+                    expanded={expandedDdc}
+                    note={`Sized from the selected controls devices. Points AI ${ddcInfrastructure.pointCounts.AI}, AO ${ddcInfrastructure.pointCounts.AO}, BI ${ddcInfrastructure.pointCounts.BI}, BO ${ddcInfrastructure.pointCounts.BO}; controllers ${ddcInfrastructure.controllerCount}; equipment instances ${ddcInfrastructure.equipmentCount}.`}
+                    onToggle={onToggleDdc}
+                  >
+                    <div style={{ display: "grid", gap: 6 }}>
+                      {ddcInfrastructure.rows.map((row) => (
+                        <div key={row.catalogId} style={{ display: "grid", gridTemplateColumns: "minmax(220px, 1fr) 48px 88px 88px", gap: 10, alignItems: "center", padding: "6px 8px", border: "1px solid " + T.border, borderRadius: 6, background: T.surface }}>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 12, color: T.text }}>{row.description}</div>
+                            <div style={{ fontSize: 10, color: T.muted, fontFamily: T.mono }}>{row.catalogId}</div>
+                          </div>
+                          <div style={{ fontSize: 11, color: T.text, fontFamily: T.mono, textAlign: "right" }}>x{row.qty}</div>
+                          <div style={{ fontSize: 11, color: T.blue, fontFamily: T.mono, textAlign: "right" }}>{fmt$(row.mtlTotal)}</div>
+                          <div style={{ fontSize: 11, color: T.purple, fontFamily: T.mono, textAlign: "right" }}>{fmtHr(row.hrsTotal)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </CostCategorySection>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      ),
+    });
+  }
+
+  if (activeTab === "outputs") {
+    return panelShell({
+      id: "outputs",
+      title: "Outputs",
+      description: "Proposal and alternate outputs live here when you are ready to package the estimate.",
+      children: (
+        <div style={{ display: "grid", gap: 10 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button type="button" onClick={onOpenProposalDetails} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700 }}>
+              Proposal Details
+            </button>
+            <button type="button" onClick={onExportInternal} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700 }}>
+              Internal Report
+            </button>
+            {!customerMode && (
+              <button type="button" onClick={onExportProposal} disabled={exporting} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.green, color: "#fff", cursor: exporting ? "default" : "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700, opacity: exporting ? 0.8 : 1 }}>
+                {exporting ? "Generating..." : "Generate Proposal"}
+              </button>
+            )}
+          </div>
+          {!customerMode && showBidAlternates && (
+            <div style={{ border: "1px solid " + T.border, borderRadius: 10, background: T.surface, overflow: "hidden" }}>
+              <div style={{ padding: "10px 14px", borderBottom: "1px solid " + T.border, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                <div>
+                  <div style={{ fontSize: 10, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
+                    Bid Outputs
+                  </div>
+                  <div style={{ fontSize: 12, color: T.dim, marginTop: 2 }}>
+                    Optional alternates priced separately from the base estimate.
+                  </div>
+                </div>
+                <button type="button" onClick={onCreateBidAlternate} style={{ padding: "7px 10px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: "pointer", fontSize: 11, fontFamily: T.mono, fontWeight: 700 }}>
+                  + Bid Alternate
+                </button>
+              </div>
+              <div style={{ padding: "12px 14px", display: "grid", gap: 10 }}>
+                {alternatesWithCosts.length ? alternatesWithCosts.map((alternate) => (
+                  <div key={alternate.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", padding: "10px 12px", border: "1px solid " + T.border, borderRadius: 8, background: T.panel }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{alternate.name || "Bid Alternate"}</div>
+                      <div style={{ fontSize: 11, color: T.dim, fontFamily: T.mono, marginTop: 3 }}>
+                        {getEstimateScopeModeLabel(alternate.settings?.estimateScopeMode)} · {(alternate.items?.length || 0)} item{(alternate.items?.length || 0) === 1 ? "" : "s"}
+                      </div>
+                      {alternate.altCosts && (
+                        <div style={{ fontSize: 11, color: T.dim, fontFamily: T.mono, marginTop: 3 }}>
+                          Material: {fmt$(alternate.altCosts.material)} · Labor: {fmtHr(alternate.altRaw.lbrHrs)} · Total: {fmt$(alternate.altCosts.total)}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      <button type="button" onClick={() => onOpenBidAlternate(alternate.id)} style={{ padding: "6px 10px", border: "1px solid " + T.blueMid, borderRadius: 5, background: T.blueFaint, color: T.blue, cursor: "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 600 }}>
+                        Edit
+                      </button>
+                      <button type="button" onClick={() => onRemoveBidAlternate(alternate.id)} style={{ padding: "6px 10px", border: "1px solid " + T.border2, borderRadius: 5, background: "none", color: T.muted, cursor: "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 600 }}>
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                )) : (
+                  <div style={{ fontSize: 12, color: T.muted, border: "1px dashed " + T.border2, borderRadius: 10, padding: "14px 16px" }}>
+                    No bid alternates yet. Use <strong>+ Bid Alternate</strong> to start one.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      ),
+    });
+  }
+
+  if (activeTab === "settings" && !customerMode) {
+    return panelShell({
+      id: "settings",
+      title: "Settings",
+      description: "Keep estimator configuration and auxiliary tools here instead of the default canvas.",
+      children: (
+        <div style={{ display: "grid", gap: 12 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button type="button" onClick={onToggleSettings} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700 }}>
+              {showSettings ? "Hide Project Settings" : "Show Project Settings"}
+            </button>
+            <button type="button" onClick={onOpenAiParser} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700 }}>
+              AI Parser
+            </button>
+            <button type="button" onClick={onOpenAiSettings} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700 }}>
+              AI Settings
+            </button>
+            <button type="button" onClick={onOpenSystemWizard} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700 }}>
+              System Wizard
+            </button>
+          </div>
+          {showProjectSettings && showSettings && (
+            <ProjectSettingsPanel
+              settings={settings}
+              onChange={onUpdateSettings}
+              costs={costs}
+              rawLbrHrs={rawLbrHrs}
+              itemCount={itemCount}
+              estimateId={estimateId}
+              onApplyDefaultInstallType={onApplyDefaultInstallType}
+            />
+          )}
+        </div>
+      ),
+    });
+  }
+
+  return null;
 }
