@@ -36,4 +36,12 @@ export const CAT_COLOR = {
   Safety:      "#E11D48",
   Wiring:      "#475569",
   Custom:      "#DC2626",
+  "IO Points":         "#0EA5E9",
+  "DDC Controllers":   "#1D4ED8",
+  "IO Modules":        "#4F46E5",
+  Panels:              "#65A30D",
+  Network:             "#0E7490",
+  "Engineering Labor": "#B45309",
+  Graphics:            "#DB2777",
+  Software:            "#6D28D9",
 };

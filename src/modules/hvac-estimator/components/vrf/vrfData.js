@@ -72,16 +72,17 @@ export const reconcileVrfSelected = (selected, cfg, options = {}) => {
 };
 
 export const VRF_COMPS = [
-  { id:"vrf-gateway",   emtAID:"60087", plnAID:"60087", name:"VRF Gateway Controller", cat:"Controls",    def:true,  desc:"Supervisory controller or BACnet gateway" },
-  { id:"vrf-indoor",    emtAID:"60092", plnAID:"60036", name:"Indoor Unit Controller",  cat:"Controls",    def:true,  desc:"Controller for fan coil or cassette indoor unit" },
-  { id:"vrf-zone",      emtAID:"60082", plnAID:"60032", name:"Zone Temp Sensor",        cat:"Temperature", def:true,  desc:"Wall-mounted zone sensor" },
-  { id:"vrf-dat",       emtAID:"60073", plnAID:"60037", name:"Supply Air Temp",         cat:"Temperature", def:false, desc:"Discharge or leaving air temperature" },
-  { id:"vrf-comm",      emtAID:"162",   plnAID:"161",   name:"VRF Comm Bus",            cat:"Controls",    def:true,  desc:"Manufacturer communication bus wiring" },
-  { id:"vrf-bacnet",    emtAID:"60119", plnAID:"60045", name:"BACnet Integration",      cat:"Controls",    def:true,  desc:"Front-end integration point list" },
-  { id:"vrf-cond",      emtAID:"60103", plnAID:"60042", name:"Outdoor Condenser I/O",   cat:"Controls",    def:true,  desc:"Outdoor unit enable, alarm, and status" },
-  { id:"vrf-branch",    emtAID:"60081", plnAID:"60089", name:"Branch Selector Control", cat:"Actuators",   def:false, desc:"Branch selector or valve box controls" },
-  { id:"vrf-leak",      emtAID:"60168", plnAID:"60167", name:"Refrigerant Leak Sensor", cat:"Safety",      def:false, desc:"Leak monitoring input" },
-  { id:"vrf-float",     emtAID:"60058", plnAID:"60026", name:"Condensate Float Safety", cat:"Safety",      def:true,  desc:"Overflow shutdown safety" },
-  { id:"vrf-pwr-trunk", emtAID:"60135", plnAID:"60052", name:"24V Power Trunk",         cat:"Controls",    def:false, desc:"Transformer and low-voltage power trunk", wire:"-" },
-  { id:"vrf-homerun",   emtAID:"60016", plnAID:"60016", name:"Home Run Conduit",        cat:"Wiring",      def:true,  desc:"EMT home run to panel", wire:"-" },
+  { id:"vrf-gateway",   emtAID:"60087", plnAID:"60087", name:"VRF Gateway Controller", cat:"Controls", controlsId: null,    def:true,  desc:"Supervisory controller or BACnet gateway" },
+  { id:"vrf-indoor",    emtAID:"60092", plnAID:"60036", name:"Indoor Unit Controller",  cat:"Controls", controlsId: null,    def:true,  desc:"Controller for fan coil or cassette indoor unit" },
+  { id:"vrf-zone",      emtAID:"60082", plnAID:"60032", name:"Zone Temp Sensor",        cat:"Temperature", controlsId: "CTL-AI", def:true,  desc:"Wall-mounted zone sensor" },
+  { id:"vrf-dat",       emtAID:"60073", plnAID:"60037", name:"Supply Air Temp",         cat:"Temperature", controlsId: "CTL-AI", def:false, desc:"Discharge or leaving air temperature" },
+  { id:"vrf-comm",      emtAID:"162",   plnAID:"161",   name:"VRF Comm Bus",            cat:"Controls", controlsId: null,    def:true,  desc:"Manufacturer communication bus wiring" },
+  { id:"vrf-bacnet",    emtAID:"60119", plnAID:"60045", name:"BACnet Integration",      cat:"Controls", controlsId: null,    def:true,  desc:"Front-end integration point list" },
+  { id:"vrf-cond",      emtAID:"60103", plnAID:"60042", name:"Outdoor Condenser I/O",   cat:"Controls", controlsId: null,    def:true,  desc:"Outdoor unit enable, alarm, and status" },
+  { id:"vrf-branch",    emtAID:"60081", plnAID:"60089", name:"Branch Selector Control", cat:"Actuators", controlsId: "CTL-AO",   def:false, desc:"Branch selector or valve box controls" },
+  { id:"vrf-leak",      emtAID:"60168", plnAID:"60167", name:"Refrigerant Leak Sensor", cat:"Safety", controlsId: "CTL-BI",      def:false, desc:"Leak monitoring input" },
+  { id:"vrf-float",     emtAID:"60058", plnAID:"60026", name:"Condensate Float Safety", cat:"Safety", controlsId: "CTL-BI",      def:true,  desc:"Overflow shutdown safety" },
+  { id:"vrf-pwr-trunk", emtAID:"60135", plnAID:"60052", name:"24V Power Trunk",         cat:"Controls", controlsId: null,    def:false, desc:"Transformer and low-voltage power trunk", wire:"-" },
+  { id:"vrf-homerun",   emtAID:"60016", plnAID:"60016", name:"Home Run Conduit",        cat:"Wiring", controlsId: null,      def:true,  desc:"EMT home run to panel", wire:"-" },
 ];
+
