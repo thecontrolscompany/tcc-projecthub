@@ -53,7 +53,7 @@ export default async function EstimateDetailPage({
       .order("id", { ascending: true }),
     supabase
       .from("controls_assembly_catalog")
-      .select("id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, freq, alternate_ids")
+      .select("id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, alternate_ids")
       .eq("organization_id", estimate.organization_id)
       .order("id", { ascending: true }),
   ]);

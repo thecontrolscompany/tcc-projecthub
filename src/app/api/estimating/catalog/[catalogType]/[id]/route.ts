@@ -84,12 +84,17 @@ export async function PATCH(
     return NextResponse.json({ error: "No fields to update." }, { status: 400 });
   }
 
+  const selectColumns =
+    catalogType === "install"
+      ? "id, organization_id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, freq, alternate_ids"
+      : "id, organization_id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, alternate_ids";
+
   const { data, error } = await supabase
     .from(table)
     .update(patch)
     .eq("organization_id", organizationId)
     .eq("id", id)
-    .select("id, organization_id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, freq, alternate_ids")
+    .select(selectColumns)
     .maybeSingle();
 
   if (error) {
