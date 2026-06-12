@@ -74,7 +74,7 @@ export function SidebarLayout({ pageKey, main, sidebar, mobileBadge }) {
   }
 
   return (
-    <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+    <div style={{ flex: 1, display: "flex", overflow: "hidden", height: "100vh", minHeight: 0 }}>
 
       {/* Sidebar */}
       <div style={{
@@ -84,9 +84,11 @@ export function SidebarLayout({ pageKey, main, sidebar, mobileBadge }) {
         background: T.surface,
         display: "flex",
         flexDirection: "column",
-        height: "100%",
+        height: "100vh",
         overflow: "hidden",
         flexShrink: 0,
+        position: "sticky",
+        top: 0,
       }}>
         {sidebar}
       </div>
@@ -131,7 +133,7 @@ export function SidebarLayout({ pageKey, main, sidebar, mobileBadge }) {
       </div>
 
       {/* Main content area */}
-      <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+      <div style={{ flex: 1, minWidth: 0, overflow: "auto", height: "100vh", minHeight: 0 }}>
         {main}
       </div>
     </div>

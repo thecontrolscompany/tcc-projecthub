@@ -743,38 +743,6 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
                   </option>
                 ))}
               </select>
-              <button
-                type="button"
-                onClick={() => router.push(`/estimating/settings?organizationId=${encodeURIComponent(organizationId)}`)}
-                disabled={!organizationId}
-                className="rounded-lg border border-border-default px-3 py-1.5 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                AI Settings
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAiParser(true)}
-                disabled={!organizationId}
-                className="rounded-lg border border-brand-primary/40 px-3 py-1.5 text-sm font-semibold text-brand-primary transition hover:bg-brand-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                AI Parser
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving || deleting}
-                className="rounded-lg bg-brand-primary px-3 py-1.5 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {saving ? "Saving..." : dirty ? "Save Changes" : "Save"}
-              </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={saving || deleting}
-                className="rounded-lg border border-status-danger/40 px-3 py-1.5 text-sm font-semibold text-status-danger transition hover:bg-status-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {deleting ? "Deleting..." : "Delete"}
-              </button>
             </div>
           </div>
           <LegacyEstimatorWorkspace
@@ -783,6 +751,10 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
             onBack={() => {
               window.location.href = "/estimating";
             }}
+            onSave={handleSave}
+            onDelete={handleDelete}
+            saving={saving}
+            deleting={deleting}
             platformEstimateId={estimate.id}
             initialProposalTab={initialProposalTab}
           />
@@ -1419,12 +1391,20 @@ function LegacyEstimatorWorkspace({
   estimate,
   onUpdate,
   onBack,
+  onSave,
+  onDelete,
+  saving,
+  deleting,
   platformEstimateId,
   initialProposalTab,
 }: {
   estimate: EstimateBody;
   onUpdate: (patch: Partial<EstimateBody>) => void;
   onBack: () => void;
+  onSave: () => void;
+  onDelete: () => void;
+  saving: boolean;
+  deleting: boolean;
   platformEstimateId: string;
   initialProposalTab?: string | null;
 }) {
@@ -1492,6 +1472,10 @@ function LegacyEstimatorWorkspace({
       estimate={estimate}
       onBack={onBack}
       onUpdate={onUpdate}
+      onSave={onSave}
+      onDelete={onDelete}
+      saving={saving}
+      deleting={deleting}
       allowBidAlternateEditor={true}
       renderBidAlternateEditor={() => <BidAlternateEditor estimate={estimate} onBack={() => setSubPage(null)} onUpdate={onUpdate} alternateId={subPage?.alternateId} />}
       showProjectSettings={true}

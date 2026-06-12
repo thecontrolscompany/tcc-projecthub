@@ -19,6 +19,10 @@ import SelectionWizardPage from "../selectionWizard";
  * @property {Record<string, unknown>} estimate
  * @property {() => void} onBack
  * @property {(estimate: Record<string, unknown>) => void} onUpdate
+ * @property {(() => void) | null} [onSave]
+ * @property {(() => void) | null} [onDelete]
+ * @property {boolean} [saving]
+ * @property {boolean} [deleting]
  * @property {boolean} [allowBidAlternateEditor]
  * @property {(() => import("react").ReactNode) | null} [renderBidAlternateEditor]
  * @property {boolean} [showProjectSettings]
@@ -34,6 +38,10 @@ export function EstimateEditorWorkspace({
   estimate,
   onBack,
   onUpdate,
+  onSave = null,
+  onDelete = null,
+  saving = false,
+  deleting = false,
   allowBidAlternateEditor = false,
   renderBidAlternateEditor = null,
   showProjectSettings = false,
@@ -90,6 +98,10 @@ export function EstimateEditorWorkspace({
               estimate={estimate}
               onBack={onBack}
               onUpdate={onUpdate}
+              onSave={onSave}
+              onDelete={onDelete}
+              saving={saving}
+              deleting={deleting}
               showProjectSettings={showProjectSettings}
               showBidAlternates={showBidAlternates}
               platformEstimateId={platformEstimateId}
@@ -102,6 +114,10 @@ export function EstimateEditorWorkspace({
               estimate={estimate}
               onBack={onBack}
               onUpdate={onUpdate}
+              onSave={onSave}
+              onDelete={onDelete}
+              saving={saving}
+              deleting={deleting}
               showProjectSettings={showProjectSettings}
               showBidAlternates={showBidAlternates}
               platformEstimateId={platformEstimateId}
@@ -123,6 +139,10 @@ export function EstimateEditorWorkspace({
       estimate={estimate}
       onBack={onBack}
       onUpdate={onUpdate}
+      onSave={onSave}
+      onDelete={onDelete}
+      saving={saving}
+      deleting={deleting}
       showProjectSettings={showProjectSettings}
       showBidAlternates={showBidAlternates}
       platformEstimateId={platformEstimateId}

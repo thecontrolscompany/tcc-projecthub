@@ -13,15 +13,27 @@ const DEFAULT_BUTTONS = [
     { type:"custom", label:"Custom", bg:"#6B7280", },
   ];
 
-export function AddEquipButtons({ onAdd, buttons = DEFAULT_BUTTONS }) {
+export function AddEquipButtons({ onAdd, buttons = DEFAULT_BUTTONS, compact = false, className = "" }) {
+  const gap = compact ? 4 : 5;
+  const padding = compact ? "6px 10px" : "7px 12px";
+  const fontSize = compact ? 10 : 11;
   return (
-    <div style={{ display:"flex", flexDirection:"column", gap:8, flexShrink:0 }}>
-      <div style={{ display:"flex", gap:5, flexShrink:0, flexWrap:"wrap" }}>
+    <div className={className} style={{ display:"flex", flexDirection:"column", gap:8, flexShrink:0 }}>
+      <div style={{ display:"flex", gap, flexShrink:0, flexWrap:"wrap" }}>
         {buttons.map(b => (
           <button key={b.type} onClick={()=>onAdd(b.type)} style={{
-            padding:"7px 12px", border:"none", borderRadius:5,
-            background:b.bg, color:"#fff",
-            cursor:"pointer", fontSize:11, fontFamily:T.mono, fontWeight:700 }}>
+            padding,
+            border:"none",
+            borderRadius:5,
+            background:b.bg,
+            color:"#fff",
+            cursor:"pointer",
+            fontSize,
+            fontFamily:T.mono,
+            fontWeight:700,
+            lineHeight:1.1,
+            boxShadow:"0 1px 0 rgba(255,255,255,0.08) inset",
+          }}>
             + {b.label}
           </button>
         ))}

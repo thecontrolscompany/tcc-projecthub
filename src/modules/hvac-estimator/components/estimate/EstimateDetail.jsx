@@ -14,6 +14,15 @@ import { ProjectSettingsPanel } from "./ProjectSettingsPanel.jsx";
 import { ProposalDetailsModal } from "./ProposalDetailsModal.jsx";
 import { applyImportedScopeImportToEstimate } from "../../ai/scopeImportToEstimate.js";
 import {
+  buildEstimateHealthRows,
+  buildNeedsReviewIssues,
+  CostCategorySection,
+  EstimateCommandCenter,
+  EstimateHealthPanel,
+  EstimatorActionBar,
+  NeedsReviewPanel,
+} from "./estimateUx.jsx";
+import {
   TYPE_META,
   buildItemsWithComps,
   calcEstimate,
@@ -21,11 +30,26 @@ import {
   fmtAuditDate,
   getItemDetails,
 } from "./estimateCalc.js";
-export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = false, showProjectSettings = true, showBidAlternates = true, platformEstimateId = null, initialProposalTab = null }) {
+export function EstimateDetail({
+  estimate,
+  onBack,
+  onUpdate,
+  onSave = null,
+  onDelete = null,
+  saving = false,
+  deleting = false,
+  customerMode = false,
+  showProjectSettings = true,
+  showBidAlternates = true,
+  platformEstimateId = null,
+  initialProposalTab = null,
+}) {
   const { subPage, setSubPage, applyDefaultInstallType, controlsCatalog } = useEstimate();
   const isMobile = useIsMobile();
   const [editHeader, setEditHeader] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
+  const [expandedDdc, setExpandedDdc] = useState(true);
+  const [recentlyEditedAt, setRecentlyEditedAt] = useState({});
   const [showSettings, setShowSettings] = useState(false);
   const [showProposalDetails, setShowProposalDetails] = useState(false);
   const [showAiParser, setShowAiParser] = useState(false);
@@ -90,7 +114,6 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     rawLbrHrs: 0,
     grandTotal: 0,
   };
-  const turnkeyTotal = costs.total + controlsCosts.total;
   const sanityCheck = useMemo(
     () => getSanityCheck({
       installTotal: costs.total,
@@ -99,15 +122,41 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     }),
     [controlsCosts.labor, controlsCosts.material, costs.total]
   );
+  const healthRows = useMemo(() => buildEstimateHealthRows(sanityCheck), [sanityCheck]);
+  const needsReviewIssues = useMemo(() => buildNeedsReviewIssues({
+    estimate,
+    controlsCatalog,
+    sanityCheck,
+    showBidAlternates,
+  }), [controlsCatalog, estimate, sanityCheck, showBidAlternates]);
+  const recentCutoffMs = 120000;
+  const recentlyEditedItemIds = useMemo(() => {
+    const now = Date.now();
+    return new Set(
+      Object.entries(recentlyEditedAt)
+        .filter(([, editedAt]) => now - Number(editedAt || 0) <= recentCutoffMs)
+        .map(([itemId]) => itemId)
+    );
+  }, [recentlyEditedAt]);
 
   const saveHeader = () => {
     onUpdate({...estimate, name, number, customer, bidder, version, notes, updatedAt:new Date().toISOString()});
     setEditHeader(false);
   };
 
-  const updateItem = (itemId, changes) =>
-    onUpdate({...estimate, updatedAt:new Date().toISOString(),
-      items: estimate.items.map(it => it.id===itemId ? {...it,...changes} : it)});
+  const markRecentlyEdited = useCallback((itemId) => {
+    if (!itemId) return;
+    setRecentlyEditedAt((prev) => ({ ...prev, [itemId]: Date.now() }));
+  }, [estimate.items]);
+
+  const updateItem = useCallback((itemId, changes) => {
+    onUpdate({
+      ...estimate,
+      updatedAt: new Date().toISOString(),
+      items: estimate.items.map((it) => (it.id === itemId ? { ...it, ...changes } : it)),
+    });
+    markRecentlyEdited(itemId);
+  }, [estimate, markRecentlyEdited, onUpdate]);
 
   const updateControlsOverride = (itemId, compId, overrideId, defaultId) => {
     const item = estimate.items.find(it => it.id === itemId);
@@ -289,6 +338,10 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     return importedCount;
   }, [estimate, onUpdate]);
 
+  const openAiSettings = useCallback(() => {
+    window.location.href = `/estimating/settings?organizationId=${encodeURIComponent(organizationId)}`;
+  }, [organizationId]);
+
   return (
     <div style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
 
@@ -352,85 +405,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                 )}
               </div>
 
-              {/* 4-bucket totals pill */}
-              <div style={{ display:"flex", gap:0, background:T.panel, border:"1px solid "+T.border,
-                borderRadius:7, overflow:"hidden", flex:"0 0 auto", fontSize:11, fontFamily:T.mono }}>
-                {[
-                  { label:"Labor",    val:costs.labor,    color:T.steel  },
-                  { label:"Material", val:costs.material, color:T.blue   },
-                  { label:"Overhead", val:costs.overhead, color:"#7C3AED" },
-                  { label:"Profit",   val:costs.profit,   color:T.green  },
-                ].map(({label,val,color}) => (
-                  <div key={label} style={{ padding:"5px 12px", textAlign:"center",
-                    borderRight:"1px solid "+T.border }}>
-                    <div style={{ fontSize:9, color:T.muted, textTransform:"uppercase", letterSpacing:1 }}>{label}</div>
-                    <div style={{ fontWeight:700, color }}>{fmt$(val)}</div>
-                  </div>
-                ))}
-                <div style={{ padding:"5px 12px", textAlign:"center" }}>
-                  <div style={{ fontSize:9, color:T.muted, textTransform:"uppercase", letterSpacing:1 }}>Total</div>
-                  <div style={{ fontWeight:700, fontSize:13, color:T.text }}>{fmt$(costs.total)}</div>
-                </div>
-              </div>
             </div>
-
-            {/* Add equipment + Settings */}
-            {!customerMode && (
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
-                gap:10, flexWrap:"wrap", paddingTop:10, borderTop:"1px solid "+T.border }}>
-                <AddEquipButtons
-                  onAdd={type => setSubPage({type})}
-                />
-                <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
-                  {showBidAlternates && (
-                    <button onClick={() => createBidAlternate("installation", "Bid Alternate")}
-                      title="Create a new bid alternate"
-                      style={{ padding:"7px 10px", border:"1px solid "+T.green,
-                        borderRadius:5, background:T.greenFaint || "#F0FDF4",
-                        color:T.green, cursor:"pointer", fontSize:12,
-                        fontFamily:T.mono, fontWeight:600 }}>
-                      + Bid Alternate
-                    </button>
-                  )}
-                  <button onClick={()=>setSubPage({ type:"wizard" })}
-                    title="Open system selection wizard"
-                    style={{ padding:"7px 10px", border:"1px solid "+T.border2,
-                      borderRadius:5, background:"none",
-                      color:T.muted, cursor:"pointer", fontSize:12,
-                      fontFamily:T.mono, fontWeight:600 }}>
-                    System Wizard
-                  </button>
-                  <button onClick={()=>setShowProposalDetails(s=>!s)}
-                    title="Proposal details"
-                    style={{ padding:"7px 10px", border:"1px solid "+(showProposalDetails?T.blue:T.border2),
-                      borderRadius:5, background:showProposalDetails?T.blueFaint:"none",
-                      color:showProposalDetails?T.blue:T.muted, cursor:"pointer", fontSize:12,
-                      fontFamily:T.mono, fontWeight:600 }}>
-                    Proposal Details
-                  </button>
-                  {!customerMode && (
-                    <button onClick={()=>setShowAiParser(s=>!s)}
-                      title="AI parser"
-                      style={{ padding:"7px 10px", border:"1px solid "+(showAiParser?T.blue:T.border2),
-                        borderRadius:5, background:showAiParser?T.blueFaint:"none",
-                        color:showAiParser?T.blue:T.muted, cursor:"pointer", fontSize:12,
-                        fontFamily:T.mono, fontWeight:600 }}>
-                      AI Parser
-                    </button>
-                  )}
-                  {showProjectSettings && (
-                    <button onClick={()=>setShowSettings(s=>!s)}
-                      title="Project settings"
-                      style={{ padding:"7px 10px", border:"1px solid "+(showSettings?T.blue:T.border2),
-                        borderRadius:5, background:showSettings?T.blueFaint:"none",
-                        color:showSettings?T.blue:T.muted, cursor:"pointer", fontSize:12,
-                        fontFamily:T.mono, fontWeight:600 }}>
-                      Settings
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         ) : (
           <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
@@ -463,46 +438,68 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
         )}
       </div>
 
+      <div style={{ padding:"0 24px 16px", display:"grid", gap:12 }}>
+        {!customerMode && (
+          <EstimatorActionBar
+            customerMode={customerMode}
+            exporting={exporting}
+            saving={saving}
+            deleting={deleting}
+            onGenerateProposal={exportProposal}
+            onSave={onSave}
+            onInternalReport={exportInternal}
+            onProposalDetails={() => setShowProposalDetails((value) => !value)}
+            onBidAlternate={() => createBidAlternate("installation", "Bid Alternate")}
+            onSystemWizard={() => setSubPage({ type: "wizard" })}
+            onAiParser={() => setShowAiParser((value) => !value)}
+            onSettings={() => setShowSettings((value) => !value)}
+            onAiSettings={openAiSettings}
+            onDelete={onDelete}
+            onAddEquipment={(type) => setSubPage({ type })}
+            showBidAlternates={showBidAlternates}
+            showProjectSettings={showProjectSettings}
+          />
+        )}
+
+        <EstimateCommandCenter
+          total={costs.total}
+          labor={costs.labor}
+          material={costs.material}
+          overhead={costs.overhead}
+          profit={costs.profit}
+          bond={costs.bond}
+          laborHours={totals.lbrHrs}
+          statusLabel={getEstimateScopeModeLabel(settings.estimateScopeMode)}
+          estimateName={estimate.name}
+        />
+
+        <div style={{ display:"grid", gap:12, gridTemplateColumns:"repeat(auto-fit, minmax(280px, 1fr))" }}>
+          <EstimateHealthPanel rows={healthRows} />
+          <NeedsReviewPanel issues={needsReviewIssues} />
+        </div>
+      </div>
+
       {!customerMode && settings.estimateScopeMode === "both" && (
         <div style={{ padding:"0 24px 18px" }}>
           <div style={{ border:"1px solid "+T.border, borderRadius:10, background:T.surface, overflow:"hidden" }}>
             <div style={{ padding:"10px 14px", borderBottom:"1px solid "+T.border }}>
               <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Turnkey Cost Summary</div>
               <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>
-                Install Labor and Material come from the install catalog. Controls Material and Controls Engineering Labor are computed automatically from the controls catalog using each component's controls pairing.
+                Install cost is already captured in the command center above. This panel keeps the DDC infrastructure detail visible without repeating the full totals.
               </div>
             </div>
             <div style={{ padding:"12px 14px", display:"grid", gap:12 }}>
-              <div style={{ display:"flex", gap:0, background:T.panel, border:"1px solid "+T.border, borderRadius:7, overflow:"hidden", fontSize:11, fontFamily:T.mono }}>
-                {[
-                  { label:"Install Total", val:costs.total, color:T.steel },
-                  { label:"Controls Material", val:controlsCosts.material, color:T.blue },
-                  { label:"Controls Eng. Labor", val:controlsCosts.labor, color:T.purple },
-                ].map(({ label, val, color }) => (
-                  <div key={label} style={{ flex:1, padding:"5px 12px", textAlign:"center", borderRight:"1px solid "+T.border }}>
-                    <div style={{ fontSize:9, color:T.muted, textTransform:"uppercase", letterSpacing:1 }}>{label}</div>
-                    <div style={{ fontWeight:700, color }}>{fmt$(val)}</div>
-                  </div>
-                ))}
-                <div style={{ flex:1, padding:"5px 12px", textAlign:"center" }}>
-                  <div style={{ fontSize:9, color:T.muted, textTransform:"uppercase", letterSpacing:1 }}>Turnkey Total</div>
-                  <div style={{ fontWeight:700, fontSize:13, color:T.text }}>{fmt$(turnkeyTotal)}</div>
-                </div>
-              </div>
-
               {ddcInfrastructure.rows.length > 0 && (
-                <div style={{ border:"1px solid "+T.border, borderRadius:8, background:T.panel, padding:"10px 12px" }}>
-                  <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", gap:12, flexWrap:"wrap", marginBottom:8 }}>
-                    <div>
-                      <div style={{ fontSize:9, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>DDC Infrastructure</div>
-                      <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>
-                        Sized from the selected controls devices. Points AI {ddcInfrastructure.pointCounts.AI}, AO {ddcInfrastructure.pointCounts.AO}, BI {ddcInfrastructure.pointCounts.BI}, BO {ddcInfrastructure.pointCounts.BO}; controllers {ddcInfrastructure.controllerCount}; equipment instances {ddcInfrastructure.equipmentCount}.
-                      </div>
-                    </div>
-                    <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono }}>
-                      Raw subtotal {fmt$(ddcInfrastructure.grandTotal)}
-                    </div>
-                  </div>
+                <CostCategorySection
+                  id="ddc-infrastructure"
+                  label="DDC Infrastructure"
+                  subtotal={ddcInfrastructure.grandTotal}
+                  laborHours={ddcInfrastructure.rawLbrHrs}
+                  itemCount={ddcInfrastructure.rows.length}
+                  expanded={expandedDdc}
+                  note={`Sized from the selected controls devices. Points AI ${ddcInfrastructure.pointCounts.AI}, AO ${ddcInfrastructure.pointCounts.AO}, BI ${ddcInfrastructure.pointCounts.BI}, BO ${ddcInfrastructure.pointCounts.BO}; controllers ${ddcInfrastructure.controllerCount}; equipment instances ${ddcInfrastructure.equipmentCount}.`}
+                  onToggle={() => setExpandedDdc((value) => !value)}
+                >
                   <div style={{ display:"grid", gap:6 }}>
                     {ddcInfrastructure.rows.map((row) => (
                       <div key={row.catalogId} style={{ display:"grid", gridTemplateColumns:"minmax(220px, 1fr) 48px 88px 88px", gap:10, alignItems:"center", padding:"6px 8px", border:"1px solid "+T.border, borderRadius:6, background:T.surface }}>
@@ -516,32 +513,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {sanityCheck && (
-                <div style={{ display:"grid", gap:6 }}>
-                  <div style={{ fontSize:9, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1 }}>40 / 40 / 20 Sanity Check</div>
-                  {[
-                    { label:"Install (target 40%)", bucket:sanityCheck.install },
-                    { label:"Controls Material (target 40%)", bucket:sanityCheck.controlsMaterial },
-                    { label:"Controls Eng. Labor (target 20%)", bucket:sanityCheck.controlsLabor },
-                  ].map(({ label, bucket }) => {
-                    const diff = Math.abs(bucket.pct - bucket.target);
-                    const color = diff <= 5 ? T.green : diff <= 15 ? T.amber : T.rose;
-                    return (
-                      <div key={label} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, padding:"6px 10px", border:"1px solid "+T.border, borderRadius:6, background:T.panel }}>
-                        <div style={{ fontSize:12, color:T.text }}>{label}</div>
-                        <div style={{ fontSize:12, fontFamily:T.mono, fontWeight:700, color }}>
-                          {bucket.pct.toFixed(1)}% ({fmt$(bucket.value)})
-                        </div>
-                      </div>
-                    );
-                  })}
-                  <div style={{ fontSize:10, color:T.dim, lineHeight:1.5 }}>
-                    Informational only - a healthy turnkey bid is roughly 40% install, 40% controls material, and 20% controls engineering labor. A large deviation may mean missing scope or a pricing issue, but this never blocks saving or exporting.
-                  </div>
-                </div>
+                </CostCategorySection>
               )}
             </div>
           </div>
@@ -642,45 +614,15 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
 
       {/* ── LINE ITEMS TABLE ── */}
       <div style={{ flex:1, overflow:"auto", padding:"20px 24px" }}>
-        <div style={{
-          position:"sticky",
-          top:0,
-          zIndex:20,
-          marginBottom:16,
-          padding:"10px 12px",
-          border:"1px solid "+T.border,
-          borderRadius:10,
-          background:T.surface,
-          boxShadow:"0 8px 20px rgba(15,23,42,0.08)",
-          opacity:0.98,
-        }}>
-          <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
-            <div style={{ minWidth:150, flex:"1 1 150px" }}>
-              <div style={{ fontSize:9, color:T.muted, fontFamily:T.mono,
-                textTransform:"uppercase", letterSpacing:1.3 }}>Live Estimate Summary</div>
-              <div style={{ fontSize:11, color:T.dim, marginTop:2 }}>
-                {estimate.items.length} line item{estimate.items.length!==1?"s":""} · {fmtHr(totals.lbrHrs)} raw labor
-              </div>
+        <div style={{ display:"flex", justifyContent:"space-between", gap:12, flexWrap:"wrap", marginBottom:14 }}>
+          <div>
+            <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Live Estimate Summary</div>
+            <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>
+              Grouped by equipment type so the line items are easier to scan.
             </div>
-            {[
-              ...(customerMode ? [] : [
-                { label:"Material", val:costs.material, color:T.blue },
-                { label:"Labor", val:costs.labor, color:T.steel },
-                { label:"Bond", val:costs.bond, color:"#B45309" },
-              ]),
-              { label:"Total", val:costs.total, color:T.text, bold:true },
-            ].map(({label,val,color,bold}) => (
-              <div key={label} style={{
-                minWidth:112,
-                padding:"6px 10px",
-                borderLeft:"1px solid "+T.border,
-              }}>
-                <div style={{ fontSize:9, color:T.muted, fontFamily:T.mono,
-                  textTransform:"uppercase", letterSpacing:1.1 }}>{label}</div>
-                <div style={{ fontSize:bold?15:13, fontWeight:bold?800:700, color,
-                  fontFamily:T.mono }}>{fmt$(val)}</div>
-              </div>
-            ))}
+          </div>
+          <div style={{ fontSize:11, color:T.muted, fontFamily:T.mono }}>
+            {estimate.items.length} line item{estimate.items.length !== 1 ? "s" : ""} · {fmtHr(totals.lbrHrs)} raw labor
           </div>
         </div>
         {estimate.items.length === 0 ? (
@@ -700,8 +642,9 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
             {estimate.items.map((item, idx) => {
               const c = calcItem(item);
               const meta = TYPE_META[item.type] || { label:item.type.toUpperCase(), color:T.steel, bg:T.faint };
+              const isRecent = recentlyEditedItemIds.has(item.id);
               return (
-                <div key={item.id} style={{ background:T.surface, border:"1px solid "+T.border,
+                <div key={item.id} style={{ background:isRecent ? T.blueFaint : T.surface, border:"1px solid "+T.border,
                   borderLeft:"3px solid "+meta.color, borderRadius:8, padding:"12px 14px" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
                     <span style={{ fontSize:11, background:meta.bg, color:meta.color,
@@ -709,6 +652,11 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                       {meta.label}
                     </span>
                     <span style={{ fontFamily:T.mono, fontWeight:700, color:meta.color, fontSize:14 }}>{item.tag}</span>
+                    {isRecent && (
+                      <span style={{ fontSize:9, fontFamily:T.mono, color:T.blue, background:T.blueFaint, border:"1px solid "+T.blueMid, borderRadius:999, padding:"2px 6px" }}>
+                        Edited
+                      </span>
+                    )}
                     <span style={{ fontSize:12, color:T.muted, marginLeft:4 }}>{item.location}</span>
                   </div>
                   <div style={{ display:"flex", gap:16, marginBottom:8 }}>
