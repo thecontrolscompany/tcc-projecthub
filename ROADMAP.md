@@ -42,13 +42,13 @@
 - [x] **Admin View As** - role preview banner for admin testing
 - [x] **Timesheets / Time tracking** - time entries, approvals, reconciliation, QB sync, weekly summaries, and project/employee hour breakdowns
 - [x] **Printable reports** - weekly update, BOM, change order, and status pages with print-ready layouts
+- [x] **Controls/Turnkey Estimating Redesign** - every estimate computes Install Labor/Material + Controls Material/Engineering Labor buckets from one item selection; `estimateScopeMode` is Install Only vs Turnkey; includes a 40/40/20 sanity check and per-instance controls substitution via the controls catalog's `alternate_ids`. Install-side substitution (`installOverride`) remains future work because install alternates are not yet curated. Spec: `codex/roadmap-controls-turnkey-estimating.md`
 
 ---
 
 ## Planned
 
 ### Near-Term
-- [ ] **Controls/Turnkey Estimating Redesign** (Priority: High) — every estimate computes Install Labor/Material + Controls Material/Engineering Labor buckets from one item selection; `estimateScopeMode` becomes an Install Only vs Turnkey export toggle; adds a 40/40/20 sanity check and curated part substitution. **Phase 1 done** — `install_assembly_catalog`/`controls_assembly_catalog` Supabase tables (org-scoped, module-gated) replace the static `assemblyData.js`/localStorage price book; install catalog seeded (400 rows for `tcc`); Price Book rebuilt as live Install/Controls tabs. **Phase 2 done** — controls catalog seeded (24 rows for `tcc`) and `controlsId` added across the HVAC component data. **Phase 3 done** — four-bucket cost model and scope mode simplification landed. **Phase 4a done** — Turnkey summary and 40/40/20 sanity check added. Remaining: Phase 4b (per-instance substitution UI). Spec: `codex/roadmap-controls-turnkey-estimating.md`
 - [ ] **Budget vs Actual** (Priority: High) — labor and material cost vs estimate by project; feeds job costing. Depends on timesheets and BOM. Spec: `codex/roadmap-budget-vs-actual.md`
 - [ ] **QBO Integration** (Priority: High) — 4-phase OAuth sync: read customers/estimates/invoices → write invoices → bills/payroll → full 2-way. Spec: `codex/roadmap-qbo-integration.md`
 - [ ] **Estimator ↔ ProjectHub Integration** (Priority: High) — Phase 1: cloud auth migration; Phase 2: link estimates to projects; Phase 3: push POC weights from estimate. Spec: `.claude/plans/goofy-sniffing-karp.md`

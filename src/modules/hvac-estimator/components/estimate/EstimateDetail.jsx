@@ -98,6 +98,22 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     onUpdate({...estimate, updatedAt:new Date().toISOString(),
       items: estimate.items.map(it => it.id===itemId ? {...it,...changes} : it)});
 
+  const updateControlsOverride = (itemId, compId, overrideId, defaultId) => {
+    const item = estimate.items.find(it => it.id === itemId);
+    if (!item) return;
+    const nextSelected = (item.selected || []).map(entry => {
+      if (entry.id !== compId) return entry;
+      const next = { ...entry };
+      if (!overrideId || overrideId === defaultId) {
+        delete next.controlsOverride;
+      } else {
+        next.controlsOverride = overrideId;
+      }
+      return next;
+    });
+    updateItem(itemId, { selected: nextSelected });
+  };
+
   const removeItem = itemId =>
     onUpdate({...estimate, updatedAt:new Date().toISOString(),
       items: estimate.items.filter(it => it.id!==itemId)});
@@ -725,8 +741,8 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
             </thead>
             <tbody>
               {estimate.items.map((item,idx) => {
-                const c = calcItem(item);
-                const details = getItemDetails(item);
+                const c = calcItem(item, controlsCatalog);
+                const details = getItemDetails(item, controlsCatalog);
                 const isExpanded = !!expandedRows[item.id];
                 const meta = TYPE_META[item.type] || { label:item.type.toUpperCase(), color:T.steel, bg:T.faint };
                 const ahuLabel = item.type==="ahu" && item.cfg
@@ -826,15 +842,34 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                                 gap:10,
                                 padding:"5px 0",
                                 borderBottom:"1px dashed "+T.border,
+                                flexWrap:"wrap",
                               }}>
                                 <div style={{ minWidth:0 }}>
                                   <div style={{ fontSize:12, color:T.text }}>{entry.label}</div>
                                   <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono }}>Qty {entry.qty}</div>
+                                  {!customerMode && entry.controlsAlternates.length > 1 && (
+                                    <select
+                                      value={entry.controlsOverride || entry.controlsId}
+                                      onChange={e => updateControlsOverride(item.id, entry.id, e.target.value, entry.controlsId)}
+                                      style={{ marginTop:4, padding:"2px 4px", border:"1px solid "+T.border2,
+                                        borderRadius:3, fontSize:10, fontFamily:T.mono, background:T.bg,
+                                        color:T.text, outline:"none", maxWidth:260 }}
+                                    >
+                                      {entry.controlsAlternates.map(alt => (
+                                        <option key={alt.id} value={alt.id}>{alt.desc}</option>
+                                      ))}
+                                    </select>
+                                  )}
                                 </div>
                                 {!customerMode && (
                                   <div style={{ textAlign:"right", flexShrink:0 }}>
                                     <div style={{ fontSize:11, color:T.blue, fontFamily:T.mono }}>{fmt$(entry.mtl)}</div>
                                     <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono }}>{fmtHr(entry.lbr)}</div>
+                                    {settings.estimateScopeMode === "both" && entry.controlsId && (
+                                      <div style={{ fontSize:10, color:T.purple, fontFamily:T.mono, marginTop:2 }}>
+                                        Ctrl {fmt$(entry.controlsMtl)} / {fmtHr(entry.controlsLbr)}
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
