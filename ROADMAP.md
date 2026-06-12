@@ -48,6 +48,7 @@
 ## Planned
 
 ### Near-Term
+- [ ] **Controls/Turnkey Estimating Redesign** (Priority: High) — every estimate computes Install Labor/Material + Controls Material/Engineering Labor buckets from one item selection; `estimateScopeMode` becomes an Install Only vs Turnkey export toggle; adds a 40/40/20 sanity check and curated part substitution. **Phase 1 done** — `install_assembly_catalog`/`controls_assembly_catalog` Supabase tables (org-scoped, module-gated) replace the static `assemblyData.js`/localStorage price book; install catalog seeded (400 rows for `tcc`); Price Book rebuilt as live Install/Controls tabs. Remaining: Phase 2 (controls catalog content + install/controls pairing), Phase 3 (four-bucket cost model + scope mode simplification), Phase 4 (sanity check + substitution UI). Spec: `codex/roadmap-controls-turnkey-estimating.md`
 - [ ] **Budget vs Actual** (Priority: High) — labor and material cost vs estimate by project; feeds job costing. Depends on timesheets and BOM. Spec: `codex/roadmap-budget-vs-actual.md`
 - [ ] **QBO Integration** (Priority: High) — 4-phase OAuth sync: read customers/estimates/invoices → write invoices → bills/payroll → full 2-way. Spec: `codex/roadmap-qbo-integration.md`
 - [ ] **Estimator ↔ ProjectHub Integration** (Priority: High) — Phase 1: cloud auth migration; Phase 2: link estimates to projects; Phase 3: push POC weights from estimate. Spec: `.claude/plans/goofy-sniffing-karp.md`
