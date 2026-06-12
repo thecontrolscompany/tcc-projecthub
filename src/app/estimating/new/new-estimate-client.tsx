@@ -95,7 +95,12 @@ export function NewEstimateClient({ initialEstimate, accounts }: Props) {
         return;
       }
 
-      router.push("/estimating");
+      const estimateId = typeof json?.estimate?.id === "string" ? json.estimate.id : "";
+      if (estimateId) {
+        router.replace(`/estimating/${estimateId}`);
+      } else {
+        router.push("/estimating");
+      }
       router.refresh();
     } finally {
       setSubmitting(false);
