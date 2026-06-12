@@ -175,6 +175,80 @@ function getSeverityBadge(severity) {
   return severityStyles[severity] || severityStyles.info;
 }
 
+export function EstimatorTabs({ tabs, activeTab, onChange }) {
+  return (
+    <nav
+      aria-label="Estimator sections"
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 6,
+        padding: "0 24px",
+      }}
+    >
+      <div
+        style={{
+          display: "inline-flex",
+          gap: 4,
+          padding: 4,
+          border: "1px solid " + T.border,
+          borderRadius: 999,
+          background: T.surface,
+          boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
+          flexWrap: "wrap",
+        }}
+      >
+        {tabs.map((tab) => {
+          const active = activeTab === tab.id;
+          const badge = tab.badge ? String(tab.badge) : "";
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onChange(tab.id)}
+              aria-pressed={active}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
+                padding: "7px 12px",
+                border: "1px solid " + (active ? T.blueMid : "transparent"),
+                borderRadius: 999,
+                background: active ? T.blueFaint : "transparent",
+                color: active ? T.blue : T.text,
+                cursor: "pointer",
+                fontSize: 12,
+                fontFamily: T.mono,
+                fontWeight: 700,
+              }}
+            >
+              <span>{tab.label}</span>
+              {badge ? (
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "2px 7px",
+                    borderRadius: 999,
+                    background: active ? "#E0F2FE" : T.panel,
+                    border: "1px solid " + (active ? T.blueMid : T.border2),
+                    color: active ? T.blue : T.muted,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {badge}
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
 export function EstimateCommandCenter({
   total,
   labor,
@@ -486,15 +560,8 @@ export function EstimatorActionBar({
   onSave,
   onInternalReport,
   onProposalDetails,
-  onBidAlternate,
-  onSystemWizard,
-  onAiParser,
-  onSettings,
-  onAiSettings,
   onDelete,
   onAddEquipment,
-  showBidAlternates,
-  showProjectSettings,
 }) {
   return (
     <section
@@ -503,176 +570,90 @@ export function EstimatorActionBar({
         border: "1px solid " + T.border,
         borderRadius: 12,
         background: T.surface,
-        padding: "10px 12px",
+        padding: "8px 10px",
       }}
     >
-      <div style={{ display: "grid", gap: 10 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div>
-            <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        {!customerMode && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3, marginRight: 4 }}>
               Workflow Actions
             </div>
-            <div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>
-              Keep the important steps closest to the estimate.
-            </div>
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          {!customerMode && (
-            <>
+            <button
+              type="button"
+              onClick={onGenerateProposal}
+              disabled={exporting}
+              style={{
+                padding: "8px 12px",
+                border: "1px solid " + T.border2,
+                borderRadius: 999,
+                background: T.green,
+                color: "#fff",
+                cursor: exporting ? "default" : "pointer",
+                fontSize: 12,
+                fontFamily: T.mono,
+                fontWeight: 700,
+                opacity: exporting ? 0.8 : 1,
+              }}
+            >
+              {exporting ? "Generating..." : "Generate Proposal"}
+            </button>
+            {onSave && (
               <button
                 type="button"
-                onClick={onGenerateProposal}
-                disabled={exporting}
-                style={{
-                  padding: "8px 12px",
-                  border: "1px solid " + T.border2,
-                  borderRadius: 999,
-                  background: T.green,
-                  color: "#fff",
-                  cursor: exporting ? "default" : "pointer",
-                  fontSize: 12,
-                  fontFamily: T.mono,
-                  fontWeight: 700,
-                  opacity: exporting ? 0.8 : 1,
-                }}
-              >
-                {exporting ? "Generating..." : "Generate Proposal"}
-              </button>
-              {onSave && (
-                <button
-                  type="button"
-                  onClick={onSave}
-                  disabled={saving}
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid " + T.border2,
-                    borderRadius: 999,
-                    background: T.surface,
-                    color: T.text,
-                    cursor: saving ? "default" : "pointer",
-                    fontSize: 12,
-                    fontFamily: T.mono,
-                    fontWeight: 700,
-                    opacity: saving ? 0.75 : 1,
-                  }}
-                >
-                  {saving ? "Saving..." : "Save"}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={onInternalReport}
+                onClick={onSave}
+                disabled={saving}
                 style={{
                   padding: "8px 12px",
                   border: "1px solid " + T.border2,
                   borderRadius: 999,
                   background: T.surface,
                   color: T.text,
-                  cursor: "pointer",
+                  cursor: saving ? "default" : "pointer",
                   fontSize: 12,
                   fontFamily: T.mono,
                   fontWeight: 700,
+                  opacity: saving ? 0.75 : 1,
                 }}
               >
-                Internal Report
+                {saving ? "Saving..." : "Save"}
               </button>
-              <button
-                type="button"
-                onClick={onProposalDetails}
-                style={{
-                  padding: "8px 12px",
-                  border: "1px solid " + T.border2,
-                  borderRadius: 999,
-                  background: T.surface,
-                  color: T.text,
-                  cursor: "pointer",
-                  fontSize: 12,
-                  fontFamily: T.mono,
-                  fontWeight: 700,
-                }}
-              >
-                Proposal Details
-              </button>
-            </>
-          )}
-          <div style={{ marginLeft: "auto", display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-            {!customerMode && showBidAlternates && (
-              <button type="button" onClick={onBidAlternate} style={{
-                padding: "7px 10px",
+            )}
+            <button
+              type="button"
+              onClick={onInternalReport}
+              style={{
+                padding: "8px 12px",
                 border: "1px solid " + T.border2,
                 borderRadius: 999,
                 background: T.surface,
                 color: T.text,
                 cursor: "pointer",
-                fontSize: 11,
+                fontSize: 12,
                 fontFamily: T.mono,
                 fontWeight: 700,
-              }}>
-                Bid Alternate
-              </button>
-            )}
-            {!customerMode && (
-              <button type="button" onClick={onSystemWizard} style={{
-                padding: "7px 10px",
+              }}
+            >
+              Internal Report
+            </button>
+            <button
+              type="button"
+              onClick={onProposalDetails}
+              style={{
+                padding: "8px 12px",
                 border: "1px solid " + T.border2,
                 borderRadius: 999,
                 background: T.surface,
                 color: T.text,
                 cursor: "pointer",
-                fontSize: 11,
+                fontSize: 12,
                 fontFamily: T.mono,
                 fontWeight: 700,
-              }}>
-                System Wizard
-              </button>
-            )}
-            {!customerMode && (
-              <button type="button" onClick={onAiParser} style={{
-                padding: "7px 10px",
-                border: "1px solid " + T.border2,
-                borderRadius: 999,
-                background: T.surface,
-                color: T.text,
-                cursor: "pointer",
-                fontSize: 11,
-                fontFamily: T.mono,
-                fontWeight: 700,
-              }}>
-                AI Parser
-              </button>
-            )}
-            {showProjectSettings && !customerMode && (
-              <button type="button" onClick={onSettings} style={{
-                padding: "7px 10px",
-                border: "1px solid " + T.border2,
-                borderRadius: 999,
-                background: T.surface,
-                color: T.text,
-                cursor: "pointer",
-                fontSize: 11,
-                fontFamily: T.mono,
-                fontWeight: 700,
-              }}>
-                Settings
-              </button>
-            )}
-            {onAiSettings && !customerMode && (
-              <button type="button" onClick={onAiSettings} style={{
-                padding: "7px 10px",
-                border: "1px solid " + T.border2,
-                borderRadius: 999,
-                background: T.surface,
-                color: T.text,
-                cursor: "pointer",
-                fontSize: 11,
-                fontFamily: T.mono,
-                fontWeight: 700,
-              }}>
-                AI Settings
-              </button>
-            )}
-            {onDelete && !customerMode && (
+              }}
+            >
+              Proposal Details
+            </button>
+            {onDelete && (
               <button
                 type="button"
                 onClick={onDelete}
@@ -693,10 +674,10 @@ export function EstimatorActionBar({
                 {deleting ? "Deleting..." : "Delete"}
               </button>
             )}
-            <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-              <AddEquipButtons onAdd={onAddEquipment} compact neutral />
-            </div>
           </div>
+        )}
+        <div style={{ marginLeft: "auto" }}>
+          <AddEquipButtons onAdd={onAddEquipment} compact neutral />
         </div>
       </div>
     </section>
