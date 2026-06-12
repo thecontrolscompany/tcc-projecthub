@@ -48,8 +48,7 @@ export function EstimateDetail({
   const isMobile = useIsMobile();
   const [editHeader, setEditHeader] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
-  const [expandedDdc, setExpandedDdc] = useState(true);
-  const [recentlyEditedAt, setRecentlyEditedAt] = useState({});
+  const [expandedDdc, setExpandedDdc] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showProposalDetails, setShowProposalDetails] = useState(false);
   const [showAiParser, setShowAiParser] = useState(false);
@@ -129,25 +128,11 @@ export function EstimateDetail({
     sanityCheck,
     showBidAlternates,
   }), [controlsCatalog, estimate, sanityCheck, showBidAlternates]);
-  const recentCutoffMs = 120000;
-  const recentlyEditedItemIds = useMemo(() => {
-    const now = Date.now();
-    return new Set(
-      Object.entries(recentlyEditedAt)
-        .filter(([, editedAt]) => now - Number(editedAt || 0) <= recentCutoffMs)
-        .map(([itemId]) => itemId)
-    );
-  }, [recentlyEditedAt]);
 
   const saveHeader = () => {
     onUpdate({...estimate, name, number, customer, bidder, version, notes, updatedAt:new Date().toISOString()});
     setEditHeader(false);
   };
-
-  const markRecentlyEdited = useCallback((itemId) => {
-    if (!itemId) return;
-    setRecentlyEditedAt((prev) => ({ ...prev, [itemId]: Date.now() }));
-  }, [estimate.items]);
 
   const updateItem = useCallback((itemId, changes) => {
     onUpdate({
@@ -155,8 +140,7 @@ export function EstimateDetail({
       updatedAt: new Date().toISOString(),
       items: estimate.items.map((it) => (it.id === itemId ? { ...it, ...changes } : it)),
     });
-    markRecentlyEdited(itemId);
-  }, [estimate, markRecentlyEdited, onUpdate]);
+  }, [estimate, onUpdate]);
 
   const updateControlsOverride = (itemId, compId, overrideId, defaultId) => {
     const item = estimate.items.find(it => it.id === itemId);
@@ -473,107 +457,7 @@ export function EstimateDetail({
           estimateName={estimate.name}
         />
 
-        <div style={{ display:"grid", gap:12, gridTemplateColumns:"repeat(auto-fit, minmax(280px, 1fr))" }}>
-          <EstimateHealthPanel rows={healthRows} />
-          <NeedsReviewPanel issues={needsReviewIssues} />
-        </div>
       </div>
-
-      {!customerMode && settings.estimateScopeMode === "both" && (
-        <div style={{ padding:"0 24px 18px" }}>
-          <div style={{ border:"1px solid "+T.border, borderRadius:10, background:T.surface, overflow:"hidden" }}>
-            <div style={{ padding:"10px 14px", borderBottom:"1px solid "+T.border }}>
-              <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Turnkey Cost Summary</div>
-              <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>
-                Install cost is already captured in the command center above. This panel keeps the DDC infrastructure detail visible without repeating the full totals.
-              </div>
-            </div>
-            <div style={{ padding:"12px 14px", display:"grid", gap:12 }}>
-              {ddcInfrastructure.rows.length > 0 && (
-                <CostCategorySection
-                  id="ddc-infrastructure"
-                  label="DDC Infrastructure"
-                  subtotal={ddcInfrastructure.grandTotal}
-                  laborHours={ddcInfrastructure.rawLbrHrs}
-                  itemCount={ddcInfrastructure.rows.length}
-                  expanded={expandedDdc}
-                  note={`Sized from the selected controls devices. Points AI ${ddcInfrastructure.pointCounts.AI}, AO ${ddcInfrastructure.pointCounts.AO}, BI ${ddcInfrastructure.pointCounts.BI}, BO ${ddcInfrastructure.pointCounts.BO}; controllers ${ddcInfrastructure.controllerCount}; equipment instances ${ddcInfrastructure.equipmentCount}.`}
-                  onToggle={() => setExpandedDdc((value) => !value)}
-                >
-                  <div style={{ display:"grid", gap:6 }}>
-                    {ddcInfrastructure.rows.map((row) => (
-                      <div key={row.catalogId} style={{ display:"grid", gridTemplateColumns:"minmax(220px, 1fr) 48px 88px 88px", gap:10, alignItems:"center", padding:"6px 8px", border:"1px solid "+T.border, borderRadius:6, background:T.surface }}>
-                        <div style={{ minWidth:0 }}>
-                          <div style={{ fontSize:12, color:T.text }}>{row.description}</div>
-                          <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono }}>{row.catalogId}</div>
-                        </div>
-                        <div style={{ fontSize:11, color:T.text, fontFamily:T.mono, textAlign:"right" }}>x{row.qty}</div>
-                        <div style={{ fontSize:11, color:T.blue, fontFamily:T.mono, textAlign:"right" }}>{fmt$(row.mtlTotal)}</div>
-                        <div style={{ fontSize:11, color:T.purple, fontFamily:T.mono, textAlign:"right" }}>{fmtHr(row.hrsTotal)}</div>
-                      </div>
-                    ))}
-                  </div>
-                </CostCategorySection>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!customerMode && showBidAlternates && (
-        <div style={{ padding:"0 24px 18px" }}>
-          <div style={{ border:"1px solid "+T.border, borderRadius:10, background:T.surface, overflow:"hidden" }}>
-            <div style={{ padding:"10px 14px", borderBottom:"1px solid "+T.border, display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap" }}>
-              <div>
-                <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Bid Outputs</div>
-                <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>Optional alternates priced separately from the base estimate.</div>
-              </div>
-            </div>
-            <div style={{ padding:"12px 14px", display:"grid", gap:10 }}>
-              {alternatesWithCosts.length ? alternatesWithCosts.map((alternate) => (
-                  <div key={alternate.id} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap", padding:"10px 12px", border:"1px solid "+T.border, borderRadius:8, background:T.panel }}>
-                  <div>
-                    <div style={{ fontSize:13, fontWeight:700, color:T.text }}>{alternate.name || "Bid Alternate"}</div>
-                    <div style={{ fontSize:11, color:T.dim, fontFamily:T.mono, marginTop:3 }}>
-                      {getEstimateScopeModeLabel(alternate.settings?.estimateScopeMode)} · {(alternate.items?.length || 0)} item{(alternate.items?.length || 0) === 1 ? "" : "s"}
-                    </div>
-                    {alternate.altCosts && (
-                      <div style={{ fontSize:11, color:T.dim, fontFamily:T.mono, marginTop:3 }}>
-                        Material: {fmt$(alternate.altCosts.material)} · Labor: {fmtHr(alternate.altRaw.lbrHrs)} · Total: {fmt$(alternate.altCosts.total)}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                    <button onClick={() => openBidAlternate(alternate.id)}
-                      style={{ padding:"6px 10px", border:"1px solid "+T.blueMid,
-                        borderRadius:5, background:T.blueFaint, color:T.blue,
-                        cursor:"pointer", fontSize:12, fontFamily:T.mono, fontWeight:600 }}>
-                      Edit
-                    </button>
-                    <button onClick={() => removeBidAlternate(alternate.id)}
-                      style={{ padding:"6px 10px", border:"1px solid "+T.border2,
-                        borderRadius:5, background:"none", color:T.muted,
-                        cursor:"pointer", fontSize:12, fontFamily:T.mono, fontWeight:600 }}>
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              )) : (
-                <div style={{ fontSize:12, color:T.muted }}>
-                  No bid alternates yet. Use <strong>+ Bid Alternate</strong> to start one.
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── PROJECT SETTINGS PANEL ── */}
-      {!customerMode && showProjectSettings && showSettings && (
-        <ProjectSettingsPanel settings={settings} onChange={updateSettings}
-          costs={costs} rawLbrHrs={totals.lbrHrs} itemCount={estimate.items?.length || 0}
-          estimateId={estimate.id} onApplyDefaultInstallType={applyDefaultInstallType} />
-      )}
 
       {!customerMode && (
         <ProposalDetailsModal
@@ -642,9 +526,8 @@ export function EstimateDetail({
             {estimate.items.map((item, idx) => {
               const c = calcItem(item);
               const meta = TYPE_META[item.type] || { label:item.type.toUpperCase(), color:T.steel, bg:T.faint };
-              const isRecent = recentlyEditedItemIds.has(item.id);
               return (
-                <div key={item.id} style={{ background:isRecent ? T.blueFaint : T.surface, border:"1px solid "+T.border,
+                <div key={item.id} style={{ background:T.surface, border:"1px solid "+T.border,
                   borderLeft:"3px solid "+meta.color, borderRadius:8, padding:"12px 14px" }}>
                   <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
                     <span style={{ fontSize:11, background:meta.bg, color:meta.color,
@@ -652,11 +535,6 @@ export function EstimateDetail({
                       {meta.label}
                     </span>
                     <span style={{ fontFamily:T.mono, fontWeight:700, color:meta.color, fontSize:14 }}>{item.tag}</span>
-                    {isRecent && (
-                      <span style={{ fontSize:9, fontFamily:T.mono, color:T.blue, background:T.blueFaint, border:"1px solid "+T.blueMid, borderRadius:999, padding:"2px 6px" }}>
-                        Edited
-                      </span>
-                    )}
                     <span style={{ fontSize:12, color:T.muted, marginLeft:4 }}>{item.location}</span>
                   </div>
                   <div style={{ display:"flex", gap:16, marginBottom:8 }}>
@@ -1029,6 +907,104 @@ export function EstimateDetail({
             </tfoot>
           </table>
         )}
+
+        <div style={{ display:"grid", gap:12, marginTop:18 }}>
+          <div style={{ display:"grid", gap:12, gridTemplateColumns:"repeat(auto-fit, minmax(280px, 1fr))" }}>
+            <EstimateHealthPanel rows={healthRows} />
+            <NeedsReviewPanel issues={needsReviewIssues} />
+          </div>
+
+          {!customerMode && settings.estimateScopeMode === "both" && (
+            <div style={{ border:"1px solid "+T.border, borderRadius:10, background:T.surface, overflow:"hidden" }}>
+              <div style={{ padding:"10px 14px", borderBottom:"1px solid "+T.border }}>
+                <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Turnkey Cost Summary</div>
+                <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>
+                  Install cost is already captured in the command center above. This panel keeps the DDC infrastructure detail visible without repeating the full totals.
+                </div>
+              </div>
+              <div style={{ padding:"12px 14px", display:"grid", gap:12 }}>
+                {ddcInfrastructure.rows.length > 0 && (
+                  <CostCategorySection
+                    id="ddc-infrastructure"
+                    label="DDC Infrastructure"
+                    subtotal={ddcInfrastructure.grandTotal}
+                    laborHours={ddcInfrastructure.rawLbrHrs}
+                    itemCount={ddcInfrastructure.rows.length}
+                    expanded={expandedDdc}
+                    note={`Sized from the selected controls devices. Points AI ${ddcInfrastructure.pointCounts.AI}, AO ${ddcInfrastructure.pointCounts.AO}, BI ${ddcInfrastructure.pointCounts.BI}, BO ${ddcInfrastructure.pointCounts.BO}; controllers ${ddcInfrastructure.controllerCount}; equipment instances ${ddcInfrastructure.equipmentCount}.`}
+                    onToggle={() => setExpandedDdc((value) => !value)}
+                  >
+                    <div style={{ display:"grid", gap:6 }}>
+                      {ddcInfrastructure.rows.map((row) => (
+                        <div key={row.catalogId} style={{ display:"grid", gridTemplateColumns:"minmax(220px, 1fr) 48px 88px 88px", gap:10, alignItems:"center", padding:"6px 8px", border:"1px solid "+T.border, borderRadius:6, background:T.surface }}>
+                          <div style={{ minWidth:0 }}>
+                            <div style={{ fontSize:12, color:T.text }}>{row.description}</div>
+                            <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono }}>{row.catalogId}</div>
+                          </div>
+                          <div style={{ fontSize:11, color:T.text, fontFamily:T.mono, textAlign:"right" }}>x{row.qty}</div>
+                          <div style={{ fontSize:11, color:T.blue, fontFamily:T.mono, textAlign:"right" }}>{fmt$(row.mtlTotal)}</div>
+                          <div style={{ fontSize:11, color:T.purple, fontFamily:T.mono, textAlign:"right" }}>{fmtHr(row.hrsTotal)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </CostCategorySection>
+                )}
+              </div>
+            </div>
+          )}
+
+          {!customerMode && showBidAlternates && (
+            <div style={{ border:"1px solid "+T.border, borderRadius:10, background:T.surface, overflow:"hidden" }}>
+              <div style={{ padding:"10px 14px", borderBottom:"1px solid "+T.border, display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap" }}>
+                <div>
+                  <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Bid Outputs</div>
+                  <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>Optional alternates priced separately from the base estimate.</div>
+                </div>
+              </div>
+              <div style={{ padding:"12px 14px", display:"grid", gap:10 }}>
+                {alternatesWithCosts.length ? alternatesWithCosts.map((alternate) => (
+                  <div key={alternate.id} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap", padding:"10px 12px", border:"1px solid "+T.border, borderRadius:8, background:T.panel }}>
+                    <div>
+                      <div style={{ fontSize:13, fontWeight:700, color:T.text }}>{alternate.name || "Bid Alternate"}</div>
+                      <div style={{ fontSize:11, color:T.dim, fontFamily:T.mono, marginTop:3 }}>
+                        {getEstimateScopeModeLabel(alternate.settings?.estimateScopeMode)} · {(alternate.items?.length || 0)} item{(alternate.items?.length || 0) === 1 ? "" : "s"}
+                      </div>
+                      {alternate.altCosts && (
+                        <div style={{ fontSize:11, color:T.dim, fontFamily:T.mono, marginTop:3 }}>
+                          Material: {fmt$(alternate.altCosts.material)} · Labor: {fmtHr(alternate.altRaw.lbrHrs)} · Total: {fmt$(alternate.altCosts.total)}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                      <button onClick={() => openBidAlternate(alternate.id)}
+                        style={{ padding:"6px 10px", border:"1px solid "+T.blueMid,
+                          borderRadius:5, background:T.blueFaint, color:T.blue,
+                          cursor:"pointer", fontSize:12, fontFamily:T.mono, fontWeight:600 }}>
+                        Edit
+                      </button>
+                      <button onClick={() => removeBidAlternate(alternate.id)}
+                        style={{ padding:"6px 10px", border:"1px solid "+T.border2,
+                          borderRadius:5, background:"none", color:T.muted,
+                          cursor:"pointer", fontSize:12, fontFamily:T.mono, fontWeight:600 }}>
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                )) : (
+                  <div style={{ fontSize:12, color:T.muted }}>
+                    No bid alternates yet. Use <strong>+ Bid Alternate</strong> to start one.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {!customerMode && showProjectSettings && showSettings && (
+            <ProjectSettingsPanel settings={settings} onChange={updateSettings}
+              costs={costs} rawLbrHrs={totals.lbrHrs} itemCount={estimate.items?.length || 0}
+              estimateId={estimate.id} onApplyDefaultInstallType={applyDefaultInstallType} />
+          )}
+        </div>
       </div>
     </div>
   );

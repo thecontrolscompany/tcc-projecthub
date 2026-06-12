@@ -13,7 +13,7 @@ const DEFAULT_BUTTONS = [
     { type:"custom", label:"Custom", bg:"#6B7280", },
   ];
 
-export function AddEquipButtons({ onAdd, buttons = DEFAULT_BUTTONS, compact = false, className = "" }) {
+export function AddEquipButtons({ onAdd, buttons = DEFAULT_BUTTONS, compact = false, neutral = false, className = "" }) {
   const gap = compact ? 4 : 5;
   const padding = compact ? "6px 10px" : "7px 12px";
   const fontSize = compact ? 10 : 11;
@@ -23,16 +23,16 @@ export function AddEquipButtons({ onAdd, buttons = DEFAULT_BUTTONS, compact = fa
         {buttons.map(b => (
           <button key={b.type} onClick={()=>onAdd(b.type)} style={{
             padding,
-            border:"none",
+            border: neutral ? "1px solid " + "#cbd5e1" : "none",
             borderRadius:5,
-            background:b.bg,
-            color:"#fff",
+            background: neutral ? "#ffffff" : b.bg,
+            color: neutral ? "#0f172a" : "#fff",
             cursor:"pointer",
             fontSize,
             fontFamily:T.mono,
             fontWeight:700,
             lineHeight:1.1,
-            boxShadow:"0 1px 0 rgba(255,255,255,0.08) inset",
+            boxShadow: neutral ? "none" : "0 1px 0 rgba(255,255,255,0.08) inset",
           }}>
             + {b.label}
           </button>

@@ -52,21 +52,18 @@ export function buildEstimateHealthRows(sanityCheck) {
       label: "Install",
       bucket: sanityCheck.install,
       targetLabel: "target 40%",
-      help: "Healthy install share stays close to the 40% benchmark.",
     },
     {
       key: "controlsMaterial",
       label: "Controls Material",
       bucket: sanityCheck.controlsMaterial,
       targetLabel: "target 40%",
-      help: "Healthy controls material share stays close to the 40% benchmark.",
     },
     {
       key: "controlsLabor",
       label: "Controls Engineering Labor",
       bucket: sanityCheck.controlsLabor,
       targetLabel: "target 20%",
-      help: "Healthy controls engineering labor share stays close to the 20% benchmark.",
     },
   ].map((row) => {
     const level = getHealthLevel(row.bucket);
@@ -78,28 +75,6 @@ export function buildEstimateHealthRows(sanityCheck) {
       targetValue: clampPct(row.bucket?.target || 0),
     };
   });
-}
-
-export function groupEstimateItemsByType(items = []) {
-  const groups = [];
-  const byType = new Map();
-
-  (items || []).forEach((item, index) => {
-    const key = String(item.type || "custom");
-    if (!byType.has(key)) {
-      const group = { type: key, items: [], firstIndex: index };
-      byType.set(key, group);
-      groups.push(group);
-    }
-    byType.get(key).items.push(item);
-  });
-
-  return groups.map((group) => ({
-    ...group,
-    label: TYPE_META[group.type]?.label || group.type.toUpperCase(),
-    color: TYPE_META[group.type]?.color || T.steel,
-    bg: TYPE_META[group.type]?.bg || T.faint,
-  }));
 }
 
 export function buildNeedsReviewIssues({
@@ -218,11 +193,11 @@ export function EstimateCommandCenter({
         position: "sticky",
         top: 0,
         zIndex: 30,
-        marginBottom: 16,
+        marginBottom: 12,
         border: "1px solid " + T.border,
         borderRadius: 12,
         background: T.surface,
-        boxShadow: "0 12px 28px rgba(15, 23, 42, 0.08)",
+        boxShadow: "0 8px 20px rgba(15, 23, 42, 0.06)",
         overflow: "hidden",
       }}
     >
@@ -232,15 +207,15 @@ export function EstimateCommandCenter({
         justifyContent: "space-between",
         gap: 12,
         flexWrap: "wrap",
-        padding: "10px 14px",
+        padding: "8px 12px",
         borderBottom: "1px solid " + T.border,
-        background: T.panel,
+        background: "#FAFAFB",
       }}>
         <div>
-          <div style={{ fontSize: 10, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
+          <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.4 }}>
             Estimate Command Center
           </div>
-          <div style={{ fontSize: 12, color: T.dim, marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>
             {estimateName || "Untitled estimate"} · {statusLabel}
           </div>
         </div>
@@ -252,7 +227,7 @@ export function EstimateCommandCenter({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(170px, 1.2fr) repeat(7, minmax(100px, 1fr))",
+          gridTemplateColumns: "minmax(220px, 1.2fr) repeat(auto-fit, minmax(108px, 1fr))",
           gap: 0,
           alignItems: "stretch",
         }}
@@ -270,10 +245,10 @@ export function EstimateCommandCenter({
           <div
             key={metric.label}
             style={{
-              padding: "12px 14px",
+              padding: metric.emphasized ? "10px 14px" : "9px 12px",
               borderRight: index < 7 ? "1px solid " + T.border : "none",
-              background: metric.emphasized ? "linear-gradient(180deg, rgba(37,99,235,0.12), rgba(37,99,235,0.04))" : T.surface,
-              minHeight: metric.emphasized ? 78 : 70,
+              background: metric.emphasized ? "#F7FBFA" : T.surface,
+              minHeight: metric.emphasized ? 72 : 60,
             }}
           >
             <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.1 }}>
@@ -282,7 +257,7 @@ export function EstimateCommandCenter({
             <div
               style={{
                 marginTop: 5,
-                fontSize: metric.emphasized ? 24 : 17,
+                fontSize: metric.emphasized ? 23 : 16,
                 fontWeight: metric.emphasized ? 800 : 700,
                 color: metric.accent,
                 fontFamily: metric.textValue || metric.status ? "inherit" : T.mono,
@@ -295,9 +270,9 @@ export function EstimateCommandCenter({
                   alignItems: "center",
                   padding: "3px 8px",
                   borderRadius: 999,
-                  background: T.blueFaint,
-                  border: "1px solid " + T.blueMid,
-                  color: T.blue,
+                  background: "#F8FAFC",
+                  border: "1px solid " + T.border2,
+                  color: T.steel,
                   fontSize: 12,
                   fontFamily: T.mono,
                 }}>
@@ -322,21 +297,21 @@ export function EstimateHealthPanel({ rows }) {
         border: "1px solid " + T.border,
         borderRadius: 12,
         background: T.surface,
-        padding: "12px 14px",
+        padding: "10px 12px",
       }}
     >
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontSize: 10, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
+          <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
             Estimate Health
           </div>
-          <div style={{ fontSize: 12, color: T.dim, marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>
             The 40 / 40 / 20 mix is informational, not a hard stop.
           </div>
         </div>
       </div>
 
-      <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+      <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
         {rows.length ? rows.map((row) => {
           const severity = row.level === "good" ? "info" : row.level === "warning" ? "warning" : "critical";
           const badge = getSeverityBadge(severity);
@@ -346,10 +321,11 @@ export function EstimateHealthPanel({ rows }) {
             <div
               key={row.key}
               style={{
-                border: "1px solid " + badge.border,
-                background: badge.bg,
+                border: "1px solid " + T.border,
+                borderLeft: "3px solid " + badge.border,
+                background: T.surface,
                 borderRadius: 10,
-                padding: "10px 12px",
+                padding: "8px 10px",
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
@@ -359,24 +335,23 @@ export function EstimateHealthPanel({ rows }) {
                     {row.targetLabel} · {statusText}
                   </div>
                 </div>
-                <div style={{ fontSize: 12, fontFamily: T.mono, fontWeight: 700, color: badge.color }}>
+                <div style={{ fontSize: 11, fontFamily: T.mono, fontWeight: 700, color: badge.color }}>
                   {formatPercent(row.bucket?.pct || 0)} of total
                 </div>
               </div>
 
-              <div style={{ marginTop: 10 }}>
-                <div style={{ height: 8, borderRadius: 999, background: "rgba(148,163,184,0.22)", overflow: "hidden" }}>
+              <div style={{ marginTop: 8 }}>
+                <div style={{ height: 7, borderRadius: 999, background: "#E2E8F0", overflow: "hidden" }}>
                   <div
                     style={{
                       width: `${Math.max(6, row.barValue)}%`,
                       height: "100%",
                       borderRadius: 999,
-                      background: row.level === "good" ? T.green : row.level === "warning" ? T.amber : T.rose,
-                      boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.22)",
+                      background: row.level === "good" ? "#7BAA98" : row.level === "warning" ? "#D6A153" : "#C77171",
                     }}
                   />
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginTop: 6, fontSize: 11, color: T.muted, fontFamily: T.mono }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginTop: 5, fontSize: 10, color: T.muted, fontFamily: T.mono }}>
                   <span>{formatPercent(row.targetValue)} target</span>
                   <span>{formatPercent(row.bucket?.pct || 0)} actual</span>
                 </div>
@@ -415,32 +390,33 @@ export function NeedsReviewPanel({ issues }) {
         border: "1px solid " + T.border,
         borderRadius: 12,
         background: T.surface,
-        padding: "12px 14px",
+        padding: "10px 12px",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontSize: 10, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
+          <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
             Needs Review
           </div>
-          <div style={{ fontSize: 12, color: T.dim, marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>
             Surface the issues that most deserve attention first.
           </div>
         </div>
       </div>
 
       {hasIssues ? (
-        <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
+        <div style={{ display: "grid", gap: 6, marginTop: 10 }}>
           {sorted.map((issue) => {
             const badge = getSeverityBadge(issue.severity);
             return (
               <div
                 key={issue.key}
                 style={{
-                  border: "1px solid " + badge.border,
-                  background: badge.bg,
+                  border: "1px solid " + T.border,
+                  borderLeft: "3px solid " + badge.border,
+                  background: T.surface,
                   borderRadius: 10,
-                  padding: "10px 12px",
+                  padding: "8px 10px",
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
@@ -466,7 +442,7 @@ export function NeedsReviewPanel({ issues }) {
                       </span>
                       <div style={{ fontSize: 12, fontWeight: 700, color: T.text }}>{issue.title}</div>
                     </div>
-                    <div style={{ fontSize: 11, color: T.dim, marginTop: 4, lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 11, color: T.dim, marginTop: 3, lineHeight: 1.45 }}>
                       {issue.detail}
                     </div>
                   </div>
@@ -481,17 +457,18 @@ export function NeedsReviewPanel({ issues }) {
           })}
         </div>
       ) : (
-        <div
+          <div
           style={{
-            marginTop: 12,
-            border: "1px solid " + T.green,
-            background: T.greenFaint || "#ECFDF5",
+            marginTop: 10,
+            border: "1px solid " + T.border,
+            borderLeft: "3px solid " + T.green,
+            background: T.surface,
             borderRadius: 10,
-            padding: "12px 14px",
+            padding: "10px 12px",
           }}
         >
-          <div style={{ fontSize: 13, fontWeight: 700, color: T.green }}>Estimate looks ready</div>
-          <div style={{ marginTop: 4, fontSize: 11, color: T.dim, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Estimate looks ready</div>
+          <div style={{ marginTop: 4, fontSize: 11, color: T.dim, lineHeight: 1.45 }}>
             Nothing obvious needs attention before you save or export.
           </div>
         </div>
@@ -526,97 +503,89 @@ export function EstimatorActionBar({
         border: "1px solid " + T.border,
         borderRadius: 12,
         background: T.surface,
-        padding: "12px 14px",
+        padding: "10px 12px",
       }}
     >
-      <div style={{ display: "grid", gap: 14 }}>
+      <div style={{ display: "grid", gap: 10 }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <div>
-            <div style={{ fontSize: 10, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
+            <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
               Workflow Actions
             </div>
-            <div style={{ fontSize: 12, color: T.dim, marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>
               Keep the important steps closest to the estimate.
             </div>
           </div>
         </div>
-
-        <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-          <div style={{ border: "1px solid " + T.border, borderRadius: 10, background: T.panel, padding: "10px 12px" }}>
-            <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 8 }}>
-              Primary actions
-            </div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {!customerMode && (
-                <>
-                  <button
-                    type="button"
-                    onClick={onGenerateProposal}
-                    disabled={exporting}
-                    style={{
-                      padding: "8px 12px",
-                      border: "none",
-                      borderRadius: 8,
-                      background: T.blue,
-                      color: "#fff",
-                      cursor: exporting ? "default" : "pointer",
-                      fontSize: 12,
-                      fontFamily: T.mono,
-                      fontWeight: 700,
-                      opacity: exporting ? 0.75 : 1,
-                    }}
-                  >
-                    {exporting ? "Generating..." : "Generate Proposal"}
-                  </button>
-                  {onSave && (
-                    <button
-                      type="button"
-                      onClick={onSave}
-                      disabled={saving}
-                      style={{
-                        padding: "8px 12px",
-                        border: "1px solid " + T.border2,
-                        borderRadius: 8,
-                        background: T.surface,
-                        color: T.text,
-                        cursor: saving ? "default" : "pointer",
-                        fontSize: 12,
-                        fontFamily: T.mono,
-                        fontWeight: 700,
-                        opacity: saving ? 0.75 : 1,
-                      }}
-                    >
-                      {saving ? "Saving..." : "Save"}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={onInternalReport}
-                    style={{
-                      padding: "8px 12px",
-                      border: "1px solid " + T.border2,
-                      borderRadius: 8,
-                      background: T.surface,
-                      color: T.text,
-                      cursor: "pointer",
-                      fontSize: 12,
-                      fontFamily: T.mono,
-                      fontWeight: 700,
-                    }}
-                  >
-                    Internal Report
-                  </button>
-                </>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          {!customerMode && (
+            <>
+              <button
+                type="button"
+                onClick={onGenerateProposal}
+                disabled={exporting}
+                style={{
+                  padding: "8px 12px",
+                  border: "1px solid " + T.border2,
+                  borderRadius: 999,
+                  background: T.green,
+                  color: "#fff",
+                  cursor: exporting ? "default" : "pointer",
+                  fontSize: 12,
+                  fontFamily: T.mono,
+                  fontWeight: 700,
+                  opacity: exporting ? 0.8 : 1,
+                }}
+              >
+                {exporting ? "Generating..." : "Generate Proposal"}
+              </button>
+              {onSave && (
+                <button
+                  type="button"
+                  onClick={onSave}
+                  disabled={saving}
+                  style={{
+                    padding: "8px 12px",
+                    border: "1px solid " + T.border2,
+                    borderRadius: 999,
+                    background: T.surface,
+                    color: T.text,
+                    cursor: saving ? "default" : "pointer",
+                    fontSize: 12,
+                    fontFamily: T.mono,
+                    fontWeight: 700,
+                    opacity: saving ? 0.75 : 1,
+                  }}
+                >
+                  {saving ? "Saving..." : "Save"}
+                </button>
               )}
+              <button
+                type="button"
+                onClick={onInternalReport}
+                style={{
+                  padding: "8px 12px",
+                  border: "1px solid " + T.border2,
+                  borderRadius: 999,
+                  background: T.surface,
+                  color: T.text,
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontFamily: T.mono,
+                  fontWeight: 700,
+                }}
+              >
+                Internal Report
+              </button>
               <button
                 type="button"
                 onClick={onProposalDetails}
                 style={{
                   padding: "8px 12px",
-                  border: "1px solid " + T.blueMid,
-                  borderRadius: 8,
-                  background: T.blueFaint,
-                  color: T.blue,
+                  border: "1px solid " + T.border2,
+                  borderRadius: 999,
+                  background: T.surface,
+                  color: T.text,
                   cursor: "pointer",
                   fontSize: 12,
                   fontFamily: T.mono,
@@ -625,136 +594,97 @@ export function EstimatorActionBar({
               >
                 Proposal Details
               </button>
-            </div>
-          </div>
-
-          <div style={{ border: "1px solid " + T.border, borderRadius: 10, background: T.panel, padding: "10px 12px" }}>
-            <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 8 }}>
-              Add equipment
-            </div>
-            <AddEquipButtons onAdd={onAddEquipment} compact />
-          </div>
-
-          <div style={{ border: "1px solid " + T.border, borderRadius: 10, background: T.panel, padding: "10px 12px" }}>
-            <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 8 }}>
-              Tools
-            </div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-              {showBidAlternates && !customerMode && (
-                <button
-                  type="button"
-                  onClick={onBidAlternate}
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid " + T.green,
-                    borderRadius: 8,
-                    background: T.greenFaint || "#ECFDF5",
-                    color: T.green,
-                    cursor: "pointer",
-                    fontSize: 12,
-                    fontFamily: T.mono,
-                    fontWeight: 700,
-                  }}
-                >
-                  Bid Alternate
-                </button>
-              )}
-              {!customerMode && (
-                <button
-                  type="button"
-                  onClick={onSystemWizard}
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid " + T.border2,
-                    borderRadius: 8,
-                    background: T.surface,
-                    color: T.muted,
-                    cursor: "pointer",
-                    fontSize: 12,
-                    fontFamily: T.mono,
-                    fontWeight: 700,
-                  }}
-                >
-                  System Wizard
-                </button>
-              )}
-              {!customerMode && (
-                <button
-                  type="button"
-                  onClick={onAiParser}
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid " + T.border2,
-                    borderRadius: 8,
-                    background: T.surface,
-                    color: T.muted,
-                    cursor: "pointer",
-                    fontSize: 12,
-                    fontFamily: T.mono,
-                    fontWeight: 700,
-                  }}
-                >
-                  AI Parser
-                </button>
-              )}
-              {showProjectSettings && !customerMode && (
-                <button
-                  type="button"
-                  onClick={onSettings}
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid " + T.border2,
-                    borderRadius: 8,
-                    background: T.surface,
-                    color: T.muted,
-                    cursor: "pointer",
-                    fontSize: 12,
-                    fontFamily: T.mono,
-                    fontWeight: 700,
-                  }}
-                >
-                  Settings
-                </button>
-              )}
-              {onAiSettings && !customerMode && (
-                <button
-                  type="button"
-                  onClick={onAiSettings}
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid " + T.border2,
-                    borderRadius: 8,
-                    background: T.surface,
-                    color: T.muted,
-                    cursor: "pointer",
-                    fontSize: 12,
-                    fontFamily: T.mono,
-                    fontWeight: 700,
-                  }}
-                >
-                  AI Settings
-                </button>
-              )}
-            </div>
-          </div>
-
-          {onDelete && !customerMode && (
-            <div style={{ border: "1px solid " + T.border, borderRadius: 10, background: T.panel, padding: "10px 12px" }}>
-              <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 8 }}>
-                Destructive action
-              </div>
+            </>
+          )}
+          <div style={{ marginLeft: "auto", display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+            {!customerMode && showBidAlternates && (
+              <button type="button" onClick={onBidAlternate} style={{
+                padding: "7px 10px",
+                border: "1px solid " + T.border2,
+                borderRadius: 999,
+                background: T.surface,
+                color: T.text,
+                cursor: "pointer",
+                fontSize: 11,
+                fontFamily: T.mono,
+                fontWeight: 700,
+              }}>
+                Bid Alternate
+              </button>
+            )}
+            {!customerMode && (
+              <button type="button" onClick={onSystemWizard} style={{
+                padding: "7px 10px",
+                border: "1px solid " + T.border2,
+                borderRadius: 999,
+                background: T.surface,
+                color: T.text,
+                cursor: "pointer",
+                fontSize: 11,
+                fontFamily: T.mono,
+                fontWeight: 700,
+              }}>
+                System Wizard
+              </button>
+            )}
+            {!customerMode && (
+              <button type="button" onClick={onAiParser} style={{
+                padding: "7px 10px",
+                border: "1px solid " + T.border2,
+                borderRadius: 999,
+                background: T.surface,
+                color: T.text,
+                cursor: "pointer",
+                fontSize: 11,
+                fontFamily: T.mono,
+                fontWeight: 700,
+              }}>
+                AI Parser
+              </button>
+            )}
+            {showProjectSettings && !customerMode && (
+              <button type="button" onClick={onSettings} style={{
+                padding: "7px 10px",
+                border: "1px solid " + T.border2,
+                borderRadius: 999,
+                background: T.surface,
+                color: T.text,
+                cursor: "pointer",
+                fontSize: 11,
+                fontFamily: T.mono,
+                fontWeight: 700,
+              }}>
+                Settings
+              </button>
+            )}
+            {onAiSettings && !customerMode && (
+              <button type="button" onClick={onAiSettings} style={{
+                padding: "7px 10px",
+                border: "1px solid " + T.border2,
+                borderRadius: 999,
+                background: T.surface,
+                color: T.text,
+                cursor: "pointer",
+                fontSize: 11,
+                fontFamily: T.mono,
+                fontWeight: 700,
+              }}>
+                AI Settings
+              </button>
+            )}
+            {onDelete && !customerMode && (
               <button
                 type="button"
                 onClick={onDelete}
                 disabled={deleting}
                 style={{
-                  padding: "8px 12px",
+                  padding: "7px 10px",
                   border: "1px solid " + T.rose,
-                  borderRadius: 8,
-                  background: "#FFF1F2",
+                  borderRadius: 999,
+                  background: "#fff",
                   color: T.rose,
                   cursor: deleting ? "default" : "pointer",
-                  fontSize: 12,
+                  fontSize: 11,
                   fontFamily: T.mono,
                   fontWeight: 700,
                   opacity: deleting ? 0.75 : 1,
@@ -762,8 +692,11 @@ export function EstimatorActionBar({
               >
                 {deleting ? "Deleting..." : "Delete"}
               </button>
+            )}
+            <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+              <AddEquipButtons onAdd={onAddEquipment} compact neutral />
             </div>
-          )}
+          </div>
         </div>
       </div>
     </section>
