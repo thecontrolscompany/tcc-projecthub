@@ -24,6 +24,7 @@ import SelectionWizardPage from "../selectionWizard";
  * @property {boolean} [showProjectSettings]
  * @property {boolean} [showBidAlternates]
  * @property {string | null} [platformEstimateId]
+ * @property {string | null} [initialProposalTab]
  */
 
 /**
@@ -38,6 +39,7 @@ export function EstimateEditorWorkspace({
   showProjectSettings = false,
   showBidAlternates = false,
   platformEstimateId = null,
+  initialProposalTab = null,
 }) {
   const { subPage, setSubPage } = useEstimate();
 
@@ -91,6 +93,7 @@ export function EstimateEditorWorkspace({
               showProjectSettings={showProjectSettings}
               showBidAlternates={showBidAlternates}
               platformEstimateId={platformEstimateId}
+              initialProposalTab={initialProposalTab}
             />
           );
         default:
@@ -102,6 +105,7 @@ export function EstimateEditorWorkspace({
               showProjectSettings={showProjectSettings}
               showBidAlternates={showBidAlternates}
               platformEstimateId={platformEstimateId}
+              initialProposalTab={initialProposalTab}
             />
           );
       }
@@ -122,6 +126,7 @@ export function EstimateEditorWorkspace({
       showProjectSettings={showProjectSettings}
       showBidAlternates={showBidAlternates}
       platformEstimateId={platformEstimateId}
+      initialProposalTab={initialProposalTab}
     />
   );
 }

@@ -1,6 +1,5 @@
 import { createContext, useContext, useMemo, useState } from "react";
-import { calcAssembly } from "./assemblyData.js";
-import { loadUnitPrices } from "./unitPriceStore.js";
+import { calcAssembly, UNIT_ITEMS } from "./assemblyData.js";
 import { getCurrentUser } from "./currentUser.js";
 import { VAV_COMPS } from "../components/vav/vavData.js";
 import { AHU_COMPS } from "../components/ahu/ahuData.js";
@@ -46,11 +45,16 @@ function getComponentsForItem(type, cfg) {
   return COMPS_MAP[type] || [];
 }
 
-function buildPriceSnapshot(type, cfg, selected, installType, overrides) {
+function getActiveInstallCatalog(installCatalog) {
+  return installCatalog && Object.keys(installCatalog).length > 0 ? installCatalog : UNIT_ITEMS;
+}
+
+function buildPriceSnapshot(type, cfg, selected, installType, installCatalog) {
   if (!selected?.length) return {};
 
   const comps = getComponentsForItem(type, cfg);
   const snap = {};
+  const activeInstallCatalog = getActiveInstallCatalog(installCatalog);
 
   for (const sel of selected) {
     const comp = comps.find(entry => entry.id === sel.id);
@@ -59,7 +63,7 @@ function buildPriceSnapshot(type, cfg, selected, installType, overrides) {
     const aid = installType === "EMT" ? comp.emtAID : comp.plnAID;
     snap[comp.id] =
       aid && String(aid) !== "undefined"
-        ? calcAssembly(String(aid), overrides)
+        ? calcAssembly(String(aid), {}, activeInstallCatalog)
         : { mtl: comp.unitMtl || 0, lbr: comp.unitLbr || 0 };
   }
 
@@ -76,9 +80,17 @@ function stamp(estimate, patch = {}) {
   };
 }
 
-export function ProjectHubEstimateProvider({ estimate, onChange, onAutosave, children }) {
+export function ProjectHubEstimateProvider({
+  estimate,
+  onChange,
+  onAutosave,
+  installCatalog,
+  controlsCatalog,
+  children,
+}) {
   const [subPage, setSubPage] = useState(null);
   const activeId = estimate?.id || null;
+  const activeInstallCatalog = getActiveInstallCatalog(installCatalog);
   const editingItem = subPage?.editItemId
     ? estimate?.items?.find(item => item.id === subPage.editItemId) || null
     : null;
@@ -96,7 +108,7 @@ export function ProjectHubEstimateProvider({ estimate, onChange, onAutosave, chi
     if (!activeId) return false;
 
     const updatedAt = new Date().toISOString();
-    const priceSnap = buildPriceSnapshot(type, cfg, selected, installType, loadUnitPrices());
+    const priceSnap = buildPriceSnapshot(type, cfg, selected, installType, activeInstallCatalog);
     const item = {
       id: uid(),
       type,
@@ -123,7 +135,7 @@ export function ProjectHubEstimateProvider({ estimate, onChange, onAutosave, chi
     if (!activeId) return false;
 
     const updatedAt = new Date().toISOString();
-    const priceSnap = buildPriceSnapshot(type, cfg, selected, installType, loadUnitPrices());
+    const priceSnap = buildPriceSnapshot(type, cfg, selected, installType, activeInstallCatalog);
     const nextEstimate = stamp(estimate, {
       items: (estimate.items || []).map(item =>
         item.id === itemId
@@ -151,13 +163,12 @@ export function ProjectHubEstimateProvider({ estimate, onChange, onAutosave, chi
 
   const refreshItemPrices = (estimateId, itemId) => {
     if (estimateId !== activeId) return false;
-    const overrides = loadUnitPrices();
     const nextEstimate = stamp(estimate, {
       items: (estimate.items || []).map(item => {
         if (item.id !== itemId) return item;
         return {
           ...item,
-          priceSnap: buildPriceSnapshot(item.type, item.cfg, item.selected, item.installType, overrides),
+          priceSnap: buildPriceSnapshot(item.type, item.cfg, item.selected, item.installType, activeInstallCatalog),
           pricesLockedAt: new Date().toISOString(),
         };
       }),
@@ -169,11 +180,10 @@ export function ProjectHubEstimateProvider({ estimate, onChange, onAutosave, chi
 
   const refreshAllPrices = estimateId => {
     if (estimateId !== activeId) return false;
-    const overrides = loadUnitPrices();
     const nextEstimate = stamp(estimate, {
       items: (estimate.items || []).map(item => ({
         ...item,
-        priceSnap: buildPriceSnapshot(item.type, item.cfg, item.selected, item.installType, overrides),
+        priceSnap: buildPriceSnapshot(item.type, item.cfg, item.selected, item.installType, activeInstallCatalog),
         pricesLockedAt: new Date().toISOString(),
       })),
     });
@@ -185,12 +195,11 @@ export function ProjectHubEstimateProvider({ estimate, onChange, onAutosave, chi
   const applyDefaultInstallType = estimateId => {
     if (estimateId !== activeId) return false;
     const installType = estimate.settings?.defaultInstallType || "EMT";
-    const overrides = loadUnitPrices();
     const nextEstimate = stamp(estimate, {
       items: (estimate.items || []).map(item => ({
         ...item,
         installType,
-        priceSnap: buildPriceSnapshot(item.type, item.cfg, item.selected, installType, overrides),
+        priceSnap: buildPriceSnapshot(item.type, item.cfg, item.selected, installType, activeInstallCatalog),
         pricesLockedAt: new Date().toISOString(),
       })),
     });
@@ -216,7 +225,7 @@ export function ProjectHubEstimateProvider({ estimate, onChange, onAutosave, chi
     subPage,
     setSubPage,
     editingItem,
-  }), [estimate, activeId, editingItem, subPage]);
+  }), [estimate, activeId, editingItem, installCatalog, subPage, controlsCatalog]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

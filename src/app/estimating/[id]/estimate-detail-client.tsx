@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Fragment, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { calcEstimate, calcItem, COMPS_MAP, TYPE_META } from "@/modules/hvac-estimator/components/estimate/estimateCalc";
 import { AddEquipButtons } from "@/modules/hvac-estimator/components/estimate/AddEquipButtons";
@@ -31,6 +31,8 @@ import type { EstimateRecord, EstimateStatus } from "@/types/database";
 
 type Props = {
   estimate: EstimateRecord;
+  installCatalog: Record<string, unknown>;
+  controlsCatalog: Record<string, unknown>;
 };
 
 type EstimateItem = {
@@ -407,8 +409,20 @@ function buildItemFromForm(form: AddItemForm): EstimateItem {
   };
 }
 
-export function EstimateDetailClient({ estimate }: Props) {
+export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const initialProposalTab = searchParams.get("panel") === "documents" ? "documents" : null;
+
+  useEffect(() => {
+    if (initialProposalTab) {
+      router.replace(pathname, { scroll: false });
+    }
+    // Only consume the `panel` query param once, on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const initialEstimateState = getInitialEstimateState(estimate);
   const [body, setBody] = useState<EstimateBody>(() => initialEstimateState.body);
   const [status, setStatus] = useState<EstimateStatus>(() => initialEstimateState.status);
@@ -687,7 +701,13 @@ export function EstimateDetailClient({ estimate }: Props) {
   const useLegacyUi = true;
   if (useLegacyUi) {
     return (
-      <ProjectHubEstimateProvider estimate={body} onChange={updateBody} onAutosave={handleAutosave}>
+      <ProjectHubEstimateProvider
+        estimate={body}
+        onChange={updateBody}
+        onAutosave={handleAutosave}
+        installCatalog={installCatalog}
+        controlsCatalog={controlsCatalog}
+      >
         <div
           className="min-h-[calc(100vh-7.5rem)] overflow-hidden rounded-xl border border-border-default bg-surface-raised"
           style={legacyDiagramTheme}
@@ -764,6 +784,7 @@ export function EstimateDetailClient({ estimate }: Props) {
               window.location.href = "/estimating";
             }}
             platformEstimateId={estimate.id}
+            initialProposalTab={initialProposalTab}
           />
           <AiTakeoffModal
             open={showAiParser}
@@ -1399,11 +1420,13 @@ function LegacyEstimatorWorkspace({
   onUpdate,
   onBack,
   platformEstimateId,
+  initialProposalTab,
 }: {
   estimate: EstimateBody;
   onUpdate: (patch: Partial<EstimateBody>) => void;
   onBack: () => void;
   platformEstimateId: string;
+  initialProposalTab?: string | null;
 }) {
   const { subPage, setSubPage } = useEstimate() as unknown as {
     subPage?: { type?: string; alternateId?: string } | null;
@@ -1474,6 +1497,7 @@ function LegacyEstimatorWorkspace({
       showProjectSettings={true}
       showBidAlternates={true}
       platformEstimateId={platformEstimateId}
+      initialProposalTab={initialProposalTab}
     />
   );
 }

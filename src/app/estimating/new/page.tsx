@@ -1,6 +1,8 @@
+import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { NewEstimateClient } from "./new-estimate-client";
 import { normalizeEstimateScopeMode } from "@/modules/hvac-estimator/components/estimate/projectSettings";
+import { mapCatalogRows } from "@/modules/hvac-estimator/shared/catalogStore";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +64,7 @@ export default async function NewEstimatePage({
   } = await supabase.auth.getUser();
 
   const currentOrganizationId = await resolveDefaultOrganizationId(supabase, user?.id ?? null);
+  if (!currentOrganizationId) notFound();
 
   let estimateNumberQuery = supabase
     .from("estimates")
@@ -72,15 +75,27 @@ export default async function NewEstimatePage({
     estimateNumberQuery = estimateNumberQuery.eq("organization_id", currentOrganizationId);
   }
 
-  const [accountsResult, estimatesResult] = await Promise.all([
+  const [accountsResult, installCatalogResult, controlsCatalogResult, estimatesResult] = await Promise.all([
     supabase
       .from("crm_accounts")
       .select("id, company_name")
       .order("company_name", { ascending: true }),
+    supabase
+      .from("install_assembly_catalog")
+      .select("id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, freq, alternate_ids")
+      .eq("organization_id", currentOrganizationId)
+      .order("id", { ascending: true }),
+    supabase
+      .from("controls_assembly_catalog")
+      .select("id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, freq, alternate_ids")
+      .eq("organization_id", currentOrganizationId)
+      .order("id", { ascending: true }),
     estimateNumberQuery,
   ]);
 
   const nextEstimateNumber = buildNextEstimateNumber((estimatesResult.data ?? []).map((estimate) => estimate.number));
+  const installCatalog = mapCatalogRows(installCatalogResult.data ?? []);
+  const controlsCatalog = mapCatalogRows(controlsCatalogResult.data ?? []);
 
   let initialEstimate = {
     organizationId: currentOrganizationId,
@@ -120,5 +135,12 @@ export default async function NewEstimatePage({
     }
   }
 
-  return <NewEstimateClient initialEstimate={initialEstimate} accounts={accountsResult.data ?? []} />;
+  return (
+    <NewEstimateClient
+      initialEstimate={initialEstimate}
+      accounts={accountsResult.data ?? []}
+      installCatalog={installCatalog}
+      controlsCatalog={controlsCatalog}
+    />
+  );
 }

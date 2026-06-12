@@ -3873,10 +3873,10 @@ export const ASSEMBLIES = {
   ]},
 };
 
-// Get effective unit price (overrides from localStorage price book)
-export function getEffectiveItems(priceOverrides = {}) {
+// Get effective unit price map for the provided catalog and overrides.
+export function getEffectiveItems(priceOverrides = {}, unitItems = UNIT_ITEMS) {
   const items = {};
-  for (const [id, item] of Object.entries(UNIT_ITEMS)) {
+  for (const [id, item] of Object.entries(unitItems)) {
     items[id] = { ...item, ...priceOverrides[id] };
   }
   return items;
@@ -3905,12 +3905,12 @@ function getLineFactor(line, item) {
 }
 
 // Calculate assembly cost from current unit prices
-export function calcAssembly(aid, priceOverrides = {}) {
+export function calcAssembly(aid, priceOverrides = {}, unitItems = UNIT_ITEMS) {
   const asm = ASSEMBLIES[aid];
   if (!asm) return { mtl: 0, lbr: 0 };
   let mtl = 0, lbr = 0;
   for (const line of asm.items) {
-    const base = UNIT_ITEMS[line.item];
+    const base = unitItems[line.item];
     if (!base) continue;
     const item = priceOverrides[line.item] ? { ...base, ...priceOverrides[line.item] } : base;
     const div = line.mtlPer === 'C' ? 100 : line.mtlPer === 'M' ? 1000 : 1;

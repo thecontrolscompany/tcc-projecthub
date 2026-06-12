@@ -27,6 +27,8 @@ type AccountOption = {
 type Props = {
   initialEstimate: InitialEstimate;
   accounts: AccountOption[];
+  installCatalog: Record<string, unknown>;
+  controlsCatalog: Record<string, unknown>;
 };
 
 const inputClassName =
