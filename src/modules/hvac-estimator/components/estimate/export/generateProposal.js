@@ -496,7 +496,7 @@ function renderAlternateScopeSections(alternates, scopeMode) {
   if (!alternates.length) return "";
 
   const blocks = alternates.map((alternate) => {
-    const raw = calcEstimate({ items: alternate.items || [] });
+    const raw = calcEstimate({ items: alternate.items || [] }, controlsCatalog);
     const alternateSettings = {
       ...DEFAULT_SETTINGS,
       ...(alternate.settings || {}),
@@ -662,7 +662,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
     ? getProposalScopeHtml(settings)
     : renderGeneratedScope(itemsWithComps, scopeMode);
   const alternates = normalizeAlternates(estimate).map((alternate) => {
-    const raw = calcEstimate({ items: alternate.items || [] });
+    const raw = calcEstimate({ items: alternate.items || [] }, controlsCatalog);
     const alternateSettings = {
       ...DEFAULT_SETTINGS,
       ...(alternate.settings || {}),

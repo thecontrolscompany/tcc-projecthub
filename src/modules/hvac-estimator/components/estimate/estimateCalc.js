@@ -78,6 +78,11 @@ function getControlsCustomPart(item, id) {
   return item.selected?.find((s) => s.id === id)?.controlsCustomPart || null;
 }
 
+function isZeroedControlsCustomPart(customPart) {
+  if (!customPart || typeof customPart !== "object") return false;
+  return (Number(customPart.mtlUnit) || 0) === 0 && (Number(customPart.hrsUnit) || 0) === 0;
+}
+
 function getControlsCost(comp, controlsCatalog, override, customPart) {
   if (customPart) {
     return {
@@ -90,6 +95,39 @@ function getControlsCost(comp, controlsCatalog, override, customPart) {
   const entry = id ? controlsCatalog?.[id] : null;
   if (!entry) return { mtl: 0, lbr: 0 };
   return { mtl: entry.mtlUnit || 0, lbr: entry.hrsUnit || 0 };
+}
+
+function resolveControlsId(comp, override) {
+  return override || comp.controlsId || null;
+}
+
+function getControlsCatalogRow(controlsCatalog, id) {
+  return id ? controlsCatalog?.[id] || null : null;
+}
+
+function getSelectedControlsEntries(estimate = {}) {
+  const entries = [];
+  for (const item of estimate.items || []) {
+    const itemQty = Math.max(1, Number(item.qty) || 1);
+    const comps = resolveItemComps(item);
+    for (const comp of comps) {
+      if (!item.selected?.some((s) => s.id === comp.id)) continue;
+      const compQty = Math.max(1, Number(getCompQty(item, comp.id)) || 1);
+      const controlsOverride = getControlsOverride(item, comp.id);
+      const controlsCustomPart = getControlsCustomPart(item, comp.id);
+      entries.push({
+        itemId: item.id,
+        itemQty,
+        compId: comp.id,
+        compQty,
+        controlsId: resolveControlsId(comp, controlsOverride),
+        baseControlsId: comp.controlsId || null,
+        controlsOverride,
+        controlsCustomPart,
+      });
+    }
+  }
+  return entries;
 }
 
 function getCustomCost(item, custom) {
@@ -105,6 +143,158 @@ function getCustomCost(item, custom) {
   return {
     mtl: ((custom.unitMtl || 0) + (custom.extraMtl || 0)) * qty,
     lbr: ((custom.unitLbr || 0) + (custom.extraLbr || 0)) * qty,
+  };
+}
+
+const DDC_CONTROLLER_TIERS = [8, 16, 32, 64];
+
+const DDC_FALLBACK_DESCRIPTIONS = {
+  "CTL-DDC-08": "DDC Controller - 8 Point Capacity",
+  "CTL-DDC-16": "DDC Controller - 16 Point Capacity",
+  "CTL-DDC-32": "DDC Controller - 32 Point Capacity",
+  "CTL-DDC-64": "DDC Controller - 64 Point Capacity",
+  "CTL-PNL-SM": "Control Panel Enclosure - Small (1-2 Controllers)",
+  "CTL-PNL-MD": "Control Panel Enclosure - Medium (3-5 Controllers)",
+  "CTL-PNL-LG": "Control Panel Enclosure - Large (6+ Controllers)",
+  "CTL-NET-SUP": "Supervisory Controller - BACnet/IP Building Controller",
+  "CTL-LIC-DEVICE": "Device Connection License - per Controller",
+  "CTL-ENG-PROGRAM": "Sequence of Operations Programming - per Controller",
+  "CTL-ENG-COMMISSION": "System Commissioning & Functional Test - per Controller",
+  "CTL-ENG-SUBMITTAL": "Controls Submittal Package - per Project",
+  "CTL-GFX-EQUIP": "Equipment Graphic - per Unit",
+  "CTL-GFX-FLOORPLAN": "Floor Plan / Summary Graphic - per Page",
+};
+
+function getDdcRowMeta(controlsCatalog, catalogId) {
+  const row = getControlsCatalogRow(controlsCatalog, catalogId);
+  return {
+    catalogId,
+    description: row?.desc || DDC_FALLBACK_DESCRIPTIONS[catalogId] || catalogId,
+    mtlUnit: row?.mtlUnit || 0,
+    hrsUnit: row?.hrsUnit || 0,
+  };
+}
+
+function sizeControllers(pointCount) {
+  let pointsLeft = Math.max(0, Math.ceil(Number(pointCount) || 0));
+  const sizes = [];
+  while (pointsLeft > 0) {
+    if (pointsLeft > 64) {
+      sizes.push(64);
+      pointsLeft -= 64;
+      continue;
+    }
+    const size = DDC_CONTROLLER_TIERS.find((tier) => tier >= pointsLeft) || 64;
+    sizes.push(size);
+    pointsLeft = 0;
+  }
+  return sizes;
+}
+
+function getPanelCatalogId(controllerCount) {
+  if (controllerCount <= 0) return null;
+  if (controllerCount <= 2) return "CTL-PNL-SM";
+  if (controllerCount <= 5) return "CTL-PNL-MD";
+  return "CTL-PNL-LG";
+}
+
+export function calcDdcInfrastructure(selected = [], controlsCatalog = {}, settings = {}) {
+  const pointCounts = { AI: 0, AO: 0, BI: 0, BO: 0 };
+  let unknownPointCount = 0;
+
+  for (const entry of selected || []) {
+    if (!entry?.controlsId) continue;
+    if (isZeroedControlsCustomPart(entry.controlsCustomPart)) continue;
+
+    const row = getControlsCatalogRow(controlsCatalog, entry.controlsId);
+    const ioType = String(row?.ioType || row?.io_type || "").toUpperCase();
+    const pointQty = Math.max(1, Number(entry.itemQty) || 1) * Math.max(1, Number(entry.compQty) || 1);
+
+    if (ioType && pointCounts[ioType] !== undefined) {
+      pointCounts[ioType] += pointQty;
+    } else {
+      unknownPointCount += pointQty;
+    }
+
+  }
+
+  const totalPoints = Object.values(pointCounts).reduce((sum, count) => sum + count, 0) + unknownPointCount;
+  const controllerSizes = sizeControllers(totalPoints);
+  const controllerCount = controllerSizes.length;
+  const panelCatalogId = getPanelCatalogId(controllerCount);
+  const equipmentInstanceCounts = new Map();
+  for (const entry of selected || []) {
+    if (!entry?.controlsId) continue;
+    if (isZeroedControlsCustomPart(entry.controlsCustomPart)) continue;
+    const qty = Math.max(1, Number(entry.itemQty) || 1);
+    equipmentInstanceCounts.set(entry.itemId, Math.max(equipmentInstanceCounts.get(entry.itemId) || 0, qty));
+  }
+  const equipmentCount = Array.from(equipmentInstanceCounts.values()).reduce((sum, qty) => sum + qty, 0);
+  const graphicsCount = equipmentCount;
+  const rows = [];
+
+  for (const size of [64, 32, 16, 8]) {
+    const qty = controllerSizes.filter((tier) => tier === size).length;
+    if (!qty) continue;
+    const meta = getDdcRowMeta(controlsCatalog, `CTL-DDC-${String(size).padStart(2, "0")}`);
+    rows.push({
+      ...meta,
+      qty,
+      mtlTotal: qty * meta.mtlUnit,
+      hrsTotal: qty * meta.hrsUnit,
+    });
+  }
+
+  if (panelCatalogId) {
+    const meta = getDdcRowMeta(controlsCatalog, panelCatalogId);
+    rows.push({
+      ...meta,
+      qty: 1,
+      mtlTotal: meta.mtlUnit,
+      hrsTotal: meta.hrsUnit,
+    });
+  }
+
+  if (controllerCount > 0) {
+    const controllerRows = [
+      { catalogId: "CTL-NET-SUP", qty: 1 },
+      { catalogId: "CTL-LIC-DEVICE", qty: controllerCount },
+      { catalogId: "CTL-ENG-PROGRAM", qty: controllerCount },
+      { catalogId: "CTL-ENG-COMMISSION", qty: controllerCount },
+      { catalogId: "CTL-ENG-SUBMITTAL", qty: 1 },
+      { catalogId: "CTL-GFX-EQUIP", qty: graphicsCount },
+      { catalogId: "CTL-GFX-FLOORPLAN", qty: 1 },
+    ];
+
+    for (const rowDef of controllerRows) {
+      if (!rowDef.qty) continue;
+      const meta = getDdcRowMeta(controlsCatalog, rowDef.catalogId);
+      rows.push({
+        ...meta,
+        qty: rowDef.qty,
+        mtlTotal: rowDef.qty * meta.mtlUnit,
+        hrsTotal: rowDef.qty * meta.hrsUnit,
+      });
+    }
+  }
+
+  const rawMtl = rows.reduce((sum, row) => sum + (row.mtlTotal || 0), 0);
+  const rawLbrHrs = rows.reduce((sum, row) => sum + (row.hrsTotal || 0), 0);
+  const controlsWageRate = Number(settings.controlsWageRate || DEFAULT_SETTINGS.controlsWageRate) || DEFAULT_SETTINGS.controlsWageRate;
+
+  return {
+    rows,
+    pointCounts,
+    unknownPointCount,
+    totalPoints,
+    controllerSizes,
+    controllerCount,
+    panelCatalogId,
+    equipmentCount,
+    graphicsCount,
+    rawMtl,
+    rawLbrHrs,
+    grandTotal: rawMtl + (rawLbrHrs * controlsWageRate),
   };
 }
 
@@ -146,6 +336,7 @@ export function calcItem(item, controlsCatalog = {}) {
 }
 
 export function calcEstimate(estimate, controlsCatalog = {}) {
+  const ddcInfrastructure = calcDdcInfrastructure(getSelectedControlsEntries(estimate), controlsCatalog, estimate?.settings || {});
   return (estimate.items || []).reduce((acc, item) => {
     const c = calcItem(item, controlsCatalog);
     return {
@@ -153,8 +344,15 @@ export function calcEstimate(estimate, controlsCatalog = {}) {
       lbrHrs: acc.lbrHrs + c.totalLbr,
       controlsMtl: acc.controlsMtl + c.totalControlsMtl,
       controlsLbrHrs: acc.controlsLbrHrs + c.totalControlsLbr,
+      ddcInfrastructure: acc.ddcInfrastructure,
     };
-  }, { mtl: 0, lbrHrs: 0, controlsMtl: 0, controlsLbrHrs: 0 });
+  }, {
+    mtl: 0,
+    lbrHrs: 0,
+    controlsMtl: ddcInfrastructure.rawMtl,
+    controlsLbrHrs: ddcInfrastructure.rawLbrHrs,
+    ddcInfrastructure,
+  });
 }
 
 export function getItemDetails(item, controlsCatalog = {}) {

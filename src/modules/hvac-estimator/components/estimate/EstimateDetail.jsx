@@ -79,6 +79,17 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     () => computeControlsCosts(totals.controlsMtl, totals.controlsLbrHrs, settings),
     [settings, totals.controlsLbrHrs, totals.controlsMtl]
   );
+  const ddcInfrastructure = totals.ddcInfrastructure || {
+    rows: [],
+    pointCounts: { AI: 0, AO: 0, BI: 0, BO: 0 },
+    totalPoints: 0,
+    controllerCount: 0,
+    equipmentCount: 0,
+    graphicsCount: 0,
+    rawMtl: 0,
+    rawLbrHrs: 0,
+    grandTotal: 0,
+  };
   const turnkeyTotal = costs.total + controlsCosts.total;
   const sanityCheck = useMemo(
     () => getSanityCheck({
@@ -478,6 +489,35 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                   <div style={{ fontWeight:700, fontSize:13, color:T.text }}>{fmt$(turnkeyTotal)}</div>
                 </div>
               </div>
+
+              {ddcInfrastructure.rows.length > 0 && (
+                <div style={{ border:"1px solid "+T.border, borderRadius:8, background:T.panel, padding:"10px 12px" }}>
+                  <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", gap:12, flexWrap:"wrap", marginBottom:8 }}>
+                    <div>
+                      <div style={{ fontSize:9, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>DDC Infrastructure</div>
+                      <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>
+                        Sized from the selected controls devices. Points AI {ddcInfrastructure.pointCounts.AI}, AO {ddcInfrastructure.pointCounts.AO}, BI {ddcInfrastructure.pointCounts.BI}, BO {ddcInfrastructure.pointCounts.BO}; controllers {ddcInfrastructure.controllerCount}; equipment instances {ddcInfrastructure.equipmentCount}.
+                      </div>
+                    </div>
+                    <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono }}>
+                      Raw subtotal {fmt$(ddcInfrastructure.grandTotal)}
+                    </div>
+                  </div>
+                  <div style={{ display:"grid", gap:6 }}>
+                    {ddcInfrastructure.rows.map((row) => (
+                      <div key={row.catalogId} style={{ display:"grid", gridTemplateColumns:"minmax(220px, 1fr) 48px 88px 88px", gap:10, alignItems:"center", padding:"6px 8px", border:"1px solid "+T.border, borderRadius:6, background:T.surface }}>
+                        <div style={{ minWidth:0 }}>
+                          <div style={{ fontSize:12, color:T.text }}>{row.description}</div>
+                          <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono }}>{row.catalogId}</div>
+                        </div>
+                        <div style={{ fontSize:11, color:T.text, fontFamily:T.mono, textAlign:"right" }}>x{row.qty}</div>
+                        <div style={{ fontSize:11, color:T.blue, fontFamily:T.mono, textAlign:"right" }}>{fmt$(row.mtlTotal)}</div>
+                        <div style={{ fontSize:11, color:T.purple, fontFamily:T.mono, textAlign:"right" }}>{fmtHr(row.hrsTotal)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {sanityCheck && (
                 <div style={{ display:"grid", gap:6 }}>

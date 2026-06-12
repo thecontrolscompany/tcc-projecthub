@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import { ProjectHubEstimateProvider } from "../../shared/EstimateContext.jsx";
+import { ProjectHubEstimateProvider, useEstimate } from "../../shared/EstimateContext.jsx";
 import { EstimateEditorWorkspace } from "./EstimateEditorWorkspace.jsx";
 import { DEFAULT_SETTINGS } from "./projectSettings.js";
 import { calcEstimate } from "./estimateCalc.js";
 
-function normalizeAlternateSettings(settings, items) {
-  const raw = calcEstimate({ items: Array.isArray(items) ? items : [] });
+function normalizeAlternateSettings(settings, items, controlsCatalog) {
+  const raw = calcEstimate({ items: Array.isArray(items) ? items : [] }, controlsCatalog);
   const trips = raw.lbrHrs > 0 ? Math.max(1, Math.ceil(raw.lbrHrs / 20)) : 1;
   return {
     ...DEFAULT_SETTINGS,
@@ -51,6 +51,7 @@ function nextAltArray(parentEstimate, nextAlternate) {
 }
 
 export function BidAlternateEditor({ estimate, alternateId, onBack, onUpdate }) {
+  const { controlsCatalog } = useEstimate();
   const alternates = Array.isArray(estimate.alternates) ? estimate.alternates : [];
   const alternate = alternates.find((entry) => entry.id === alternateId) || null;
 
@@ -61,7 +62,7 @@ export function BidAlternateEditor({ estimate, alternateId, onBack, onUpdate }) 
 
   const handleUpdate = (nextAlternateEstimate) => {
     if (!nextAlternateEstimate) return;
-    const settings = normalizeAlternateSettings(nextAlternateEstimate.settings, nextAlternateEstimate.items);
+    const settings = normalizeAlternateSettings(nextAlternateEstimate.settings, nextAlternateEstimate.items, controlsCatalog);
     const nextAlternate = {
       id: nextAlternateEstimate.id || alternateId,
       name: nextAlternateEstimate.name || alternate?.name || "Bid Alternate",
