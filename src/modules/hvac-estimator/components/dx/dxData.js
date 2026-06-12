@@ -84,15 +84,16 @@ export const buildDefaultDxSelected = (cfg, options = {}) => {
 
 export const DX_COMPS = [
   { id:"dx-ddc",        emtAID:"60087", plnAID:"60087", name:"DX Unit Controller",      cat:"Controls", controlsId: null,    def:true,  desc:"Field-mounted controller for split system or heat pump" },
-  { id:"dx-zone",       emtAID:"60082", plnAID:"60032", name:"Zone Temp Sensor",         cat:"Temperature", controlsId: "CTL-AI", def:true,  desc:"Wall-mounted zone sensor" },
-  { id:"dx-dat",        emtAID:"60073", plnAID:"60037", name:"Discharge Air Temp",       cat:"Temperature", controlsId: "CTL-AI", def:true,  desc:"Supply air discharge sensor" },
+  { id:"dx-zone",       emtAID:"60082", plnAID:"60032", name:"Zone Temp Sensor",         cat:"Temperature", controlsId: "CTL-DEV-TEMP-SPACE", def:true,  desc:"Wall-mounted zone sensor" },
+  { id:"dx-dat",        emtAID:"60073", plnAID:"60037", name:"Discharge Air Temp",       cat:"Temperature", controlsId: "CTL-DEV-TEMP-DUCT", def:true,  desc:"Supply air discharge sensor" },
   { id:"dx-cond",       emtAID:"60103", plnAID:"60042", name:"Outdoor Unit I/O",         cat:"Controls", controlsId: null,    def:true,  desc:"Start, status, and safety interface to outdoor section" },
   { id:"dx-heatpump",   emtAID:"60071", plnAID:"60071", name:"Heat Pump Changeover",     cat:"Controls", controlsId: null,    def:false, showWhen: cfg => normalizeDxCfg(cfg).dxMode === "heat-pump-mode", defaultWhen: cfg => normalizeDxCfg(cfg).dxMode === "heat-pump-mode", desc:"Reversing valve and heat pump enable control" },
-  { id:"dx-aux-heat",   emtAID:"60108", plnAID:"60040", name:"Aux Heat Control",         cat:"Actuators", controlsId: "CTL-BO",   def:false, showWhen: cfg => ["heat-pump-mode", "furnace-mode"].includes(normalizeDxCfg(cfg).dxMode), defaultWhen: cfg => ["heat-pump-mode", "furnace-mode"].includes(normalizeDxCfg(cfg).dxMode), desc:"Electric or staged auxiliary heat outputs" },
-  { id:"dx-float",      emtAID:"60058", plnAID:"60026", name:"Condensate Float Safety",  cat:"Safety", controlsId: "CTL-BI",      def:true,  desc:"Overflow shutdown safety switch" },
-  { id:"dx-filter",     emtAID:"60059", plnAID:"60059", name:"Filter DP Switch",         cat:"Pressure", controlsId: "CTL-AI",    def:false, desc:"Differential pressure across filter" },
-  { id:"dx-smoke",      emtAID:"60122", plnAID:"60122", name:"Smoke Shutdown",           cat:"Safety", controlsId: "CTL-BI",      def:false, desc:"Duct smoke shutdown interlock" },
+  { id:"dx-aux-heat",   emtAID:"60108", plnAID:"60040", name:"Aux Heat Control",         cat:"Actuators", controlsId: "CTL-DEV-STAGE-RELAY",   def:false, showWhen: cfg => ["heat-pump-mode", "furnace-mode"].includes(normalizeDxCfg(cfg).dxMode), defaultWhen: cfg => ["heat-pump-mode", "furnace-mode"].includes(normalizeDxCfg(cfg).dxMode), desc:"Electric or staged auxiliary heat outputs" },
+  { id:"dx-float",      emtAID:"60058", plnAID:"60026", name:"Condensate Float Safety",  cat:"Safety", controlsId: "CTL-DEV-CONDENSATE",      def:true,  desc:"Overflow shutdown safety switch" },
+  { id:"dx-filter",     emtAID:"60059", plnAID:"60059", name:"Filter DP Switch",         cat:"Pressure", controlsId: "CTL-DEV-PRESS-FILTER",    def:false, desc:"Differential pressure across filter" },
+  { id:"dx-smoke",      emtAID:"60122", plnAID:"60122", name:"Smoke Shutdown",           cat:"Safety", controlsId: "CTL-DEV-SMOKE",      def:false, desc:"Duct smoke shutdown interlock" },
   { id:"dx-pwr-trunk",  emtAID:"60135", plnAID:"60052", name:"24V Power Trunk",          cat:"Controls", controlsId: null,    def:false, desc:"24VAC transformer and power trunk", wire:"-" },
   { id:"dx-homerun",    emtAID:"60016", plnAID:"60016", name:"Home Run Conduit",         cat:"Wiring", controlsId: null,      def:true,  desc:"EMT home run to panel", wire:"-" },
 ];
+
 

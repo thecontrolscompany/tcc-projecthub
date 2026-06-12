@@ -109,6 +109,24 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
       } else {
         next.controlsOverride = overrideId;
       }
+      delete next.controlsCustomPart;
+      return next;
+    });
+    updateItem(itemId, { selected: nextSelected });
+  };
+
+  const updateControlsCustomPart = (itemId, compId, customPart) => {
+    const item = estimate.items.find(it => it.id === itemId);
+    if (!item) return;
+    const nextSelected = (item.selected || []).map(entry => {
+      if (entry.id !== compId) return entry;
+      const next = { ...entry };
+      if (customPart) {
+        next.controlsCustomPart = customPart;
+        delete next.controlsOverride;
+      } else {
+        delete next.controlsCustomPart;
+      }
       return next;
     });
     updateItem(itemId, { selected: nextSelected });
@@ -847,19 +865,80 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                                 <div style={{ minWidth:0 }}>
                                   <div style={{ fontSize:12, color:T.text }}>{entry.label}</div>
                                   <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono }}>Qty {entry.qty}</div>
-                                  {!customerMode && entry.controlsAlternates.length > 1 && (
-                                    <select
-                                      value={entry.controlsOverride || entry.controlsId}
-                                      onChange={e => updateControlsOverride(item.id, entry.id, e.target.value, entry.controlsId)}
-                                      style={{ marginTop:4, padding:"2px 4px", border:"1px solid "+T.border2,
-                                        borderRadius:3, fontSize:10, fontFamily:T.mono, background:T.bg,
-                                        color:T.text, outline:"none", maxWidth:260 }}
-                                    >
-                                      {entry.controlsAlternates.map(alt => (
-                                        <option key={alt.id} value={alt.id}>{alt.desc}</option>
-                                      ))}
-                                    </select>
-                                  )}
+                                  {!customerMode && entry.controlsId && (() => {
+                                    const optionMap = new Map();
+                                    const options = [
+                                      { id: entry.controlsId, desc: entry.controlsAlternates.find((alt) => alt.id === entry.controlsId)?.desc || entry.controlsId },
+                                      ...entry.controlsAlternates,
+                                    ].filter((alt) => {
+                                      if (!alt?.id) return false;
+                                      if (optionMap.has(alt.id)) return false;
+                                      optionMap.set(alt.id, true);
+                                      return true;
+                                    });
+                                    const customPart = entry.controlsCustomPart || null;
+                                    const selectValue = customPart ? "__custom__" : (entry.controlsOverride || entry.controlsId);
+                                    return (
+                                      <>
+                                        <select
+                                          value={selectValue}
+                                          onChange={e => {
+                                            if (e.target.value === "__custom__") {
+                                              updateControlsCustomPart(item.id, entry.id, { partNumber: "", description: "", mtlUnit: 0, hrsUnit: 0 });
+                                              return;
+                                            }
+                                            updateControlsOverride(item.id, entry.id, e.target.value, entry.controlsId);
+                                          }}
+                                          style={{ marginTop:4, padding:"2px 4px", border:"1px solid "+T.border2,
+                                            borderRadius:3, fontSize:10, fontFamily:T.mono, background:T.bg,
+                                            color:T.text, outline:"none", maxWidth:260 }}
+                                        >
+                                          {options.map(alt => (
+                                            <option key={alt.id} value={alt.id}>{alt.desc}</option>
+                                          ))}
+                                          <option value="__custom__">Custom part...</option>
+                                        </select>
+                                        {customPart && !customerMode && (
+                                          <div style={{
+                                            marginTop:6,
+                                            display:"grid",
+                                            gridTemplateColumns:"repeat(2, minmax(0, 1fr))",
+                                            gap:6,
+                                            maxWidth:360,
+                                          }}>
+                                            {[
+                                              { key: "partNumber", label: "Part Number", type: "text" },
+                                              { key: "description", label: "Description", type: "text" },
+                                              { key: "mtlUnit", label: "Mtl $", type: "number" },
+                                              { key: "hrsUnit", label: "Hrs", type: "number" },
+                                            ].map((field) => (
+                                              <label key={field.key} style={{ display:"flex", flexDirection:"column", gap:2 }}>
+                                                <span style={{ fontSize:9, color:T.dim, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1 }}>
+                                                  {field.label}
+                                                </span>
+                                                <input
+                                                  type={field.type}
+                                                  value={customPart[field.key] ?? ""}
+                                                  onChange={e => updateControlsCustomPart(item.id, entry.id, { ...customPart, [field.key]: e.target.value })}
+                                                  onBlur={e => updateControlsCustomPart(item.id, entry.id, { ...customPart, [field.key]: e.target.value })}
+                                                  style={{
+                                                    padding:"3px 5px",
+                                                    border:"1px solid "+T.border2,
+                                                    borderRadius:3,
+                                                    fontSize:10,
+                                                    fontFamily:T.mono,
+                                                    background:T.bg,
+                                                    color:T.text,
+                                                    outline:"none",
+                                                  }}
+                                                />
+                                              </label>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </>
+                                    );
+                                  })()}
                                 </div>
                                 {!customerMode && (
                                   <div style={{ textAlign:"right", flexShrink:0 }}>

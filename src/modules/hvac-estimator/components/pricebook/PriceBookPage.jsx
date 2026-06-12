@@ -75,15 +75,20 @@ function parseCsvRow(line) {
   return cells;
 }
 
-async function patchCatalogRow({ organizationId, catalogType, id, mtlUnit, hrsUnit }) {
+async function patchCatalogRow({ organizationId, catalogType, id, mtlUnit, hrsUnit, partNumber, manufacturer }) {
+  const body = {
+    organizationId,
+    mtlUnit,
+    hrsUnit,
+  };
+
+  if (partNumber !== undefined) body.partNumber = partNumber;
+  if (manufacturer !== undefined) body.manufacturer = manufacturer;
+
   const response = await fetch(`/api/estimating/catalog/${catalogType}/${encodeURIComponent(id)}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      organizationId,
-      mtlUnit,
-      hrsUnit,
-    }),
+    body: JSON.stringify(body),
   });
 
   const json = await response.json().catch(() => null);
@@ -174,6 +179,8 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
         category: savedRow.category ?? null,
         freq: Boolean(savedRow.freq),
         alternateIds: Array.isArray(savedRow.alternate_ids) ? savedRow.alternate_ids : [],
+        partNumber: savedRow.part_number ?? null,
+        manufacturer: savedRow.manufacturer ?? null,
       };
 
       if (activeTab === "installation") {
@@ -192,18 +199,83 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
     }
   };
 
+  const updateControlsTextRow = async (id, field, event) => {
+    if (activeCatalogType !== "controls") return;
+
+    const input = event.target;
+    const row = activeCatalog[id];
+    if (!row) return;
+
+    const key = `${id}:${field}`;
+    const nextValue = input.value.trim();
+    setSavingKey(key);
+
+    try {
+      const savedRow = await patchCatalogRow({
+        organizationId,
+        catalogType: activeCatalogType,
+        id,
+        mtlUnit: row.mtlUnit,
+        hrsUnit: row.hrsUnit,
+        partNumber: field === "partNumber" ? (nextValue || null) : row.partNumber ?? null,
+        manufacturer: field === "manufacturer" ? (nextValue || null) : row.manufacturer ?? null,
+      });
+
+      if (!savedRow) return;
+
+      const mappedRow = {
+        id: savedRow.id,
+        desc: savedRow.description,
+        mtlUnit: Number(savedRow.mtl_unit ?? 0),
+        mtlPer: savedRow.mtl_per ?? "E",
+        hrsUnit: Number(savedRow.hrs_unit ?? 0),
+        hrsPer: savedRow.hrs_per ?? "E",
+        category: savedRow.category ?? null,
+        freq: Boolean(savedRow.freq),
+        alternateIds: Array.isArray(savedRow.alternate_ids) ? savedRow.alternate_ids : [],
+        partNumber: savedRow.part_number ?? null,
+        manufacturer: savedRow.manufacturer ?? null,
+      };
+
+      setControlsRows((current) => ({ ...current, [id]: mappedRow }));
+      setRecentKey(key);
+      window.setTimeout(() => setRecentKey(null), 900);
+    } catch (error) {
+      input.value = String(activeCatalog[id]?.[field] ?? "");
+      window.alert(error instanceof Error ? error.message : "Unable to save price.");
+    } finally {
+      setSavingKey(null);
+    }
+  };
+
   const exportCSV = () => {
-    const rows = [["Item ID", "Description", "Category", "Mtl Unit", "Mtl Per", "Hrs Unit", "Hrs Per"]];
+    const rows = activeCatalogType === "controls"
+      ? [["Item ID", "Description", "Category", "Part #", "Manufacturer", "Mtl Unit", "Mtl Per", "Hrs Unit", "Hrs Per"]]
+      : [["Item ID", "Description", "Category", "Mtl Unit", "Mtl Per", "Hrs Unit", "Hrs Per"]];
     for (const item of activeRows) {
-      rows.push([
-        item.id,
-        item.desc,
-        item.category ?? "",
-        item.mtlUnit,
-        item.mtlPer,
-        item.hrsUnit,
-        item.hrsPer,
-      ]);
+      rows.push(
+        activeCatalogType === "controls"
+          ? [
+              item.id,
+              item.desc,
+              item.category ?? "",
+              item.partNumber ?? "",
+              item.manufacturer ?? "",
+              item.mtlUnit,
+              item.mtlPer,
+              item.hrsUnit,
+              item.hrsPer,
+            ]
+          : [
+              item.id,
+              item.desc,
+              item.category ?? "",
+              item.mtlUnit,
+              item.mtlPer,
+              item.hrsUnit,
+              item.hrsPer,
+            ],
+      );
     }
 
     const csv = rows.map((row) => row.map(escapeCsvCell).join(",")).join("\n");
@@ -261,6 +333,8 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
         category: savedRow.category ?? null,
         freq: Boolean(savedRow.freq),
         alternateIds: Array.isArray(savedRow.alternate_ids) ? savedRow.alternate_ids : [],
+        partNumber: savedRow.part_number ?? null,
+        manufacturer: savedRow.manufacturer ?? null,
       };
 
       if (activeTab === "installation") {
@@ -313,6 +387,50 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
         <td style={{ padding: "7px 10px", maxWidth: 280 }}>
           <div style={{ fontSize: 13, color: T.text, fontWeight: 500 }}>{item.desc}</div>
           <div style={{ fontSize: 10, color: color, fontFamily: T.mono }}>{item.category || "Uncategorized"}</div>
+          {activeTab === "controls" && (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
+              <label style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <span style={{ fontSize: 9, color: T.dim, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1 }}>Part #</span>
+                <input
+                  type="text"
+                  defaultValue={item.partNumber ?? ""}
+                  key={`${item.id}:part:${item.partNumber ?? ""}`}
+                  onBlur={(event) => void updateControlsTextRow(item.id, "partNumber", event)}
+                  style={{
+                    width: 118,
+                    padding: "3px 6px",
+                    border: "1px solid " + color,
+                    borderRadius: 4,
+                    fontSize: 11,
+                    fontFamily: T.mono,
+                    background: color + "10",
+                    color: T.text,
+                    outline: "none",
+                  }}
+                />
+              </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 2, flex: "1 1 140px", minWidth: 140 }}>
+                <span style={{ fontSize: 9, color: T.dim, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1 }}>Manufacturer</span>
+                <input
+                  type="text"
+                  defaultValue={item.manufacturer ?? ""}
+                  key={`${item.id}:manufacturer:${item.manufacturer ?? ""}`}
+                  onBlur={(event) => void updateControlsTextRow(item.id, "manufacturer", event)}
+                  style={{
+                    width: "100%",
+                    padding: "3px 6px",
+                    border: "1px solid " + color,
+                    borderRadius: 4,
+                    fontSize: 11,
+                    fontFamily: T.mono,
+                    background: color + "10",
+                    color: T.text,
+                    outline: "none",
+                  }}
+                />
+              </label>
+            </div>
+          )}
         </td>
         <td style={{ padding: "7px 10px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>

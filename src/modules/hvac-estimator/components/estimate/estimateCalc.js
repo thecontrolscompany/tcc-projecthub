@@ -74,7 +74,18 @@ function getControlsOverride(item, id) {
   return item.selected?.find((s) => s.id === id)?.controlsOverride || null;
 }
 
-function getControlsCost(comp, controlsCatalog, override) {
+function getControlsCustomPart(item, id) {
+  return item.selected?.find((s) => s.id === id)?.controlsCustomPart || null;
+}
+
+function getControlsCost(comp, controlsCatalog, override, customPart) {
+  if (customPart) {
+    return {
+      mtl: Number(customPart.mtlUnit) || 0,
+      lbr: Number(customPart.hrsUnit) || 0,
+    };
+  }
+
   const id = override || comp.controlsId;
   const entry = id ? controlsCatalog?.[id] : null;
   if (!entry) return { mtl: 0, lbr: 0 };
@@ -114,12 +125,12 @@ export function calcItem(item, controlsCatalog = {}) {
   }, 0) + custLbr;
   const unitControlsMtl = selComps.reduce((a, c) => {
     const cq = getCompQty(item, c.id);
-    const result = getControlsCost(c, controlsCatalog, getControlsOverride(item, c.id));
+    const result = getControlsCost(c, controlsCatalog, getControlsOverride(item, c.id), getControlsCustomPart(item, c.id));
     return a + (result?.mtl || 0) * cq;
   }, 0);
   const unitControlsLbr = selComps.reduce((a, c) => {
     const cq = getCompQty(item, c.id);
-    const result = getControlsCost(c, controlsCatalog, getControlsOverride(item, c.id));
+    const result = getControlsCost(c, controlsCatalog, getControlsOverride(item, c.id), getControlsCustomPart(item, c.id));
     return a + (result?.lbr || 0) * cq;
   }, 0);
   return {
@@ -155,17 +166,18 @@ export function getItemDetails(item, controlsCatalog = {}) {
       const cost = getCompCost(item, comp);
       const controlsId = comp.controlsId || null;
       const controlsOverride = getControlsOverride(item, comp.id);
+      const controlsCustomPart = getControlsCustomPart(item, comp.id);
       const controlsEntry = controlsId ? controlsCatalog?.[controlsId] : null;
-      const controlsAlternates = controlsEntry?.alternateIds?.length
+      const controlsAlternates = controlsEntry
         ? [
             { id: controlsId, desc: controlsEntry.desc || controlsId },
-            ...controlsEntry.alternateIds.map((altId) => ({
+            ...(controlsEntry.alternateIds || []).map((altId) => ({
               id: altId,
               desc: controlsCatalog?.[altId]?.desc || altId,
             })),
           ]
         : [];
-      const controlsCost = getControlsCost(comp, controlsCatalog, controlsOverride);
+      const controlsCost = getControlsCost(comp, controlsCatalog, controlsOverride, controlsCustomPart);
       return {
         id: comp.id,
         label: comp.label || comp.name || comp.id,
@@ -174,6 +186,7 @@ export function getItemDetails(item, controlsCatalog = {}) {
         lbr: (cost?.lbr || 0) * qty,
         controlsId,
         controlsOverride,
+        controlsCustomPart,
         controlsAlternates,
         controlsMtl: (controlsCost?.mtl || 0) * qty,
         controlsLbr: (controlsCost?.lbr || 0) * qty,

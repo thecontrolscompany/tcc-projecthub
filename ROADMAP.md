@@ -43,12 +43,14 @@
 - [x] **Timesheets / Time tracking** - time entries, approvals, reconciliation, QB sync, weekly summaries, and project/employee hour breakdowns
 - [x] **Printable reports** - weekly update, BOM, change order, and status pages with print-ready layouts
 - [x] **Controls/Turnkey Estimating Redesign** - every estimate computes Install Labor/Material + Controls Material/Engineering Labor buckets from one item selection; `estimateScopeMode` is Install Only vs Turnkey; includes a 40/40/20 sanity check and per-instance controls substitution via the controls catalog's `alternate_ids`. Install-side substitution (`installOverride`) remains future work because install alternates are not yet curated. Spec: `codex/roadmap-controls-turnkey-estimating.md`
+- [x] **Controls Field Devices parts catalog** - seeded all 27 `CTL-DEV-*` rows into `controls_assembly_catalog` for tcc; 14 rows have real part#/manufacturer and 13 remain placeholders with draft pricing/hours; re-paired every estimator component `controlsId` off the old generic IO rows; retired the 5 generic IO Point catalog rows after confirming no `CTL-AI`/`CTL-AO`/`CTL-BI`/`CTL-BO`/`CTL-AI-WIRELESS` references remained in the `*Data.js` files. Spec: `codex/roadmap-controls-field-devices.md`
 
 ---
 
 ## Planned
 
 ### Near-Term
+- [ ] **DDC infrastructure sizing** (Priority: Medium) — estimates currently have zero cost for DDC controllers, IO modules, panels, network/JACE, software licenses, or related engineering labor/graphics, even though `controls_assembly_catalog` already has seeded generic-tier rows for all of these categories. Add calc logic to size this bill from an estimate's total IO point count and equipment mix (incl. a per-VAV-box controller line), plus a UI section to show it, and curate real Johnson Controls FX/Metasys parts for the tiers using Field Devices Phase A's part_number/manufacturer columns. Cross-dependency with Field Devices Phase C (point-type tagging). Spec: `codex/roadmap-controls-ddc-infrastructure-sizing.md`
 - [ ] **Budget vs Actual** (Priority: High) — labor and material cost vs estimate by project; feeds job costing. Depends on timesheets and BOM. Spec: `codex/roadmap-budget-vs-actual.md`
 - [ ] **QBO Integration** (Priority: High) — 4-phase OAuth sync: read customers/estimates/invoices → write invoices → bills/payroll → full 2-way. Spec: `codex/roadmap-qbo-integration.md`
 - [ ] **Estimator ↔ ProjectHub Integration** (Priority: High) — Phase 1: cloud auth migration; Phase 2: link estimates to projects; Phase 3: push POC weights from estimate. Spec: `.claude/plans/goofy-sniffing-karp.md`

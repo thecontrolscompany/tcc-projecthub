@@ -49,7 +49,7 @@ export default async function EstimatingPriceBookPage() {
       .order("id", { ascending: true }),
     supabase
       .from("controls_assembly_catalog")
-      .select("id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, alternate_ids")
+      .select("id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, alternate_ids, part_number, manufacturer")
       .eq("organization_id", organizationId)
       .order("id", { ascending: true }),
   ]);

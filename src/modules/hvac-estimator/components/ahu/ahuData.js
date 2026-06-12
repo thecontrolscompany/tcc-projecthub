@@ -297,37 +297,37 @@ export const toggleAhuComponentSelection = (selected, componentId, options = {})
 
 export const AHU_COMPS = [
   withLegacyArrays(
-    { id: "oa-temp", emtAID: "60075", plnAID: "60075", name: "OA Temp Sensor", cat: "Temperature", controlsId: "CTL-AI", unitMtl: 95, unitLbr: 1.0,
+    { id: "oa-temp", emtAID: "60075", plnAID: "60075", name: "OA Temp Sensor", cat: "Temperature", controlsId: "CTL-DEV-TEMP-DUCT", unitMtl: 95, unitLbr: 1.0,
       showWhen: () => true, defaultWhen: () => true, desc: "Outside air temp at intake" },
     A, A
   ),
   withLegacyArrays(
-    { id: "ma-temp", emtAID: "60075", plnAID: "60075", name: "Mixed Air Temp", cat: "Temperature", controlsId: "CTL-AI", unitMtl: 85, unitLbr: 0.75,
+    { id: "ma-temp", emtAID: "60075", plnAID: "60075", name: "Mixed Air Temp", cat: "Temperature", controlsId: "CTL-DEV-TEMP-DUCT", unitMtl: 85, unitLbr: 0.75,
       showWhen: cfg => normalizeAhuCfg(cfg).ahuType === "mixed",
       defaultWhen: cfg => normalizeAhuCfg(cfg).ahuType === "mixed",
       desc: "Mixed air temp after mixing box" },
     M, M
   ),
   withLegacyArrays(
-    { id: "sa-temp", emtAID: "60075", plnAID: "60075", name: "SA Temp Sensor", cat: "Temperature", controlsId: "CTL-AI", unitMtl: 85, unitLbr: 0.75,
+    { id: "sa-temp", emtAID: "60075", plnAID: "60075", name: "SA Temp Sensor", cat: "Temperature", controlsId: "CTL-DEV-TEMP-DUCT", unitMtl: 85, unitLbr: 0.75,
       showWhen: () => true, defaultWhen: () => true, desc: "Supply air temp in discharge duct" },
     A, A
   ),
   withLegacyArrays(
-    { id: "ra-temp", emtAID: "60075", plnAID: "60075", name: "RA Temp Sensor", cat: "Temperature", controlsId: "CTL-AI", unitMtl: 85, unitLbr: 0.75,
+    { id: "ra-temp", emtAID: "60075", plnAID: "60075", name: "RA Temp Sensor", cat: "Temperature", controlsId: "CTL-DEV-TEMP-DUCT", unitMtl: 85, unitLbr: 0.75,
       showWhen: cfg => normalizeAhuCfg(cfg).ahuType !== "doas",
       defaultWhen: cfg => normalizeAhuCfg(cfg).ahuType !== "doas",
       desc: "Return air temp sensor" },
     ME, ME
   ),
   withLegacyArrays(
-    { id: "ea-temp", emtAID: "60075", plnAID: "60075", name: "EA Temp Sensor", cat: "Temperature", controlsId: "CTL-AI", unitMtl: 85, unitLbr: 0.75,
+    { id: "ea-temp", emtAID: "60075", plnAID: "60075", name: "EA Temp Sensor", cat: "Temperature", controlsId: "CTL-DEV-TEMP-DUCT", unitMtl: 85, unitLbr: 0.75,
       showWhen: cfg => normalizeAhuCfg(cfg).heatRecoveryType !== "none",
       desc: "Exhaust air temp after energy recovery" },
     E, []
   ),
   withLegacyArrays(
-    { id: "hw-sup-t", emtAID: "60076", plnAID: "60076", name: "HW Supply Temp", cat: "Temperature", controlsId: "CTL-AI", unitMtl: 95, unitLbr: 1.0,
+    { id: "hw-sup-t", emtAID: "60076", plnAID: "60076", name: "HW Supply Temp", cat: "Temperature", controlsId: "CTL-DEV-TEMP-PIPE", unitMtl: 95, unitLbr: 1.0,
       showWhen: cfg => {
         const next = normalizeAhuCfg(cfg);
         return next.heatingType !== "none" || next.preheatType !== "none";
@@ -340,7 +340,7 @@ export const AHU_COMPS = [
     A, []
   ),
   withLegacyArrays(
-    { id: "hw-ret-t", emtAID: "60076", plnAID: "60076", name: "HW Return Temp", cat: "Temperature", controlsId: "CTL-AI", unitMtl: 95, unitLbr: 1.0,
+    { id: "hw-ret-t", emtAID: "60076", plnAID: "60076", name: "HW Return Temp", cat: "Temperature", controlsId: "CTL-DEV-TEMP-PIPE", unitMtl: 95, unitLbr: 1.0,
       showWhen: cfg => {
         const next = normalizeAhuCfg(cfg);
         return next.heatingType !== "none" || next.preheatType !== "none";
@@ -353,26 +353,26 @@ export const AHU_COMPS = [
     A, []
   ),
   withLegacyArrays(
-    { id: "chw-sup-t", emtAID: "60076", plnAID: "60076", name: "CHW Supply Temp", cat: "Temperature", controlsId: "CTL-AI", unitMtl: 95, unitLbr: 1.0,
+    { id: "chw-sup-t", emtAID: "60076", plnAID: "60076", name: "CHW Supply Temp", cat: "Temperature", controlsId: "CTL-DEV-TEMP-PIPE", unitMtl: 95, unitLbr: 1.0,
       showWhen: cfg => normalizeAhuCfg(cfg).coolingType !== "none",
       defaultWhen: cfg => normalizeAhuCfg(cfg).coolingType !== "none",
       desc: "CHW supply temp at cooling coil" },
     A, []
   ),
   withLegacyArrays(
-    { id: "chw-ret-t", emtAID: "60076", plnAID: "60076", name: "CHW Return Temp", cat: "Temperature", controlsId: "CTL-AI", unitMtl: 95, unitLbr: 1.0,
+    { id: "chw-ret-t", emtAID: "60076", plnAID: "60076", name: "CHW Return Temp", cat: "Temperature", controlsId: "CTL-DEV-TEMP-PIPE", unitMtl: 95, unitLbr: 1.0,
       showWhen: cfg => normalizeAhuCfg(cfg).coolingType !== "none",
       defaultWhen: cfg => normalizeAhuCfg(cfg).coolingType !== "none",
       desc: "CHW return temp at cooling coil" },
     A, []
   ),
   withLegacyArrays(
-    { id: "oa-rh", emtAID: "60066", plnAID: "60066", name: "OA Humidity", cat: "Humidity", controlsId: "CTL-AI", unitMtl: 195, unitLbr: 1.0,
+    { id: "oa-rh", emtAID: "60066", plnAID: "60066", name: "OA Humidity", cat: "Humidity", controlsId: "CTL-DEV-HUMID-DUCT", unitMtl: 195, unitLbr: 1.0,
       showWhen: () => true, desc: "Outside air relative humidity" },
     A, []
   ),
   withLegacyArrays(
-    { id: "sa-rh", emtAID: "60066", plnAID: "60066", name: "SA Humidity", cat: "Humidity", controlsId: "CTL-AI", unitMtl: 185, unitLbr: 1.0,
+    { id: "sa-rh", emtAID: "60066", plnAID: "60066", name: "SA Humidity", cat: "Humidity", controlsId: "CTL-DEV-HUMID-DUCT", unitMtl: 185, unitLbr: 1.0,
       showWhen: () => true,
       defaultWhen: cfg => {
         const next = normalizeAhuCfg(cfg);
@@ -382,26 +382,26 @@ export const AHU_COMPS = [
     A, ["mixed", "doas"]
   ),
   withLegacyArrays(
-    { id: "ra-rh", emtAID: "60066", plnAID: "60066", name: "RA Humidity", cat: "Humidity", controlsId: "CTL-AI", unitMtl: 185, unitLbr: 1.0,
+    { id: "ra-rh", emtAID: "60066", plnAID: "60066", name: "RA Humidity", cat: "Humidity", controlsId: "CTL-DEV-HUMID-DUCT", unitMtl: 185, unitLbr: 1.0,
       showWhen: cfg => normalizeAhuCfg(cfg).ahuType !== "doas",
       defaultWhen: cfg => normalizeAhuCfg(cfg).ahuType === "mixed",
       desc: "Return air humidity sensor" },
     ME, M
   ),
   withLegacyArrays(
-    { id: "sa-static", emtAID: "60100", plnAID: "60100", name: "SA Static Pressure", cat: "Pressure", controlsId: "CTL-AI", unitMtl: 220, unitLbr: 1.5,
+    { id: "sa-static", emtAID: "60100", plnAID: "60100", name: "SA Static Pressure", cat: "Pressure", controlsId: "CTL-DEV-PRESS-DUCT", unitMtl: 220, unitLbr: 1.5,
       showWhen: () => true, defaultWhen: () => true, desc: "Supply duct static pressure" },
     A, A
   ),
   withLegacyArrays(
-    { id: "ra-static", emtAID: "60100", plnAID: "60100", name: "RA Static Pressure", cat: "Pressure", controlsId: "CTL-AI", unitMtl: 220, unitLbr: 1.5,
+    { id: "ra-static", emtAID: "60100", plnAID: "60100", name: "RA Static Pressure", cat: "Pressure", controlsId: "CTL-DEV-PRESS-DUCT", unitMtl: 220, unitLbr: 1.5,
       showWhen: cfg => normalizeAhuCfg(cfg).ahuType !== "doas",
       defaultWhen: cfg => normalizeAhuCfg(cfg).ahuType === "mixed",
       desc: "Return duct static pressure" },
     ME, M
   ),
   withLegacyArrays(
-    { id: "bldg-sp", emtAID: "60100", plnAID: "60100", name: "Building Static", cat: "Pressure", controlsId: "CTL-AI", unitMtl: 245, unitLbr: 1.75,
+    { id: "bldg-sp", emtAID: "60100", plnAID: "60100", name: "Building Static", cat: "Pressure", controlsId: "CTL-DEV-PRESS-DUCT", unitMtl: 245, unitLbr: 1.75,
       showWhen: () => true,
       defaultWhen: cfg => {
         const next = normalizeAhuCfg(cfg);
@@ -411,12 +411,12 @@ export const AHU_COMPS = [
     A, ["mixed", "doas"]
   ),
   withLegacyArrays(
-    { id: "filter-dp", emtAID: "60059", plnAID: "60059", name: "Filter Diff. Pressure", cat: "Pressure", controlsId: "CTL-AI", unitMtl: 220, unitLbr: 1.5,
+    { id: "filter-dp", emtAID: "60059", plnAID: "60059", name: "Filter Diff. Pressure", cat: "Pressure", controlsId: "CTL-DEV-PRESS-FILTER", unitMtl: 220, unitLbr: 1.5,
       showWhen: () => true, defaultWhen: () => true, desc: "Differential pressure across filters" },
     A, A
   ),
   withLegacyArrays(
-    { id: "oa-damper", emtAID: "60069", plnAID: "60069", name: "OA Damper Actuator", cat: "Actuators", controlsId: "CTL-AO", unitMtl: 285, unitLbr: 2.0,
+    { id: "oa-damper", emtAID: "60069", plnAID: "60069", name: "OA Damper Actuator", cat: "Actuators", controlsId: "CTL-DEV-ACT-DAMPER-MOD", unitMtl: 285, unitLbr: 2.0,
       showWhen: cfg => {
         const next = normalizeAhuCfg(cfg);
         return next.ahuType !== "doas" || next.economizer !== "none";
@@ -426,21 +426,21 @@ export const AHU_COMPS = [
     ME, ME
   ),
   withLegacyArrays(
-    { id: "ea-damper", emtAID: "60069", plnAID: "60069", name: "Exhaust Damper Act.", cat: "Actuators", controlsId: "CTL-AO", unitMtl: 285, unitLbr: 2.0,
+    { id: "ea-damper", emtAID: "60069", plnAID: "60069", name: "Exhaust Damper Act.", cat: "Actuators", controlsId: "CTL-DEV-ACT-DAMPER-MOD", unitMtl: 285, unitLbr: 2.0,
       showWhen: cfg => normalizeAhuCfg(cfg).ahuType !== "doas",
       defaultWhen: cfg => normalizeAhuCfg(cfg).ahuType !== "doas",
       desc: "Exhaust air damper actuator" },
     ME, ME
   ),
   withLegacyArrays(
-    { id: "ra-damper", emtAID: "60069", plnAID: "60069", name: "RA Damper Actuator", cat: "Actuators", controlsId: "CTL-AO", unitMtl: 285, unitLbr: 2.0,
+    { id: "ra-damper", emtAID: "60069", plnAID: "60069", name: "RA Damper Actuator", cat: "Actuators", controlsId: "CTL-DEV-ACT-DAMPER-MOD", unitMtl: 285, unitLbr: 2.0,
       showWhen: cfg => normalizeAhuCfg(cfg).ahuType === "mixed",
       defaultWhen: cfg => normalizeAhuCfg(cfg).ahuType === "mixed",
       desc: "Return air damper actuator" },
     M, M
   ),
   withLegacyArrays(
-    { id: "min-oa-d", emtAID: "60069", plnAID: "60069", name: "MIN OA Damper Act.", cat: "Actuators", controlsId: "CTL-AO", unitMtl: 285, unitLbr: 2.0,
+    { id: "min-oa-d", emtAID: "60069", plnAID: "60069", name: "MIN OA Damper Act.", cat: "Actuators", controlsId: "CTL-DEV-ACT-DAMPER-MOD", unitMtl: 285, unitLbr: 2.0,
       showWhen: cfg => {
         const next = normalizeAhuCfg(cfg);
         return next.ahuType === "mixed" && next.economizer === "modulating";
@@ -449,55 +449,55 @@ export const AHU_COMPS = [
     M, []
   ),
   withLegacyArrays(
-    { id: "htg-valve", groupId: "ahu-htg-actuator", emtAID: "60077", plnAID: "60077", name: "Heating Valve Act.", cat: "Actuators", controlsId: "CTL-AO", unitMtl: 315, unitLbr: 2.5,
+    { id: "htg-valve", groupId: "ahu-htg-actuator", emtAID: "60077", plnAID: "60077", name: "Heating Valve Act.", cat: "Actuators", controlsId: "CTL-DEV-ACT-VALVE-MOD", unitMtl: 315, unitLbr: 2.5,
       showWhen: cfg => normalizeAhuCfg(cfg).heatingType === "hw-prop",
       defaultWhen: cfg => normalizeAhuCfg(cfg).heatingType === "hw-prop",
       desc: "HW heating coil valve actuator" },
     A, A
   ),
   withLegacyArrays(
-    { id: "clg-valve", groupId: "ahu-clg-actuator", emtAID: "60077", plnAID: "60077", name: "Cooling Valve Act.", cat: "Actuators", controlsId: "CTL-AO", unitMtl: 315, unitLbr: 2.5,
+    { id: "clg-valve", groupId: "ahu-clg-actuator", emtAID: "60077", plnAID: "60077", name: "Cooling Valve Act.", cat: "Actuators", controlsId: "CTL-DEV-ACT-VALVE-MOD", unitMtl: 315, unitLbr: 2.5,
       showWhen: cfg => normalizeAhuCfg(cfg).coolingType === "chw-prop",
       defaultWhen: cfg => normalizeAhuCfg(cfg).coolingType === "chw-prop",
       desc: "CHW cooling coil valve actuator" },
     A, A
   ),
   withLegacyArrays(
-    { id: "ph-valve", groupId: "ahu-preheat-actuator", emtAID: "60077", plnAID: "60077", name: "Preheat Valve Act.", cat: "Actuators", controlsId: "CTL-AO", unitMtl: 315, unitLbr: 2.5,
+    { id: "ph-valve", groupId: "ahu-preheat-actuator", emtAID: "60077", plnAID: "60077", name: "Preheat Valve Act.", cat: "Actuators", controlsId: "CTL-DEV-ACT-VALVE-MOD", unitMtl: 315, unitLbr: 2.5,
       showWhen: cfg => normalizeAhuCfg(cfg).preheatType === "hw-prop",
       defaultWhen: cfg => normalizeAhuCfg(cfg).preheatType === "hw-prop",
       desc: "HW preheat coil valve actuator" },
     A, ["doas", ...E]
   ),
   withLegacyArrays(
-    { id: "elec-heat", groupId: "ahu-htg-actuator", emtAID: "60108", plnAID: "60040", name: "Electric Heat Stages", cat: "Actuators", controlsId: "CTL-BO", unitMtl: 225, unitLbr: 2.0,
+    { id: "elec-heat", groupId: "ahu-htg-actuator", emtAID: "60108", plnAID: "60040", name: "Electric Heat Stages", cat: "Actuators", controlsId: "CTL-DEV-STAGE-RELAY", unitMtl: 225, unitLbr: 2.0,
       showWhen: cfg => normalizeAhuCfg(cfg).heatingType === "electric-staged",
       desc: "Electric reheat staging control" },
     A, []
   ),
   withLegacyArrays(
-    { id: "wheel-spd", emtAID: "60129", plnAID: "60129", name: "Wheel Speed Control", cat: "Actuators", controlsId: "CTL-AO", unitMtl: 385, unitLbr: 2.0,
+    { id: "wheel-spd", emtAID: "60129", plnAID: "60129", name: "Wheel Speed Control", cat: "Actuators", controlsId: "CTL-DEV-WHEEL-SPD", unitMtl: 385, unitLbr: 2.0,
       showWhen: cfg => normalizeAhuCfg(cfg).heatRecoveryType === "wheel",
       defaultWhen: cfg => normalizeAhuCfg(cfg).heatRecoveryType === "wheel",
       desc: "Heat wheel VFD/speed controller" },
     ["erv-wheel"], ["erv-wheel"]
   ),
   withLegacyArrays(
-    { id: "rac-pump", emtAID: "60131", plnAID: "60131", name: "Run-Around Pump Ctrl", cat: "Actuators", controlsId: "CTL-AO", unitMtl: 285, unitLbr: 2.0,
+    { id: "rac-pump", emtAID: "60131", plnAID: "60131", name: "Run-Around Pump Ctrl", cat: "Actuators", controlsId: "CTL-DEV-RAC-PUMP", unitMtl: 285, unitLbr: 2.0,
       showWhen: cfg => normalizeAhuCfg(cfg).heatRecoveryType === "run-around",
       defaultWhen: cfg => normalizeAhuCfg(cfg).heatRecoveryType === "run-around",
       desc: "Run-around coil pump control" },
     ["erv-rac"], ["erv-rac"]
   ),
   withLegacyArrays(
-    { id: "vfd-sf", groupId: "ahu-supply-fan", emtAID: "60129", plnAID: "60129", name: "Supply Fan VFD", cat: "Drives", controlsId: "CTL-AO", unitMtl: 850, unitLbr: 4.0,
+    { id: "vfd-sf", groupId: "ahu-supply-fan", emtAID: "60129", plnAID: "60129", name: "Supply Fan VFD", cat: "Drives", controlsId: "CTL-DEV-VFD-INTERFACE", unitMtl: 850, unitLbr: 4.0,
       showWhen: cfg => normalizeAhuCfg(cfg).supplyFanType === "variable",
       defaultWhen: cfg => normalizeAhuCfg(cfg).supplyFanType === "variable",
       desc: "VFD on supply fan(s)" },
     A, A
   ),
   withLegacyArrays(
-    { id: "vfd-rf", groupId: "ahu-return-fan", emtAID: "60129", plnAID: "60129", name: "Return Fan VFD", cat: "Drives", controlsId: "CTL-AO", unitMtl: 850, unitLbr: 4.0,
+    { id: "vfd-rf", groupId: "ahu-return-fan", emtAID: "60129", plnAID: "60129", name: "Return Fan VFD", cat: "Drives", controlsId: "CTL-DEV-VFD-INTERFACE", unitMtl: 850, unitLbr: 4.0,
       showWhen: cfg => {
         const next = normalizeAhuCfg(cfg);
         return next.returnFanConfig !== "none" && next.returnFanType === "variable";
@@ -510,17 +510,17 @@ export const AHU_COMPS = [
     ME, M
   ),
   withLegacyArrays(
-    { id: "freeze", emtAID: "60056", plnAID: "60056", name: "Freezestat", cat: "Safety", controlsId: "CTL-BI", unitMtl: 145, unitLbr: 1.5,
+    { id: "freeze", emtAID: "60056", plnAID: "60056", name: "Freezestat", cat: "Safety", controlsId: "CTL-DEV-FREEZESTAT", unitMtl: 145, unitLbr: 1.5,
       showWhen: () => true, defaultWhen: () => true, desc: "Low-limit freeze protection stat" },
     A, A
   ),
   withLegacyArrays(
-    { id: "smoke-sa", emtAID: "60122", plnAID: "60122", name: "Smoke Det. (Supply)", cat: "Safety", controlsId: "CTL-BI", unitMtl: 185, unitLbr: 1.5,
+    { id: "smoke-sa", emtAID: "60122", plnAID: "60122", name: "Smoke Det. (Supply)", cat: "Safety", controlsId: "CTL-DEV-SMOKE", unitMtl: 185, unitLbr: 1.5,
       showWhen: () => true, defaultWhen: () => true, desc: "Duct smoke detector, supply stream" },
     A, A
   ),
   withLegacyArrays(
-    { id: "smoke-ra", emtAID: "60122", plnAID: "60122", name: "Smoke Det. (Return)", cat: "Safety", controlsId: "CTL-BI", unitMtl: 185, unitLbr: 1.5,
+    { id: "smoke-ra", emtAID: "60122", plnAID: "60122", name: "Smoke Det. (Return)", cat: "Safety", controlsId: "CTL-DEV-SMOKE", unitMtl: 185, unitLbr: 1.5,
       showWhen: cfg => normalizeAhuCfg(cfg).ahuType !== "doas",
       defaultWhen: cfg => normalizeAhuCfg(cfg).ahuType !== "doas",
       desc: "Duct smoke detector, return stream" },
@@ -547,7 +547,7 @@ export const AHU_COMPS = [
     A, A
   ),
   withLegacyArrays(
-    { id: "fab-damper", emtAID: "60069", plnAID: "60039", name: "Face and Bypass Damper", cat: "Actuators", controlsId: "CTL-BO", unitMtl: 0, unitLbr: 0,
+    { id: "fab-damper", emtAID: "60069", plnAID: "60039", name: "Face and Bypass Damper", cat: "Actuators", controlsId: "CTL-DEV-ACT-DAMPER-MOD", unitMtl: 0, unitLbr: 0,
       showWhen: cfg => {
         const next = normalizeAhuCfg(cfg);
         return next.coolingType === "chw-2pos" || next.heatingType === "hw-2pos";
@@ -560,95 +560,95 @@ export const AHU_COMPS = [
     [], []
   ),
   withLegacyArrays(
-    { id: "clg-valve-2pos", groupId: "ahu-clg-actuator", emtAID: "60077", plnAID: "60077", name: "Cooling Valve Act. - Two-Position", cat: "Actuators", controlsId: "CTL-BO", unitMtl: 0, unitLbr: 0,
+    { id: "clg-valve-2pos", groupId: "ahu-clg-actuator", emtAID: "60077", plnAID: "60077", name: "Cooling Valve Act. - Two-Position", cat: "Actuators", controlsId: "CTL-DEV-ACT-VALVE-2POS", unitMtl: 0, unitLbr: 0,
       showWhen: cfg => normalizeAhuCfg(cfg).coolingType === "chw-2pos",
       defaultWhen: cfg => normalizeAhuCfg(cfg).coolingType === "chw-2pos",
       desc: "CHW cooling coil two-position valve actuator" },
     [], []
   ),
   withLegacyArrays(
-    { id: "clg-dx-staged", emtAID: "60106", plnAID: "60106", name: "DX Cooling Stages", cat: "Actuators", controlsId: "CTL-BO", unitMtl: 0, unitLbr: 0,
+    { id: "clg-dx-staged", emtAID: "60106", plnAID: "60106", name: "DX Cooling Stages", cat: "Actuators", controlsId: "CTL-DEV-STAGE-RELAY", unitMtl: 0, unitLbr: 0,
       showWhen: cfg => normalizeAhuCfg(cfg).coolingType === "dx-staged",
       desc: "DX cooling staging outputs" },
     [], []
   ),
   withLegacyArrays(
-    { id: "htg-valve-2pos", groupId: "ahu-htg-actuator", emtAID: "60077", plnAID: "60077", name: "Heating Valve Act. - Two-Position", cat: "Actuators", controlsId: "CTL-BO", unitMtl: 0, unitLbr: 0,
+    { id: "htg-valve-2pos", groupId: "ahu-htg-actuator", emtAID: "60077", plnAID: "60077", name: "Heating Valve Act. - Two-Position", cat: "Actuators", controlsId: "CTL-DEV-ACT-VALVE-2POS", unitMtl: 0, unitLbr: 0,
       showWhen: cfg => normalizeAhuCfg(cfg).heatingType === "hw-2pos",
       defaultWhen: cfg => normalizeAhuCfg(cfg).heatingType === "hw-2pos",
       desc: "HW heating coil two-position valve actuator" },
     [], []
   ),
   withLegacyArrays(
-    { id: "htg-valve-incr", groupId: "ahu-htg-actuator", emtAID: "60147", plnAID: "60096", name: "Heating Valve Act. - Incremental", cat: "Actuators", controlsId: "CTL-BO", unitMtl: 0, unitLbr: 0,
+    { id: "htg-valve-incr", groupId: "ahu-htg-actuator", emtAID: "60147", plnAID: "60096", name: "Heating Valve Act. - Incremental", cat: "Actuators", controlsId: "CTL-DEV-ACT-VALVE-2POS", unitMtl: 0, unitLbr: 0,
       showWhen: cfg => normalizeAhuCfg(cfg).heatingType === "hw-incr",
       defaultWhen: cfg => normalizeAhuCfg(cfg).heatingType === "hw-incr",
       desc: "HW heating coil incremental valve actuator" },
     [], []
   ),
   withLegacyArrays(
-    { id: "htg-steam-valve", groupId: "ahu-htg-actuator", emtAID: "60077", plnAID: "60077", name: "Heating Steam Valve Act.", cat: "Actuators", controlsId: "CTL-AO", unitMtl: 0, unitLbr: 0,
+    { id: "htg-steam-valve", groupId: "ahu-htg-actuator", emtAID: "60077", plnAID: "60077", name: "Heating Steam Valve Act.", cat: "Actuators", controlsId: "CTL-DEV-ACT-VALVE-MOD", unitMtl: 0, unitLbr: 0,
       showWhen: cfg => normalizeAhuCfg(cfg).heatingType === "steam-prop",
       defaultWhen: cfg => normalizeAhuCfg(cfg).heatingType === "steam-prop",
       desc: "Steam heating valve actuator" },
     [], []
   ),
   withLegacyArrays(
-    { id: "ph-valve-2pos", groupId: "ahu-preheat-actuator", emtAID: "60077", plnAID: "60077", name: "Preheat Valve Act. - Two-Position", cat: "Actuators", controlsId: "CTL-BO", unitMtl: 0, unitLbr: 0,
+    { id: "ph-valve-2pos", groupId: "ahu-preheat-actuator", emtAID: "60077", plnAID: "60077", name: "Preheat Valve Act. - Two-Position", cat: "Actuators", controlsId: "CTL-DEV-ACT-VALVE-2POS", unitMtl: 0, unitLbr: 0,
       showWhen: cfg => normalizeAhuCfg(cfg).preheatType === "hw-2pos",
       defaultWhen: cfg => normalizeAhuCfg(cfg).preheatType === "hw-2pos",
       desc: "HW preheat coil two-position valve actuator" },
     [], []
   ),
   withLegacyArrays(
-    { id: "ph-steam-valve", groupId: "ahu-preheat-actuator", emtAID: "60077", plnAID: "60077", name: "Preheat Steam Valve Act.", cat: "Actuators", controlsId: "CTL-AO", unitMtl: 0, unitLbr: 0,
+    { id: "ph-steam-valve", groupId: "ahu-preheat-actuator", emtAID: "60077", plnAID: "60077", name: "Preheat Steam Valve Act.", cat: "Actuators", controlsId: "CTL-DEV-ACT-VALVE-MOD", unitMtl: 0, unitLbr: 0,
       showWhen: cfg => normalizeAhuCfg(cfg).preheatType === "steam-prop",
       defaultWhen: cfg => normalizeAhuCfg(cfg).preheatType === "steam-prop",
       desc: "Steam preheat valve actuator" },
     [], []
   ),
   withLegacyArrays(
-    { id: "rh-valve", groupId: "ahu-reheat-actuator", emtAID: "60077", plnAID: "60077", name: "Reheat Valve Act. - Proportional", cat: "Actuators", controlsId: "CTL-AO", unitMtl: 0, unitLbr: 0,
+    { id: "rh-valve", groupId: "ahu-reheat-actuator", emtAID: "60077", plnAID: "60077", name: "Reheat Valve Act. - Proportional", cat: "Actuators", controlsId: "CTL-DEV-ACT-VALVE-MOD", unitMtl: 0, unitLbr: 0,
       showWhen: cfg => normalizeAhuCfg(cfg).reheatType === "hw-prop",
       defaultWhen: cfg => normalizeAhuCfg(cfg).reheatType === "hw-prop",
       desc: "Downstream hot water reheat valve actuator" },
     [], []
   ),
   withLegacyArrays(
-    { id: "rh-valve-2pos", groupId: "ahu-reheat-actuator", emtAID: "60077", plnAID: "60077", name: "Reheat Valve Act. - Two-Position", cat: "Actuators", controlsId: "CTL-BO", unitMtl: 0, unitLbr: 0,
+    { id: "rh-valve-2pos", groupId: "ahu-reheat-actuator", emtAID: "60077", plnAID: "60077", name: "Reheat Valve Act. - Two-Position", cat: "Actuators", controlsId: "CTL-DEV-ACT-VALVE-2POS", unitMtl: 0, unitLbr: 0,
       showWhen: cfg => normalizeAhuCfg(cfg).reheatType === "hw-2pos",
       defaultWhen: cfg => normalizeAhuCfg(cfg).reheatType === "hw-2pos",
       desc: "Downstream two-position reheat valve actuator" },
     [], []
   ),
   withLegacyArrays(
-    { id: "rh-valve-incr", groupId: "ahu-reheat-actuator", emtAID: "60147", plnAID: "60096", name: "Reheat Valve Act. - Incremental", cat: "Actuators", controlsId: "CTL-BO", unitMtl: 0, unitLbr: 0,
+    { id: "rh-valve-incr", groupId: "ahu-reheat-actuator", emtAID: "60147", plnAID: "60096", name: "Reheat Valve Act. - Incremental", cat: "Actuators", controlsId: "CTL-DEV-ACT-VALVE-2POS", unitMtl: 0, unitLbr: 0,
       showWhen: cfg => normalizeAhuCfg(cfg).reheatType === "hw-incr",
       defaultWhen: cfg => normalizeAhuCfg(cfg).reheatType === "hw-incr",
       desc: "Downstream incremental reheat valve actuator" },
     [], []
   ),
   withLegacyArrays(
-    { id: "rh-elec-heat", groupId: "ahu-reheat-actuator", emtAID: "60107", plnAID: "60107", name: "Reheat Electric Stages", cat: "Actuators", controlsId: "CTL-BO", unitMtl: 0, unitLbr: 0,
+    { id: "rh-elec-heat", groupId: "ahu-reheat-actuator", emtAID: "60107", plnAID: "60107", name: "Reheat Electric Stages", cat: "Actuators", controlsId: "CTL-DEV-STAGE-RELAY", unitMtl: 0, unitLbr: 0,
       showWhen: cfg => normalizeAhuCfg(cfg).reheatType === "electric-staged",
       desc: "Downstream electric reheat staging outputs" },
     [], []
   ),
   withLegacyArrays(
-    { id: "plate-bypass", emtAID: "60069", plnAID: "60039", name: "Plate HX Bypass Damper", cat: "Actuators", controlsId: "CTL-AO", unitMtl: 0, unitLbr: 0,
+    { id: "plate-bypass", emtAID: "60069", plnAID: "60039", name: "Plate HX Bypass Damper", cat: "Actuators", controlsId: "CTL-DEV-ACT-DAMPER-MOD", unitMtl: 0, unitLbr: 0,
       showWhen: cfg => normalizeAhuCfg(cfg).heatRecoveryType === "plate",
       desc: "Plate heat exchanger bypass damper actuator" },
     [], []
   ),
   withLegacyArrays(
-    { id: "sf-starter", groupId: "ahu-supply-fan", emtAID: "60070", plnAID: "60070", name: "Supply Fan Starter", cat: "Drives", controlsId: "CTL-BO", unitMtl: 0, unitLbr: 0,
+    { id: "sf-starter", groupId: "ahu-supply-fan", emtAID: "60070", plnAID: "60070", name: "Supply Fan Starter", cat: "Drives", controlsId: "CTL-DEV-STAGE-RELAY", unitMtl: 0, unitLbr: 0,
       showWhen: cfg => normalizeAhuCfg(cfg).supplyFanType === "constant",
       defaultWhen: cfg => normalizeAhuCfg(cfg).supplyFanType === "constant",
       desc: "Constant-speed supply fan start/stop wiring" },
     [], []
   ),
   withLegacyArrays(
-    { id: "rf-starter", groupId: "ahu-return-fan", emtAID: "60070", plnAID: "60070", name: "Return Fan Starter", cat: "Drives", controlsId: "CTL-BO", unitMtl: 0, unitLbr: 0,
+    { id: "rf-starter", groupId: "ahu-return-fan", emtAID: "60070", plnAID: "60070", name: "Return Fan Starter", cat: "Drives", controlsId: "CTL-DEV-STAGE-RELAY", unitMtl: 0, unitLbr: 0,
       showWhen: cfg => {
         const next = normalizeAhuCfg(cfg);
         return next.returnFanConfig !== "none" && next.returnFanType === "constant";
@@ -661,3 +661,4 @@ export const AHU_COMPS = [
     [], []
   ),
 ];
+

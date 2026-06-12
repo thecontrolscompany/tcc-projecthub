@@ -576,6 +576,23 @@ export interface BomItem {
   status?: BomStatus;
 }
 
+export interface ControlsAssemblyCatalogRow {
+  id: string;
+  organization_id: string;
+  description: string;
+  mtl_unit: number;
+  mtl_per: string;
+  hrs_unit: number;
+  hrs_per: string;
+  category: string | null;
+  alternate_ids: string[];
+  part_number: string | null;
+  manufacturer: string | null;
+  io_type: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface MaterialReceipt {
   id: string;
   bom_item_id: string;

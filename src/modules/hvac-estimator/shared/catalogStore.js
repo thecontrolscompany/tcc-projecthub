@@ -17,6 +17,9 @@ export function mapCatalogRows(rows = []) {
       .filter((row) => row && typeof row.id === "string" && row.id.trim())
       .map((row) => {
         const id = row.id.trim();
+        const partNumber = typeof row.part_number === "string" && row.part_number.trim() ? row.part_number.trim() : null;
+        const manufacturer = typeof row.manufacturer === "string" && row.manufacturer.trim() ? row.manufacturer.trim() : null;
+        const ioType = typeof row.io_type === "string" && row.io_type.trim() ? row.io_type.trim() : null;
         return [
           id,
           {
@@ -29,6 +32,9 @@ export function mapCatalogRows(rows = []) {
             category: typeof row.category === "string" && row.category.trim() ? row.category : null,
             freq: Boolean(row.freq),
             alternateIds: toArray(row.alternate_ids),
+            partNumber,
+            manufacturer,
+            ioType,
           },
         ];
       }),

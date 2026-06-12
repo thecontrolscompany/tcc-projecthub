@@ -327,7 +327,7 @@ Actions taken:
   - `20260508000002_estimates_tenant_module_policies`
 - `supabase db push` was initially blocked by a stale remote migration history entry for `20260415`.
 - Repaired that remote history entry:
-  - `supabase migration repair --status reverted 20260415`
+  - `npx supabase migration repair 20260415 --status applied --linked --yes`
 - Applied pending migrations:
   - `supabase db push --include-all`
 - Verified remote now has the May 8 migrations applied.

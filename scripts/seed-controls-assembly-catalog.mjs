@@ -13,11 +13,6 @@ if (!supabaseUrl || !serviceRoleKey) {
 }
 
 const CONTROLS_CATALOG_ITEMS = [
-  { id: "CTL-AI", desc: "Analog Input Point - Sensor Interface, Programming & Commissioning", mtlUnit: 45, hrsUnit: 0.5, category: "IO Points", alternateIds: ["CTL-AI-WIRELESS"] },
-  { id: "CTL-AO", desc: "Analog Output Point - Modulating Actuator/VFD Interface, Programming & Commissioning", mtlUnit: 55, hrsUnit: 0.75, category: "IO Points", alternateIds: [] },
-  { id: "CTL-BI", desc: "Binary Input Point - Status/Alarm Interface, Programming & Commissioning", mtlUnit: 35, hrsUnit: 0.4, category: "IO Points", alternateIds: [] },
-  { id: "CTL-BO", desc: "Binary Output Point - Start/Stop/Stage Interface, Programming & Commissioning", mtlUnit: 40, hrsUnit: 0.5, category: "IO Points", alternateIds: [] },
-  { id: "CTL-AI-WIRELESS", desc: "Analog Input Point - Wireless Sensor Interface, Programming & Commissioning", mtlUnit: 145, hrsUnit: 0.6, category: "IO Points", alternateIds: ["CTL-AI"] },
   { id: "CTL-DDC-08", desc: "DDC Controller - 8 Point Capacity", mtlUnit: 650, hrsUnit: 3.0, category: "DDC Controllers", alternateIds: ["CTL-DDC-16", "CTL-DDC-32", "CTL-DDC-64"] },
   { id: "CTL-DDC-16", desc: "DDC Controller - 16 Point Capacity", mtlUnit: 950, hrsUnit: 4.0, category: "DDC Controllers", alternateIds: ["CTL-DDC-08", "CTL-DDC-32", "CTL-DDC-64"] },
   { id: "CTL-DDC-32", desc: "DDC Controller - 32 Point Capacity", mtlUnit: 1450, hrsUnit: 5.0, category: "DDC Controllers", alternateIds: ["CTL-DDC-08", "CTL-DDC-16", "CTL-DDC-64"] },

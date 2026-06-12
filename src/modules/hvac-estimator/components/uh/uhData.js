@@ -134,15 +134,16 @@ export const UH_COMPS = [
   // Controls
   { id:"uh-ctrl",     emtAID:"60087", plnAID:"60087", name:"DDC Control Panel",      cat:"Controls", controlsId: null,    def:true,  defaultWhen: () => true, desc:"Field DDC panel - BACnet" },
   // Heating
-  { id:"uh-hw-vlv",   groupId:"uh-heating-type", emtAID:"60077", plnAID:"60077", name:"HW Valve Actuator",      cat:"Actuators", controlsId: "CTL-AO",   def:true,  showWhen: cfg => normalizeUhCfg(cfg).heatingType === "hw-valve", defaultWhen: cfg => normalizeUhCfg(cfg).heatingType === "hw-valve", desc:"Hot water valve actuator" },
-  { id:"uh-htg2",     groupId:"uh-heating-type", emtAID:"60109", plnAID:"60109", name:"Electric Heat 2-Stage",  cat:"Actuators", controlsId: "CTL-BO",   def:false, showWhen: cfg => normalizeUhCfg(cfg).heatingType === "electric-2stage", defaultWhen: cfg => normalizeUhCfg(cfg).heatingType === "electric-2stage", desc:"2-stage electric heat relay" },
-  { id:"uh-htg3",     groupId:"uh-heating-type", emtAID:"60107", plnAID:"60107", name:"Electric Heat 3-Stage",  cat:"Actuators", controlsId: "CTL-BO",   def:false, showWhen: cfg => normalizeUhCfg(cfg).heatingType === "electric-3stage", defaultWhen: cfg => normalizeUhCfg(cfg).heatingType === "electric-3stage", desc:"3-stage electric heat relay" },
+  { id:"uh-hw-vlv",   groupId:"uh-heating-type", emtAID:"60077", plnAID:"60077", name:"HW Valve Actuator",      cat:"Actuators", controlsId: "CTL-DEV-ACT-VALVE-MOD",   def:true,  showWhen: cfg => normalizeUhCfg(cfg).heatingType === "hw-valve", defaultWhen: cfg => normalizeUhCfg(cfg).heatingType === "hw-valve", desc:"Hot water valve actuator" },
+  { id:"uh-htg2",     groupId:"uh-heating-type", emtAID:"60109", plnAID:"60109", name:"Electric Heat 2-Stage",  cat:"Actuators", controlsId: "CTL-DEV-STAGE-RELAY",   def:false, showWhen: cfg => normalizeUhCfg(cfg).heatingType === "electric-2stage", defaultWhen: cfg => normalizeUhCfg(cfg).heatingType === "electric-2stage", desc:"2-stage electric heat relay" },
+  { id:"uh-htg3",     groupId:"uh-heating-type", emtAID:"60107", plnAID:"60107", name:"Electric Heat 3-Stage",  cat:"Actuators", controlsId: "CTL-DEV-STAGE-RELAY",   def:false, showWhen: cfg => normalizeUhCfg(cfg).heatingType === "electric-3stage", defaultWhen: cfg => normalizeUhCfg(cfg).heatingType === "electric-3stage", desc:"3-stage electric heat relay" },
   // Fan Status
-  { id:"uh-fan-cs",   emtAID:"60061", plnAID:"60061", name:"Fan Current Switch",     cat:"Safety", controlsId: "CTL-BI",      def:true,  defaultWhen: () => true, desc:"Current switch for fan proof" },
+  { id:"uh-fan-cs",   emtAID:"60061", plnAID:"60061", name:"Fan Current Switch",     cat:"Safety", controlsId: "CTL-DEV-FAN-STATUS",      def:true,  defaultWhen: () => true, desc:"Current switch for fan proof" },
   // Temperature
-  { id:"uh-sp-t",     emtAID:"60076", plnAID:"60076", name:"HW Supply Temp",         cat:"Temperature", controlsId: "CTL-AI", def:false, showWhen: cfg => normalizeUhCfg(cfg).heatingType === "hw-valve", desc:"Hot water supply temp sensor" },
-  { id:"uh-rm-t",     emtAID:"60082", plnAID:"60032", name:"Room Temp Sensor",       cat:"Temperature", controlsId: "CTL-AI", def:true,  defaultWhen: () => true, desc:"Wall-mount room temp sensor" },
+  { id:"uh-sp-t",     emtAID:"60076", plnAID:"60076", name:"HW Supply Temp",         cat:"Temperature", controlsId: "CTL-DEV-TEMP-PIPE", def:false, showWhen: cfg => normalizeUhCfg(cfg).heatingType === "hw-valve", desc:"Hot water supply temp sensor" },
+  { id:"uh-rm-t",     emtAID:"60082", plnAID:"60032", name:"Room Temp Sensor",       cat:"Temperature", controlsId: "CTL-DEV-TEMP-SPACE", def:true,  defaultWhen: () => true, desc:"Wall-mount room temp sensor" },
   // Wiring
   { id:"uh-pwr-trunk", emtAID:"60135", plnAID:"60052", name:"24V Power Trunk",       cat:"Controls", controlsId: null,    def:false, desc:"24VAC transformer + power trunk to DDC controllers", wire:"-" },
   { id:"uh-homerun",   emtAID:"60016", plnAID:"60016", name:"Home Run Conduit",       cat:"Wiring", controlsId: null,      def:true,  defaultWhen: () => true, desc:"EMT home run to main panel", wire:"-" },
 ];
+

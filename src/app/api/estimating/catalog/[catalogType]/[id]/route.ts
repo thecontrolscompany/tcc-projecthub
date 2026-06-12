@@ -46,6 +46,8 @@ export async function PATCH(
         mtlUnit?: number | string | null;
         hrsUnit?: number | string | null;
         alternateIds?: string[] | null;
+        partNumber?: string | null;
+        manufacturer?: string | null;
       }
     | null;
 
@@ -80,6 +82,15 @@ export async function PATCH(
     patch.alternate_ids = body.alternateIds.filter((value) => typeof value === "string");
   }
 
+  if (catalogType === "controls") {
+    if (body.partNumber !== undefined) {
+      patch.part_number = typeof body.partNumber === "string" && body.partNumber.trim() ? body.partNumber.trim() : null;
+    }
+    if (body.manufacturer !== undefined) {
+      patch.manufacturer = typeof body.manufacturer === "string" && body.manufacturer.trim() ? body.manufacturer.trim() : null;
+    }
+  }
+
   if (!Object.keys(patch).length) {
     return NextResponse.json({ error: "No fields to update." }, { status: 400 });
   }
@@ -87,7 +98,7 @@ export async function PATCH(
   const selectColumns =
     catalogType === "install"
       ? "id, organization_id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, freq, alternate_ids"
-      : "id, organization_id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, alternate_ids";
+      : "id, organization_id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, alternate_ids, part_number, manufacturer, io_type";
 
   const { data, error } = await supabase
     .from(table)
