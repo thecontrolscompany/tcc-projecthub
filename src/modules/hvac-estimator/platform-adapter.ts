@@ -65,7 +65,7 @@ export function buildHvacEstimateBody(input: HvacEstimateCreateInput): HvacEstim
     notes: input.notes ?? "",
     settings: {
       ...DEFAULT_SETTINGS,
-      estimateScopeMode: normalizeEstimateScopeMode(input.estimateScopeMode),
+      estimateScopeMode: normalizeEstimateScopeMode(input.estimateScopeMode ?? "both"),
     },
     alternates: [],
     createdAt: now,

@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { NewEstimateClient } from "./new-estimate-client";
-import { normalizeEstimateScopeMode } from "@/modules/hvac-estimator/components/estimate/projectSettings";
 import { mapCatalogRows } from "@/modules/hvac-estimator/shared/catalogStore";
 
 export const dynamic = "force-dynamic";
@@ -106,7 +105,7 @@ export default async function NewEstimatePage({
     customerAccountId: "",
     customer: "",
     notes: "",
-    estimateScopeMode: normalizeEstimateScopeMode("installation"),
+    estimateScopeMode: "both",
   };
 
   if (opportunityId) {

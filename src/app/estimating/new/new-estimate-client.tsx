@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { OpportunityHubSubnav } from "@/components/opportunity-hub-subnav";
 import { buildHvacEstimateBody, toPlatformEstimatePayload } from "@/modules/hvac-estimator/platform-adapter";
-import { ESTIMATE_SCOPE_MODES, normalizeEstimateScopeMode } from "@/modules/hvac-estimator/components/estimate/projectSettings";
 
 type InitialEstimate = {
   organizationId: string | null;
@@ -81,7 +80,6 @@ export function NewEstimateClient({ initialEstimate, accounts }: Props) {
         customerAccountId: form.customerAccountId || null,
         customer: form.customer.trim() || null,
         notes: form.notes.trim() || null,
-        estimateScopeMode: normalizeEstimateScopeMode(form.estimateScopeMode),
       });
 
       const payload = toPlatformEstimatePayload(body, "draft");
@@ -174,38 +172,6 @@ export function NewEstimateClient({ initialEstimate, accounts }: Props) {
           </label>
         </div>
 
-        <fieldset className="mt-4 rounded-2xl border border-border-default bg-surface-overlay p-4">
-          <legend className="px-1 text-xs font-medium uppercase tracking-wide text-text-tertiary">Estimate scope</legend>
-          <div className="mt-3 grid gap-3 md:grid-cols-3">
-            {ESTIMATE_SCOPE_MODES.map((mode) => {
-              const checked = normalizeEstimateScopeMode(form.estimateScopeMode) === mode.id;
-              return (
-                <label
-                  key={mode.id}
-                  className={`flex h-full cursor-pointer flex-col rounded-xl border px-4 py-3 transition ${
-                    checked
-                      ? "border-brand-primary bg-brand-subtle"
-                      : "border-border-default bg-surface-raised hover:border-brand-primary/50"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name="estimateScopeMode"
-                      value={mode.id}
-                      checked={checked}
-                      onChange={() => setField("estimateScopeMode", mode.id)}
-                      className="mt-0.5 h-4 w-4 accent-brand-primary"
-                    />
-                    <span className="text-sm font-semibold text-text-primary">{mode.label}</span>
-                  </div>
-                  <p className="mt-2 text-xs leading-5 text-text-secondary">{mode.description}</p>
-                </label>
-              );
-            })}
-          </div>
-        </fieldset>
-
         <label className="mt-4 block">
           <span className={labelClassName}>Notes</span>
           <textarea
@@ -224,7 +190,7 @@ export function NewEstimateClient({ initialEstimate, accounts }: Props) {
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
           <p className="text-xs text-text-tertiary">
-            This saves an empty estimate body with default HVAC Estimator settings and platform linkage.
+            This saves an empty estimate body with default HVAC Estimator settings and platform linkage. Proposal scope can be chosen later.
           </p>
           <button
             type="submit"
