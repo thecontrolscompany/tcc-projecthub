@@ -225,6 +225,7 @@ export function ProjectHubEstimateProvider({
     subPage,
     setSubPage,
     editingItem,
+    controlsCatalog,
   }), [estimate, activeId, editingItem, installCatalog, subPage, controlsCatalog]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

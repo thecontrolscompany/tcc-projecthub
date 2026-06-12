@@ -70,6 +70,12 @@ function getCompCost(item, comp) {
   return calcAssembly(aid);
 }
 
+function getControlsCost(comp, controlsCatalog) {
+  const entry = comp.controlsId ? controlsCatalog?.[comp.controlsId] : null;
+  if (!entry) return { mtl: 0, lbr: 0 };
+  return { mtl: entry.mtlUnit || 0, lbr: entry.hrsUnit || 0 };
+}
+
 function getCustomCost(item, custom) {
   const aid = String(item.installType === "EMT" ? custom.emtAID : custom.plnAID);
   const qty = Math.max(1, Number(custom.qty || 1));
@@ -86,7 +92,7 @@ function getCustomCost(item, custom) {
   };
 }
 
-export function calcItem(item) {
+export function calcItem(item, controlsCatalog = {}) {
   const comps = resolveItemComps(item);
   const selComps = comps.filter((c) => item.selected?.some((s) => s.id === c.id));
   const custMtl = (item.custom || []).reduce((a, c) => a + getCustomCost(item, c).mtl, 0);
@@ -101,14 +107,38 @@ export function calcItem(item) {
     const result = getCompCost(item, c);
     return a + (result?.lbr || 0) * cq;
   }, 0) + custLbr;
-  return { unitMtl, unitLbr, totalMtl: unitMtl * item.qty, totalLbr: unitLbr * item.qty };
+  const unitControlsMtl = selComps.reduce((a, c) => {
+    const cq = getCompQty(item, c.id);
+    const result = getControlsCost(c, controlsCatalog);
+    return a + (result?.mtl || 0) * cq;
+  }, 0);
+  const unitControlsLbr = selComps.reduce((a, c) => {
+    const cq = getCompQty(item, c.id);
+    const result = getControlsCost(c, controlsCatalog);
+    return a + (result?.lbr || 0) * cq;
+  }, 0);
+  return {
+    unitMtl,
+    unitLbr,
+    totalMtl: unitMtl * item.qty,
+    totalLbr: unitLbr * item.qty,
+    unitControlsMtl,
+    unitControlsLbr,
+    totalControlsMtl: unitControlsMtl * item.qty,
+    totalControlsLbr: unitControlsLbr * item.qty,
+  };
 }
 
-export function calcEstimate(estimate) {
+export function calcEstimate(estimate, controlsCatalog = {}) {
   return (estimate.items || []).reduce((acc, item) => {
-    const c = calcItem(item);
-    return { mtl: acc.mtl + c.totalMtl, lbrHrs: acc.lbrHrs + c.totalLbr };
-  }, { mtl: 0, lbrHrs: 0 });
+    const c = calcItem(item, controlsCatalog);
+    return {
+      mtl: acc.mtl + c.totalMtl,
+      lbrHrs: acc.lbrHrs + c.totalLbr,
+      controlsMtl: acc.controlsMtl + c.totalControlsMtl,
+      controlsLbrHrs: acc.controlsLbrHrs + c.totalControlsLbr,
+    };
+  }, { mtl: 0, lbrHrs: 0, controlsMtl: 0, controlsLbrHrs: 0 });
 }
 
 export function getItemDetails(item) {

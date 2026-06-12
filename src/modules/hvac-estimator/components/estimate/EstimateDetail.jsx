@@ -4,7 +4,7 @@ import { generateProposal } from "./export/generateProposal.js";
 import { generateInternalEstimateExport } from "./export/generateInternalEstimateExport.js";
 import { T } from "../../shared/tokens.js";
 import { fmt$, fmtHr } from "../../shared/utils.js";
-import { DEFAULT_SETTINGS, computeCosts, getEstimateScopeModeLabel } from "./projectSettings.js";
+import { DEFAULT_SETTINGS, computeCosts, computeControlsCosts, getSanityCheck, getEstimateScopeModeLabel } from "./projectSettings.js";
 import { useEstimate } from "../../shared/EstimateContext.jsx";
 import { getCurrentUser } from "../../shared/currentUser.js";
 import { AHU_TYPES } from "../ahu/ahuData.js";
@@ -22,7 +22,7 @@ import {
   getItemDetails,
 } from "./estimateCalc.js";
 export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = false, showProjectSettings = true, showBidAlternates = true, platformEstimateId = null, initialProposalTab = null }) {
-  const { subPage, setSubPage, applyDefaultInstallType } = useEstimate();
+  const { subPage, setSubPage, applyDefaultInstallType, controlsCatalog } = useEstimate();
   const isMobile = useIsMobile();
   const [editHeader, setEditHeader] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
@@ -63,18 +63,31 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     const altItems = alternate.items || [];
     if (!altItems.length) return { ...alternate, altRaw: null, altCosts: null };
     const altSettings = { ...DEFAULT_SETTINGS, ...(alternate.settings || {}) };
-    const altRaw = calcEstimate({ items: altItems });
+    const altRaw = calcEstimate({ items: altItems }, controlsCatalog);
     const altCosts = computeCosts(altRaw.mtl, altRaw.lbrHrs, altSettings, altItems);
     return { ...alternate, altRaw, altCosts };
-  }), [alternates]);
+  }), [alternates, controlsCatalog]);
   const updateSettings = useCallback((patch) => {
     onUpdate({ ...estimate, updatedAt: new Date().toISOString(),
       settings: { ...settings, ...patch } });
   }, [estimate, settings, onUpdate]);
 
-  const totals     = calcEstimate(estimate);
+  const totals     = calcEstimate(estimate, controlsCatalog);
   const costs      = useMemo(() => computeCosts(totals.mtl, totals.lbrHrs, settings, estimate.items||[]), [totals.mtl, totals.lbrHrs, settings, estimate.items]);
   const grandTotal = costs.total;
+  const controlsCosts = useMemo(
+    () => computeControlsCosts(totals.controlsMtl, totals.controlsLbrHrs, settings),
+    [settings, totals.controlsLbrHrs, totals.controlsMtl]
+  );
+  const turnkeyTotal = costs.total + controlsCosts.total;
+  const sanityCheck = useMemo(
+    () => getSanityCheck({
+      installTotal: costs.total,
+      controlsMaterial: controlsCosts.material,
+      controlsLabor: controlsCosts.labor,
+    }),
+    [controlsCosts.labor, controlsCosts.material, costs.total]
+  );
 
   const saveHeader = () => {
     onUpdate({...estimate, name, number, customer, bidder, version, notes, updatedAt:new Date().toISOString()});
@@ -197,7 +210,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     setExporting(true);
     try {
       const itemsWithComps = buildItemsWithComps(estimate);
-      const result = await generateProposal(estimate, itemsWithComps, grandTotal, costs.bond);
+      const result = await generateProposal(estimate, itemsWithComps, grandTotal, costs.bond, controlsCatalog);
       if (result?.blob) {
         void uploadGeneratedToSharePoint(result.blob, result.fileName, "proposal_pdf");
       }
@@ -207,7 +220,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     } finally {
       setExporting(false);
     }
-  }, [estimate, grandTotal, costs.bond]);
+  }, [controlsCatalog, costs.bond, estimate, grandTotal]);
 
   const exportInternal = useCallback(async () => {
     try {
@@ -334,16 +347,6 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                       + Bid Alternate
                     </button>
                   )}
-                  {showBidAlternates && (
-                    <button onClick={() => createBidAlternate("controls", "Controls Estimate Draft", true)}
-                      title="Create a controls estimate draft from the current equipment selection"
-                      style={{ padding:"7px 10px", border:"1px solid "+T.blue,
-                        borderRadius:5, background:T.blueFaint || "#EFF6FF",
-                        color:T.blue, cursor:"pointer", fontSize:12,
-                        fontFamily:T.mono, fontWeight:600 }}>
-                      + Controls Estimate Draft
-                    </button>
-                  )}
                   <button onClick={()=>setSubPage({ type:"wizard" })}
                     title="Open system selection wizard"
                     style={{ padding:"7px 10px", border:"1px solid "+T.border2,
@@ -415,40 +418,78 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
         )}
       </div>
 
+      {!customerMode && settings.estimateScopeMode === "both" && (
+        <div style={{ padding:"0 24px 18px" }}>
+          <div style={{ border:"1px solid "+T.border, borderRadius:10, background:T.surface, overflow:"hidden" }}>
+            <div style={{ padding:"10px 14px", borderBottom:"1px solid "+T.border }}>
+              <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Turnkey Cost Summary</div>
+              <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>
+                Install Labor and Material come from the install catalog. Controls Material and Controls Engineering Labor are computed automatically from the controls catalog using each component's controls pairing.
+              </div>
+            </div>
+            <div style={{ padding:"12px 14px", display:"grid", gap:12 }}>
+              <div style={{ display:"flex", gap:0, background:T.panel, border:"1px solid "+T.border, borderRadius:7, overflow:"hidden", fontSize:11, fontFamily:T.mono }}>
+                {[
+                  { label:"Install Total", val:costs.total, color:T.steel },
+                  { label:"Controls Material", val:controlsCosts.material, color:T.blue },
+                  { label:"Controls Eng. Labor", val:controlsCosts.labor, color:T.purple },
+                ].map(({ label, val, color }) => (
+                  <div key={label} style={{ flex:1, padding:"5px 12px", textAlign:"center", borderRight:"1px solid "+T.border }}>
+                    <div style={{ fontSize:9, color:T.muted, textTransform:"uppercase", letterSpacing:1 }}>{label}</div>
+                    <div style={{ fontWeight:700, color }}>{fmt$(val)}</div>
+                  </div>
+                ))}
+                <div style={{ flex:1, padding:"5px 12px", textAlign:"center" }}>
+                  <div style={{ fontSize:9, color:T.muted, textTransform:"uppercase", letterSpacing:1 }}>Turnkey Total</div>
+                  <div style={{ fontWeight:700, fontSize:13, color:T.text }}>{fmt$(turnkeyTotal)}</div>
+                </div>
+              </div>
+
+              {sanityCheck && (
+                <div style={{ display:"grid", gap:6 }}>
+                  <div style={{ fontSize:9, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1 }}>40 / 40 / 20 Sanity Check</div>
+                  {[
+                    { label:"Install (target 40%)", bucket:sanityCheck.install },
+                    { label:"Controls Material (target 40%)", bucket:sanityCheck.controlsMaterial },
+                    { label:"Controls Eng. Labor (target 20%)", bucket:sanityCheck.controlsLabor },
+                  ].map(({ label, bucket }) => {
+                    const diff = Math.abs(bucket.pct - bucket.target);
+                    const color = diff <= 5 ? T.green : diff <= 15 ? T.amber : T.rose;
+                    return (
+                      <div key={label} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, padding:"6px 10px", border:"1px solid "+T.border, borderRadius:6, background:T.panel }}>
+                        <div style={{ fontSize:12, color:T.text }}>{label}</div>
+                        <div style={{ fontSize:12, fontFamily:T.mono, fontWeight:700, color }}>
+                          {bucket.pct.toFixed(1)}% ({fmt$(bucket.value)})
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div style={{ fontSize:10, color:T.dim, lineHeight:1.5 }}>
+                    Informational only - a healthy turnkey bid is roughly 40% install, 40% controls material, and 20% controls engineering labor. A large deviation may mean missing scope or a pricing issue, but this never blocks saving or exporting.
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {!customerMode && showBidAlternates && (
         <div style={{ padding:"0 24px 18px" }}>
           <div style={{ border:"1px solid "+T.border, borderRadius:10, background:T.surface, overflow:"hidden" }}>
             <div style={{ padding:"10px 14px", borderBottom:"1px solid "+T.border, display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap" }}>
               <div>
                 <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.3 }}>Bid Outputs</div>
-                <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>Pick equipment once, then keep the installation bid and the controls draft separate from the same source selection.</div>
+                <div style={{ fontSize:12, color:T.dim, marginTop:2 }}>Optional alternates priced separately from the base estimate.</div>
               </div>
             </div>
             <div style={{ padding:"12px 14px", display:"grid", gap:10 }}>
-              {(() => {
-                if (settings.estimateScopeMode !== "both") return null;
-                const controlsAlternate = alternatesWithCosts.find(
-                  (alternate) => alternate.settings?.estimateScopeMode === "controls" && alternate.altCosts
-                );
-                if (!controlsAlternate) return null;
-                return (
-                  <div style={{ padding:"10px 12px", border:"1px solid "+T.blueMid, borderRadius:8, background:T.blueFaint }}>
-                    <div style={{ fontSize:11, color:T.blue, fontFamily:T.mono, fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>
-                      Turnkey Total (Installation + Controls)
-                    </div>
-                    <div style={{ fontSize:16, color:T.text, fontWeight:700, marginTop:4 }}>
-                      {fmt$(costs.total + controlsAlternate.altCosts.total)}
-                    </div>
-                  </div>
-                );
-              })()}
               {alternatesWithCosts.length ? alternatesWithCosts.map((alternate) => (
                   <div key={alternate.id} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap", padding:"10px 12px", border:"1px solid "+T.border, borderRadius:8, background:T.panel }}>
                   <div>
                     <div style={{ fontSize:13, fontWeight:700, color:T.text }}>{alternate.name || "Bid Alternate"}</div>
                     <div style={{ fontSize:11, color:T.dim, fontFamily:T.mono, marginTop:3 }}>
                       {getEstimateScopeModeLabel(alternate.settings?.estimateScopeMode)} · {(alternate.items?.length || 0)} item{(alternate.items?.length || 0) === 1 ? "" : "s"}
-                      {alternate.settings?.estimateScopeMode === "controls" && alternate.items?.length > 0 ? " · seeded from current equipment" : ""}
                     </div>
                     {alternate.altCosts && (
                       <div style={{ fontSize:11, color:T.dim, fontFamily:T.mono, marginTop:3 }}>
@@ -473,7 +514,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                 </div>
               )) : (
                 <div style={{ fontSize:12, color:T.muted }}>
-                  No bid alternates yet. Use <strong>+ Bid Alternate</strong> or <strong>+ Controls Estimate Draft</strong> to start one.
+                  No bid alternates yet. Use <strong>+ Bid Alternate</strong> to start one.
                 </div>
               )}
             </div>

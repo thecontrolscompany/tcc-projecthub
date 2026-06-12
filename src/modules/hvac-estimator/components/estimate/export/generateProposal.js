@@ -6,7 +6,7 @@
  */
 
 import { buildItemsWithComps, calcEstimate } from "../estimateCalc.js";
-import { DEFAULT_SETTINGS, computeCosts, getEstimateScopeModeLabel, normalizeEstimateScopeMode } from "../projectSettings.js";
+import { DEFAULT_SETTINGS, computeCosts, computeControlsCosts, getEstimateScopeModeLabel, normalizeEstimateScopeMode } from "../projectSettings.js";
 
 const TEMPLATE_PATH = "/report-assets/proposal-template.html";
 const LOGO_PATH = "/report-assets/logo.png";
@@ -37,10 +37,6 @@ const SCOPE_MODE_META = {
   installation: {
     label: "Installation",
     intro: "HVAC controls installation",
-  },
-  controls: {
-    label: "Controls",
-    intro: "full HVAC controls scope",
   },
   both: {
     label: "Installation and Controls",
@@ -333,7 +329,7 @@ function getClarificationItems(settings) {
     );
   }
 
-  if (mode === "controls" || mode === "both") {
+  if (mode === "both") {
     items.push(
       "Full controls scope includes controllers, panel hardware, enclosure components, control programming, graphics, startup, commissioning support, operator training, and related engineering unless specifically noted otherwise.",
       "Controls hardware, software, network interfaces, and related documentation will be furnished and coordinated as part of the controls scope unless specifically excluded elsewhere in the proposal.",
@@ -361,13 +357,6 @@ function getExclusionItems(settings) {
     items.unshift(
       "All controls devices, supervisory hardware, enclosure components, software licenses, programming, graphics, startup, commissioning, operator training, and related engineering are by others unless specifically noted.",
       "All field devices, including control valves, flow meters, sensors, immersion wells, airflow measuring stations, dampers, and actuators not specifically listed in the scope above, are furnished by others and installed by others unless noted.",
-    );
-  }
-
-  if (mode === "controls") {
-    items.unshift(
-      "Physical installation labor for controls devices, conduit, control wiring, communication wiring, and mounting of field devices not specifically included in the controls scope is by others unless noted.",
-      "Any field devices, dampers, valves, and associated installation labor not specifically listed in the scope above are furnished and installed by others unless noted.",
     );
   }
 
@@ -422,24 +411,37 @@ function normalizeAlternates(estimate) {
     .filter(Boolean);
 }
 
-function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBond, alternates = [] }) {
+function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBond, controlsMaterial = 0, controlsLabor = 0, alternates = [] }) {
+  const isTurnkey = scopeMode === "both";
   const baseRows = [];
-  const subtotalLabel =
-    scopeMode === "controls"
-      ? "Controls draft subtotal"
-      : scopeMode === "both"
-        ? "Turnkey subtotal"
-        : "Installation subtotal";
 
   baseRows.push(`
           <tr>
-            <td><strong>${subtotalLabel}</strong></td>
+            <td><strong>Installation subtotal</strong></td>
             <td class="cell-number">${fmtMoney(installationTotal)}</td>
           </tr>`);
 
+  if (isTurnkey) {
+    baseRows.push(`
+          <tr>
+            <td><strong>Controls material</strong></td>
+            <td class="cell-number">${fmtMoney(controlsMaterial)}</td>
+          </tr>`);
+    baseRows.push(`
+          <tr>
+            <td><strong>Controls engineering labor</strong></td>
+            <td class="cell-number">${fmtMoney(controlsLabor)}</td>
+          </tr>`);
+    baseRows.push(`
+          <tr>
+            <td><strong>Turnkey subtotal</strong></td>
+            <td class="cell-number">${fmtMoney(installationTotal + controlsMaterial + controlsLabor)}</td>
+          </tr>`);
+  }
+
   baseRows.push(`
           <tr class="row-bond">
-            <td><strong>Optional performance and payment bond</strong></td>
+            <td><strong>Optional performance and payment bond${isTurnkey ? " (installation portion)" : ""}</strong></td>
             <td class="cell-number">add ${fmtMoney(totalBond || 0)}</td>
           </tr>`);
 
@@ -460,15 +462,15 @@ function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBo
     ];
   });
 
-  const totalPrice = [totalAmount || 0, totalBond || 0, ...alternates.map((alternate) => Number(alternate.total || 0) + Number(alternate.bond || 0))]
-    .reduce((sum, value) => sum + value, 0);
+  const totalPrice = [
+    totalAmount || 0,
+    totalBond || 0,
+    controlsMaterial || 0,
+    controlsLabor || 0,
+    ...alternates.map((alternate) => Number(alternate.total || 0) + Number(alternate.bond || 0)),
+  ].reduce((sum, value) => sum + value, 0);
 
-  const totalLabel =
-    scopeMode === "controls"
-      ? "TOTAL CONTROLS DRAFT PRICE"
-      : scopeMode === "both"
-        ? "TOTAL TURNKEY PRICE"
-        : "TOTAL INSTALL ONLY PRICE";
+  const totalLabel = isTurnkey ? "TOTAL TURNKEY PRICE" : "TOTAL INSTALL ONLY PRICE";
 
   return `
       <table>
@@ -637,7 +639,7 @@ function embedTemplateImages(template, assets) {
     .replace(/src="\/report-assets\/signature-blue\.png"/g, `src="${assets.signature}"`);
 }
 
-export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps, grandTotal, bondAmount, assets) {
+export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps, grandTotal, bondAmount, controlsCatalog = {}, assets) {
   const settings = estimate.settings || {};
   const projectName = estimate.name || "Proposal";
   const versionSuffix = getVersionSuffix(estimate);
@@ -647,6 +649,14 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   const estimateScopeLabel = getEstimateScopeModeLabel(estimateScopeMode);
   const totalBond = bondAmount || 0;
   const totalAmount = installedTotal - totalBond;
+  let controlsMaterial = 0;
+  let controlsLabor = 0;
+  if (estimateScopeMode === "both") {
+    const rawWithControls = calcEstimate(estimate, controlsCatalog);
+    const controlsCosts = computeControlsCosts(rawWithControls.controlsMtl, rawWithControls.controlsLbrHrs, settings);
+    controlsMaterial = controlsCosts.material;
+    controlsLabor = controlsCosts.labor;
+  }
   const useCustomerScope = Boolean(settings.useCustomerScope && String(settings.customerScope || "").trim());
   const scopeHtml = useCustomerScope
     ? getProposalScopeHtml(settings)
@@ -679,6 +689,8 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
     installationTotal: totalAmount,
     totalAmount,
     totalBond,
+    controlsMaterial,
+    controlsLabor,
     alternates,
   });
   const alternateScopeHtml = renderAlternateScopeSections(alternates, scopeMode);
@@ -718,8 +730,9 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
  * @param {Array}  itemsWithComps - [{ item: {qty,tag,label}, compNames: string[] }]
  * @param {number} grandTotal     - final total ($)
  * @param {number} bondAmount     - bond amount ($)
+ * @param {object} controlsCatalog - controls catalog lookup map
  */
-export async function generateProposal(estimate, itemsWithComps, grandTotal, bondAmount = 0) {
+export async function generateProposal(estimate, itemsWithComps, grandTotal, bondAmount = 0, controlsCatalog = {}) {
   const assets = await loadProposalAssets();
   const html = buildProposalHtmlFromTemplate(
     assets.template,
@@ -727,6 +740,7 @@ export async function generateProposal(estimate, itemsWithComps, grandTotal, bon
     itemsWithComps,
     grandTotal,
     bondAmount,
+    controlsCatalog,
     assets,
   );
   const blob = new Blob([html], { type: "text/html" });

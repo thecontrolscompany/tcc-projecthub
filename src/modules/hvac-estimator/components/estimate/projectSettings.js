@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS = {
   _v: 1,                   // settings schema version (for migration)
   // ── Rates & markups ─────────────────────────────────────────────────────────
   wageRate:       42.95,   // locked: CCE Regular
+  controlsWageRate: 125,    // controls engineering labor rate (programming, commissioning)
   overheadPct:    10,      // % of (labor + material)
   profitPct:      25,      // % of (labor + material + overhead)
   bondPct:         4,      // % of (labor + material + overhead + profit)
@@ -76,14 +77,9 @@ export const ESTIMATE_SCOPE_MODES = [
     description: "Bid the installation scope only. This is the physical controls installation price.",
   },
   {
-    id: "controls",
-    label: "Controls Draft",
-    description: "Seeded from the same equipment selection until the controls parts and services are defined.",
-  },
-  {
     id: "both",
     label: "Turnkey",
-    description: "Bid installation plus controls together as one combined turnkey price.",
+    description: "Bid installation plus controls together as one combined turnkey price, computed automatically from the controls catalog.",
   },
 ];
 
@@ -315,5 +311,64 @@ export function computeCosts(rawMtl, rawLbrHrs, settings = {}, items = []) {
         coring:     coreAdj,
       },
     },
+  };
+}
+
+/**
+ * Controls Material + Controls Engineering Labor, with the same
+ * overhead/profit/bond markups as computeCosts, allocated proportionally
+ * back onto labor and material so they sum cleanly to total.
+ */
+export function computeControlsCosts(controlsMtl, controlsLbrHrs, settings = {}) {
+  const s = { ...DEFAULT_SETTINGS, ...settings };
+  const rawLabor = controlsLbrHrs * s.controlsWageRate;
+  const rawMaterial = controlsMtl;
+  const rawTotal = rawLabor + rawMaterial;
+
+  if (rawTotal === 0) {
+    return {
+      labor: 0,
+      material: 0,
+      overhead: 0,
+      profit: 0,
+      bond: 0,
+      total: 0,
+      rawLbrHrs: controlsLbrHrs,
+      rawMtl: controlsMtl,
+    };
+  }
+
+  const overhead = rawTotal * (s.overheadPct / 100);
+  const profit = (rawTotal + overhead) * (s.profitPct / 100);
+  const bond = (rawTotal + overhead + profit) * (s.bondPct / 100);
+  const total = rawTotal + overhead + profit + bond;
+  const markupFactor = total / rawTotal;
+
+  return {
+    labor: rawLabor * markupFactor,
+    material: rawMaterial * markupFactor,
+    overhead,
+    profit,
+    bond,
+    total,
+    rawLbrHrs: controlsLbrHrs,
+    rawMtl: controlsMtl,
+  };
+}
+
+/**
+ * Soft 40/40/20 check: Install Total vs Controls Material vs Controls
+ * Engineering Labor, each as a % of the combined Turnkey Total.
+ * Returns null when there's nothing to check yet.
+ */
+export function getSanityCheck({ installTotal = 0, controlsMaterial = 0, controlsLabor = 0 }) {
+  const turnkeyTotal = installTotal + controlsMaterial + controlsLabor;
+  if (turnkeyTotal <= 0) return null;
+
+  return {
+    turnkeyTotal,
+    install: { value: installTotal, pct: (installTotal / turnkeyTotal) * 100, target: 40 },
+    controlsMaterial: { value: controlsMaterial, pct: (controlsMaterial / turnkeyTotal) * 100, target: 40 },
+    controlsLabor: { value: controlsLabor, pct: (controlsLabor / turnkeyTotal) * 100, target: 20 },
   };
 }

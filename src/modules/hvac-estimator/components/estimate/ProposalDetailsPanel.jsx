@@ -162,7 +162,7 @@ export function ProposalDetailsPanel({ settings, onChange }) {
           })}
         </div>
         <div style={{ fontSize: 10, color: T.dim, lineHeight: 1.5 }}>
-          The controls estimate should start from the same equipment selection, then get its own controls parts and cost model as that scope is defined.
+          Turnkey automatically computes Controls Material and Controls Engineering Labor from the same equipment selection using the controls catalog - no separate draft needed.
         </div>
       </div>
       {textField("baseScopeName", "Base Scope Name", "Scope")}
