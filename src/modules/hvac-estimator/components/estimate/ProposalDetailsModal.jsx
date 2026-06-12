@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { EstimateDocumentsPanel } from "./EstimateDocumentsPanel.tsx";
 import { ProposalDetailsPanel } from "./ProposalDetailsPanel.jsx";
+import { ProposalScopePanel } from "./ProposalScopePanel.jsx";
 
 export function ProposalDetailsModal({
   open,
+  initialTab = "details",
   settings,
   onChange,
   onClose,
@@ -18,7 +20,7 @@ export function ProposalDetailsModal({
   useEffect(() => {
     if (!open) return undefined;
 
-    setActiveTab("details");
+    setActiveTab(initialTab === "documents" ? "documents" : "details");
 
     const onKeyDown = (event) => {
       if (event.key === "Escape") {
@@ -28,7 +30,7 @@ export function ProposalDetailsModal({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
+  }, [open, onClose, initialTab]);
 
   if (!open) return null;
 
@@ -84,6 +86,14 @@ export function ProposalDetailsModal({
             >
               Documents
             </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("scope")}
+              style={tabButtonStyle(activeTab === "scope")}
+              className="rounded-full px-4 py-2 text-sm font-semibold transition hover:bg-slate-50"
+            >
+              Scope
+            </button>
           </div>
         </div>
 
@@ -103,6 +113,11 @@ export function ProposalDetailsModal({
                 Documents will appear here once this estimate is loaded.
               </div>
             )
+          ) : activeTab === "scope" ? (
+            <ProposalScopePanel
+              settings={settings}
+              onChange={onChange}
+            />
           ) : (
             <ProposalDetailsPanel
               settings={settings}

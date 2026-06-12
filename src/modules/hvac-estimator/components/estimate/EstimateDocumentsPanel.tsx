@@ -17,6 +17,21 @@ type EstimateDocument = {
   extraction_notes: string | null;
 };
 
+type MailAttachmentSummary = {
+  id: string;
+  name: string;
+  contentType: string | null;
+  size: number;
+};
+
+type MailMessageWithAttachments = {
+  id: string;
+  subject: string;
+  from: string | null;
+  receivedDateTime: string;
+  attachments: MailAttachmentSummary[];
+};
+
 type Props = {
   estimateId: string;
   sharepointFolder?: string | null;
@@ -80,6 +95,12 @@ export function EstimateDocumentsPanel({
   const [localFolder, setLocalFolder] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCounter = useRef(0);
+  const [showEmailPicker, setShowEmailPicker] = useState(false);
+  const [emailMessages, setEmailMessages] = useState<MailMessageWithAttachments[]>([]);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailAuthError, setEmailAuthError] = useState(false);
+  const [importingKey, setImportingKey] = useState<string | null>(null);
 
   const sharepointFolder = localFolder ?? sharepointFolderProp ?? null;
 
@@ -131,9 +152,10 @@ export function EstimateDocumentsPanel({
 
   async function reconnectMicrosoft() {
     const supabase = createSupabaseClient();
+    const next = `${window.location.pathname}?panel=documents`;
     await supabase.auth.signInWithOAuth({
       provider: "azure",
-      options: { redirectTo: window.location.href },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
   }
 
@@ -313,6 +335,66 @@ export function EstimateDocumentsPanel({
     }
   }
 
+  async function openEmailPicker() {
+    setShowEmailPicker(true);
+    setEmailError(null);
+    setEmailAuthError(false);
+    setEmailLoading(true);
+    try {
+      const res = await fetch(`/api/estimates/${estimateId}/documents`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "list-email-attachments" }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        if (res.status === 401) setEmailAuthError(true);
+        throw new Error(typeof json?.error === "string" ? json.error : "Unable to list email attachments.");
+      }
+      setEmailMessages(Array.isArray(json?.messages) ? json.messages : []);
+    } catch (err) {
+      setEmailError(err instanceof Error ? err.message : "Unable to list email attachments.");
+    } finally {
+      setEmailLoading(false);
+    }
+  }
+
+  async function importEmailAttachment(messageId: string, attachmentId: string) {
+    setImportingKey(`${messageId}:${attachmentId}`);
+    setEmailError(null);
+    try {
+      const res = await fetch(`/api/estimates/${estimateId}/documents`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "import-email-attachment",
+          documentRole: selectedRole,
+          messageId,
+          attachmentId,
+          notes: batchNote.trim(),
+        }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) {
+        if (res.status === 401) setEmailAuthError(true);
+        throw new Error(typeof json?.error === "string" ? json.error : "Unable to import attachment.");
+      }
+
+      setMessage("Imported attachment from email.");
+      setShowEmailPicker(false);
+
+      const refreshed = await fetch(`/api/estimates/${estimateId}/documents`, { cache: "no-store" });
+      const refreshedJson = await refreshed.json().catch(() => null);
+      if (refreshed.ok && Array.isArray(refreshedJson?.documents)) {
+        setDocuments(refreshedJson.documents);
+      }
+    } catch (err) {
+      setEmailError(err instanceof Error ? err.message : "Unable to import attachment.");
+    } finally {
+      setImportingKey(null);
+    }
+  }
+
   const body = (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-default px-5 py-4">
@@ -405,14 +487,24 @@ export function EstimateDocumentsPanel({
               </div>
             </label>
 
-            <button
-              type="button"
-              onClick={() => void handleUpload()}
-              disabled={uploading || selectedFiles.length === 0 || !sharepointFolder}
-              className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {uploading ? "Uploading..." : "Upload to Estimate Folder"}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => void handleUpload()}
+                disabled={uploading || selectedFiles.length === 0 || !sharepointFolder}
+                className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {uploading ? "Uploading..." : "Upload to Estimate Folder"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void openEmailPicker()}
+                disabled={!sharepointFolder}
+                className="rounded-xl border border-brand-primary/30 bg-brand-primary/10 px-4 py-2 text-sm font-semibold text-brand-primary transition hover:bg-brand-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Attach from Email
+              </button>
+            </div>
 
             {!sharepointFolder && (
               <div className="space-y-2">
@@ -441,6 +533,73 @@ export function EstimateDocumentsPanel({
           </div>
         </div>
       </div>
+
+      {showEmailPicker && (
+        <div className="border-b border-border-default px-5 py-4">
+          <div className="rounded-2xl border border-border-default bg-surface-overlay p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-semibold text-text-primary">Attach from Email</div>
+              <button
+                type="button"
+                onClick={() => setShowEmailPicker(false)}
+                className="rounded-lg border border-border-default bg-surface-base px-3 py-1.5 text-xs font-semibold text-text-secondary transition hover:bg-surface-raised"
+              >
+                Close
+              </button>
+            </div>
+
+            {emailError && <p className="mt-3 text-sm text-status-danger">{emailError}</p>}
+
+            {emailAuthError && (
+              <button
+                type="button"
+                onClick={() => void reconnectMicrosoft()}
+                className="mt-3 rounded-xl border border-border-default bg-surface-base px-3 py-2 text-xs font-semibold text-text-secondary transition hover:bg-surface-raised"
+              >
+                Reconnect Microsoft
+              </button>
+            )}
+
+            {emailLoading ? (
+              <p className="mt-3 text-sm text-text-secondary">Loading recent messages...</p>
+            ) : emailMessages.length === 0 && !emailError ? (
+              <p className="mt-3 text-sm text-text-secondary">No recent messages with attachments found.</p>
+            ) : (
+              <div className="mt-3 max-h-96 space-y-3 overflow-y-auto">
+                {emailMessages.map((msg) => (
+                  <div key={msg.id} className="rounded-xl border border-border-default bg-surface-base p-3">
+                    <div className="text-sm font-medium text-text-primary">{msg.subject || "(no subject)"}</div>
+                    <div className="text-xs text-text-tertiary">
+                      {msg.from || "Unknown sender"} · {formatDate(msg.receivedDateTime)}
+                    </div>
+                    <div className="mt-2 space-y-1">
+                      {msg.attachments.map((attachment) => {
+                        const key = `${msg.id}:${attachment.id}`;
+                        return (
+                          <div key={key} className="flex items-center justify-between gap-3 rounded-lg border border-border-default px-3 py-2">
+                            <div className="text-xs text-text-secondary">
+                              {attachment.name}
+                              <span className="ml-2 text-text-tertiary">{formatFileSize(attachment.size)}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => void importEmailAttachment(msg.id, attachment.id)}
+                              disabled={importingKey === key}
+                              className="rounded-lg bg-brand-primary px-3 py-1.5 text-xs font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {importingKey === key ? "Attaching..." : "Attach"}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {error && <div className="border-b border-border-default px-5 py-3 text-sm text-status-danger">{error}</div>}
       {message && <div className="border-b border-border-default px-5 py-3 text-sm text-status-success">{message}</div>}

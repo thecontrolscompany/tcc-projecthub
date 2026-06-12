@@ -8,10 +8,12 @@ import {
 } from "@/lib/estimates/api";
 import {
   createSharePointFolder,
+  getMailAttachment,
   getSharePointDriveId,
   getSharePointFolderIdByPath,
   getSharePointSiteId,
   graphFetch,
+  listRecentMailAttachments,
 } from "@/lib/graph/client";
 
 type EstimateDocumentRole = "supporting_scope" | "customer_upload" | "addendum" | "scope_of_work" | "proposal_pdf";
@@ -493,6 +495,76 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       } catch (error) {
         return NextResponse.json(
           { error: error instanceof Error ? error.message : "Unable to save document metadata." },
+          { status: 500 },
+        );
+      }
+    }
+
+    if (action === "list-email-attachments") {
+      try {
+        const providerToken = (await auth.supabase.auth.getSession()).data.session?.provider_token;
+        if (!providerToken) {
+          return NextResponse.json({ error: "Microsoft access token not available." }, { status: 401 });
+        }
+
+        const messages = await listRecentMailAttachments(providerToken);
+        return NextResponse.json({ messages });
+      } catch (error) {
+        return NextResponse.json(
+          { error: error instanceof Error ? error.message : "Unable to list email attachments." },
+          { status: 500 },
+        );
+      }
+    }
+
+    if (action === "import-email-attachment") {
+      const messageId = String((payload as { messageId?: unknown }).messageId || "").trim();
+      const attachmentId = String((payload as { attachmentId?: unknown }).attachmentId || "").trim();
+      const notes = String((payload as { notes?: unknown }).notes || "").trim();
+
+      if (!messageId || !attachmentId) {
+        return NextResponse.json({ error: "A message and attachment are required." }, { status: 400 });
+      }
+
+      try {
+        const providerToken = (await auth.supabase.auth.getSession()).data.session?.provider_token;
+        if (!providerToken) {
+          return NextResponse.json({ error: "Microsoft access token not available." }, { status: 401 });
+        }
+
+        const { driveId, folderPath } = await resolveSharePointContext(auth.supabase, providerToken, estimate);
+        const attachment = await getMailAttachment(providerToken, messageId, attachmentId);
+        const ext = attachment.name.includes(".")
+          ? `.${attachment.name.split(".").pop() ?? ""}`.toLowerCase()
+          : null;
+
+        const upload = await uploadFile(providerToken, driveId, folderPath, attachment.name, attachment.bytes, attachment.contentType);
+        if (!upload.id) {
+          return NextResponse.json({ error: "SharePoint upload did not return an item ID." }, { status: 500 });
+        }
+
+        const inserted = await saveDocumentMetadata(
+          auth,
+          estimate,
+          {
+            documentRole,
+            fileName: attachment.name,
+            fileExt: ext,
+            contentType: attachment.contentType,
+            fileSizeBytes: attachment.bytes.byteLength,
+            notes,
+          },
+          {
+            storagePath: `${folderPath}/${attachment.name}`,
+            storageItemId: upload.id,
+            storageWebUrl: upload.webUrl,
+          }
+        );
+
+        return NextResponse.json({ document: inserted }, { status: 201 });
+      } catch (error) {
+        return NextResponse.json(
+          { error: error instanceof Error ? error.message : "Unable to import email attachment." },
           { status: 500 },
         );
       }

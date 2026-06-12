@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useIsMobile } from "../../shared/useIsMobile.js";
 import { generateProposal } from "./export/generateProposal.js";
 import { generateInternalEstimateExport } from "./export/generateInternalEstimateExport.js";
@@ -21,7 +21,7 @@ import {
   fmtAuditDate,
   getItemDetails,
 } from "./estimateCalc.js";
-export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = false, showProjectSettings = true, showBidAlternates = true, platformEstimateId = null }) {
+export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = false, showProjectSettings = true, showBidAlternates = true, platformEstimateId = null, initialProposalTab = null }) {
   const { subPage, setSubPage, applyDefaultInstallType } = useEstimate();
   const isMobile = useIsMobile();
   const [editHeader, setEditHeader] = useState(false);
@@ -29,6 +29,12 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
   const [showSettings, setShowSettings] = useState(false);
   const [showProposalDetails, setShowProposalDetails] = useState(false);
   const [showAiParser, setShowAiParser] = useState(false);
+
+  useEffect(() => {
+    if (initialProposalTab === "documents") {
+      setShowProposalDetails(true);
+    }
+  }, [initialProposalTab]);
   const [name,setName]         = useState(estimate.name);
   const [number,setNumber]     = useState(estimate.number||"");
   const [customer,setCustomer] = useState(estimate.customer||"");
@@ -53,6 +59,14 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
     estimate.body?.organization_id ||
     "";
   const alternates = useMemo(() => Array.isArray(estimate.alternates) ? estimate.alternates : [], [estimate.alternates]);
+  const alternatesWithCosts = useMemo(() => alternates.map((alternate) => {
+    const altItems = alternate.items || [];
+    if (!altItems.length) return { ...alternate, altRaw: null, altCosts: null };
+    const altSettings = { ...DEFAULT_SETTINGS, ...(alternate.settings || {}) };
+    const altRaw = calcEstimate({ items: altItems });
+    const altCosts = computeCosts(altRaw.mtl, altRaw.lbrHrs, altSettings, altItems);
+    return { ...alternate, altRaw, altCosts };
+  }), [alternates]);
   const updateSettings = useCallback((patch) => {
     onUpdate({ ...estimate, updatedAt: new Date().toISOString(),
       settings: { ...settings, ...patch } });
@@ -411,7 +425,24 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
               </div>
             </div>
             <div style={{ padding:"12px 14px", display:"grid", gap:10 }}>
-              {alternates.length ? alternates.map((alternate) => (
+              {(() => {
+                if (settings.estimateScopeMode !== "both") return null;
+                const controlsAlternate = alternatesWithCosts.find(
+                  (alternate) => alternate.settings?.estimateScopeMode === "controls" && alternate.altCosts
+                );
+                if (!controlsAlternate) return null;
+                return (
+                  <div style={{ padding:"10px 12px", border:"1px solid "+T.blueMid, borderRadius:8, background:T.blueFaint }}>
+                    <div style={{ fontSize:11, color:T.blue, fontFamily:T.mono, fontWeight:700, textTransform:"uppercase", letterSpacing:1 }}>
+                      Turnkey Total (Installation + Controls)
+                    </div>
+                    <div style={{ fontSize:16, color:T.text, fontWeight:700, marginTop:4 }}>
+                      {fmt$(costs.total + controlsAlternate.altCosts.total)}
+                    </div>
+                  </div>
+                );
+              })()}
+              {alternatesWithCosts.length ? alternatesWithCosts.map((alternate) => (
                   <div key={alternate.id} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap", padding:"10px 12px", border:"1px solid "+T.border, borderRadius:8, background:T.panel }}>
                   <div>
                     <div style={{ fontSize:13, fontWeight:700, color:T.text }}>{alternate.name || "Bid Alternate"}</div>
@@ -419,6 +450,11 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
                       {getEstimateScopeModeLabel(alternate.settings?.estimateScopeMode)} · {(alternate.items?.length || 0)} item{(alternate.items?.length || 0) === 1 ? "" : "s"}
                       {alternate.settings?.estimateScopeMode === "controls" && alternate.items?.length > 0 ? " · seeded from current equipment" : ""}
                     </div>
+                    {alternate.altCosts && (
+                      <div style={{ fontSize:11, color:T.dim, fontFamily:T.mono, marginTop:3 }}>
+                        Material: {fmt$(alternate.altCosts.material)} · Labor: {fmtHr(alternate.altRaw.lbrHrs)} · Total: {fmt$(alternate.altCosts.total)}
+                      </div>
+                    )}
                   </div>
                   <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
                     <button onClick={() => openBidAlternate(alternate.id)}
@@ -455,6 +491,7 @@ export function EstimateDetail({ estimate, onBack, onUpdate, customerMode = fals
       {!customerMode && (
         <ProposalDetailsModal
           open={showProposalDetails}
+          initialTab={initialProposalTab === "documents" ? "documents" : "details"}
           settings={settings}
           onChange={updateSettings}
           onClose={() => setShowProposalDetails(false)}

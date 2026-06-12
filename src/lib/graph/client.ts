@@ -667,3 +667,98 @@ export async function fetchSharePointItemContent(
     }
   );
 }
+
+export interface MailAttachmentSummary {
+  id: string;
+  name: string;
+  contentType: string | null;
+  size: number;
+}
+
+export interface MailMessageWithAttachments {
+  id: string;
+  subject: string;
+  from: string | null;
+  receivedDateTime: string;
+  attachments: MailAttachmentSummary[];
+}
+
+/**
+ * List recent Outlook messages that have non-inline attachments,
+ * for the "Attach from Email" document picker.
+ */
+export async function listRecentMailAttachments(
+  providerToken: string,
+  top = 25
+): Promise<MailMessageWithAttachments[]> {
+  const res = await graphFetch(
+    `/me/messages?$filter=hasAttachments eq true&$orderby=receivedDateTime desc&$top=${top}&$select=id,subject,from,receivedDateTime&$expand=attachments($select=id,name,contentType,size,isInline)`,
+    providerToken
+  );
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(body || `Failed to list mail attachments: ${res.status}`);
+  }
+
+  const data = await res.json();
+  const messages: Array<{
+    id?: string;
+    subject?: string;
+    from?: { emailAddress?: { name?: string; address?: string } };
+    receivedDateTime?: string;
+    attachments?: Array<{
+      id?: string;
+      name?: string;
+      contentType?: string;
+      size?: number;
+      isInline?: boolean;
+    }>;
+  }> = Array.isArray(data?.value) ? data.value : [];
+
+  return messages
+    .map((message) => ({
+      id: message.id ?? "",
+      subject: typeof message.subject === "string" ? message.subject : "",
+      from: message.from?.emailAddress?.name || message.from?.emailAddress?.address || null,
+      receivedDateTime: message.receivedDateTime ?? "",
+      attachments: (message.attachments ?? [])
+        .filter((attachment) => !attachment.isInline && attachment.id && attachment.name)
+        .map((attachment) => ({
+          id: attachment.id as string,
+          name: attachment.name as string,
+          contentType: typeof attachment.contentType === "string" ? attachment.contentType : null,
+          size: typeof attachment.size === "number" ? attachment.size : 0,
+        })),
+    }))
+    .filter((message) => message.id && message.attachments.length > 0);
+}
+
+/**
+ * Download a single Outlook attachment's bytes for re-upload to SharePoint.
+ */
+export async function getMailAttachment(
+  providerToken: string,
+  messageId: string,
+  attachmentId: string
+): Promise<{ name: string; contentType: string | null; bytes: ArrayBuffer }> {
+  const res = await graphFetch(
+    `/me/messages/${encodeURIComponent(messageId)}/attachments/${encodeURIComponent(attachmentId)}`,
+    providerToken
+  );
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(body || `Failed to fetch mail attachment: ${res.status}`);
+  }
+
+  const data = await res.json();
+  const name = typeof data?.name === "string" ? data.name : "attachment";
+  const contentType = typeof data?.contentType === "string" ? data.contentType : null;
+  const contentBytes = typeof data?.contentBytes === "string" ? data.contentBytes : "";
+
+  const buffer = Buffer.from(contentBytes, "base64");
+  const bytes = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+
+  return { name, contentType, bytes };
+}

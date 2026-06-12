@@ -12,7 +12,6 @@ const TEMPLATE_PATH = "/report-assets/proposal-template.html";
 const LOGO_PATH = "/report-assets/logo.png";
 const SDVOSB_PATH = "/report-assets/sdvosb.jpg";
 const SIGNATURE_PATH = "/report-assets/signature-blue.png";
-const BOND_RATE = 0.04;
 
 const esc = value =>
   String(value || "")
@@ -646,8 +645,8 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   const scopeMode = settings.proposalScopeMode === "detailed" ? "detailed" : "brief";
   const estimateScopeMode = normalizeEstimateScopeMode(settings.estimateScopeMode);
   const estimateScopeLabel = getEstimateScopeModeLabel(estimateScopeMode);
-  const totalAmount = installedTotal;
-  const totalBond = bondAmount > 0 ? bondAmount : totalAmount > 0 ? totalAmount * BOND_RATE : 0;
+  const totalBond = bondAmount || 0;
+  const totalAmount = installedTotal - totalBond;
   const useCustomerScope = Boolean(settings.useCustomerScope && String(settings.customerScope || "").trim());
   const scopeHtml = useCustomerScope
     ? getProposalScopeHtml(settings)
@@ -663,17 +662,21 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
       items: alternate.items || [],
       settings: alternateSettings,
     };
-    const computedTotal = computeCosts(raw.mtl, raw.lbrHrs, alternateSettings, alternateEstimate.items || []).total || 0;
+    const altCosts = computeCosts(raw.mtl, raw.lbrHrs, alternateSettings, alternateEstimate.items || []);
+    const computedTotal = altCosts.total || 0;
     const displayTotal = computedTotal || alternate.amount || 0;
+    const displayBond = computedTotal
+      ? altCosts.bond || 0
+      : displayTotal * (Number(alternateSettings.bondPct || 0) / 100);
     return {
       ...alternate,
-      total: displayTotal,
-      bond: displayTotal * BOND_RATE,
+      total: displayTotal - displayBond,
+      bond: displayBond,
     };
   });
   const pricingHtml = renderPricingTable({
     scopeMode: estimateScopeMode,
-    installationTotal: installedTotal,
+    installationTotal: totalAmount,
     totalAmount,
     totalBond,
     alternates,
