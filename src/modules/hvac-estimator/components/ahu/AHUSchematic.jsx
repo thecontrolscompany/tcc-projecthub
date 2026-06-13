@@ -22,6 +22,7 @@ import {
   toggleAhuComponentSelection,
 } from "./ahuData.js";
 import { AddToEstimateBtn } from "../../shared/AddToEstimateBtn.jsx";
+import { ControlsCostBreakdown } from "../../shared/ControlsCostBreakdown.jsx";
 import { useEstimate } from "../../shared/EstimateContext.jsx";
 import { calcAssembly, ASSEMBLIES, UNIT_ITEMS } from "../../shared/assemblyData.js";
 import { SidebarLayout } from "../../shared/SidebarLayout.jsx";
@@ -611,9 +612,11 @@ function AhuConfigLauncher({ cfg, onCfgChange, onStart }) {
 
 
 function CompPanel({cfg, visibleComponents, selected,onToggle,onSetCompQty,custom,onAddCust,onRemoveCust,installType,setIT,qty,setQty}) {
+  const { activeEstimate, controlsCatalog } = useEstimate();
   const [filterCat,setFC]   = useState("All");
   const [expanded,setExp]   = useState(null);
   const [modal,setModal]    = useState(false);
+  const controlsSettings = activeEstimate?.settings || {};
   const cats = ["All",...Object.keys(CAT_COLOR)];
   const applicable = visibleComponents;
   const visible = filterCat==="All" ? applicable : applicable.filter(c=>c.cat===filterCat);
@@ -820,6 +823,14 @@ function CompPanel({cfg, visibleComponents, selected,onToggle,onSetCompQty,custo
             </div>
           </div>
         )}
+        <div style={{marginTop:8}}>
+          <ControlsCostBreakdown
+            item={{ qty, selected, custom }}
+            controlsCatalog={controlsCatalog}
+            settings={controlsSettings}
+            defaultOpen={false}
+          />
+        </div>
       </div>
       {modal && (
         <AssemblyPickerModal

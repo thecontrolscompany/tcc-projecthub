@@ -20,6 +20,7 @@ import {
   toggleVavComponentSelection,
 } from "./vavData.js";
 import { AddToEstimateBtn } from "../../shared/AddToEstimateBtn.jsx";
+import { ControlsCostBreakdown } from "../../shared/ControlsCostBreakdown.jsx";
 import { useEstimate } from "../../shared/EstimateContext.jsx";
 import { calcAssembly, ASSEMBLIES, UNIT_ITEMS } from "../../shared/assemblyData.js";
 import { SchematicTabs } from "../../shared/SchematicTabs.jsx";
@@ -466,7 +467,7 @@ function VAVConfigSelector({ initialCfg, onSelect }) {
 
 
 export default function VAVPage() {
-  const { activeEstimate, editingItem, subPage } = useEstimate();
+  const { activeEstimate, editingItem, subPage, controlsCatalog } = useEstimate();
   const isEditing = !!editingItem && editingItem.type === "vav";
   const quoteDefault = activeEstimate?.settings?.defaultInstallType ?? "EMT";
 
@@ -640,6 +641,7 @@ export default function VAVPage() {
   });
 
   const hasReheat = cfg.heatType !== "cooling-only";
+  const controlsSettings = activeEstimate?.settings || {};
   const commScale = Number(commRunFt) || 0;
   const legacyCommAID = LEGACY_COMM_AID_BY_INSTALL[installType] || LEGACY_COMM_AID_BY_INSTALL.Plenum;
   const cat6AID = MODERN_CAT6_AID_BY_INSTALL[installType] || MODERN_CAT6_AID_BY_INSTALL.Plenum;
@@ -1145,6 +1147,14 @@ export default function VAVPage() {
                 </div>
               </div>
             )}
+            <div style={{ marginTop:8 }}>
+              <ControlsCostBreakdown
+                item={{ qty, selected, custom }}
+                controlsCatalog={controlsCatalog}
+                settings={controlsSettings}
+                defaultOpen={false}
+              />
+            </div>
           </div>
       </>
     )}

@@ -580,6 +580,78 @@ export function getItemDetails(item, controlsCatalog = {}) {
   return { selected, custom };
 }
 
+export function deriveItemControlsCostBreakdown(item, controlsCatalog = {}, settings = {}) {
+  const normalizedItem = item || {};
+  const normalizedSettings = { ...DEFAULT_SETTINGS, ...(settings || {}) };
+  const itemQty = Math.max(1, Number(normalizedItem.qty) || 1);
+  const comps = resolveItemComps(normalizedItem);
+  const selectedRows = comps
+    .filter((comp) => normalizedItem.selected?.some((entry) => entry.id === comp.id))
+    .map((comp) => {
+      const qtyPerUnit = Math.max(1, Number(getCompQty(normalizedItem, comp.id)) || 1);
+      const controlsOverride = getControlsOverride(normalizedItem, comp.id);
+      const controlsCustomPart = getControlsCustomPart(normalizedItem, comp.id);
+      const controlsCost = getControlsCost(comp, controlsCatalog, controlsOverride, controlsCustomPart);
+      const unitMaterialCost = (controlsCost?.mtl || 0) * qtyPerUnit;
+      const unitLaborHours = (controlsCost?.lbr || 0) * qtyPerUnit;
+      const unitLaborDollarCost = unitLaborHours * normalizedSettings.controlsWageRate;
+      const unitInternalCost = unitMaterialCost + unitLaborDollarCost;
+      const extendedQty = itemQty * qtyPerUnit;
+      const extendedMaterialCost = unitMaterialCost * itemQty;
+      const extendedLaborHours = unitLaborHours * itemQty;
+      const extendedLaborDollarCost = unitLaborDollarCost * itemQty;
+      const totalInternalCost = unitInternalCost * itemQty;
+
+      return {
+        id: comp.id,
+        name: comp.label || comp.name || comp.id,
+        controlsId: controlsOverride || comp.controlsId || null,
+        qtyPerUnit,
+        extendedQty,
+        unitMaterialCost,
+        extendedMaterialCost,
+        unitLaborHours,
+        extendedLaborHours,
+        unitLaborDollarCost,
+        extendedLaborDollarCost,
+        unitInternalCost,
+        totalInternalCost,
+      };
+    })
+    .sort((left, right) => {
+      const delta = (right.totalInternalCost || 0) - (left.totalInternalCost || 0);
+      if (delta !== 0) return delta;
+      return String(left.name || "").localeCompare(String(right.name || ""));
+    });
+
+  const totals = selectedRows.reduce((acc, row) => ({
+    controlsMaterialPerUnit: acc.controlsMaterialPerUnit + row.unitMaterialCost,
+    controlsLaborHoursPerUnit: acc.controlsLaborHoursPerUnit + row.unitLaborHours,
+    controlsLaborDollarPerUnit: acc.controlsLaborDollarPerUnit + row.unitLaborDollarCost,
+    controlsInternalCostPerUnit: acc.controlsInternalCostPerUnit + row.unitInternalCost,
+    extendedControlsMaterial: acc.extendedControlsMaterial + row.extendedMaterialCost,
+    extendedControlsLaborHours: acc.extendedControlsLaborHours + row.extendedLaborHours,
+    extendedControlsLaborDollars: acc.extendedControlsLaborDollars + row.extendedLaborDollarCost,
+    extendedTotalControlsInternalCost: acc.extendedTotalControlsInternalCost + row.totalInternalCost,
+  }), {
+    controlsMaterialPerUnit: 0,
+    controlsLaborHoursPerUnit: 0,
+    controlsLaborDollarPerUnit: 0,
+    controlsInternalCostPerUnit: 0,
+    extendedControlsMaterial: 0,
+    extendedControlsLaborHours: 0,
+    extendedControlsLaborDollars: 0,
+    extendedTotalControlsInternalCost: 0,
+  });
+
+  return {
+    itemQty,
+    rows: selectedRows,
+    totals,
+    hasRows: selectedRows.length > 0,
+  };
+}
+
 export function fmtAuditDate(value) {
   if (!value) return "";
   const dt = new Date(value);

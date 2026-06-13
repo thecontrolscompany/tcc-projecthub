@@ -3,6 +3,7 @@ import { T, CAT_COLOR } from "./tokens.js";
 import { fmt$, fmtHr } from "./utils.js";
 import { AddToEstimateBtn } from "./AddToEstimateBtn.jsx";
 import { useEstimate } from "./EstimateContext.jsx";
+import { ControlsCostBreakdown } from "./ControlsCostBreakdown.jsx";
 import { calcAssembly, ASSEMBLIES, UNIT_ITEMS } from "./assemblyData.js";
 import { SidebarLayout } from "./SidebarLayout.jsx";
 import { SchematicTabs } from "./SchematicTabs.jsx";
@@ -50,9 +51,10 @@ export function UnitEditorPage({
   assemblyCategory,
   addAssemblyLabel = "Add assembly...",
 }) {
-  const { editingItem, subPage, setSubPage } = useEstimate();
+  const { editingItem, subPage, setSubPage, activeEstimate, controlsCatalog } = useEstimate();
   const isEditing = !!editingItem;
   const editingItemId = editingItem?.id || null;
+  const controlsSettings = activeEstimate?.settings || {};
 
   const [selected, setSel] = useState(() => {
     if (isEditing) return normalizeSelected(editingItem.selected, comps, cfg);
@@ -312,6 +314,14 @@ export function UnitEditorPage({
                     background:"none", color:T.blue, fontSize:11, cursor:"pointer", fontFamily:T.mono }}>
                   Configure →
                 </button>
+              </div>
+              <div style={{ margin:"10px 20px 0" }}>
+                <ControlsCostBreakdown
+                  item={{ qty, selected, custom }}
+                  controlsCatalog={controlsCatalog}
+                  settings={controlsSettings}
+                  defaultOpen={false}
+                />
               </div>
             </div>
             {mainFooter && mainFooter(selected, toggle, allComps)}

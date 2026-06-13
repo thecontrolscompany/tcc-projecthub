@@ -20,6 +20,7 @@ import {
   EstimatorTabs,
   EstimatorTabPanels,
 } from "./estimateUx.jsx";
+import { ControlsCostBreakdown } from "../../shared/ControlsCostBreakdown.jsx";
 import {
   TYPE_META,
   buildItemsWithComps,
@@ -916,6 +917,16 @@ export function EstimateDetail({
                             )}
                           </div>
                         </div>
+                        {(details.selected.some((entry) => entry.controlsId || entry.controlsCustomPart) || details.custom.length > 0) && (
+                          <div style={{ marginTop: 12 }}>
+                            <ControlsCostBreakdown
+                              item={item}
+                              controlsCatalog={controlsCatalog}
+                              settings={settings}
+                              defaultOpen={false}
+                            />
+                          </div>
+                        )}
                       </td>
                     </tr>
                   )}
