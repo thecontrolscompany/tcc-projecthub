@@ -69,15 +69,14 @@ export default async function EstimateDetailPage({
         ? `Active Projects/${sourceProject.name.trim()}`
         : "";
   const canonicalEstimateFolder = projectRootFolder ? `${projectRootFolder}/02 Estimate` : null;
-  const estimateBody = estimate.body && typeof estimate.body === "object" ? (estimate.body as Record<string, unknown>) : {};
 
   const hydratedEstimate = canonicalEstimateFolder
     ? {
         ...estimate,
         body: {
-          ...estimateBody,
+          ...(estimate.body as Record<string, unknown>),
           sharepointFolder: canonicalEstimateFolder,
-          sharepointItemId: estimateBody.sharepointItemId ?? null,
+          sharepointItemId: (estimate.body as Record<string, unknown>).sharepointItemId ?? null,
         },
       }
     : estimate;

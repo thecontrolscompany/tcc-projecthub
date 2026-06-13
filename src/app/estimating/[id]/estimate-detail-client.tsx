@@ -348,8 +348,7 @@ function getDefaultSelectedForType(type: string, cfg: Record<string, unknown>) {
 }
 
 function normalizeBody(record: EstimateRecord): EstimateBody {
-  const body = record.body && typeof record.body === "object" ? (record.body as Partial<EstimateBody>) : {};
-  const settings = body.settings && typeof body.settings === "object" ? body.settings : {};
+  const body = record.body as Partial<EstimateBody>;
   return {
     id: asString(body.id) || record.id,
     organizationId: asString(body.organizationId) || record.organization_id,
@@ -365,7 +364,7 @@ function normalizeBody(record: EstimateRecord): EstimateBody {
     bidder: asString(body.bidder) || null,
     version: asString(body.version) || "1.0",
     notes: asString(body.notes),
-    settings: { ...DEFAULT_SETTINGS, ...settings },
+    settings: { ...DEFAULT_SETTINGS, ...(body.settings ?? {}) },
     alternates: Array.isArray(body.alternates) ? body.alternates : [],
     createdAt: asString(body.createdAt) || record.created_at,
     updatedAt: asString(body.updatedAt) || record.updated_at,
