@@ -1,5 +1,5 @@
 import { T } from "../../shared/tokens.js";
-import { DEFAULT_SETTINGS } from "./projectSettings.js";
+import { DEFAULT_SETTINGS, computeCosts, computeControlsCosts } from "./projectSettings.js";
 import { VAV_COMPS } from "../vav/vavData.js";
 import { AHU_COMPS, AHU_TYPES } from "../ahu/ahuData.js";
 import { RTU_COMPS } from "../rtu/rtuData.js";
@@ -363,6 +363,64 @@ export function calcEstimate(estimate, controlsCatalog = {}) {
     controlsLbrHrs: ddcInfrastructure.rawLbrHrs,
     ddcInfrastructure,
   });
+}
+
+// Install and controls are parallel cost pools, not nested buckets.
+// Install sell price still comes from the command center logic, while
+// controls sell price is derived separately from the controls catalog.
+export function deriveEstimatorCostBuckets(estimate, controlsCatalog = {}, settings = {}) {
+  const normalizedEstimate = estimate || {};
+  const normalizedSettings = { ...DEFAULT_SETTINGS, ...(normalizedEstimate.settings || {}), ...(settings || {}) };
+  const totals = calcEstimate(normalizedEstimate, controlsCatalog);
+  const costs = computeCosts(totals.mtl, totals.lbrHrs, normalizedSettings, normalizedEstimate.items || []);
+  const controlsCosts = computeControlsCosts(totals.controlsMtl, totals.controlsLbrHrs, normalizedSettings);
+
+  const installInternalCost = costs.labor + costs.material;
+  const controlsInternalLaborCost = totals.controlsLbrHrs * normalizedSettings.controlsWageRate;
+  const controlsInternalCost = totals.controlsMtl + controlsInternalLaborCost;
+  const installSellPrice = costs.total;
+  const controlsSellPrice = controlsCosts.material + controlsCosts.labor;
+  const turnkeySellPrice = installSellPrice + controlsSellPrice;
+  const internalCost = installInternalCost + controlsInternalCost;
+
+  return {
+    install: {
+      laborCost: costs.labor,
+      materialCost: costs.material,
+      internalCost: installInternalCost,
+      markup: {
+        overhead: costs.overhead,
+        profit: costs.profit,
+        bond: costs.bond,
+      },
+      sellPrice: installSellPrice,
+    },
+    controls: {
+      materialCost: totals.controlsMtl,
+      engineeringLaborCost: controlsInternalLaborCost,
+      internalCost: controlsInternalCost,
+      markup: {
+        overhead: controlsCosts.overhead,
+        profit: controlsCosts.profit,
+        bond: controlsCosts.bond,
+      },
+      sellPrice: controlsSellPrice,
+    },
+    totals: {
+      internalCost,
+      markupTotal: turnkeySellPrice - internalCost,
+      installSellPrice,
+      controlsSellPrice,
+      turnkeySellPrice,
+    },
+    diagnostics: {
+      installRawLaborHours: totals.lbrHrs,
+      controlsRawLaborHours: totals.controlsLbrHrs,
+      estimateScopeMode: normalizedSettings.estimateScopeMode,
+      hasControlsCost: controlsInternalCost > 0,
+      hasInstallCost: installInternalCost > 0,
+    },
+  };
 }
 
 function toSafeNumber(value, fallback = 0) {
