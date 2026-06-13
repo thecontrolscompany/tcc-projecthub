@@ -355,6 +355,91 @@ export function calcEstimate(estimate, controlsCatalog = {}) {
   });
 }
 
+function accumulateScopeTotals(item, controlsCatalog, settings) {
+  const cost = calcItem(item, controlsCatalog);
+  const installMaterial = Math.max(0, (cost.totalMtl || 0) - (cost.totalControlsMtl || 0));
+  const installLaborHrs = Math.max(0, (cost.totalLbr || 0) - (cost.totalControlsLbr || 0));
+  const controlsMaterial = Math.max(0, cost.totalControlsMtl || 0);
+  const controlsLaborHrs = Math.max(0, cost.totalControlsLbr || 0);
+  const installLabor = installLaborHrs * (settings.wageRate || DEFAULT_SETTINGS.wageRate);
+  const controlsLabor = controlsLaborHrs * (settings.controlsWageRate || DEFAULT_SETTINGS.controlsWageRate);
+
+  return {
+    installMaterial,
+    installLaborHrs,
+    installLabor,
+    controlsMaterial,
+    controlsLaborHrs,
+    controlsLabor,
+    installRaw: installMaterial + installLabor,
+    controlsRaw: controlsMaterial + controlsLabor,
+  };
+}
+
+/**
+ * Derives a reconciliation-friendly scope split from the live estimate rows.
+ * Installation is the remaining non-controls row cost, while controls is the
+ * controls-specific material/labor carried by the selected components.
+ */
+export function deriveScopeBreakdown(estimate, controlsCatalog = {}, settings = {}, totalEstimate = 0) {
+  const scopeTotals = {
+    controlsMaterial: 0,
+    controlsLaborHrs: 0,
+    installMaterial: 0,
+    installLaborHrs: 0,
+    controlsRaw: 0,
+    installRaw: 0,
+    unclassifiedRaw: 0,
+  };
+
+  for (const item of estimate?.items || []) {
+    const next = accumulateScopeTotals(item, controlsCatalog, settings);
+    scopeTotals.controlsMaterial += next.controlsMaterial;
+    scopeTotals.controlsLaborHrs += next.controlsLaborHrs;
+    scopeTotals.installMaterial += next.installMaterial;
+    scopeTotals.installLaborHrs += next.installLaborHrs;
+    scopeTotals.controlsRaw += next.controlsRaw;
+    scopeTotals.installRaw += next.installRaw;
+  }
+
+  const total = Math.max(0, Number(totalEstimate) || 0);
+  const rawTotal = scopeTotals.controlsRaw + scopeTotals.installRaw + scopeTotals.unclassifiedRaw;
+  const denominator = rawTotal > 0 ? rawTotal : 1;
+  const controlsPercent = (scopeTotals.controlsRaw / denominator) * 100;
+  const installPercent = (scopeTotals.installRaw / denominator) * 100;
+  const unclassifiedPercent = (scopeTotals.unclassifiedRaw / denominator) * 100;
+
+  let controlsLoadedTotal = 0;
+  let installLoadedTotal = 0;
+  let unclassifiedLoadedTotal = 0;
+
+  if (total > 0 && rawTotal > 0) {
+    controlsLoadedTotal = total * (scopeTotals.controlsRaw / rawTotal);
+    installLoadedTotal = total * (scopeTotals.installRaw / rawTotal);
+    unclassifiedLoadedTotal = total - controlsLoadedTotal - installLoadedTotal;
+  }
+
+  return {
+    total,
+    controlsRawCost: scopeTotals.controlsRaw,
+    installationRawCost: scopeTotals.installRaw,
+    unclassifiedRawCost: scopeTotals.unclassifiedRaw,
+    controlsLoadedTotal,
+    installationLoadedTotal,
+    unclassifiedLoadedTotal,
+    controlsPercent,
+    installationPercent: installPercent,
+    unclassifiedPercent,
+    controlsMaterial: scopeTotals.controlsMaterial,
+    controlsLabor: scopeTotals.controlsLabor,
+    installationMaterial: scopeTotals.installMaterial,
+    installationLabor: scopeTotals.installLabor,
+    controlsLaborHours: scopeTotals.controlsLaborHrs,
+    installationLaborHours: scopeTotals.installLaborHrs,
+    hasUnclassified: scopeTotals.unclassifiedRaw > 0,
+  };
+}
+
 export function getItemDetails(item, controlsCatalog = {}) {
   const comps = resolveItemComps(item);
   const selected = comps
