@@ -486,7 +486,7 @@ export function EstimateCommandCenter({
             <tr style={{ background: T.surface }}>
               <th style={{ ...headerCellStyle, textAlign: "left" }}>Scope</th>
               {columns.map((column) => (
-                <th key={column.key} style={headerCellStyle}>
+                <th key={column.key} style={{ ...headerCellStyle, textAlign: "right" }}>
                   {column.label}
                 </th>
               ))}
