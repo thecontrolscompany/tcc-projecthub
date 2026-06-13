@@ -16,8 +16,10 @@ import {
   buildEstimateHealthRows,
   buildNeedsReviewIssues,
   EstimateCommandCenter,
+  buildEstimateScopeBreakdown,
   EstimatorActionBar,
   EstimatorTabs,
+  EstimateScopeBreakdown,
   EstimatorTabPanels,
 } from "./estimateUx.jsx";
 import {
@@ -98,6 +100,17 @@ export function EstimateDetail({
   const controlsCosts = useMemo(
     () => computeControlsCosts(totals.controlsMtl, totals.controlsLbrHrs, settings),
     [settings, totals.controlsLbrHrs, totals.controlsMtl]
+  );
+  const scopeBreakdown = useMemo(
+    () => buildEstimateScopeBreakdown({
+      total: costs.total,
+      controlsTotal: controlsCosts.total,
+      controlsMaterial: controlsCosts.material,
+      controlsLabor: controlsCosts.labor,
+      installMaterial: Math.max(0, costs.material - controlsCosts.material),
+      installLabor: Math.max(0, costs.labor - controlsCosts.labor),
+    }),
+    [controlsCosts.labor, controlsCosts.material, controlsCosts.total, costs.labor, costs.material, costs.total]
   );
   const ddcInfrastructure = totals.ddcInfrastructure || {
     rows: [],
@@ -481,6 +494,8 @@ export function EstimateDetail({
           statusLabel={getEstimateScopeModeLabel(settings.estimateScopeMode)}
           estimateName={estimate.name}
         />
+
+        <EstimateScopeBreakdown breakdown={scopeBreakdown} />
 
         {reviewBadgeLabel && (
           <button
