@@ -188,7 +188,7 @@ export function UnitEditorPage({
         <button
           type="button"
           onClick={() => setSubPage(null)}
-          title="Return to this estimate without adding a system"
+          title="Return to this estimate without saving changes"
           style={{
             padding: "4px 10px",
             border: `1px solid ${T.border2}`,
@@ -201,7 +201,7 @@ export function UnitEditorPage({
             whiteSpace: "nowrap",
           }}
         >
-          ← Estimate
+          ← Back to Estimate
         </button>
         <div style={{ padding: "3px 10px", background: accentBg, border: `1px solid ${accentBorder}`, borderRadius: 4 }}>
           <span style={{ fontSize: 11, color: accent, fontFamily: T.mono, fontWeight: 700, letterSpacing: 1 }}>{badge}</span>

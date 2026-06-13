@@ -703,6 +703,13 @@ export default function VAVPage() {
         <AddToEstimateBtn type="vav" tag={tag} location={loc}
           cfg={{ ...cfg, heatType: cfg.heatType, actuatorType: cfg.actuatorType, powerMode, commMode, commRunFt, damperIntegration, flowIntegration }} selected={selected} custom={custom}
           qty={qty} installType={installType} />
+        <button
+          type="button"
+          onClick={() => setSubPage(null)}
+          title="Return to this estimate without saving changes"
+          style={{ padding:"4px 10px", border:"1px solid "+T.border2, borderRadius:4, background:"none", color:T.muted, cursor:"pointer", fontSize:11, fontFamily:T.mono, whiteSpace:"nowrap" }}>
+          ← Back to Estimate
+        </button>
         <div style={{ flex:1 }} />
         <div style={{ display:"flex", gap:14, padding:"5px 14px", background:T.blueFaint,
           borderRadius:6, border:"1px solid "+T.blueMid }}>

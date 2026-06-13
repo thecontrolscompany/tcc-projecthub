@@ -25,7 +25,7 @@ function PlantTypeSelector({ onSelect, onBack }) {
           fontFamily: T.mono,
         }}
       >
-        ← Estimate
+        ← Back to Estimate
       </button>
       <div style={{ fontSize: 22, fontWeight: 700, color: T.text, marginBottom: 4 }}>Central Plant</div>
       <div style={{ fontSize: 14, color: T.muted, marginBottom: 28 }}>
