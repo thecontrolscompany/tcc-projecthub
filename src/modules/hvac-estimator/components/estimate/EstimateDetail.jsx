@@ -454,11 +454,8 @@ export function EstimateDetail({
         {!customerMode && (
           <EstimatorActionBar
             customerMode={customerMode}
-            exporting={exporting}
             saving={saving}
-            onGenerateProposal={exportProposal}
             onSave={onSave}
-            onInternalReport={exportInternal}
             onProposalDetails={() => setShowProposalDetails((value) => !value)}
             onBidAlternate={() => createBidAlternate("installation", "Bid Alternate")}
             onSystemWizard={() => setSubPage({ type: "wizard" })}

@@ -751,9 +751,7 @@ export function EstimatorActionBar({
   customerMode,
   exporting,
   saving,
-  onGenerateProposal,
   onSave,
-  onInternalReport,
   onProposalDetails,
   onAddEquipment,
 }) {
@@ -773,25 +771,6 @@ export function EstimatorActionBar({
             <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3, marginRight: 4 }}>
               Workflow Actions
             </div>
-            <button
-              type="button"
-              onClick={onGenerateProposal}
-              disabled={exporting}
-              style={{
-                padding: "8px 12px",
-                border: "1px solid " + T.border2,
-                borderRadius: 999,
-                background: T.green,
-                color: "#fff",
-                cursor: exporting ? "default" : "pointer",
-                fontSize: 12,
-                fontFamily: T.mono,
-                fontWeight: 700,
-                opacity: exporting ? 0.8 : 1,
-              }}
-            >
-              {exporting ? "Generating..." : "Generate Proposal"}
-            </button>
             {onSave && (
               <button
                 type="button"
@@ -813,23 +792,6 @@ export function EstimatorActionBar({
                 {saving ? "Saving..." : "Save"}
               </button>
             )}
-            <button
-              type="button"
-              onClick={onInternalReport}
-              style={{
-                padding: "8px 12px",
-                border: "1px solid " + T.border2,
-                borderRadius: 999,
-                background: T.surface,
-                color: T.text,
-                cursor: "pointer",
-                fontSize: 12,
-                fontFamily: T.mono,
-                fontWeight: 700,
-              }}
-            >
-              Internal Report
-            </button>
             <button
               type="button"
               onClick={onProposalDetails}
