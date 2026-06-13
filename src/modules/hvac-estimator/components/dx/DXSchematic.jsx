@@ -9,7 +9,7 @@ import {
   reconcileDxSelected,
 } from "./dxData.js";
 
-export default function DXPage({ onBack = null } = {}) {
+export default function DXPage() {
   const { activeEstimate, editingItem, subPage } = useEstimate();
   const quoteDefault = activeEstimate?.settings?.defaultInstallType ?? "EMT";
   const isEditing = !!editingItem && editingItem.type === "dx";
@@ -29,7 +29,6 @@ export default function DXPage({ onBack = null } = {}) {
 
   return (
     <UnitEditorPage
-      onBack={onBack}
       type="dx"
       comps={visibleComponents}
       title="DX Split / Heat Pump"

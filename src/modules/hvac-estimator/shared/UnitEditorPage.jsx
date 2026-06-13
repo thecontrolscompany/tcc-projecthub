@@ -49,18 +49,10 @@ export function UnitEditorPage({
   assemblyEmptyText,
   assemblyCategory,
   addAssemblyLabel = "Add assembly...",
-  onBack = null,
 }) {
   const { editingItem, subPage, setSubPage } = useEstimate();
   const isEditing = !!editingItem;
   const editingItemId = editingItem?.id || null;
-  const handleBack = () => {
-    if (typeof onBack === "function") {
-      onBack();
-      return;
-    }
-    setSubPage(null);
-  };
 
   const [selected, setSel] = useState(() => {
     if (isEditing) return normalizeSelected(editingItem.selected, comps, cfg);
@@ -195,7 +187,7 @@ export function UnitEditorPage({
       }}>
         <button
           type="button"
-          onClick={handleBack}
+          onClick={() => setSubPage(null)}
           title="Return to this estimate without saving changes"
           style={{
             padding: "4px 10px",

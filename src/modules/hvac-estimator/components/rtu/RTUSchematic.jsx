@@ -9,7 +9,7 @@ import {
   toggleRtuComponentSelection,
 } from "./rtuData.js";
 
-export default function RTUPage({ onBack = null } = {}) {
+export default function RTUPage() {
   const { activeEstimate, editingItem, subPage } = useEstimate();
   const quoteDefault = activeEstimate?.settings?.defaultInstallType ?? "EMT";
   const isEditing = !!editingItem && editingItem.type === "rtu";
@@ -44,7 +44,6 @@ export default function RTUPage({ onBack = null } = {}) {
 
   return (
     <UnitEditorPage
-      onBack={onBack}
       type="rtu"
       comps={visibleComponents}
       title="Roof Top Unit"

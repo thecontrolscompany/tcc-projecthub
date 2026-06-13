@@ -9,7 +9,7 @@ import {
   toggleUhComponentSelection,
 } from "./uhData.js";
 
-export default function UHPage({ onBack = null } = {}) {
+export default function UHPage() {
   const { activeEstimate, editingItem, subPage } = useEstimate();
   const quoteDefault = activeEstimate?.settings?.defaultInstallType ?? "EMT";
   const isEditing = !!editingItem && editingItem.type === "uh";
@@ -42,7 +42,6 @@ export default function UHPage({ onBack = null } = {}) {
 
   return (
     <UnitEditorPage
-      onBack={onBack}
       type="uh"
       comps={visibleComponents}
       title="Unit Heater"

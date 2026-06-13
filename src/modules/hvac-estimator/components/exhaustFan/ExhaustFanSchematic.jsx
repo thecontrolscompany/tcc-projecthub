@@ -16,13 +16,12 @@ function EmptyFlow() {
   );
 }
 
-export default function ExhaustFanSchematic({ onBack = null } = {}) {
+export default function ExhaustFanSchematic() {
   const { activeEstimate } = useEstimate();
   const quoteDefault = activeEstimate?.settings?.defaultInstallType ?? "EMT";
 
   return (
     <UnitEditorPage
-      onBack={onBack}
       type="exhaust-fan"
       comps={EXHAUST_FAN_COMPS}
       title="Exhaust Fan"

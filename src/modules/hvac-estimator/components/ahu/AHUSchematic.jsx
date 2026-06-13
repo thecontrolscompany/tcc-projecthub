@@ -834,7 +834,7 @@ function CompPanel({cfg, visibleComponents, selected,onToggle,onSetCompQty,custo
   );
 }
 
-export default function AHUPage({ onBack = null } = {}) {
+export default function AHUPage() {
   const { activeEstimate, editingItem, subPage } = useEstimate();
   const isEditing = !!editingItem && editingItem.type === "ahu";
   const quoteDefault = activeEstimate?.settings?.defaultInstallType ?? "EMT";
@@ -856,13 +856,6 @@ export default function AHUPage({ onBack = null } = {}) {
   const [tag,setTag]        = useState(() => isEditing ? editingItem.tag : "AHU");
   const [loc,setLoc]        = useState(() => isEditing ? editingItem.location : "Mechanical Room");
   const [isLauncherMode, setIsLauncherMode] = useState(() => !isEditing);
-  const handleBack = () => {
-    if (typeof onBack === "function") {
-      onBack();
-      return;
-    }
-    setSubPage(null);
-  };
 
   const visibleComponents = useMemo(
     () => (cfg ? getVisibleAhuComponents(cfg) : []),
@@ -973,7 +966,7 @@ export default function AHUPage({ onBack = null } = {}) {
               qty={qty} installType={installType} />
             <button
               type="button"
-              onClick={handleBack}
+              onClick={() => setSubPage(null)}
               title="Return to this estimate without saving changes"
               style={{ padding:"4px 10px", border:"1px solid "+T.border2, borderRadius:4,
               background:"none", color:T.muted, cursor:"pointer", fontSize:11, fontFamily:T.mono, whiteSpace:"nowrap" }}>
