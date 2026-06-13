@@ -177,49 +177,14 @@ function getSeverityBadge(severity) {
   return severityStyles[severity] || severityStyles.info;
 }
 
-// Assumption: controls scope is the separately computed controls total, and
-// installation is the remaining fully loaded estimate total.
-export function buildEstimateScopeBreakdown({
-  total = 0,
-  controlsTotal = 0,
-  controlsMaterial = 0,
-  controlsLabor = 0,
-  installMaterial = 0,
-  installLabor = 0,
-}) {
-  const grandTotal = Math.max(0, Number(total) || 0);
-  const normalizedControls = Math.min(Math.max(0, Number(controlsTotal) || 0), grandTotal);
-  const normalizedInstall = Math.max(0, grandTotal - normalizedControls);
-  const divisor = grandTotal > 0 ? grandTotal : 1;
-  const controlsPercent = (normalizedControls / divisor) * 100;
-  const installPercent = (normalizedInstall / divisor) * 100;
-
-  return {
-    total: grandTotal,
-    controls: {
-      total: normalizedControls,
-      percent: controlsPercent,
-      material: Math.max(0, Number(controlsMaterial) || 0),
-      labor: Math.max(0, Number(controlsLabor) || 0),
-      hasScope: normalizedControls > 0,
-    },
-    installation: {
-      total: normalizedInstall,
-      percent: installPercent,
-      material: Math.max(0, Number(installMaterial) || 0),
-      labor: Math.max(0, Number(installLabor) || 0),
-      hasScope: normalizedInstall > 0,
-    },
-  };
-}
-
 export function EstimateScopeBreakdown({ breakdown }) {
   const controlsFallback = breakdown.controls.hasScope ? "" : "No controls scope found.";
   const installFallback = breakdown.installation.hasScope ? "" : "No install scope found.";
+  const unclassifiedFallback = breakdown.unclassified?.hasScope ? "" : "No unclassified cost.";
 
   return (
     <section
-      aria-label="Scope breakdown"
+      aria-label="Cost breakdown by scope"
       style={{
         border: "1px solid " + T.border,
         borderRadius: 12,
@@ -239,21 +204,21 @@ export function EstimateScopeBreakdown({ breakdown }) {
       >
         <div>
           <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
-            Scope Breakdown
+            Cost Breakdown by Scope
           </div>
           <div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>
-            Controls and installation portions of the full estimate.
+            Cost only. Excludes overhead, profit, and bond.
           </div>
         </div>
         <div style={{ fontSize: 11, color: T.muted, fontFamily: T.mono }}>
-          Total: {fmt$(breakdown.total)}
+          Internal cost: {fmt$(breakdown.total)}
         </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 0 }}>
         {[
           {
-            label: "Controls Scope",
+            label: "Controls Cost",
             total: breakdown.controls.total,
             percent: breakdown.controls.percent,
             accent: T.blue,
@@ -264,22 +229,30 @@ export function EstimateScopeBreakdown({ breakdown }) {
             fallback: controlsFallback,
           },
           {
-            label: "Installation Scope",
+            label: "Installation Cost",
             total: breakdown.installation.total,
             percent: breakdown.installation.percent,
             accent: T.steel,
             detail: [
-              { label: "Install labor", value: breakdown.installation.labor, isHours: false },
+              { label: "Install labor cost", value: breakdown.installation.labor },
               { label: "Install material / subcontract", value: breakdown.installation.material },
             ],
             fallback: installFallback,
           },
-        ].map((scope, index) => (
+          breakdown.unclassified?.hasScope ? {
+            label: "Unclassified Cost",
+            total: breakdown.unclassified.total,
+            percent: breakdown.unclassified.percent,
+            accent: T.muted,
+            detail: [],
+            fallback: unclassifiedFallback,
+          } : null,
+        ].filter(Boolean).map((scope, index, scopes) => (
           <div
             key={scope.label}
             style={{
               padding: "10px 12px 12px",
-              borderRight: index === 0 ? "1px solid " + T.border : "none",
+              borderRight: index < scopes.length - 1 ? "1px solid " + T.border : "none",
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "baseline" }}>
@@ -296,7 +269,7 @@ export function EstimateScopeBreakdown({ breakdown }) {
                 <div key={row.label} style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 11, lineHeight: 1.4 }}>
                   <span style={{ color: T.dim }}>{row.label}</span>
                   <span style={{ color: T.text, fontFamily: T.mono, fontWeight: 700 }}>
-                    {row.isHours ? fmtHr(row.value) : fmt$(row.value)}
+                    {fmt$(row.value)}
                   </span>
                 </div>
               ))}

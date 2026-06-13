@@ -362,6 +362,7 @@ function toSafeNumber(value, fallback = 0) {
 
 function accumulateScopeTotals(item, controlsCatalog, settings) {
   const cost = calcItem(item, controlsCatalog);
+  const hasKnownComps = resolveItemComps(item).length > 0;
   const installMaterial = Math.max(0, toSafeNumber(cost.totalMtl) - toSafeNumber(cost.totalControlsMtl));
   const installLaborHrs = Math.max(0, toSafeNumber(cost.totalLbr) - toSafeNumber(cost.totalControlsLbr));
   const controlsMaterial = Math.max(0, toSafeNumber(cost.totalControlsMtl));
@@ -370,6 +371,7 @@ function accumulateScopeTotals(item, controlsCatalog, settings) {
   const controlsLabor = controlsLaborHrs * toSafeNumber(settings?.controlsWageRate, DEFAULT_SETTINGS.controlsWageRate);
 
   return {
+    isUnclassified: !hasKnownComps && (installMaterial + installLabor + controlsMaterial + controlsLabor > 0),
     installMaterial,
     installLaborHrs,
     installLabor,
@@ -381,7 +383,7 @@ function accumulateScopeTotals(item, controlsCatalog, settings) {
   };
 }
 
-export function deriveScopeBreakdown(estimate, controlsCatalog = {}, settings = {}, totalEstimate = 0) {
+export function deriveCostBreakdownByScope(estimate, controlsCatalog = {}, settings = {}, totalInternalCost = 0) {
   const items = Array.isArray(estimate?.items) ? estimate.items : [];
   const scopeTotals = {
     controlsMaterial: 0,
@@ -394,61 +396,70 @@ export function deriveScopeBreakdown(estimate, controlsCatalog = {}, settings = 
     installRaw: 0,
     unclassifiedRaw: 0,
   };
+  let unclassifiedCount = 0;
 
   for (const item of items) {
     try {
       const next = accumulateScopeTotals(item, controlsCatalog, settings);
-      scopeTotals.controlsMaterial += next.controlsMaterial;
-      scopeTotals.controlsLaborHrs += next.controlsLaborHrs;
-      scopeTotals.controlsLabor += next.controlsLabor;
-      scopeTotals.installMaterial += next.installMaterial;
-      scopeTotals.installLaborHrs += next.installLaborHrs;
-      scopeTotals.installLabor += next.installLabor;
-      scopeTotals.controlsRaw += next.controlsRaw;
-      scopeTotals.installRaw += next.installRaw;
+      if (next.isUnclassified) {
+        unclassifiedCount += 1;
+        scopeTotals.unclassifiedRaw += next.installRaw + next.controlsRaw;
+      } else {
+        scopeTotals.controlsMaterial += next.controlsMaterial;
+        scopeTotals.controlsLaborHrs += next.controlsLaborHrs;
+        scopeTotals.controlsLabor += next.controlsLabor;
+        scopeTotals.installMaterial += next.installMaterial;
+        scopeTotals.installLaborHrs += next.installLaborHrs;
+        scopeTotals.installLabor += next.installLabor;
+        scopeTotals.controlsRaw += next.controlsRaw;
+        scopeTotals.installRaw += next.installRaw;
+      }
     } catch {
-      scopeTotals.unclassifiedRaw += 0;
+      unclassifiedCount += 1;
     }
   }
 
-  const total = Math.max(0, toSafeNumber(totalEstimate));
-  const rawTotal = scopeTotals.controlsRaw + scopeTotals.installRaw + scopeTotals.unclassifiedRaw;
-  const divisor = rawTotal > 0 ? rawTotal : 1;
-  const controlsPercent = (scopeTotals.controlsRaw / divisor) * 100;
-  const installPercent = (scopeTotals.installRaw / divisor) * 100;
-
-  let controlsLoadedTotal = 0;
-  let installLoadedTotal = 0;
-  let unclassifiedLoadedTotal = 0;
-  if (total > 0 && rawTotal > 0) {
-    controlsLoadedTotal = total * (scopeTotals.controlsRaw / rawTotal);
-    installLoadedTotal = total * (scopeTotals.installRaw / rawTotal);
-    unclassifiedLoadedTotal = total - controlsLoadedTotal - installLoadedTotal;
-  }
+  const controlsTotal = scopeTotals.controlsMaterial + scopeTotals.controlsLabor;
+  const installTotal = scopeTotals.installMaterial + scopeTotals.installLabor;
+  const unclassifiedTotal = Math.max(0, toSafeNumber(totalInternalCost) - controlsTotal - installTotal);
+  const total = Math.max(0, controlsTotal + installTotal + unclassifiedTotal);
+  const divisor = total > 0 ? total : 1;
+  const controlsPercent = (controlsTotal / divisor) * 100;
+  const installPercent = (installTotal / divisor) * 100;
+  const unclassifiedPercent = (unclassifiedTotal / divisor) * 100;
 
   return {
     total,
     controls: {
-      total: controlsLoadedTotal,
+      total: controlsTotal,
       percent: controlsPercent,
       material: scopeTotals.controlsMaterial,
       labor: scopeTotals.controlsLabor,
-      hasScope: scopeTotals.controlsRaw > 0,
+      hasScope: controlsTotal > 0,
     },
     installation: {
-      total: installLoadedTotal,
+      total: installTotal,
       percent: installPercent,
       material: scopeTotals.installMaterial,
       labor: scopeTotals.installLabor,
-      hasScope: scopeTotals.installRaw > 0,
+      hasScope: installTotal > 0,
+    },
+    unclassified: {
+      total: unclassifiedTotal,
+      percent: unclassifiedPercent,
+      material: 0,
+      labor: 0,
+      hasScope: unclassifiedTotal > 0,
+      count: unclassifiedCount,
     },
     controlsRawCost: scopeTotals.controlsRaw,
     installationRawCost: scopeTotals.installRaw,
     unclassifiedRawCost: scopeTotals.unclassifiedRaw,
-    unclassifiedLoadedTotal,
-    hasUnclassified: scopeTotals.unclassifiedRaw > 0,
+    hasUnclassified: unclassifiedTotal > 0 || unclassifiedCount > 0,
   };
 }
+
+export const deriveScopeBreakdown = deriveCostBreakdownByScope;
 
 export function getItemDetails(item, controlsCatalog = {}) {
   const comps = resolveItemComps(item);
