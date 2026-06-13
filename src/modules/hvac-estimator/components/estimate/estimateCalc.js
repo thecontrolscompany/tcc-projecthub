@@ -654,12 +654,25 @@ export function deriveItemControlsCostBreakdown(item, controlsCatalog = {}, sett
   };
 }
 
-function buildBomPartNumber(row) {
+function buildBomPartIdentity(row, controlsCatalog) {
   const customPart = row.controlsCustomPart || null;
+  const internalId = String(row.controlsId || row.controlsOverride || row.id || "—").trim() || "—";
   if (customPart) {
-    return String(customPart.partNumber || customPart.description || "Custom part").trim() || "Custom part";
+    const displayPartNumber = String(customPart.partNumber || customPart.modelNumber || customPart.model || customPart.catalogNumber || customPart.description || "").trim();
+    return {
+      displayPartNumber: displayPartNumber || null,
+      internalId,
+      manufacturer: String(customPart.manufacturer || customPart.brand || "").trim() || null,
+    };
   }
-  return String(row.controlsId || row.controlsOverride || row.id || "—").trim() || "—";
+
+  const catalogRow = controlsCatalog?.[row.controlsId || row.controlsOverride || row.id] || null;
+  const displayPartNumber = String(catalogRow?.partNumber || catalogRow?.manufacturerPartNumber || catalogRow?.modelNumber || catalogRow?.model || catalogRow?.catalogNumber || catalogRow?.vendorPartNumber || catalogRow?.sku || catalogRow?.productCode || catalogRow?.sourcePartNumber || "").trim();
+  return {
+    displayPartNumber: displayPartNumber || null,
+    internalId,
+    manufacturer: String(catalogRow?.manufacturer || "").trim() || null,
+  };
 }
 
 function buildBomEquipmentLabel(item) {
@@ -692,7 +705,7 @@ export function deriveControlsBomRows(estimate, controlsCatalog = {}, settings =
       equipmentType: equipment.equipmentType,
       sourceLabel: equipment.sourceLabel,
       controlsPart: row.name,
-      partNumber: buildBomPartNumber(row),
+      ...buildBomPartIdentity(row, controlsCatalog),
       qtyPerUnit: row.qtyPerUnit,
       equipmentQty: itemBreakdown.itemQty,
       extendedQty: row.extendedQty,
@@ -744,7 +757,12 @@ export function deriveControlsBomRows(estimate, controlsCatalog = {}, settings =
       equipmentType: "Infrastructure",
       sourceLabel: "DDC Infrastructure",
       controlsPart: row.description || row.catalogId,
-      partNumber: row.catalogId,
+      ...buildBomPartIdentity({
+        id: row.catalogId,
+        controlsId: row.catalogId,
+        controlsOverride: null,
+        controlsCustomPart: null,
+      }, controlsCatalog),
       qtyPerUnit: qty,
       equipmentQty: 1,
       extendedQty: qty,

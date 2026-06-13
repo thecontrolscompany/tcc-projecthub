@@ -130,7 +130,7 @@ export function ControlsBomTab({ estimate, controlsCatalog, settings }) {
                   <thead>
                     <tr style={{ background: T.surface }}>
                       <th style={{ ...headerCellStyle, textAlign: "left" }}>Controls Part</th>
-                      <th style={{ ...headerCellStyle, textAlign: "left" }}>Part Number / Catalog ID</th>
+                      <th style={{ ...headerCellStyle, textAlign: "left" }}>Part Number</th>
                       <th style={{ ...headerCellStyle, textAlign: "right" }}>Qty / Unit</th>
                       <th style={{ ...headerCellStyle, textAlign: "right" }}>Equip Qty</th>
                       <th style={{ ...headerCellStyle, textAlign: "right" }}>Ext Qty</th>
@@ -151,8 +151,25 @@ export function ControlsBomTab({ estimate, controlsCatalog, settings }) {
                           </div>
                         </td>
                         <td style={{ ...bodyCellStyle, textAlign: "left", color: T.dim }}>
-                          <div style={{ whiteSpace: "normal", lineHeight: 1.35 }}>
-                            {row.partNumber}
+                          <div style={{ whiteSpace: "normal", lineHeight: 1.35, display: "grid", gap: 2 }}>
+                            <span style={{ color: row.displayPartNumber ? T.text : T.muted, fontWeight: row.displayPartNumber ? 700 : 600 }}>
+                              {row.displayPartNumber || row.internalId}
+                            </span>
+                            {row.manufacturer && (
+                              <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 10 }}>
+                                {row.manufacturer}
+                              </span>
+                            )}
+                            {row.displayPartNumber && row.internalId && row.displayPartNumber !== row.internalId && (
+                              <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 10 }}>
+                                Internal ID: {row.internalId}
+                              </span>
+                            )}
+                            {!row.displayPartNumber && row.internalId && (
+                              <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 10 }}>
+                                Internal ID: {row.internalId}
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td style={{ ...bodyCellStyle, textAlign: "right" }}>{row.qtyPerUnit}</td>
