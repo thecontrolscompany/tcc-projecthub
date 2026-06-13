@@ -18,7 +18,6 @@ import {
   EstimateCommandCenter,
   EstimatorActionBar,
   EstimatorTabs,
-  EstimateScopeBreakdown,
   EstimatorTabPanels,
 } from "./estimateUx.jsx";
 import {
@@ -26,7 +25,6 @@ import {
   buildItemsWithComps,
   calcEstimate,
   calcItem,
-  deriveScopeBreakdown,
   fmtAuditDate,
   getItemDetails,
 } from "./estimateCalc.js";
@@ -100,10 +98,6 @@ export function EstimateDetail({
   const controlsCosts = useMemo(
     () => computeControlsCosts(totals.controlsMtl, totals.controlsLbrHrs, settings),
     [settings, totals.controlsLbrHrs, totals.controlsMtl]
-  );
-  const scopeBreakdown = useMemo(
-    () => deriveScopeBreakdown(estimate, controlsCatalog, settings, costs.total),
-    [controlsCatalog, costs.total, estimate, settings]
   );
   const ddcInfrastructure = totals.ddcInfrastructure || {
     rows: [],
@@ -488,7 +482,20 @@ export function EstimateDetail({
           estimateName={estimate.name}
         />
 
-        <EstimateScopeBreakdown breakdown={scopeBreakdown} />
+        <section
+          aria-label="Cost breakdown by scope unavailable"
+          style={{
+            border: "1px solid " + T.border,
+            borderRadius: 12,
+            background: T.surface,
+            padding: "10px 12px",
+            color: T.dim,
+            fontSize: 11,
+            lineHeight: 1.5,
+          }}
+        >
+          Cost breakdown by scope needs bucket mapping before it can be shown accurately.
+        </section>
 
         {reviewBadgeLabel && (
           <button
