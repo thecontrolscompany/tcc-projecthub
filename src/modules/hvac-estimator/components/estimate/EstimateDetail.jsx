@@ -443,6 +443,7 @@ export function EstimateDetail({
         onChange={setActiveTab}
         tabs={[
           { id: "estimate", label: "Estimate" },
+          ...(customerMode ? [] : [{ id: "controlsBom", label: "Controls BOM" }]),
           { id: "review", label: "Review", badge: reviewBadgeLabel },
           { id: "costDetail", label: "Cost Detail" },
           { id: "outputs", label: "Outputs" },
@@ -962,6 +963,8 @@ export function EstimateDetail({
 
       <EstimatorTabPanels
         activeTab={activeTab}
+        estimate={estimate}
+        controlsCatalog={controlsCatalog}
         customerMode={customerMode}
         settings={settings}
         costs={costs}

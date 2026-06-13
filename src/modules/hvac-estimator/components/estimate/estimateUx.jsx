@@ -4,6 +4,7 @@ import { T } from "../../shared/tokens.js";
 import { fmt$, fmtHr } from "../../shared/utils.js";
 import { getEstimateScopeModeLabel } from "./projectSettings.js";
 import { TYPE_META, calcItem, deriveEstimatorCostBuckets } from "./estimateCalc.js";
+import { ControlsBomTab } from "./ControlsBomTab.jsx";
 
 const HEALTH_WINDOW = 5;
 
@@ -918,6 +919,8 @@ function panelShell({ id, title, description, children }) {
 
 export function EstimatorTabPanels({
   activeTab,
+  estimate,
+  controlsCatalog,
   customerMode,
   settings,
   costs,
@@ -948,6 +951,16 @@ export function EstimatorTabPanels({
   rawLbrHrs,
   itemCount,
 }) {
+  if (!customerMode && activeTab === "controlsBom") {
+    return (
+      <ControlsBomTab
+        estimate={estimate}
+        controlsCatalog={controlsCatalog}
+        settings={settings}
+      />
+    );
+  }
+
   if (activeTab === "review") {
     return panelShell({
       id: "review",

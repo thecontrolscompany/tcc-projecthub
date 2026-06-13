@@ -606,6 +606,8 @@ export function deriveItemControlsCostBreakdown(item, controlsCatalog = {}, sett
         id: comp.id,
         name: comp.label || comp.name || comp.id,
         controlsId: controlsOverride || comp.controlsId || null,
+        controlsOverride,
+        controlsCustomPart,
         qtyPerUnit,
         extendedQty,
         unitMaterialCost,
@@ -649,6 +651,149 @@ export function deriveItemControlsCostBreakdown(item, controlsCatalog = {}, sett
     rows: selectedRows,
     totals,
     hasRows: selectedRows.length > 0,
+  };
+}
+
+function buildBomPartNumber(row) {
+  const customPart = row.controlsCustomPart || null;
+  if (customPart) {
+    return String(customPart.partNumber || customPart.description || "Custom part").trim() || "Custom part";
+  }
+  return String(row.controlsId || row.controlsOverride || row.id || "—").trim() || "—";
+}
+
+function buildBomEquipmentLabel(item) {
+  const typeLabel = TYPE_META[item.type]?.label || String(item.type || "ITEM").toUpperCase();
+  const sourceBits = [item.tag, item.location].map((part) => String(part || "").trim()).filter(Boolean);
+  return {
+    system: typeLabel,
+    tag: String(item.tag || "").trim(),
+    equipmentType: String(item.location || item.cfg?.ahuType || item.cfg?.plantType || item.cfg?.componentId || item.type || "").trim() || "—",
+    sourceLabel: sourceBits.length ? `${typeLabel} · ${sourceBits.join(" · ")}` : typeLabel,
+  };
+}
+
+export function deriveControlsBomRows(estimate, controlsCatalog = {}, settings = {}) {
+  const normalizedEstimate = estimate || {};
+  const normalizedSettings = { ...DEFAULT_SETTINGS, ...(normalizedEstimate.settings || {}), ...(settings || {}) };
+  const equipmentGroups = [];
+
+  for (const item of normalizedEstimate.items || []) {
+    const itemBreakdown = deriveItemControlsCostBreakdown(item, controlsCatalog, normalizedSettings);
+    if (!itemBreakdown.rows.length) continue;
+
+    const equipment = buildBomEquipmentLabel(item);
+    const rows = itemBreakdown.rows.map((row) => ({
+      id: `${item.id}-${row.id}`,
+      groupId: item.id,
+      groupKind: "equipment",
+      system: equipment.system,
+      tag: equipment.tag || "—",
+      equipmentType: equipment.equipmentType,
+      sourceLabel: equipment.sourceLabel,
+      controlsPart: row.name,
+      partNumber: buildBomPartNumber(row),
+      qtyPerUnit: row.qtyPerUnit,
+      equipmentQty: itemBreakdown.itemQty,
+      extendedQty: row.extendedQty,
+      unitMaterialCost: row.unitMaterialCost,
+      extendedMaterialCost: row.extendedMaterialCost,
+      unitLaborHours: row.unitLaborHours,
+      extendedLaborHours: row.extendedLaborHours,
+      unitLaborDollarCost: row.unitLaborDollarCost,
+      extendedLaborDollarCost: row.extendedLaborDollarCost,
+      totalInternalCost: row.totalInternalCost,
+      controlsCustomPart: row.controlsCustomPart || null,
+      controlsId: row.controlsId || null,
+    }));
+
+    equipmentGroups.push({
+      id: item.id,
+      kind: "equipment",
+      system: equipment.system,
+      tag: equipment.tag || "—",
+      equipmentType: equipment.equipmentType,
+      sourceLabel: equipment.sourceLabel,
+      subtotalInternalCost: itemBreakdown.totals.extendedTotalControlsInternalCost,
+      subtotalMaterialCost: itemBreakdown.totals.extendedControlsMaterial,
+      subtotalLaborHours: itemBreakdown.totals.extendedControlsLaborHours,
+      equipmentQty: itemBreakdown.itemQty,
+      rows,
+    });
+  }
+
+  const ddcInfrastructure = calcEstimate(normalizedEstimate, controlsCatalog).ddcInfrastructure || {
+    rows: [],
+    rawMtl: 0,
+    rawLbrHrs: 0,
+    grandTotal: 0,
+  };
+  const controlsWageRate = Number(normalizedSettings.controlsWageRate || DEFAULT_SETTINGS.controlsWageRate) || DEFAULT_SETTINGS.controlsWageRate;
+  const ddcRows = (ddcInfrastructure.rows || []).map((row) => {
+    const qty = Math.max(1, Number(row.qty) || 1);
+    const unitMaterialCost = (Number(row.mtlTotal) || 0) / qty;
+    const unitLaborHours = (Number(row.hrsTotal) || 0) / qty;
+    const unitLaborDollarCost = unitLaborHours * controlsWageRate;
+    const totalInternalCost = (Number(row.mtlTotal) || 0) + (Number(row.hrsTotal) || 0) * controlsWageRate;
+    return {
+      id: `ddc-${row.catalogId}`,
+      groupId: "ddc-infrastructure",
+      groupKind: "ddc",
+      system: "DDC Infrastructure",
+      tag: "—",
+      equipmentType: "Infrastructure",
+      sourceLabel: "DDC Infrastructure",
+      controlsPart: row.description || row.catalogId,
+      partNumber: row.catalogId,
+      qtyPerUnit: qty,
+      equipmentQty: 1,
+      extendedQty: qty,
+      unitMaterialCost,
+      extendedMaterialCost: Number(row.mtlTotal) || 0,
+      unitLaborHours,
+      extendedLaborHours: Number(row.hrsTotal) || 0,
+      unitLaborDollarCost,
+      extendedLaborDollarCost: (Number(row.hrsTotal) || 0) * controlsWageRate,
+      totalInternalCost,
+      controlsCustomPart: null,
+      controlsId: row.catalogId,
+    };
+  });
+
+  if (ddcRows.length) {
+    equipmentGroups.push({
+      id: "ddc-infrastructure",
+      kind: "ddc",
+      system: "DDC Infrastructure",
+      tag: "—",
+      equipmentType: "Infrastructure",
+      sourceLabel: "DDC Infrastructure",
+      subtotalInternalCost: ddcRows.reduce((sum, row) => sum + (row.totalInternalCost || 0), 0),
+      subtotalMaterialCost: ddcRows.reduce((sum, row) => sum + (row.extendedMaterialCost || 0), 0),
+      subtotalLaborHours: ddcRows.reduce((sum, row) => sum + (row.extendedLaborHours || 0), 0),
+      equipmentQty: 1,
+      rows: ddcRows,
+    });
+  }
+
+  const totals = equipmentGroups.reduce((acc, group) => ({
+    rowCount: acc.rowCount + (group.rows?.length || 0),
+    groupCount: acc.groupCount + 1,
+    internalCost: acc.internalCost + (group.subtotalInternalCost || 0),
+    materialCost: acc.materialCost + (group.subtotalMaterialCost || 0),
+    laborHours: acc.laborHours + (group.subtotalLaborHours || 0),
+  }), {
+    rowCount: 0,
+    groupCount: 0,
+    internalCost: 0,
+    materialCost: 0,
+    laborHours: 0,
+  });
+
+  return {
+    groups: equipmentGroups,
+    totals,
+    hasRows: equipmentGroups.length > 0,
   };
 }
 
