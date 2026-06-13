@@ -206,15 +206,18 @@ parts, and four catalog-only rows were added: `CTL-IO-16-BI`, `CTL-PNL-XFMR`,
 `$21,600.00` and `$1,150.00`. `CTL-PNL-XFMR` remains a placeholder pricing
 item pending a better public source.
 
-**Phase 5 — Per-VAV-box controller** (v1 scope decided — see "Phase 5 —
-candidate part & draft pricing" above)
-Add `CTL-DEV-VAV-CTRL` (real part `M4-CVM03050-0`, ~$1,307) to
-`scripts/seed-controls-field-devices.mjs`. Re-pair `vavData.js`'s `vav-ctrl`
-component (`controlsId: null` → `"CTL-DEV-VAV-CTRL"`) — a Field Devices
-Phase C-style change for the VAV equipment type. Adjust
-`calcDdcInfrastructure` so a VAV box with this controller selected excludes
-its other point components from the shared AI/AO/BI/BO pool (resolves Task
-116 assumption #9 double-count flag).
+**Phase 5 — Per-VAV-box controller** Completed: `CTL-DEV-VAV-CTRL` was added
+to `scripts/seed-controls-field-devices.mjs` and `vavData.js`'s `vav-ctrl`
+component was re-paired to it (`controlsId: null` → `"CTL-DEV-VAV-CTRL"`).
+`calcDdcInfrastructure` now excludes a VAV box's other point components from
+the shared AI/AO/BI/BO pool when that dedicated controller is selected,
+resolving Task 116's double-count issue. Sample estimate `EST-2026-055`
+(`test2`) now shows the VAV line as `vav-ctrl` install `$425 / 2.5 hrs`
+plus `CTL-DEV-VAV-CTRL` controls `$1,306.79 / 1.0 hr`. That estimate's DDC
+infrastructure bill is `$13,217.89` with `24` total points and `1`
+controller; without the dedicated-controller exclusion, the VAV box would
+have contributed `60` points (`2 AI + 1 AO` per box × `20` boxes), pushing
+the DDC pool to `84` total points and `2` controllers.
 
 ## Touched files (anticipated)
 

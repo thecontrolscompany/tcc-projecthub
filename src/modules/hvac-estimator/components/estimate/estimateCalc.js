@@ -147,6 +147,7 @@ function getCustomCost(item, custom) {
 }
 
 const DDC_CONTROLLER_TIERS = [8, 16, 32, 64];
+const VAV_DEDICATED_CONTROLLER_ID = "CTL-DEV-VAV-CTRL";
 
 const DDC_FALLBACK_DESCRIPTIONS = {
   "CTL-DDC-08": "DDC Controller - 8 Point Capacity",
@@ -201,10 +202,19 @@ function getPanelCatalogId(controllerCount) {
 export function calcDdcInfrastructure(selected = [], controlsCatalog = {}, settings = {}) {
   const pointCounts = { AI: 0, AO: 0, BI: 0, BO: 0 };
   let unknownPointCount = 0;
+  const dedicatedControllerItemIds = new Set();
+
+  for (const entry of selected || []) {
+    if (entry?.controlsId !== VAV_DEDICATED_CONTROLLER_ID) continue;
+    if (isZeroedControlsCustomPart(entry.controlsCustomPart)) continue;
+    dedicatedControllerItemIds.add(entry.itemId);
+  }
 
   for (const entry of selected || []) {
     if (!entry?.controlsId) continue;
     if (isZeroedControlsCustomPart(entry.controlsCustomPart)) continue;
+    if (entry.controlsId === VAV_DEDICATED_CONTROLLER_ID) continue;
+    if (dedicatedControllerItemIds.has(entry.itemId)) continue;
 
     const row = getControlsCatalogRow(controlsCatalog, entry.controlsId);
     const ioType = String(row?.ioType || row?.io_type || "").toUpperCase();

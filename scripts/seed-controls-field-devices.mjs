@@ -40,6 +40,7 @@ const FIELD_DEVICE_ROWS = [
   { id: "CTL-DEV-WHEEL-SPD", description: "ERV Wheel Speed Controller", category: "Actuators", io_type: "AO", part_number: null, manufacturer: null, mtl_unit: 450.00, hrs_unit: 1.5 },
   { id: "CTL-DEV-RAC-PUMP", description: "Run-Around Pump Controller", category: "Actuators", io_type: "AO", part_number: null, manufacturer: null, mtl_unit: 200.00, hrs_unit: 1.0 },
   { id: "CTL-DEV-VRF-BRANCH", description: "VRF Branch Selector Interface", category: "Actuators", io_type: "BO", part_number: null, manufacturer: null, mtl_unit: 400.00, hrs_unit: 1.5 },
+  { id: "CTL-DEV-VAV-CTRL", description: "VAV Box Controller w/ Integral Actuator, DPT, BACnet", category: "DDC Controllers", io_type: null, part_number: "M4-CVM03050-0", manufacturer: "Johnson Controls", mtl_unit: 1306.79, hrs_unit: 1.0 },
 ];
 
 const supabase = createClient(supabaseUrl, serviceRoleKey, {

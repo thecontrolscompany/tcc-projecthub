@@ -44,13 +44,13 @@
 - [x] **Printable reports** - weekly update, BOM, change order, and status pages with print-ready layouts
 - [x] **Controls/Turnkey Estimating Redesign** - every estimate computes Install Labor/Material + Controls Material/Engineering Labor buckets from one item selection; `estimateScopeMode` is Install Only vs Turnkey; includes a 40/40/20 sanity check and per-instance controls substitution via the controls catalog's `alternate_ids`. Install-side substitution (`installOverride`) remains future work because install alternates are not yet curated. Spec: `codex/roadmap-controls-turnkey-estimating.md`
 - [x] **Controls Field Devices parts catalog** - seeded all 27 `CTL-DEV-*` rows into `controls_assembly_catalog` for tcc; 14 rows have real part#/manufacturer and 13 remain placeholders with draft pricing/hours; re-paired every estimator component `controlsId` off the old generic IO rows; retired the 5 generic IO Point catalog rows after confirming no `CTL-AI`/`CTL-AO`/`CTL-BI`/`CTL-BO`/`CTL-AI-WIRELESS` references remained in the `*Data.js` files. Spec: `codex/roadmap-controls-field-devices.md`
+- [x] **DDC infrastructure sizing** - estimates now include DDC controllers, panels, network/JACE, software licenses, engineering/graphics costs, and a per-VAV dedicated controller with shared-point-pool exclusion. Phases 1-5 are complete; remaining refinements like license tiering banding, per-building JACE/supervisor granularity, and full panel dimension re-tiering are unscheduled future work. Spec: `codex/roadmap-controls-ddc-infrastructure-sizing.md`
 
 ---
 
 ## Planned
 
 ### Near-Term
-- [ ] **DDC infrastructure sizing** (Priority: Medium) — estimates now include DDC controllers, panels, network/JACE, software licenses, and engineering/graphics costs sized from the selected controls devices, even though `controls_assembly_catalog` already has seeded generic-tier rows for all of these categories. Phase 1 (ioType AI/AO/BI/BO tagging on all 27 `CTL-DEV-*` rows) is complete, Phase 2 sizing calc is complete, and Phase 3 UI section is complete. Remaining: Phase 4 real JCI FX/Metasys part curation and Phase 5 per-VAV-box controller line. Spec: `codex/roadmap-controls-ddc-infrastructure-sizing.md`
 - [ ] **Budget vs Actual** (Priority: High) — labor and material cost vs estimate by project; feeds job costing. Depends on timesheets and BOM. Spec: `codex/roadmap-budget-vs-actual.md`
 - [ ] **QBO Integration** (Priority: High) — 4-phase OAuth sync: read customers/estimates/invoices → write invoices → bills/payroll → full 2-way. Spec: `codex/roadmap-qbo-integration.md`
 - [ ] **Estimator ↔ ProjectHub Integration** (Priority: High) — Phase 1: cloud auth migration; Phase 2: link estimates to projects; Phase 3: push POC weights from estimate. Spec: `.claude/plans/goofy-sniffing-karp.md`

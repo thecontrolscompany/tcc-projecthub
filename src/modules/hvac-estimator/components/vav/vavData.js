@@ -262,7 +262,7 @@ export const VAV_ZONE_ASSEMBLIES = [
 ];
 
 export const VAV_COMPS = [
-  { id:"vav-ctrl",    emtAID:"60092", plnAID:"60036", name:"VAV Controller",         cat:"Controls", controlsId: null,    unitMtl:425, unitLbr:2.5,  sym:"DDC", def:true,
+  { id:"vav-ctrl",    emtAID:"60092", plnAID:"60036", name:"VAV Controller",         cat:"Controls", controlsId: "CTL-DEV-VAV-CTRL",    unitMtl:425, unitLbr:2.5,  sym:"DDC", def:true,
     pos:{x:300,y:52},  anc:{x:300,y:178}, desc:"DDC controller — mounts on VAV box" },
   { id:"vav-act",     groupId:"vav-actuator-type", emtAID:"60069", plnAID:"60039", name:"Damper Actuator - Proportional", cat:"Actuators", controlsId: "CTL-DEV-ACT-DAMPER-MOD", unitMtl:265, unitLbr:1.5, sym:"ACT", def:false,
     showWhen: cfg => normalizeVavCfg(cfg).actuatorType === "proportional",
@@ -302,4 +302,3 @@ export const VAV_COMPS = [
   { id:"vav-pwr-trunk", emtAID:"60135", plnAID:"60052", name:"24V Power Trunk",          cat:"Controls", controlsId: null,    unitMtl:285, unitLbr:2.0,  sym:"TR",  def:false,
     desc:"24VAC transformer + power trunk to VAV controllers", wire:"—" },
 ];
-
