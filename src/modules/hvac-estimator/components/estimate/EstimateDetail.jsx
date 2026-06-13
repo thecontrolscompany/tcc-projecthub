@@ -16,6 +16,7 @@ import {
   buildEstimateHealthRows,
   buildNeedsReviewIssues,
   EstimateCommandCenter,
+  buildEstimateScopeBreakdown,
   EstimatorActionBar,
   EstimatorTabs,
   EstimateScopeBreakdown,
@@ -26,7 +27,6 @@ import {
   buildItemsWithComps,
   calcEstimate,
   calcItem,
-  deriveScopeBreakdown,
   fmtAuditDate,
   getItemDetails,
 } from "./estimateCalc.js";
@@ -102,8 +102,15 @@ export function EstimateDetail({
     [settings, totals.controlsLbrHrs, totals.controlsMtl]
   );
   const scopeBreakdown = useMemo(
-    () => deriveScopeBreakdown(estimate, controlsCatalog, settings, costs.total),
-    [controlsCatalog, costs.total, estimate, settings]
+    () => buildEstimateScopeBreakdown({
+      total: costs.total,
+      controlsTotal: controlsCosts.total,
+      controlsMaterial: controlsCosts.material,
+      controlsLabor: controlsCosts.labor,
+      installMaterial: Math.max(0, costs.material - controlsCosts.material),
+      installLabor: Math.max(0, costs.labor - controlsCosts.labor),
+    }),
+    [controlsCosts.labor, controlsCosts.material, controlsCosts.total, costs.labor, costs.material, costs.total]
   );
   const ddcInfrastructure = totals.ddcInfrastructure || {
     rows: [],
