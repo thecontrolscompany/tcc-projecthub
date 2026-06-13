@@ -23,6 +23,15 @@ const bodyCellStyle = {
   color: T.text,
 };
 
+function formatQtyDisplay(row) {
+  const qtyPerUnit = Number(row.qtyPerUnit) || 0;
+  const equipmentQty = Number(row.equipmentQty) || 0;
+  const extendedQty = Number(row.extendedQty) || 0;
+  if (qtyPerUnit === 1 && equipmentQty === 1 && extendedQty === 1) return "1";
+  if (equipmentQty > 1 || qtyPerUnit > 1) return `${qtyPerUnit} × ${equipmentQty} = ${extendedQty}`;
+  return String(extendedQty || qtyPerUnit || equipmentQty || 1);
+}
+
 function ActionPlaceholder({ label }) {
   return (
     <button
@@ -132,9 +141,7 @@ export function ControlsBomTab({ estimate, controlsCatalog, settings }) {
                     <tr style={{ background: T.surface }}>
                       <th style={{ ...headerCellStyle, textAlign: "left" }}>Controls Part</th>
                       <th style={{ ...headerCellStyle, textAlign: "left" }}>Part Number</th>
-                      <th style={{ ...headerCellStyle, textAlign: "right" }}>Qty / Unit</th>
-                      <th style={{ ...headerCellStyle, textAlign: "right" }}>Equip Qty</th>
-                      <th style={{ ...headerCellStyle, textAlign: "right" }}>Ext Qty</th>
+                      <th style={{ ...headerCellStyle, textAlign: "right" }}>Qty</th>
                       <th style={{ ...headerCellStyle, textAlign: "right" }}>Unit Mtl</th>
                       <th style={{ ...headerCellStyle, textAlign: "right" }}>Ext Mtl</th>
                       <th style={{ ...headerCellStyle, textAlign: "right" }}>Unit Labor Hrs</th>
@@ -145,10 +152,34 @@ export function ControlsBomTab({ estimate, controlsCatalog, settings }) {
                   </thead>
                   <tbody>
                     {group.rows.map((row) => (
-                      <tr key={row.id} style={{ background: T.surface }}>
-                        <td style={{ ...bodyCellStyle, textAlign: "left", fontWeight: 700, color: T.text }}>
+                      <tr
+                        key={row.id}
+                        style={{
+                          background: row.totalInternalCost <= 0 ? T.faint : T.surface,
+                          opacity: row.totalInternalCost <= 0 ? 0.8 : 1,
+                        }}
+                      >
+                        <td style={{ ...bodyCellStyle, textAlign: "left", fontWeight: 700, color: row.totalInternalCost <= 0 ? T.muted : T.text }}>
                           <div style={{ whiteSpace: "normal", lineHeight: 1.35 }}>
                             {row.controlsPart}
+                            {row.totalInternalCost <= 0 && (
+                              <span style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                marginLeft: 6,
+                                padding: "1px 5px",
+                                borderRadius: 999,
+                                border: "1px solid " + T.border2,
+                                background: T.surface,
+                                color: T.muted,
+                                fontSize: 9,
+                                fontFamily: T.mono,
+                                fontWeight: 700,
+                                verticalAlign: "middle",
+                              }}>
+                                No cost
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td style={{ ...bodyCellStyle, textAlign: "left", color: T.dim }}>
@@ -161,11 +192,6 @@ export function ControlsBomTab({ estimate, controlsCatalog, settings }) {
                                 {row.manufacturer}
                               </span>
                             )}
-                            {row.displayPartNumber && row.internalId && row.displayPartNumber !== row.internalId && (
-                              <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 10 }}>
-                                Internal ID: {row.internalId}
-                              </span>
-                            )}
                             {!row.displayPartNumber && row.internalId && (
                               <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 10 }}>
                                 Internal ID: {row.internalId}
@@ -173,16 +199,14 @@ export function ControlsBomTab({ estimate, controlsCatalog, settings }) {
                             )}
                           </div>
                         </td>
-                        <td style={{ ...bodyCellStyle, textAlign: "right", color: T.text }}>{row.qtyPerUnit}</td>
-                        <td style={{ ...bodyCellStyle, textAlign: "right", color: T.text }}>{row.equipmentQty}</td>
-                        <td style={{ ...bodyCellStyle, textAlign: "right", color: T.text }}>{row.extendedQty}</td>
+                        <td style={{ ...bodyCellStyle, textAlign: "right", color: T.text }}>{formatQtyDisplay(row)}</td>
                         <td style={{ ...bodyCellStyle, textAlign: "right", color: T.steel }}>{fmt$(row.unitMaterialCost)}</td>
                         <td style={{ ...bodyCellStyle, textAlign: "right", color: T.steel }}>{fmt$(row.extendedMaterialCost)}</td>
                         <td style={{ ...bodyCellStyle, textAlign: "right", color: T.steel }}>{fmtHr(row.unitLaborHours)}</td>
                         <td style={{ ...bodyCellStyle, textAlign: "right", color: T.steel }}>{fmtHr(row.extendedLaborHours)}</td>
                         <td style={{ ...bodyCellStyle, textAlign: "right", color: T.text, fontWeight: 800 }}>{fmt$(row.totalInternalCost)}</td>
                         <td style={{ ...bodyCellStyle, textAlign: "center" }}>
-                          <div style={{ display: "inline-flex", gap: 4, flexWrap: "wrap", justifyContent: "center" }}>
+                          <div style={{ display: "inline-flex", gap: 3, flexWrap: "nowrap", justifyContent: "center", whiteSpace: "nowrap" }}>
                             <ActionPlaceholder label="Change" />
                             <ActionPlaceholder label="Add" />
                             <ActionPlaceholder label="Qty" />
