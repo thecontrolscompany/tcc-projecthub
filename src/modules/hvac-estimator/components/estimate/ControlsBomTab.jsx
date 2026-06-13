@@ -20,6 +20,7 @@ const bodyCellStyle = {
   fontSize: 11,
   fontFamily: T.mono,
   whiteSpace: "nowrap",
+  color: T.text,
 };
 
 function ActionPlaceholder({ label }) {
@@ -172,14 +173,14 @@ export function ControlsBomTab({ estimate, controlsCatalog, settings }) {
                             )}
                           </div>
                         </td>
-                        <td style={{ ...bodyCellStyle, textAlign: "right" }}>{row.qtyPerUnit}</td>
-                        <td style={{ ...bodyCellStyle, textAlign: "right" }}>{row.equipmentQty}</td>
-                        <td style={{ ...bodyCellStyle, textAlign: "right" }}>{row.extendedQty}</td>
-                        <td style={{ ...bodyCellStyle, textAlign: "right", color: T.blue }}>{fmt$(row.unitMaterialCost)}</td>
-                        <td style={{ ...bodyCellStyle, textAlign: "right", color: T.blue }}>{fmt$(row.extendedMaterialCost)}</td>
+                        <td style={{ ...bodyCellStyle, textAlign: "right", color: T.text }}>{row.qtyPerUnit}</td>
+                        <td style={{ ...bodyCellStyle, textAlign: "right", color: T.text }}>{row.equipmentQty}</td>
+                        <td style={{ ...bodyCellStyle, textAlign: "right", color: T.text }}>{row.extendedQty}</td>
+                        <td style={{ ...bodyCellStyle, textAlign: "right", color: T.steel }}>{fmt$(row.unitMaterialCost)}</td>
+                        <td style={{ ...bodyCellStyle, textAlign: "right", color: T.steel }}>{fmt$(row.extendedMaterialCost)}</td>
                         <td style={{ ...bodyCellStyle, textAlign: "right", color: T.steel }}>{fmtHr(row.unitLaborHours)}</td>
                         <td style={{ ...bodyCellStyle, textAlign: "right", color: T.steel }}>{fmtHr(row.extendedLaborHours)}</td>
-                        <td style={{ ...bodyCellStyle, textAlign: "right", color: T.blue, fontWeight: 800 }}>{fmt$(row.totalInternalCost)}</td>
+                        <td style={{ ...bodyCellStyle, textAlign: "right", color: T.text, fontWeight: 800 }}>{fmt$(row.totalInternalCost)}</td>
                         <td style={{ ...bodyCellStyle, textAlign: "center" }}>
                           <div style={{ display: "inline-flex", gap: 4, flexWrap: "wrap", justifyContent: "center" }}>
                             <ActionPlaceholder label="Change" />
