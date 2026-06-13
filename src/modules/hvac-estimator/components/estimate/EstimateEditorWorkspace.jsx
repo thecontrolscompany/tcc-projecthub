@@ -50,10 +50,11 @@ export function EstimateEditorWorkspace({
   initialProposalTab = null,
 }) {
   const { subPage, setSubPage } = useEstimate();
+  const returnToEstimate = () => setSubPage(null);
 
   if (subPage?.type === "wizard") {
     return (
-      <EditorFrame title="System Wizard" onBack={() => setSubPage(null)}>
+      <EditorFrame title="System Wizard" onBack={returnToEstimate}>
         <SelectionWizardPage
           hasActiveEstimate={true}
           onAddToEstimate={(type) => {
@@ -68,27 +69,27 @@ export function EstimateEditorWorkspace({
     const editor = (() => {
       switch (subPage.type) {
         case "ahu":
-          return <AHUSchematic />;
+          return <AHUSchematic onBack={returnToEstimate} />;
         case "vav":
-          return <VAVSchematic />;
+          return <VAVSchematic onBack={returnToEstimate} />;
         case "rtu":
-          return <RTUSchematic />;
+          return <RTUSchematic onBack={returnToEstimate} />;
         case "dx":
-          return <DXSchematic />;
+          return <DXSchematic onBack={returnToEstimate} />;
         case "vrf":
-          return <VRFSchematic />;
+          return <VRFSchematic onBack={returnToEstimate} />;
         case "fcu":
-          return <FCUSchematic />;
+          return <FCUSchematic onBack={returnToEstimate} />;
         case "uh":
-          return <UHSchematic />;
+          return <UHSchematic onBack={returnToEstimate} />;
         case "plant":
-          return <PlantSchematic />;
+          return <PlantSchematic onBack={returnToEstimate} />;
         case "network":
-          return <NetworkSchematic />;
+          return <NetworkSchematic onBack={returnToEstimate} />;
         case "exhaust-fan":
-          return <ExhaustFanSchematic />;
+          return <ExhaustFanSchematic onBack={returnToEstimate} />;
         case "custom":
-          return <CustomComponentPage />;
+          return <CustomComponentPage onBack={returnToEstimate} />;
         case "alternate":
           if (allowBidAlternateEditor && typeof renderBidAlternateEditor === "function") {
             return renderBidAlternateEditor();

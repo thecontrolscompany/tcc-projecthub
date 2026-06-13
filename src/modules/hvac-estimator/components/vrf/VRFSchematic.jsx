@@ -10,7 +10,7 @@ import {
   reconcileVrfSelected,
 } from "./vrfData.js";
 
-export default function VRFPage() {
+export default function VRFPage({ onBack = null } = {}) {
   const { activeEstimate, editingItem, subPage } = useEstimate();
   const quoteDefault = activeEstimate?.settings?.defaultInstallType ?? "EMT";
   const isEditing = !!editingItem && editingItem.type === "vrf";
@@ -44,6 +44,7 @@ export default function VRFPage() {
 
   return (
     <UnitEditorPage
+      onBack={onBack}
       type="vrf"
       comps={visibleComponents}
       title="VRF System"

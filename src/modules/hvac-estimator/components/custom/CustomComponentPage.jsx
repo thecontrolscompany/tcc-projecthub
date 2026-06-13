@@ -53,7 +53,7 @@ function CustomComponentSelector({ options, selectedId, onChange }) {
   );
 }
 
-export default function CustomComponentPage() {
+export default function CustomComponentPage({ onBack = null } = {}) {
   const { activeEstimate } = useEstimate();
   const quoteDefault = activeEstimate?.settings?.defaultInstallType ?? "EMT";
   const options = useMemo(() => getCustomComponentOptions(), []);
@@ -70,6 +70,7 @@ export default function CustomComponentPage() {
 
   return (
     <UnitEditorPage
+      onBack={onBack}
       key={selected.id}
       type="custom"
       comps={[selected.component]}

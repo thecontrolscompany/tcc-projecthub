@@ -4,12 +4,13 @@ import { T, CAT_COLOR } from "../../shared/tokens.js";
 import { NETWORK_COMPS } from "./networkData.js";
 import { NetworkFlowDiagram } from "./NetworkFlowDiagram.jsx";
 
-export default function NetworkPage() {
+export default function NetworkPage({ onBack = null } = {}) {
   const { activeEstimate } = useEstimate();
   const quoteDefault = activeEstimate?.settings?.defaultInstallType ?? "EMT";
 
   return (
     <UnitEditorPage
+      onBack={onBack}
       type="network"
       comps={NETWORK_COMPS}
       title="Network"

@@ -465,7 +465,7 @@ function VAVConfigSelector({ initialCfg, onSelect }) {
 }
 
 
-export default function VAVPage() {
+export default function VAVPage({ onBack = null } = {}) {
   const { activeEstimate, editingItem, subPage } = useEstimate();
   const isEditing = !!editingItem && editingItem.type === "vav";
   const quoteDefault = activeEstimate?.settings?.defaultInstallType ?? "EMT";
@@ -496,6 +496,13 @@ export default function VAVPage() {
   const [qty, setQty] = useState(() => isEditing ? editingItem.qty : 1);
   const [tag, setTag] = useState(() => isEditing ? editingItem.tag : "VAV");
   const [loc, setLoc] = useState(() => isEditing ? editingItem.location : "Typical");
+  const handleBack = () => {
+    if (typeof onBack === "function") {
+      onBack();
+      return;
+    }
+    setSubPage(null);
+  };
   const [filterCat, setFC] = useState("All");
   const [expanded, setExp] = useState(null);
   const [showModal, setModal] = useState(false);
@@ -705,7 +712,7 @@ export default function VAVPage() {
           qty={qty} installType={installType} />
         <button
           type="button"
-          onClick={() => setSubPage(null)}
+          onClick={handleBack}
           title="Return to this estimate without saving changes"
           style={{ padding:"4px 10px", border:"1px solid "+T.border2, borderRadius:4, background:"none", color:T.muted, cursor:"pointer", fontSize:11, fontFamily:T.mono, whiteSpace:"nowrap" }}>
           ← Back to Estimate

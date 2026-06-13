@@ -202,7 +202,7 @@ function FCUFlowDiagram({ cfg, selected, onToggle }) {
   );
 }
 
-export default function FCUPage() {
+export default function FCUPage({ onBack = null } = {}) {
   const { activeEstimate, editingItem, subPage } = useEstimate();
   const quoteDefault = activeEstimate?.settings?.defaultInstallType ?? "EMT";
   const isEditing = !!editingItem && editingItem.type === "fcu";
@@ -225,6 +225,7 @@ export default function FCUPage() {
 
   return (
     <UnitEditorPage
+      onBack={onBack}
       type="fcu"
       comps={visibleComponents}
       title="Fan Coil Unit"

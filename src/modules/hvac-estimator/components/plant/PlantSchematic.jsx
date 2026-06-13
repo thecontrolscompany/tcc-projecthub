@@ -69,13 +69,20 @@ function PlantTypeSelector({ onSelect, onBack }) {
   );
 }
 
-export default function PlantSchematic() {
+export default function PlantSchematic({ onBack = null } = {}) {
   const { activeEstimate, editingItem, subPage, setSubPage } = useEstimate();
   const editPlantType = editingItem?.cfg?.plantType
     ? PLANT_TYPES.find(type => type.id === editingItem.cfg.plantType) || null
     : null;
   const [plantType, setPlantType] = useState(editPlantType);
   const quoteDefault = activeEstimate?.settings?.defaultInstallType ?? "EMT";
+  const handleBack = () => {
+    if (typeof onBack === "function") {
+      onBack();
+      return;
+    }
+    setSubPage(null);
+  };
 
   useEffect(() => {
     setPlantType(editPlantType);
@@ -91,7 +98,7 @@ export default function PlantSchematic() {
     return (
       <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 52px)", overflow: "hidden" }}>
         <div style={{ flex: 1, overflowY: "auto" }}>
-          <PlantTypeSelector onSelect={setPlantType} onBack={() => setSubPage(null)} />
+          <PlantTypeSelector onSelect={setPlantType} onBack={handleBack} />
         </div>
       </div>
     );
