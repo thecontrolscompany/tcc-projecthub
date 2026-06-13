@@ -3,7 +3,7 @@ import { ProjectSettingsPanel } from "./ProjectSettingsPanel.jsx";
 import { T } from "../../shared/tokens.js";
 import { fmt$, fmtHr } from "../../shared/utils.js";
 import { getEstimateScopeModeLabel } from "./projectSettings.js";
-import { TYPE_META, calcItem } from "./estimateCalc.js";
+import { TYPE_META, calcItem, deriveEstimatorCostBuckets } from "./estimateCalc.js";
 
 const HEALTH_WINDOW = 5;
 
@@ -365,16 +365,68 @@ export function EstimatorTabs({ tabs, activeTab, onChange }) {
 }
 
 export function EstimateCommandCenter({
-  total,
-  labor,
-  material,
-  overhead,
-  profit,
-  bond,
-  laborHours,
+  estimate,
+  controlsCatalog,
+  settings,
   statusLabel,
   estimateName,
 }) {
+  const buckets = deriveEstimatorCostBuckets(estimate, controlsCatalog, settings);
+  const install = buckets.install;
+  const controls = buckets.controls;
+  const totals = buckets.totals;
+  const rows = [
+    {
+      key: "installation",
+      label: "Installation",
+      values: {
+        labor: install.laborCost,
+        laborHours: buckets.diagnostics.installRawLaborHours,
+        material: install.materialCost,
+        overhead: install.markup.overhead,
+        profit: install.markup.profit,
+        bond: install.markup.bond,
+        total: install.sellPrice,
+      },
+    },
+    {
+      key: "controls",
+      label: "Controls",
+      values: {
+        labor: controls.engineeringLaborCost,
+        laborHours: buckets.diagnostics.controlsRawLaborHours,
+        material: controls.materialCost,
+        overhead: controls.markup.overhead,
+        profit: controls.markup.profit,
+        bond: controls.markup.bond,
+        total: controls.sellPrice,
+      },
+    },
+    {
+      key: "total",
+      label: "Total",
+      emphasized: true,
+      values: {
+        labor: install.laborCost + controls.engineeringLaborCost,
+        laborHours: buckets.diagnostics.installRawLaborHours + buckets.diagnostics.controlsRawLaborHours,
+        material: install.materialCost + controls.materialCost,
+        overhead: install.markup.overhead + controls.markup.overhead,
+        profit: install.markup.profit + controls.markup.profit,
+        bond: install.markup.bond + controls.markup.bond,
+        total: totals.turnkeySellPrice,
+      },
+    },
+  ];
+  const columns = [
+    { key: "labor", label: "Labor $" },
+    { key: "laborHours", label: "Labor Hrs" },
+    { key: "material", label: "Material $" },
+    { key: "overhead", label: "OH $" },
+    { key: "profit", label: "Profit $" },
+    { key: "bond", label: "Bond $" },
+    { key: "total", label: "Total" },
+  ];
+
   return (
     <section
       id="estimate-command-center"
@@ -402,81 +454,110 @@ export function EstimateCommandCenter({
       }}>
         <div>
           <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.4 }}>
-            Estimate Command Center
+            Turnkey Estimate Summary
           </div>
           <div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>
             {estimateName || "Untitled estimate"} · {statusLabel}
           </div>
         </div>
-        <div style={{ fontSize: 11, color: T.muted, fontFamily: T.mono }}>
-          {fmtHr(laborHours)} raw labor
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <span style={{
+            display: "inline-flex",
+            alignItems: "center",
+            padding: "3px 8px",
+            borderRadius: 999,
+            background: T.panel,
+            border: "1px solid " + T.border2,
+            color: T.steel,
+            fontSize: 11,
+            fontFamily: T.mono,
+          }}>
+            {statusLabel}
+          </span>
+          <span style={{ fontSize: 11, color: T.muted, fontFamily: T.mono }}>
+            Install + controls
+          </span>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(220px, 1.2fr) repeat(auto-fit, minmax(108px, 1fr))",
-          gap: 0,
-          alignItems: "stretch",
-        }}
-      >
-        {[
-          { label: "Estimate Total", value: total, accent: T.blue, emphasized: true },
-          { label: "Labor Dollars", value: labor, accent: T.steel },
-          { label: "Material Dollars", value: material, accent: T.blue },
-          { label: "Overhead", value: overhead, accent: "#7C3AED" },
-          { label: "Profit", value: profit, accent: T.green },
-          { label: "Bond", value: bond, accent: "#B45309" },
-          { label: "Total Labor Hours", value: fmtHr(laborHours), accent: T.text, textValue: true },
-          { label: "Estimate Status", value: statusLabel, accent: T.text, status: true },
-        ].map((metric, index) => (
-          <div
-            key={metric.label}
-            style={{
-              padding: metric.emphasized ? "10px 14px" : "9px 12px",
-              borderRight: index < 7 ? "1px solid " + T.border : "none",
-              background: metric.emphasized ? "#F7FBFA" : T.surface,
-              minHeight: metric.emphasized ? 72 : 60,
-            }}
-          >
-            <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.1 }}>
-              {metric.label}
-            </div>
-            <div
-              style={{
-                marginTop: 5,
-                fontSize: metric.emphasized ? 23 : 16,
-                fontWeight: metric.emphasized ? 800 : 700,
-                color: metric.accent,
-                fontFamily: metric.textValue || metric.status ? "inherit" : T.mono,
-                lineHeight: 1.1,
-              }}
-            >
-              {metric.textValue ? metric.value : metric.status ? (
-                <span style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "3px 8px",
-                  borderRadius: 999,
-                  background: "#F8FAFC",
-                  border: "1px solid " + T.border2,
-                  color: T.steel,
-                  fontSize: 12,
-                  fontFamily: T.mono,
-                }}>
-                  {metric.value}
-                </span>
-              ) : (
-                fmt$(metric.value)
-              )}
-            </div>
-          </div>
-        ))}
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
+          <thead>
+            <tr style={{ background: T.surface }}>
+              <th style={{ ...headerCellStyle, textAlign: "left" }}>Scope</th>
+              {columns.map((column) => (
+                <th key={column.key} style={headerCellStyle}>
+                  {column.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr
+                key={row.key}
+                style={{
+                  background: row.emphasized ? "#F7FBFA" : T.surface,
+                  borderTop: row.emphasized ? "1px solid " + T.border2 : "1px solid " + T.border,
+                }}
+              >
+                <td style={{ ...scopeCellStyle, fontWeight: row.emphasized ? 800 : 700, color: row.emphasized ? T.blue : T.text }}>
+                  {row.label}
+                </td>
+                {columns.map((column) => {
+                  const value = row.values[column.key];
+                  const isHours = column.key === "laborHours";
+                  const isTotal = column.key === "total";
+                  return (
+                    <td
+                      key={column.key}
+                      style={{
+                        ...valueCellStyle,
+                        fontWeight: row.emphasized || isTotal ? 800 : 700,
+                        color: row.emphasized || isTotal ? T.blue : T.steel,
+                        fontSize: row.emphasized ? 13 : 12,
+                        background: row.emphasized && isTotal ? "#E0F2FE" : "transparent",
+                      }}
+                    >
+                      {isHours ? fmtHr(value) : fmt$(value)}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </section>
   );
 }
+
+const headerCellStyle = {
+  padding: "8px 10px",
+  borderBottom: "1px solid " + T.border,
+  fontSize: 9,
+  color: T.muted,
+  fontFamily: T.mono,
+  textTransform: "uppercase",
+  letterSpacing: 1.1,
+  whiteSpace: "nowrap",
+};
+
+const scopeCellStyle = {
+  padding: "10px 10px",
+  borderBottom: "1px solid " + T.border,
+  fontSize: 12,
+  fontFamily: T.mono,
+  whiteSpace: "nowrap",
+};
+
+const valueCellStyle = {
+  padding: "10px 10px",
+  borderBottom: "1px solid " + T.border,
+  textAlign: "right",
+  fontFamily: T.mono,
+  whiteSpace: "nowrap",
+};
 
 export function EstimateHealthPanel({ rows }) {
   return (

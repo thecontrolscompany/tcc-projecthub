@@ -472,31 +472,12 @@ export function EstimateDetail({
         )}
 
         <EstimateCommandCenter
-          total={costs.total}
-          labor={costs.labor}
-          material={costs.material}
-          overhead={costs.overhead}
-          profit={costs.profit}
-          bond={costs.bond}
-          laborHours={totals.lbrHrs}
+          estimate={estimate}
+          controlsCatalog={controlsCatalog}
+          settings={settings}
           statusLabel={getEstimateScopeModeLabel(settings.estimateScopeMode)}
           estimateName={estimate.name}
         />
-
-        <section
-          aria-label="Cost breakdown by scope unavailable"
-          style={{
-            border: "1px solid " + T.border,
-            borderRadius: 12,
-            background: T.surface,
-            padding: "10px 12px",
-            color: T.dim,
-            fontSize: 11,
-            lineHeight: 1.5,
-          }}
-        >
-          Cost breakdown by scope needs bucket mapping before it can be shown accurately.
-        </section>
 
         {reviewBadgeLabel && (
           <button
