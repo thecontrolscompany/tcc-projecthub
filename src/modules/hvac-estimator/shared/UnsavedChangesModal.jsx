@@ -6,7 +6,7 @@ export function UnsavedChangesModal({ open, onStay, onDiscard }) {
   if (typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 px-4 py-6">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4">
       <div className="w-full max-w-md rounded-2xl border border-border-default bg-surface-raised shadow-2xl">
         <div className="flex items-center justify-between border-b border-border-default px-5 py-4">
           <h3 className="text-base font-semibold text-text-primary">Unsaved changes</h3>

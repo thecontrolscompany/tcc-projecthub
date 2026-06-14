@@ -867,7 +867,7 @@ function CompPanel({cfg, visibleComponents, selected,onToggle,onSetCompQty,custo
   );
 }
 
-export default function AHUPage() {
+export default function AHUPage({ onNavigateBack = null }) {
   const { activeEstimate, editingItem, subPage } = useEstimate();
   const isEditing = !!editingItem && editingItem.type === "ahu";
   const quoteDefault = activeEstimate?.settings?.defaultInstallType ?? "EMT";
@@ -995,7 +995,7 @@ export default function AHUPage() {
       setShowUnsavedModal(true);
       return;
     }
-    setSubPage(null);
+    if (typeof onNavigateBack === "function") onNavigateBack();
   };
 
   if (isLauncherMode) {
@@ -1128,14 +1128,14 @@ export default function AHUPage() {
                 installType={installType} setIT={setIT} qty={qty} setQty={setQty}/>
             )}
           />
-          <UnsavedChangesModal
-            open={showUnsavedModal}
-            onStay={() => setShowUnsavedModal(false)}
-            onDiscard={() => {
-              setShowUnsavedModal(false);
-              setSubPage(null);
-            }}
-          />
+      <UnsavedChangesModal
+        open={showUnsavedModal}
+        onStay={() => setShowUnsavedModal(false)}
+        onDiscard={() => {
+          setShowUnsavedModal(false);
+          if (typeof onNavigateBack === "function") onNavigateBack();
+        }}
+      />
       </>
     </div>
   );

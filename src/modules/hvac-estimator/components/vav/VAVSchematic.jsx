@@ -469,7 +469,7 @@ function VAVConfigSelector({ initialCfg, onSelect }) {
 }
 
 
-export default function VAVPage() {
+export default function VAVPage({ onNavigateBack = null }) {
   const { activeEstimate, editingItem, subPage, controlsCatalog } = useEstimate();
   const isEditing = !!editingItem && editingItem.type === "vav";
   const quoteDefault = activeEstimate?.settings?.defaultInstallType ?? "EMT";
@@ -715,7 +715,7 @@ export default function VAVPage() {
       setShowUnsavedModal(true);
       return;
     }
-    setSubPage(null);
+    if (typeof onNavigateBack === "function") onNavigateBack();
   };
 
   const visible = filterCat==="All" ? visibleComponents : visibleComponents.filter(c=>c.cat===filterCat);
@@ -1216,7 +1216,7 @@ export default function VAVPage() {
           onStay={() => setShowUnsavedModal(false)}
           onDiscard={() => {
             setShowUnsavedModal(false);
-            setSubPage(null);
+            if (typeof onNavigateBack === "function") onNavigateBack();
           }}
         />
       </>

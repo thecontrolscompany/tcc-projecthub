@@ -84,9 +84,9 @@ export function EstimateEditorWorkspace(props) {
     const editor = (() => {
       switch (subPage.type) {
         case "ahu":
-          return <AHUSchematic />;
+          return <AHUSchematic onNavigateBack={() => setSubPage(null)} />;
         case "vav":
-          return <VAVSchematic />;
+          return <VAVSchematic onNavigateBack={() => setSubPage(null)} />;
         case "rtu":
           return <RTUSchematic />;
         case "dx":
