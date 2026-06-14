@@ -5,6 +5,7 @@ export function DiagramViewer({ svgPath, selectedIds = [], allIds = [], fallback
   const [svgText, setSvgText] = useState(null);
   const [notFound, setNotFound] = useState(false);
   const divRef = useRef(null);
+  const previousSelectedRef = useRef(new Set());
 
   useEffect(() => {
     let active = true;
@@ -31,6 +32,29 @@ export function DiagramViewer({ svgPath, selectedIds = [], allIds = [], fallback
       if (el) el.style.opacity = "1";
     });
   }, [svgText, selectedIds, allIds]);
+
+  useEffect(() => {
+    if (!svgText || !divRef.current) return;
+    const prev = previousSelectedRef.current;
+    const next = new Set(selectedIds);
+    const changed = [...new Set([...prev, ...next])].filter(id => prev.has(id) !== next.has(id));
+    const escapeId = value => (window.CSS?.escape ? window.CSS.escape(value) : value.replace(/[^a-zA-Z0-9_-]/g, "\\$&"));
+
+    changed.forEach(id => {
+      const el = divRef.current?.querySelector("#" + escapeId(id));
+      if (!el || typeof el.animate !== "function") return;
+      el.animate([
+        { filter: "drop-shadow(0 0 0px rgba(250, 204, 21, 0))", transform: "scale(1)" },
+        { filter: "drop-shadow(0 0 8px rgba(250, 204, 21, 0.95))", transform: "scale(1.03)" },
+        { filter: "drop-shadow(0 0 0px rgba(250, 204, 21, 0))", transform: "scale(1)" },
+      ], {
+        duration: 500,
+        easing: "ease-out",
+      });
+    });
+
+    previousSelectedRef.current = next;
+  }, [svgText, selectedIds]);
 
   if (notFound) return fallback;
   if (!svgText) return (

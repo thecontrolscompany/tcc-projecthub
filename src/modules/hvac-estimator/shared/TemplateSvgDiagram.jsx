@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 // Module-level cache: SVG text is fetched once per session per path.
 // Subsequent mounts read from memory — no round-trip, no loading flash.
@@ -55,6 +55,8 @@ export function TemplateSvgDiagram({
 }) {
   const [svgText, setSvgText] = useState(() => _svgCache.get(svgPath) ?? null);
   const [missing, setMissing] = useState(false);
+  const containerRef = useRef(null);
+  const previousVisibilityRef = useRef({});
 
   // Fetch the raw SVG once per path. Already-cached paths resolve immediately
   // from the useState initializer above — no async, no flash on re-open.
@@ -91,12 +93,40 @@ export function TemplateSvgDiagram({
     [svgText, visibilityKey]
   );
 
+  useEffect(() => {
+    if (!containerRef.current || !svgText) return;
+    const current = JSON.parse(visibilityKey || "{}");
+    const previous = previousVisibilityRef.current || {};
+    const changedIds = new Set([
+      ...Object.keys(previous),
+      ...Object.keys(current),
+    ].filter((id) => Boolean(previous[id]) !== Boolean(current[id])));
+
+    const escapeId = (value) => (window.CSS?.escape ? window.CSS.escape(value) : value.replace(/[^a-zA-Z0-9_-]/g, "\\$&"));
+
+    changedIds.forEach((id) => {
+      const el = containerRef.current?.querySelector("#" + escapeId(id));
+      if (!el || typeof el.animate !== "function") return;
+      el.animate([
+        { filter: "drop-shadow(0 0 0px rgba(250, 204, 21, 0))", transform: "scale(1)" },
+        { filter: "drop-shadow(0 0 8px rgba(250, 204, 21, 0.95))", transform: "scale(1.03)" },
+        { filter: "drop-shadow(0 0 0px rgba(250, 204, 21, 0))", transform: "scale(1)" },
+      ], {
+        duration: 500,
+        easing: "ease-out",
+      });
+    });
+
+    previousVisibilityRef.current = current;
+  }, [svgText, visibilityKey]);
+
   if (missing || !markup) {
     return fallback;
   }
 
   return (
     <div
+      ref={containerRef}
       style={{ width: "100%", height: "100%" }}
       dangerouslySetInnerHTML={{ __html: markup }}
     />

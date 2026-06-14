@@ -19,6 +19,9 @@ import {
   findHomeRunComponentId,
 } from "./conduitFill.js";
 
+const TIER1_CATS = ["All", "Controls", "Actuators", "Temperature", "Pressure", "Humidity", "Air Quality", "Safety", "Drives", "Wiring"];
+const TIER2_CATS = ["IO Points", "DDC Controllers", "IO Modules", "Panels", "Network", "Engineering Labor", "Graphics", "Software", "Custom"];
+
 export function UnitEditorPage({
   type,
   comps,
@@ -67,9 +70,11 @@ export function UnitEditorPage({
   const [tag, setTag] = useState(() => (isEditing ? editingItem.tag : defaultTag));
   const [loc, setLoc] = useState(() => (isEditing ? editingItem.location : defaultLocation));
   const [filterCat, setFC] = useState("All");
+  const [showMoreCats, setShowMoreCats] = useState(false);
   const [search, setSrch] = useState("");
   const [expanded, setExp] = useState(null);
   const [showModal, setModal] = useState(false);
+  const initialSnapshotRef = useRef("");
 
   useEffect(() => {
     if (!isEditing) return;
@@ -91,6 +96,18 @@ export function UnitEditorPage({
     if (typeof draft.tag === "string") setTag(draft.tag);
     if (typeof draft.location === "string") setLoc(draft.location);
   }, [editingItem?.id, subPage, type]);
+
+  useEffect(() => {
+    initialSnapshotRef.current = JSON.stringify({
+      selected,
+      custom,
+      installType,
+      qty,
+      tag,
+      loc,
+      filterCat,
+    });
+  }, [editingItemId]);
 
   const reconcileRanOnce = useRef(false);
   useEffect(() => {
@@ -135,8 +152,25 @@ export function UnitEditorPage({
   const custLbr = custom.reduce((sum, comp) => sum + getCustomCost(comp, installType).lbr, 0);
   const unitMtl = comps.filter(comp => isOn(comp.id)).reduce((sum, comp) => sum + getAsmCost(comp).mtl * getQtyFor(comp.id), 0) + custMtl;
   const unitLbr = comps.filter(comp => isOn(comp.id)).reduce((sum, comp) => sum + getAsmCost(comp).lbr * getQtyFor(comp.id), 0) + custLbr;
+  const currentSnapshot = JSON.stringify({
+    selected,
+    custom,
+    installType,
+    qty,
+    tag,
+    loc,
+    filterCat,
+  });
+  const hasUnsavedChanges = initialSnapshotRef.current && initialSnapshotRef.current !== currentSnapshot;
 
-  const cats = ["All", ...Object.keys(CAT_COLOR)];
+  const handleBack = () => {
+    if (hasUnsavedChanges && typeof window !== "undefined") {
+      const shouldLeave = window.confirm("Return to the estimate without saving? Any unsaved changes to this line item will be lost.");
+      if (!shouldLeave) return;
+    }
+    setSubPage(null);
+  };
+
   const visible = (filterCat === "All" ? allComps : allComps.filter(comp => comp.cat === filterCat))
     .filter(comp => !search || comp.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -189,8 +223,8 @@ export function UnitEditorPage({
       }}>
         <button
           type="button"
-          onClick={() => setSubPage(null)}
-          title="Return to this estimate without saving changes"
+          onClick={handleBack}
+          title="Return to the estimate without saving. Any unsaved changes to this line item will be lost."
           style={{
             padding: "4px 10px",
             border: `1px solid ${T.border2}`,
@@ -201,6 +235,7 @@ export function UnitEditorPage({
             fontSize: 11,
             fontFamily: T.mono,
             whiteSpace: "nowrap",
+            flexShrink: 0,
           }}
         >
           ← Back to Estimate
@@ -225,7 +260,7 @@ export function UnitEditorPage({
             fontWeight: 700,
           }}
         />
-        {qty > 1 && <span style={{ fontSize: 13, color: accent, fontFamily: T.mono }}>x {qty} typical</span>}
+        {qty > 1 && <span style={{ fontSize: 13, color: accent, fontFamily: T.mono }}>Qty Multiplier: × {qty}</span>}
         <AddToEstimateBtn type={type} tag={tag} location={loc} cfg={cfg} selected={selected} custom={custom} qty={qty} installType={installType} />
         <input
           value={loc}
@@ -242,16 +277,6 @@ export function UnitEditorPage({
             outline: "none",
           }}
         />
-        <div style={{ display: "flex", gap: 14, padding: "5px 14px", background: accentBg, borderRadius: 6, border: `1px solid ${accentBorder}`, marginLeft: "auto" }}>
-          <span style={{ fontFamily: T.mono, fontSize: 12, color: T.muted }}>
-            Unit <span style={{ color: accent, fontWeight: 700 }}>{fmt$(unitMtl)}</span>
-          </span>
-          {qty > 1 && (
-            <span style={{ fontFamily: T.mono, fontSize: 12, color: T.muted }}>
-              Total <span style={{ color: accent, fontWeight: 700 }}>{fmt$(unitMtl * qty)}</span>
-            </span>
-          )}
-        </div>
         {toolbarTail}
       </div>
 
@@ -332,8 +357,22 @@ export function UnitEditorPage({
             <div style={{ padding: "12px 14px 10px", borderBottom: `1px solid ${T.border}` }}>
               <div style={{ fontSize: 10, color: T.muted, fontFamily: T.mono, letterSpacing: 2, textTransform: "uppercase", marginBottom: 3 }}>System</div>
               <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 8 }}>{title}</div>
+              <div style={{ padding: "8px 10px", background: accentBg, borderRadius: 8, border: `1px solid ${accentBorder}`, boxShadow: "0 8px 16px rgba(15,23,42,0.06)", marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
+                  <span style={{ fontSize: 10, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.5 }}>Per unit</span>
+                  <span style={{ fontSize: 12, fontFamily: T.mono }}>
+                    <span style={{ color: accent, fontWeight: 700 }}>{fmt$(unitMtl)}</span>
+                    <span style={{ color: T.dim, marginLeft: 10 }}>{fmtHr(unitLbr)}</span>
+                  </span>
+                </div>
+                {qty > 1 && (
+                  <div style={{ marginTop: 4, fontSize: 11, color: T.muted, fontFamily: T.mono }}>
+                    × {qty} units = {fmt$(unitMtl * qty)} total
+                  </div>
+                )}
+              </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, padding: "6px 10px", background: accentBg, borderRadius: 5, border: `1px solid ${accentBorder}` }}>
-                <span style={{ fontSize: 11, color: accent, fontFamily: T.mono, letterSpacing: 1, textTransform: "uppercase" }}>Typical x</span>
+                <span title="Multiplies all components by this count. Use for typical floors or repeated identical units. The total in the estimate summary will reflect Qty × per-unit cost." style={{ fontSize: 11, color: T.muted, fontFamily: T.mono, letterSpacing: 1.5, textTransform: "uppercase", cursor: "help" }}>Qty Multiplier:</span>
                 <input
                   type="number"
                   min="1"
@@ -399,33 +438,67 @@ export function UnitEditorPage({
               />
             </div>
 
-            <div style={{ padding: "6px 10px", borderBottom: `1px solid ${T.border}`, display: "flex", gap: 3, flexWrap: "wrap", alignItems: "center" }}>
-              {cats.map(cat => {
-                const color = CAT_COLOR[cat] || T.steel;
-                const active = filterCat === cat;
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => setFC(cat)}
-                    style={{
-                      padding: "2px 7px",
-                      borderRadius: 10,
-                      fontSize: 9.5,
-                      fontFamily: T.mono,
-                      cursor: "pointer",
-                      border: `1px solid ${active ? color : T.border}`,
-                      background: active ? `${color}14` : "transparent",
-                      color: active ? color : T.muted,
-                    }}
-                  >
-                    {cat}
+            <div style={{ padding: "6px 10px", borderBottom: `1px solid ${T.border}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", alignItems: "center", flex: 1, minWidth: 0 }}>
+                  {TIER1_CATS.map(cat => {
+                    const color = CAT_COLOR[cat] || T.steel;
+                    const active = filterCat === cat;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setFC(cat)}
+                        style={{
+                          padding: "4px 9px",
+                          borderRadius: 999,
+                          fontSize: 10,
+                          fontFamily: T.mono,
+                          cursor: "pointer",
+                          border: `1px solid ${active ? color : T.border}`,
+                          background: active ? color : "transparent",
+                          color: active ? "#fff" : color,
+                          fontWeight: active ? 700 : 500,
+                        }}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{ marginLeft: "auto", display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
+                  <button onClick={selectAll} style={{ padding: "4px 9px", borderRadius: 999, fontSize: 10, fontFamily: T.mono, cursor: "pointer", border: `1px solid ${T.border}`, background: "transparent", color: T.muted }}>All</button>
+                  <button onClick={deselectAll} style={{ padding: "4px 9px", borderRadius: 999, fontSize: 10, fontFamily: T.mono, cursor: "pointer", border: `1px solid ${T.border}`, background: "transparent", color: T.muted }}>None</button>
+                  <button onClick={() => setShowMoreCats(value => !value)} style={{ padding: "4px 9px", borderRadius: 999, fontSize: 10, fontFamily: T.mono, cursor: "pointer", border: `1px solid ${T.border}`, background: showMoreCats ? T.blueFaint : "transparent", color: showMoreCats ? T.blue : T.muted, fontWeight: showMoreCats ? 700 : 400 }}>
+                    More {showMoreCats ? "▴" : "▾"}
                   </button>
-                );
-              })}
-              <div style={{ marginLeft: "auto", display: "flex", gap: 3 }}>
-                <button onClick={selectAll} style={{ padding: "2px 7px", borderRadius: 10, fontSize: 9.5, fontFamily: T.mono, cursor: "pointer", border: `1px solid ${T.border}`, background: "transparent", color: T.muted }}>All</button>
-                <button onClick={deselectAll} style={{ padding: "2px 7px", borderRadius: 10, fontSize: 9.5, fontFamily: T.mono, cursor: "pointer", border: `1px solid ${T.border}`, background: "transparent", color: T.muted }}>None</button>
+                </div>
               </div>
+              {showMoreCats && (
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 6, paddingLeft: 2 }}>
+                  {TIER2_CATS.map(cat => {
+                    const color = CAT_COLOR[cat] || T.steel;
+                    const active = filterCat === cat;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setFC(cat)}
+                        style={{
+                          padding: "3px 8px",
+                          borderRadius: 999,
+                          fontSize: 9,
+                          fontFamily: T.mono,
+                          cursor: "pointer",
+                          border: `1px solid ${active ? color : T.border}`,
+                          background: active ? `${color}18` : "transparent",
+                          color: active ? color : T.muted,
+                        }}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div style={{ flex: 1, overflowY: "auto" }}>
@@ -468,26 +541,13 @@ export function UnitEditorPage({
                         <div style={{ fontSize: 10, color: T.dim, fontFamily: T.mono }}>{fmtHr(cost.lbr * compQty)}</div>
                       </div>
                       {isActive && (
-                        <input
-                          type="number"
-                          min="1"
-                          value={compQty}
-                          onClick={event => event.stopPropagation()}
-                          onChange={event => setCompQty(comp.id, parseInt(event.target.value, 10) || 1)}
-                          style={{
-                            width: 36,
-                            padding: "2px 4px",
-                            border: `1px solid ${accentBorder}`,
-                            borderRadius: 3,
-                            fontSize: 11,
-                            fontFamily: T.mono,
-                            background: accentBg,
-                            color: accent,
-                            fontWeight: 700,
-                            outline: "none",
-                            textAlign: "center",
-                          }}
-                        />
+                        <div style={{ display: "flex", alignItems: "center", gap: 2 }} onClick={event => event.stopPropagation()}>
+                          <button type="button" onClick={event => { event.stopPropagation(); setCompQty(comp.id, compQty - 1); }} style={{ width: 22, height: 22, borderRadius: 4, border: `1px solid ${accentBorder}`, background: T.surface, color: accent, fontSize: 14, fontFamily: T.mono, cursor: "pointer", lineHeight: 1 }}>−</button>
+                          <div style={{ minWidth: 30, textAlign: "center", padding: "2px 4px", border: `1px solid ${accentBorder}`, borderRadius: 4, fontSize: 11, fontFamily: T.mono, background: accentBg, color: accent, fontWeight: 700 }}>
+                            {compQty}
+                          </div>
+                          <button type="button" onClick={event => { event.stopPropagation(); setCompQty(comp.id, compQty + 1); }} style={{ width: 22, height: 22, borderRadius: 4, border: `1px solid ${accentBorder}`, background: T.surface, color: accent, fontSize: 14, fontFamily: T.mono, cursor: "pointer", lineHeight: 1 }}>+</button>
+                        </div>
                       )}
                       {isActive && (
                         <button
@@ -495,9 +555,10 @@ export function UnitEditorPage({
                             event.stopPropagation();
                             setExp(isExp ? null : comp.id);
                           }}
+                          title="Show assembly parts"
                           style={{ background: "none", border: "none", color: T.dim, cursor: "pointer", fontSize: 11, padding: "0 2px", lineHeight: 1, marginLeft: 2 }}
                         >
-                          {isExp ? "▲" : "▼"}
+                          ⓘ
                         </button>
                       )}
                     </div>
@@ -584,24 +645,6 @@ export function UnitEditorPage({
               </div>
             </div>
 
-            <div style={{ padding: "10px 13px", borderTop: `1px solid ${T.border}`, background: T.panel }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, padding: "5px 8px", background: T.surface, borderRadius: 4, border: `1px solid ${T.border}` }}>
-                <span style={{ fontSize: 10, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1 }}>Per unit</span>
-                <span style={{ fontSize: 12, fontFamily: T.mono }}>
-                  <span style={{ color: accent, fontWeight: 700 }}>{fmt$(unitMtl)}</span>
-                  <span style={{ color: T.dim, marginLeft: 10 }}>{fmtHr(unitLbr)}</span>
-                </span>
-              </div>
-              {qty > 1 && (
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 10px", background: accentBg, borderRadius: 5, border: `1px solid ${accentBorder}` }}>
-                  <span style={{ fontSize: 11, color: accent, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1 }}>Total x {qty}</span>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 15, color: accent, fontFamily: T.mono, fontWeight: 700 }}>{fmt$(unitMtl * qty)}</div>
-                    <div style={{ fontSize: 11, color: T.muted, fontFamily: T.mono }}>{fmtHr(unitLbr * qty)}</div>
-                  </div>
-                </div>
-              )}
-            </div>
           </>
         )}
       />

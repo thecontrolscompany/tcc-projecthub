@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ggtSymbolCatalog from '@/data/projecthub/ggt_symbol_catalog.json';
 
 type GgtSymbolCatalog = {
@@ -286,6 +286,8 @@ export function GgtMixedAirPoc({
   const [internalSelectedOntologyIds, setInternalSelectedOntologyIds] = useState<string[]>(
     defaultOntologyIds
   );
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const previousSelectedRef = useRef<Set<string>>(new Set());
 
   const activeOntologyIds = selectedOntologyIds ?? internalSelectedOntologyIds;
   const selectedSet = useMemo(() => new Set(activeOntologyIds), [activeOntologyIds]);
@@ -303,6 +305,33 @@ export function GgtMixedAirPoc({
 
   const isPlacementOn = (placement: GgtMixedAirPlacement) =>
     placement.ontologyIds.some((ontologyId) => selectedSet.has(ontologyId));
+
+  useEffect(() => {
+    if (!svgRef.current) return;
+    const prev = previousSelectedRef.current;
+    const next = new Set(activeOntologyIds);
+    const changed = new Set<string>();
+    [...prev, ...next].forEach((ontologyId) => {
+      if (prev.has(ontologyId) !== next.has(ontologyId)) changed.add(ontologyId);
+    });
+
+    const placementNodes = Array.from(svgRef.current.querySelectorAll('[data-placement-key]'));
+    placementNodes.forEach((node) => {
+      const ids = String((node as HTMLElement).dataset.ontologyIds || '').split('|').filter(Boolean);
+      if (!ids.some((ontologyId) => changed.has(ontologyId))) return;
+      if (typeof (node as SVGElement).animate !== 'function') return;
+      (node as SVGElement).animate([
+        { filter: 'drop-shadow(0 0 0px rgba(250, 204, 21, 0))', transform: 'scale(1)' },
+        { filter: 'drop-shadow(0 0 8px rgba(250, 204, 21, 0.95))', transform: 'scale(1.03)' },
+        { filter: 'drop-shadow(0 0 0px rgba(250, 204, 21, 0))', transform: 'scale(1)' },
+      ], {
+        duration: 500,
+        easing: 'ease-out',
+      });
+    });
+
+    previousSelectedRef.current = next;
+  }, [activeOntologyIds]);
 
   const renderTag = (placement: GgtMixedAirPlacement) => {
     const isOn = isPlacementOn(placement);
@@ -344,7 +373,7 @@ export function GgtMixedAirPoc({
     if (!symbol) return null;
 
     return (
-      <g key={placement.key}>
+      <g key={placement.key} data-placement-key={placement.key} data-ontology-ids={placement.ontologyIds.join('|')}>
         <image
           href={symbol.output_svg_path}
           x={placement.x}
@@ -501,6 +530,7 @@ export function GgtMixedAirPoc({
           }}
         >
           <svg
+            ref={svgRef}
             viewBox="0 0 1220 560"
             width="100%"
             style={{ display: 'block' }}

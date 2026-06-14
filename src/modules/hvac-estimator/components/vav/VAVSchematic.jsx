@@ -59,6 +59,8 @@ const REHEAT_GROUP = VAV_COMPONENT_GROUPS.find(group => group.groupId === "rehea
 const REHEAT_MEMBER_IDS = new Set(
   VAV_COMPS.filter(comp => comp.groupId === REHEAT_GROUP?.groupId).map(comp => comp.id)
 );
+const TIER1_CATS = ["All", "Controls", "Actuators", "Temperature", "Pressure", "Humidity", "Air Quality", "Safety", "Drives", "Wiring"];
+const TIER2_CATS = ["IO Points", "DDC Controllers", "IO Modules", "Panels", "Network", "Engineering Labor", "Graphics", "Software", "Custom"];
 
 const normalizeCfg = cfg => {
   const base = normalizeVavCfg(cfg);
@@ -498,10 +500,12 @@ export default function VAVPage() {
   const [tag, setTag] = useState(() => isEditing ? editingItem.tag : "VAV");
   const [loc, setLoc] = useState(() => isEditing ? editingItem.location : "Typical");
   const [filterCat, setFC] = useState("All");
+  const [showMoreCats, setShowMoreCats] = useState(false);
   const [expanded, setExp] = useState(null);
   const [showModal, setModal] = useState(false);
   const [blockedDefaultIds, setBlockedDefaultIds] = useState([]);
   const [syncDefaults, setSyncDefaults] = useState(() => !isEditing);
+  const initialSnapshotRef = useRef("");
 
   const applyTemplate = templateId => {
     if (!templateId) return;
@@ -553,6 +557,25 @@ export default function VAVPage() {
     setBlockedDefaultIds(draft.blockedDefaultIds || []);
     setSyncDefaults(Boolean(draft.syncDefaults));
   }, [subPage]);
+
+  useEffect(() => {
+    initialSnapshotRef.current = JSON.stringify({
+      cfg,
+      selected,
+      custom,
+      installType,
+      powerMode,
+      commMode,
+      damperIntegration,
+      flowIntegration,
+      commRunFt,
+      qty,
+      tag,
+      loc,
+      blockedDefaultIds,
+      syncDefaults,
+    });
+  }, [editingItem?.id]);
 
   const visibleComponents = useMemo(
     () => getVisibleVavComponents(cfg, ACTIVE_VAV_COMPS),
@@ -668,8 +691,31 @@ export default function VAVPage() {
   const custLbr   = custom.reduce((a,c)=>a+(c.unitLbr+c.extraLbr),0);
   const unitMtl   = selComps.reduce((a,c)=>a+getAsmCost(c).mtl*getQty(c.id),0) + custMtl + commCost.mtl + powerCost.mtl + validationCost.mtl;
   const unitLbr   = selComps.reduce((a,c)=>a+getAsmCost(c).lbr*getQty(c.id),0) + custLbr + commCost.lbr + powerCost.lbr + validationCost.lbr;
+  const currentSnapshot = JSON.stringify({
+    cfg,
+    selected,
+    custom,
+    installType,
+    powerMode,
+    commMode,
+    damperIntegration,
+    flowIntegration,
+    commRunFt,
+    qty,
+    tag,
+    loc,
+    blockedDefaultIds,
+    syncDefaults,
+  });
+  const hasUnsavedChanges = initialSnapshotRef.current && initialSnapshotRef.current !== currentSnapshot;
+  const handleBack = () => {
+    if (hasUnsavedChanges && typeof window !== "undefined") {
+      const shouldLeave = window.confirm("Return to the estimate without saving? Any unsaved changes to this line item will be lost.");
+      if (!shouldLeave) return;
+    }
+    setSubPage(null);
+  };
 
-  const cats = ["All",...Object.keys(CAT_COLOR)];
   const visible = filterCat==="All" ? visibleComponents : visibleComponents.filter(c=>c.cat===filterCat);
 
   return (
@@ -692,7 +738,7 @@ export default function VAVPage() {
         <input value={tag} onChange={e=>setTag(e.target.value)}
           style={{ background:T.blueFaint, border:"1px solid "+T.blueMid, borderRadius:4,
             color:T.blue, fontFamily:T.mono, fontSize:13, padding:"4px 8px", width:80, outline:"none", fontWeight:700 }} />
-        {qty>1 && <span style={{ fontSize:13, color:T.blue, fontFamily:T.mono }}>× {qty} typical</span>}
+        {qty>1 && <span style={{ fontSize:13, color:T.blue, fontFamily:T.mono }}>Qty Multiplier: × {qty}</span>}
         <input value={loc} onChange={e=>setLoc(e.target.value)}
           style={{ background:T.panel, border:"1px solid "+T.border, borderRadius:4,
             color:T.steel, fontFamily:T.mono, fontSize:12, padding:"4px 8px", width:150, outline:"none" }} />
@@ -707,21 +753,12 @@ export default function VAVPage() {
           qty={qty} installType={installType} />
         <button
           type="button"
-          onClick={() => setSubPage(null)}
-          title="Return to this estimate without saving changes"
-          style={{ padding:"4px 10px", border:"1px solid "+T.border2, borderRadius:4, background:"none", color:T.muted, cursor:"pointer", fontSize:11, fontFamily:T.mono, whiteSpace:"nowrap" }}>
+          onClick={handleBack}
+          title="Return to the estimate without saving. Any unsaved changes to this line item will be lost."
+          style={{ padding:"4px 10px", border:"1px solid "+T.border2, borderRadius:4, background:"none", color:T.muted, cursor:"pointer", fontSize:11, fontFamily:T.mono, whiteSpace:"nowrap", flexShrink:0 }}>
           ← Back to Estimate
         </button>
         <div style={{ flex:1 }} />
-        <div style={{ display:"flex", gap:14, padding:"5px 14px", background:T.blueFaint,
-          borderRadius:6, border:"1px solid "+T.blueMid }}>
-          <span style={{ fontFamily:T.mono, fontSize:12, color:T.muted }}>
-            Unit <span style={{ color:T.blue, fontWeight:700 }}>{fmt$(unitMtl)}</span>
-          </span>
-          {qty>1 && <span style={{ fontFamily:T.mono, fontSize:12, color:T.muted }}>
-            Total <span style={{ color:T.blue, fontWeight:700 }}>{fmt$(unitMtl*qty)}</span>
-          </span>}
-        </div>
         <button
           onClick={() => {
             setCfg(null);
@@ -817,13 +854,24 @@ export default function VAVPage() {
             <div style={{ fontSize:14, fontWeight:700, color:T.text, marginBottom:8 }}>VAV Terminal Unit</div>
             <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8,
               padding:"6px 10px", background:T.blueFaint, borderRadius:5, border:"1px solid "+T.blueMid }}>
-              <span style={{ fontSize:11, color:T.blue, fontFamily:T.mono, letterSpacing:1, textTransform:"uppercase" }}>Typical ×</span>
+              <span title="Multiplies all components by this count. Use for typical floors or repeated identical units. The total in the estimate summary will reflect Qty × per-unit cost." style={{ fontSize:11, color:T.muted, fontFamily:T.mono, letterSpacing:1.5, textTransform:"uppercase", cursor:"help" }}>Qty Multiplier:</span>
               <input type="number" min="1" value={qty} onChange={e=>setQty(Math.max(1,parseInt(e.target.value)||1))}
                 style={{ width:52, padding:"4px 6px", border:"1px solid "+T.blueMid, borderRadius:4,
                   fontSize:14, fontFamily:T.mono, background:T.surface, color:T.blue,
                   fontWeight:700, outline:"none", textAlign:"center" }} />
               <span style={{ fontSize:11, color:T.muted }}>{qty===1?"unit":"units"}</span>
             </div>
+            <div style={{ padding:"8px 10px", marginBottom:8, background:T.blueFaint, border:"1px solid "+T.blueMid, borderRadius:8, boxShadow:"0 8px 16px rgba(15,23,42,0.06)" }}>
+              <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", gap:10 }}>
+                <span style={{ fontSize:10, color:T.muted, fontFamily:T.mono, letterSpacing:1.5, textTransform:"uppercase" }}>Per unit</span>
+                <span style={{ fontSize:12, fontFamily:T.mono }}>
+                  <span style={{ color:T.blue, fontWeight:700 }}>{fmt$(unitMtl)}</span>
+                  <span style={{ color:T.dim, marginLeft:10 }}>{fmtHr(unitLbr)}</span>
+                </span>
+              </div>
+              {qty>1 && <div style={{ marginTop:4, fontSize:11, color:T.muted, fontFamily:T.mono }}>× {qty} units = {fmt$(unitMtl*qty)} total</div>}
+            </div>
+            <div title="Controls the conduit material used for wiring runs. EMT = metallic conduit (standard), Plenum = plenum-rated (required in open ceiling/air plenum spaces). Affects both material cost and labor hours." style={{ fontSize:10, color:T.muted, fontFamily:T.mono, letterSpacing:1.5, textTransform:"uppercase", marginBottom:5, cursor:"help" }}>Conduit Type:</div>
             <div style={{ display:"flex", gap:6, marginBottom:10 }}>
               {["Plenum","EMT"].map(tt=>(
                 <button key={tt} onClick={()=>setIT(tt)} style={{
@@ -972,25 +1020,49 @@ export default function VAVPage() {
             </div>
           </div>
 
-          <div style={{ padding:"6px 10px", borderBottom:"1px solid "+T.border,
-            display:"flex", gap:3, flexWrap:"wrap", alignItems:"center" }}>
-            {cats.map(cat=>{
-              const color = CAT_COLOR[cat]||T.steel;
-              const active = filterCat===cat;
-              return (
-                <button key={cat} onClick={()=>setFC(cat)} style={{
-                  padding:"2px 7px", borderRadius:10, fontSize:9.5, fontFamily:T.mono, cursor:"pointer",
-                  border:"1px solid "+(active?color:T.border),
-                  background:active?color+"14":"transparent",
-                  color:active?color:T.muted }}>
-                  {cat}
+          <div style={{ padding:"6px 10px", borderBottom:"1px solid "+T.border }}>
+            <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
+              <div style={{ display:"flex", gap:4, flexWrap:"wrap", alignItems:"center", flex:1, minWidth:0 }}>
+                {TIER1_CATS.map(cat=>{
+                  const color = CAT_COLOR[cat]||T.steel;
+                  const active = filterCat===cat;
+                  return (
+                    <button key={cat} onClick={()=>setFC(cat)} style={{
+                      padding:"4px 9px", borderRadius:999, fontSize:10, fontFamily:T.mono, cursor:"pointer",
+                      border:"1px solid "+(active?color:T.border),
+                      background:active?color:"transparent",
+                      color:active?"#fff":color,
+                      fontWeight:active?700:500 }}>
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ marginLeft:"auto", display:"flex", gap:4, alignItems:"center", flexShrink:0 }}>
+                <button onClick={()=>setSel(sel=>{const next=[...sel];for(const c of visible){if(!isIntegrated(c.id)&&!next.some(s=>s.id===c.id))next.push({id:c.id,qty:1});}return next;})} style={{ padding:"4px 9px", borderRadius:999, fontSize:10, fontFamily:T.mono, cursor:"pointer", border:"1px solid "+T.border, background:"transparent", color:T.muted }}>All</button>
+                <button onClick={()=>setSel(sel=>sel.filter(s=>!visible.some(c=>c.id===s.id)||isIntegrated(s.id)))} style={{ padding:"4px 9px", borderRadius:999, fontSize:10, fontFamily:T.mono, cursor:"pointer", border:"1px solid "+T.border, background:"transparent", color:T.muted }}>None</button>
+                <button onClick={()=>setShowMoreCats(v=>!v)} style={{ padding:"4px 9px", borderRadius:999, fontSize:10, fontFamily:T.mono, cursor:"pointer", border:"1px solid "+T.border, background:showMoreCats?T.blueFaint:"transparent", color:showMoreCats?T.blue:T.muted, fontWeight:showMoreCats?700:400 }}>
+                  More {showMoreCats?"▴":"▾"}
                 </button>
-              );
-            })}
-            <div style={{ marginLeft:"auto", display:"flex", gap:3 }}>
-              <button onClick={()=>setSel(sel=>{const next=[...sel];for(const c of visible){if(!isIntegrated(c.id)&&!next.some(s=>s.id===c.id))next.push({id:c.id,qty:1});}return next;})} style={{ padding:"2px 7px", borderRadius:10, fontSize:9.5, fontFamily:T.mono, cursor:"pointer", border:"1px solid "+T.border, background:"transparent", color:T.muted }}>All</button>
-              <button onClick={()=>setSel(sel=>sel.filter(s=>!visible.some(c=>c.id===s.id)||isIntegrated(s.id)))} style={{ padding:"2px 7px", borderRadius:10, fontSize:9.5, fontFamily:T.mono, cursor:"pointer", border:"1px solid "+T.border, background:"transparent", color:T.muted }}>None</button>
+              </div>
             </div>
+            {showMoreCats && (
+              <div style={{ display:"flex", gap:4, flexWrap:"wrap", marginTop:6, paddingLeft:2 }}>
+                {TIER2_CATS.map(cat=>{
+                  const color = CAT_COLOR[cat]||T.steel;
+                  const active = filterCat===cat;
+                  return (
+                    <button key={cat} onClick={()=>setFC(cat)} style={{
+                      padding:"3px 8px", borderRadius:999, fontSize:9, fontFamily:T.mono, cursor:"pointer",
+                      border:"1px solid "+(active?color:T.border),
+                      background:active?color+"18":"transparent",
+                      color:active?color:T.muted }}>
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div style={{ flex:1, overflowY:"auto" }}>
@@ -1030,18 +1102,20 @@ export default function VAVPage() {
                       </div>
                     </div>
                     {isOn && !lockedIntegrated && (
-                        <input type="number" min="1" value={compQty}
-                          onClick={e=>e.stopPropagation()}
-                          onChange={e=>setCompQty(comp.id, parseInt(e.target.value)||1)}
-                          style={{ width:36, padding:"2px 4px", border:"1px solid "+T.blueMid,
-                            borderRadius:3, fontSize:11, fontFamily:T.mono, background:T.blueFaint,
-                            color:T.blue, fontWeight:700, outline:"none", textAlign:"center" }} />
+                        <div style={{ display:"flex", alignItems:"center", gap:2 }} onClick={e=>e.stopPropagation()}>
+                          <button type="button" onClick={e=>{ e.stopPropagation(); setCompQty(comp.id, compQty-1); }} style={{ width:22, height:22, borderRadius:4, border:"1px solid "+T.blueMid, background:T.surface, color:T.blue, fontSize:14, fontFamily:T.mono, cursor:"pointer", lineHeight:1 }}>−</button>
+                          <div style={{ minWidth:30, textAlign:"center", padding:"2px 4px", border:"1px solid "+T.blueMid, borderRadius:4, fontSize:11, fontFamily:T.mono, background:T.blueFaint, color:T.blue, fontWeight:700 }}>
+                            {compQty}
+                          </div>
+                          <button type="button" onClick={e=>{ e.stopPropagation(); setCompQty(comp.id, compQty+1); }} style={{ width:22, height:22, borderRadius:4, border:"1px solid "+T.blueMid, background:T.surface, color:T.blue, fontSize:14, fontFamily:T.mono, cursor:"pointer", lineHeight:1 }}>+</button>
+                        </div>
                       )}
                     {isOn && !lockedIntegrated && (
                       <button onClick={e=>{ e.stopPropagation(); setExp(isExp?null:comp.id); }}
+                        title="Show assembly parts"
                         style={{ background:"none", border:"none", color:T.dim, cursor:"pointer",
                           fontSize:11, padding:"0 2px", lineHeight:1, marginLeft:2 }}>
-                        {isExp?"▲":"▼"}
+                        ⓘ
                       </button>
                     )}
                   </div>
@@ -1126,36 +1200,15 @@ export default function VAVPage() {
           </div>
 
           <div style={{ padding:"10px 13px", borderTop:"1px solid "+T.border, background:T.panel }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center",
-              marginBottom:6, padding:"5px 8px", background:T.surface,
-              borderRadius:4, border:"1px solid "+T.border }}>
-              <span style={{ fontSize:10, color:T.muted, fontFamily:T.mono,
-                textTransform:"uppercase", letterSpacing:1 }}>Per unit</span>
-              <span style={{ fontSize:12, fontFamily:T.mono }}>
-                <span style={{ color:T.blue, fontWeight:700 }}>{fmt$(unitMtl)}</span>
-                <span style={{ color:T.dim, marginLeft:10 }}>{fmtHr(unitLbr)}</span>
-              </span>
-            </div>
-            {qty>1 && (
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center",
-                padding:"7px 10px", background:T.blueFaint, borderRadius:5, border:"1px solid "+T.blueMid }}>
-                <span style={{ fontSize:11, color:T.blue, fontFamily:T.mono,
-                  textTransform:"uppercase", letterSpacing:1 }}>Total × {qty}</span>
-                <div style={{ textAlign:"right" }}>
-                  <div style={{ fontSize:15, color:T.blue, fontFamily:T.mono, fontWeight:700 }}>{fmt$(unitMtl*qty)}</div>
-                  <div style={{ fontSize:11, color:T.blueL, fontFamily:T.mono }}>{fmtHr(unitLbr*qty)}</div>
-                </div>
-              </div>
-            )}
-            <div style={{ marginTop:8 }}>
-              <ControlsCostBreakdown
-                item={{ qty, selected, custom }}
-                controlsCatalog={controlsCatalog}
-                settings={controlsSettings}
-                defaultOpen={false}
-              />
-            </div>
+          <div style={{ marginTop:8 }}>
+            <ControlsCostBreakdown
+              item={{ qty, selected, custom }}
+              controlsCatalog={controlsCatalog}
+              settings={controlsSettings}
+              defaultOpen={false}
+            />
           </div>
+        </div>
       </>
     )}
     />
