@@ -826,7 +826,7 @@ export function EstimateDetail({
           <div style={{ display:"flex", flexDirection:"column", gap:8, paddingBottom:24 }}>
             {estimate.items.map((item, idx) => {
               const c = calcItem(item);
-              const meta = TYPE_META[item.type] || { label:item.type.toUpperCase(), color:T.steel, bg:T.faint };
+              const meta = TYPE_META[item.type] || { label:String(item.type || "ITEM").toUpperCase(), color:T.steel, bg:T.faint };
               return (
                 <div key={item.id} style={{ background:T.surface, border:"1px solid "+T.border,
                   borderLeft:"3px solid "+meta.color, borderRadius:8, padding:"12px 14px" }}>
@@ -953,7 +953,7 @@ export function EstimateDetail({
                 const c = calcItem(item, controlsCatalog);
                 const details = getItemDetails(item, controlsCatalog);
                 const isExpanded = !!expandedRows[item.id];
-                const meta = TYPE_META[item.type] || { label:item.type.toUpperCase(), color:T.steel, bg:T.faint };
+                const meta = TYPE_META[item.type] || { label:String(item.type || "ITEM").toUpperCase(), color:T.steel, bg:T.faint };
                 const ahuLabel = item.type==="ahu" && item.cfg
                   ? AHU_TYPES.find(t=>t.id===item.cfg.ahuType)?.label : "";
                 return (

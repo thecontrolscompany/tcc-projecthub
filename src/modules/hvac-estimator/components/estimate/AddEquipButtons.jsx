@@ -25,7 +25,7 @@ export function AddEquipButtons({ onAdd, buttons = DEFAULT_BUTTONS, compact = fa
             padding,
             border: neutral ? "1px solid " + "#cbd5e1" : "none",
             borderRadius:5,
-            background: neutral ? "#ffffff" : b.bg,
+            background: neutral ? "#ffffff" : (b.bg || T.blue),
             color: neutral ? "#0f172a" : "#fff",
             cursor:"pointer",
             fontSize,

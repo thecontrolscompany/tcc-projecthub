@@ -254,7 +254,7 @@ function getInitialEstimateState(estimate: EstimateRecord): { body: EstimateBody
 
 function getTypeMeta(type: string) {
   return (TYPE_META as Record<string, { label: string; color: string; bg: string }>)[type] ?? {
-    label: type.toUpperCase(),
+    label: String(type || "ITEM").toUpperCase(),
     color: "currentColor",
     bg: "transparent",
   };
@@ -431,7 +431,7 @@ function EstimateStatusBadge({
     awarded: { label: "Awarded", bg: "#D1FAE5", border: "#6EE7B7", color: "#059669" },
     archived: { label: "Archived", bg: "#E2E8F0", border: "#CBD5E1", color: "#64748B" },
   };
-  const selected = statusMeta[status];
+  const selected = statusMeta[status] ?? statusMeta.draft;
 
   return (
     <div className="relative">
