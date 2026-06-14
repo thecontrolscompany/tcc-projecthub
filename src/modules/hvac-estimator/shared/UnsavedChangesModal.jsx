@@ -1,7 +1,11 @@
+import { createPortal } from "react-dom";
+
 export function UnsavedChangesModal({ open, onStay, onDiscard }) {
   if (!open) return null;
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 px-4 py-6">
       <div className="w-full max-w-md rounded-2xl border border-border-default bg-surface-raised shadow-2xl">
         <div className="flex items-center justify-between border-b border-border-default px-5 py-4">
@@ -27,6 +31,7 @@ export function UnsavedChangesModal({ open, onStay, onDiscard }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

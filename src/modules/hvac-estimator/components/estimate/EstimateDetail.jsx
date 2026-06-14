@@ -1,4 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useIsMobile } from "../../shared/useIsMobile.js";
 import { generateProposal } from "./export/generateProposal.js";
 import { generateInternalEstimateExport } from "./export/generateInternalEstimateExport.js";
@@ -143,8 +144,9 @@ function EstimateStatusBadge({ status, onChange }) {
 
 function VersionHistoryModal({ open, onClose }) {
   if (!open) return null;
+  if (typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[80] bg-black/50 px-4 py-6">
       <div className="fixed left-1/2 top-1/2 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border-default bg-surface-raised shadow-2xl">
         <div className="flex items-center justify-between border-b border-border-default px-5 py-4">
@@ -159,7 +161,8 @@ function VersionHistoryModal({ open, onClose }) {
         </div>
         <div className="px-5 py-5 text-sm text-text-secondary">Version history coming soon.</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 export function EstimateDetail({
