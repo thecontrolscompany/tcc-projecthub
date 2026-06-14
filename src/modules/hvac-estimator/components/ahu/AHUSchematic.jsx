@@ -614,7 +614,7 @@ function AhuConfigLauncher({ cfg, onCfgChange, onStart }) {
 }
 
 
-function CompPanel({cfg, visibleComponents, selected,onToggle,onSetCompQty,custom,onAddCust,onRemoveCust,installType,setIT,qty,setQty}) {
+function CompPanel({cfg, visibleComponents, selected,onToggle,onSetCompQty,custom,onAddCust,onRemoveCust,installType,setIT,qty,setQty,showUnsavedModal,setShowUnsavedModal}) {
   const { activeEstimate, controlsCatalog } = useEstimate();
   const [filterCat,setFC]   = useState("All");
   const [showMoreCats,setShowMoreCats] = useState(false);
@@ -1133,7 +1133,8 @@ export default function AHUPage() {
               <CompPanel cfg={cfg} visibleComponents={visibleComponents} selected={selected} onToggle={toggle} onSetCompQty={setCompQty}
                 custom={custom} onAddCust={c=>setCustom(cs=>[...cs,c])}
                 onRemoveCust={id=>setCustom(cs=>cs.filter(c=>c.id!==id))}
-                installType={installType} setIT={setIT} qty={qty} setQty={setQty}/>
+                installType={installType} setIT={setIT} qty={qty} setQty={setQty}
+                showUnsavedModal={showUnsavedModal} setShowUnsavedModal={setShowUnsavedModal}/>
             )}
           />
       </>
