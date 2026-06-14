@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
+import { summarizeHvacEstimate, type HvacEstimateBody } from "@/modules/hvac-estimator/platform-adapter";
+import { mapCatalogRows } from "@/modules/hvac-estimator/shared/catalogStore";
 import {
   createSharePointFolder,
   getSharePointDriveId,
@@ -203,6 +205,26 @@ async function resolveOrganizationId(
   return typeof tccOrganization?.id === "string" ? tccOrganization.id : null;
 }
 
+function normalizeEstimateSummary(
+  estimate: {
+    body?: unknown;
+    total_amount: number | null;
+    gross_margin_amount: number | null;
+    gross_margin_pct: number | null;
+  },
+  controlsCatalog: Record<string, unknown>,
+) {
+  if (!estimate.body || typeof estimate.body !== "object") return estimate;
+
+  const summary = summarizeHvacEstimate(estimate.body as HvacEstimateBody, controlsCatalog);
+  return {
+    ...estimate,
+    total_amount: summary.totalAmount ?? estimate.total_amount,
+    gross_margin_amount: summary.grossMarginAmount ?? estimate.gross_margin_amount,
+    gross_margin_pct: summary.grossMarginPct ?? estimate.gross_margin_pct,
+  };
+}
+
 export async function GET(request: Request) {
   const supabase = await createClient();
   const {
@@ -243,7 +265,18 @@ export async function GET(request: Request) {
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ estimates: data ?? [] });
+  const { data: controlsRows, error: controlsError } = await supabase
+    .from("controls_assembly_catalog")
+    .select("id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, alternate_ids, part_number, manufacturer, io_type")
+    .eq("organization_id", organizationId)
+    .order("id", { ascending: true });
+
+  if (controlsError) return NextResponse.json({ error: controlsError.message }, { status: 500 });
+
+  const controlsCatalog = mapCatalogRows(controlsRows ?? []);
+  const estimates = (data ?? []).map((estimate) => normalizeEstimateSummary(estimate, controlsCatalog));
+
+  return NextResponse.json({ estimates });
 }
 
 export async function POST(request: Request) {
@@ -291,6 +324,16 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  const { data: controlsRows, error: controlsError } = await supabase
+    .from("controls_assembly_catalog")
+    .select("id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, alternate_ids, part_number, manufacturer, io_type")
+    .eq("organization_id", organizationId)
+    .order("id", { ascending: true });
+
+  if (controlsError) return NextResponse.json({ error: controlsError.message }, { status: 500 });
+
+  const controlsCatalog = mapCatalogRows(controlsRows ?? []);
+
   let provisionWarning: string | null = null;
   try {
     const folderInfo = await provisionEstimateFolder(supabase, {
@@ -317,7 +360,13 @@ export async function POST(request: Request) {
         .single();
 
       if (!updateError && updatedEstimate) {
-        return NextResponse.json({ estimate: updatedEstimate, sharepointFolder: folderInfo.sharepointFolder }, { status: 201 });
+        return NextResponse.json(
+          {
+            estimate: normalizeEstimateSummary(updatedEstimate, controlsCatalog),
+            sharepointFolder: folderInfo.sharepointFolder,
+          },
+          { status: 201 },
+        );
       }
     }
 
@@ -326,5 +375,8 @@ export async function POST(request: Request) {
     provisionWarning = provisionError instanceof Error ? provisionError.message : "SharePoint provisioning failed.";
   }
 
-  return NextResponse.json({ estimate: data, sharepointWarning: provisionWarning }, { status: 201 });
+  return NextResponse.json(
+    { estimate: normalizeEstimateSummary(data, controlsCatalog), sharepointWarning: provisionWarning },
+    { status: 201 },
+  );
 }

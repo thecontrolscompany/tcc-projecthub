@@ -684,7 +684,7 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
       importedCount: number;
     };
 
-    await persistEstimate(nextEstimate, status);
+    await persistEstimate(nextEstimate, status, controlsCatalog);
     setSaveChipState("saved");
     setSavedAt(new Date().toISOString());
   }
@@ -694,8 +694,8 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
     writeLocalDraft(estimate.id, body, status);
   }, [dirty, body, status, estimate.id]);
 
-  async function persistEstimate(nextBody: EstimateBody, nextStatus: EstimateStatus) {
-    const summary = summarizeHvacEstimate(nextBody);
+  async function persistEstimate(nextBody: EstimateBody, nextStatus: EstimateStatus, catalog = controlsCatalog) {
+    const summary = summarizeHvacEstimate(nextBody, catalog);
 
     const res = await fetch(`/api/estimates/${estimate.id}`, {
       method: "PUT",
@@ -734,7 +734,7 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
     };
 
     try {
-      await persistEstimate(nextBody, status);
+      await persistEstimate(nextBody, status, controlsCatalog);
       setError(null);
     } catch (error) {
       setSaveChipState("unsaved");
@@ -748,7 +748,7 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
     setSaving(true);
     setSaveChipState("saving");
     try {
-      await persistEstimate(nextBody, nextStatus);
+      await persistEstimate(nextBody, nextStatus, controlsCatalog);
       setError(null);
     } catch (error) {
       setSaveChipState("unsaved");

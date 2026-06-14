@@ -3,8 +3,6 @@
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { OpportunityHubSubnav } from "@/components/opportunity-hub-subnav";
-import { deriveEstimatorCostBuckets } from "@/modules/hvac-estimator/components/estimate/estimateCalc";
-import { DEFAULT_SETTINGS } from "@/modules/hvac-estimator/components/estimate/projectSettings";
 import type { EstimateRecord } from "@/types/database";
 
 type ApiResponse = {
@@ -38,136 +36,8 @@ function getEstimateBodyField(body: Record<string, unknown> | null | undefined, 
   return typeof value === "string" ? value : "";
 }
 
-function toNumber(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string" && value.trim() !== "") {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-  return null;
-}
-
-function readFirstNumber(source: Record<string, unknown>, keys: string[]) {
-  for (const key of keys) {
-    const value = toNumber(source[key]);
-    if (value !== null) return value;
-  }
-  return null;
-}
-
-function findFirstNumberDeep(
-  value: unknown,
-  keys: string[],
-  seen = new WeakSet<object>(),
-): number | null {
-  if (!value || typeof value !== "object") return null;
-  if (seen.has(value)) return null;
-  seen.add(value);
-
-  const source = value as Record<string, unknown>;
-  const direct = readFirstNumber(source, keys);
-  if (direct !== null) return direct;
-
-  for (const nestedValue of Object.values(source)) {
-    if (Array.isArray(nestedValue)) {
-      for (const entry of nestedValue) {
-        const found = findFirstNumberDeep(entry, keys, seen);
-        if (found !== null) return found;
-      }
-      continue;
-    }
-
-    const found = findFirstNumberDeep(nestedValue, keys, seen);
-    if (found !== null) return found;
-  }
-
-  return null;
-}
-
 function getEstimateDisplayTotal(estimate: EstimateRecord) {
-  const body = (estimate.body ?? {}) as Record<string, unknown>;
-  const rawEstimate = estimate as unknown as Record<string, unknown>;
-
-  const turnkeyTotal =
-    findFirstNumberDeep(rawEstimate, [
-      "turnkey_total",
-      "turnkeyTotal",
-      "turnkey_total_amount",
-      "total_turnkey",
-      "totalTurnkey",
-      "turnkeySellPrice",
-      "final_total_amount",
-      "finalTotalAmount",
-    ]) ??
-    findFirstNumberDeep(body, [
-      "turnkey_total",
-      "turnkeyTotal",
-      "turnkey_total_amount",
-      "total_turnkey",
-      "totalTurnkey",
-      "turnkeySellPrice",
-      "final_total_amount",
-      "finalTotalAmount",
-    ]);
-
-  if (turnkeyTotal !== null) {
-    return turnkeyTotal;
-  }
-
-  const installationTotal =
-    findFirstNumberDeep(rawEstimate, [
-      "installation_total",
-      "installationTotal",
-      "install_total",
-      "installTotal",
-      "installation_amount",
-      "installationAmount",
-      "bid_price",
-      "bidPrice",
-      "installSellPrice",
-    ]) ??
-    findFirstNumberDeep(body, [
-      "installation_total",
-      "installationTotal",
-      "install_total",
-      "installTotal",
-      "installation_amount",
-      "installationAmount",
-      "bid_price",
-      "bidPrice",
-      "installSellPrice",
-    ]) ??
-    estimate.total_amount ??
-    0;
-
-  const controlsTotal =
-    findFirstNumberDeep(rawEstimate, [
-      "controls_total",
-      "controlsTotal",
-      "controls_total_amount",
-      "controlsTotalAmount",
-      "controls_amount",
-      "controlsAmount",
-      "controlsSellPrice",
-    ]) ??
-    findFirstNumberDeep(body, [
-      "controls_total",
-      "controlsTotal",
-      "controls_total_amount",
-      "controlsTotalAmount",
-      "controls_amount",
-      "controlsAmount",
-      "controlsSellPrice",
-    ]);
-
-  if (controlsTotal !== null && controlsTotal > 0) {
-    return installationTotal + controlsTotal;
-  }
-
-  const rawSettings = body.settings && typeof body.settings === "object" ? (body.settings as Record<string, unknown>) : {};
-  const settings = { ...DEFAULT_SETTINGS, ...rawSettings };
-  const buckets = deriveEstimatorCostBuckets(body, {}, settings);
-  return buckets.totals.turnkeySellPrice ?? installationTotal ?? estimate.total_amount ?? 0;
+  return estimate.total_amount ?? 0;
 }
 
 export function EstimatingListClient({ role }: EstimatingListClientProps) {

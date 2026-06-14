@@ -81,19 +81,15 @@ export function buildHvacEstimateBody(input: HvacEstimateCreateInput): HvacEstim
   };
 }
 
-export function summarizeHvacEstimate(body: HvacEstimateBody) {
+export function summarizeHvacEstimate(body: HvacEstimateBody, controlsCatalog: Record<string, unknown> = {}) {
   const raw = calcEstimate(body) as { mtl: number; lbrHrs: number };
   const normalizedSettings = { ...DEFAULT_SETTINGS, ...(body.settings || {}) };
-  const costBuckets = deriveEstimatorCostBuckets(body, {}, normalizedSettings);
+  const costBuckets = deriveEstimatorCostBuckets(body, controlsCatalog, normalizedSettings);
   const costs = computeCosts(raw.mtl, raw.lbrHrs, body.settings, body.items) as {
     total?: number;
     profit?: number;
   };
-  const scopeMode = normalizeEstimateScopeMode(normalizedSettings.estimateScopeMode);
-  const totalAmount =
-    scopeMode === "installation"
-      ? costBuckets.totals.installSellPrice ?? costs.total ?? null
-      : costBuckets.totals.turnkeySellPrice ?? costs.total ?? null;
+  const totalAmount = costBuckets.totals.turnkeySellPrice ?? costs.total ?? null;
   const grossMarginAmount = costBuckets.totals.markupTotal ?? costs.profit ?? null;
 
   return {
