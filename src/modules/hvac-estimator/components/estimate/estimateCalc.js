@@ -659,19 +659,23 @@ function buildBomPartIdentity(row, controlsCatalog) {
   const internalId = String(row.controlsId || row.controlsOverride || row.id || "—").trim() || "—";
   if (customPart) {
     const displayPartNumber = String(customPart.partNumber || customPart.modelNumber || customPart.model || customPart.catalogNumber || customPart.description || "").trim();
+    const vendor = String(customPart.vendor || customPart.manufacturer || customPart.brand || "").trim() || null;
     return {
       displayPartNumber: displayPartNumber || null,
       internalId,
-      manufacturer: String(customPart.manufacturer || customPart.brand || "").trim() || null,
+      manufacturer: vendor,
+      vendor,
     };
   }
 
   const catalogRow = controlsCatalog?.[row.controlsId || row.controlsOverride || row.id] || null;
   const displayPartNumber = String(catalogRow?.partNumber || catalogRow?.manufacturerPartNumber || catalogRow?.modelNumber || catalogRow?.model || catalogRow?.catalogNumber || catalogRow?.vendorPartNumber || catalogRow?.sku || catalogRow?.productCode || catalogRow?.sourcePartNumber || "").trim();
+  const vendor = String(catalogRow?.vendor || catalogRow?.manufacturer || "").trim() || null;
   return {
     displayPartNumber: displayPartNumber || null,
     internalId,
-    manufacturer: String(catalogRow?.manufacturer || "").trim() || null,
+    manufacturer: vendor,
+    vendor,
   };
 }
 
@@ -718,6 +722,7 @@ export function deriveControlsBomRows(estimate, controlsCatalog = {}, settings =
       totalInternalCost: row.totalInternalCost,
       controlsCustomPart: row.controlsCustomPart || null,
       controlsId: row.controlsId || null,
+      vendor: row.vendor || row.manufacturer || null,
     }));
 
     equipmentGroups.push({
@@ -763,6 +768,7 @@ export function deriveControlsBomRows(estimate, controlsCatalog = {}, settings =
         controlsOverride: null,
         controlsCustomPart: null,
       }, controlsCatalog),
+      vendor: (controlsCatalog?.[row.catalogId]?.vendor || controlsCatalog?.[row.catalogId]?.manufacturer || null),
       qtyPerUnit: qty,
       equipmentQty: 1,
       extendedQty: qty,

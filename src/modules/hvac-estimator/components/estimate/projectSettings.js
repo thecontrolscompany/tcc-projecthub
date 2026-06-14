@@ -357,17 +357,24 @@ export function computeControlsCosts(controlsMtl, controlsLbrHrs, settings = {})
 }
 
 /**
- * Soft 40/40/20 check: Install Total vs Controls Material vs Controls
- * Engineering Labor, each as a % of the combined Turnkey Total.
+ * Soft 40/40/20 check: Installation total, Installation labor,
+ * Controls material, and Controls engineering labor as a % of the
+ * combined Turnkey Total.
  * Returns null when there's nothing to check yet.
  */
-export function getSanityCheck({ installTotal = 0, controlsMaterial = 0, controlsLabor = 0 }) {
-  const turnkeyTotal = installTotal + controlsMaterial + controlsLabor;
+export function getSanityCheck({
+  installTotal = 0,
+  installLabor = 0,
+  controlsMaterial = 0,
+  controlsLabor = 0,
+}) {
+  const turnkeyTotal = installTotal + installLabor + controlsMaterial + controlsLabor;
   if (turnkeyTotal <= 0) return null;
 
   return {
     turnkeyTotal,
     install: { value: installTotal, pct: (installTotal / turnkeyTotal) * 100, target: 40 },
+    installLabor: { value: installLabor, pct: (installLabor / turnkeyTotal) * 100, target: 40 },
     controlsMaterial: { value: controlsMaterial, pct: (controlsMaterial / turnkeyTotal) * 100, target: 40 },
     controlsLabor: { value: controlsLabor, pct: (controlsLabor / turnkeyTotal) * 100, target: 20 },
   };

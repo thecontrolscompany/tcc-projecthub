@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useIsMobile } from "../../shared/useIsMobile.js";
 import { generateProposal } from "./export/generateProposal.js";
@@ -76,6 +76,12 @@ function getStatusMeta(status) {
 function formatPercentValue(value) {
   const num = Number(value) || 0;
   return `${Number.isInteger(num) ? num.toFixed(0) : num.toFixed(1)}%`;
+}
+
+function hasIncompleteProposalDetails(settings) {
+  return !String(settings?.baseScopeName || "").trim()
+    || !String(settings?.customerContact || "").trim()
+    || !String(settings?.estimateDate || "").trim();
 }
 
 function getMarginColor(pct) {
@@ -194,6 +200,8 @@ export function EstimateDetail({
   const [showAiParser, setShowAiParser] = useState(false);
   const [activeTab, setActiveTab] = useState("estimate");
   const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [highlightedSummaryRow, setHighlightedSummaryRow] = useState(null);
+  const summaryHighlightTimerRef = useRef(null);
 
   useEffect(() => {
     if (initialProposalTab === "documents") {
@@ -215,6 +223,7 @@ export function EstimateDetail({
     const stored = estimate.settings || {};
     return { ...DEFAULT_SETTINGS, ...stored };
   }, [estimate.settings]);
+  const proposalDetailsIncomplete = hasIncompleteProposalDetails(settings);
   const drawingBasis = settings.drawingBasis || settings.proposalBasis || settings.bidBasis || "";
   const sharepointFolder = estimate.sharepointFolder || estimate.sharepoint_folder || estimate.body?.sharepointFolder || estimate.body?.sharepoint_folder || null;
   const organizationId =
@@ -258,10 +267,11 @@ export function EstimateDetail({
   const sanityCheck = useMemo(
     () => getSanityCheck({
       installTotal: costs.total,
+      installLabor: costs.labor,
       controlsMaterial: controlsCosts.material,
       controlsLabor: controlsCosts.labor,
     }),
-    [controlsCosts.labor, controlsCosts.material, costs.total]
+    [controlsCosts.labor, controlsCosts.material, costs.labor, costs.total]
   );
   const healthRows = useMemo(() => buildEstimateHealthRows(sanityCheck), [sanityCheck]);
   const needsReviewIssues = useMemo(() => buildNeedsReviewIssues({
@@ -486,6 +496,65 @@ export function EstimateDetail({
     window.location.href = `/estimating/settings?organizationId=${encodeURIComponent(organizationId)}`;
   }, [organizationId]);
 
+  const handleFixReviewIssue = useCallback((issue) => {
+    if (!issue) return;
+    if (issue.fixTarget === "proposal-details") {
+      setShowProposalDetails(true);
+      return;
+    }
+
+    if (issue.fixTarget) {
+      setActiveTab("estimate");
+      setHighlightedSummaryRow(issue.fixTarget);
+    }
+  }, [setActiveTab, setHighlightedSummaryRow, setShowProposalDetails]);
+
+  const handleJumpReviewIssue = useCallback((issue) => {
+    if (!issue) return;
+    if (issue.fixTarget === "proposal-details") {
+      setActiveTab("estimate");
+      window.setTimeout(() => {
+        document.getElementById("proposal-details-entry")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 60);
+      return;
+    }
+    if (issue.fixTarget) {
+      setActiveTab("estimate");
+      setHighlightedSummaryRow(issue.fixTarget);
+    }
+  }, [setActiveTab, setHighlightedSummaryRow]);
+
+  useEffect(() => {
+    if (!highlightedSummaryRow) return undefined;
+    if (activeTab !== "estimate") return undefined;
+
+    if (summaryHighlightTimerRef.current) {
+      window.clearTimeout(summaryHighlightTimerRef.current);
+      summaryHighlightTimerRef.current = null;
+    }
+
+    const rowId = `estimate-command-center-row-${highlightedSummaryRow}`;
+    const timer = window.setTimeout(() => {
+      const element = document.getElementById(rowId);
+      element?.scrollIntoView({ behavior: "smooth", block: "center" });
+      summaryHighlightTimerRef.current = window.setTimeout(() => {
+        setHighlightedSummaryRow(null);
+        summaryHighlightTimerRef.current = null;
+      }, 1800);
+    }, 60);
+
+    return () => window.clearTimeout(timer);
+  }, [activeTab, highlightedSummaryRow]);
+
+  useEffect(
+    () => () => {
+      if (summaryHighlightTimerRef.current) {
+        window.clearTimeout(summaryHighlightTimerRef.current);
+      }
+    },
+    [],
+  );
+
   return (
     <div style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden" }}>
 
@@ -504,6 +573,31 @@ export function EstimateDetail({
                   <span style={{ fontSize:18, lineHeight:1.25, fontWeight:800, color:T.text, overflowWrap:"break-word" }}>
                     {estimate.name}
                   </span>
+                  {proposalDetailsIncomplete && (
+                    <button
+                      type="button"
+                      onClick={() => setShowProposalDetails(true)}
+                      title="Open proposal details"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 5,
+                        padding: "2px 8px",
+                        border: "1px solid #F59E0B",
+                        borderRadius: 999,
+                        background: "#FFFBEB",
+                        color: "#B45309",
+                        cursor: "pointer",
+                        fontSize: 10,
+                        fontFamily: T.mono,
+                        fontWeight: 700,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      <span aria-hidden="true">⚠</span>
+                      Proposal details incomplete
+                    </button>
+                  )}
                   {estimate.number && <span style={{ fontSize:11, color:T.muted, background:T.panel,
                     padding:"1px 6px", borderRadius:8, fontFamily:T.mono, border:"1px solid "+T.border }}>
                     #{estimate.number}</span>}
@@ -572,9 +666,9 @@ export function EstimateDetail({
       <EstimatorTabs
         activeTab={activeTab}
         onChange={setActiveTab}
-        tabs={[
+      tabs={[
           { id: "estimate", label: "Estimate" },
-          ...(customerMode ? [] : [{ id: "controlsBom", label: "Controls BOM" }]),
+          ...(customerMode ? [] : [{ id: "controlsBom", label: "Controls Parts" }]),
           { id: "review", label: "Review", badge: reviewBadgeLabel },
           { id: "costDetail", label: "Cost Detail" },
           { id: "outputs", label: "Outputs" },
@@ -636,6 +730,7 @@ export function EstimateDetail({
           settings={settings}
           statusLabel={getEstimateScopeModeLabel(settings.estimateScopeMode)}
           estimateName={estimate.name}
+          highlightedRowKey={highlightedSummaryRow}
         />
 
         {reviewBadgeLabel && (
@@ -1160,6 +1255,7 @@ export function EstimateDetail({
         controlsCatalog={controlsCatalog}
         customerMode={customerMode}
         settings={settings}
+        sanityCheck={sanityCheck}
         costs={costs}
         totals={totals}
         ddcInfrastructure={ddcInfrastructure}
@@ -1167,6 +1263,9 @@ export function EstimateDetail({
         onToggleDdc={() => setExpandedDdc((value) => !value)}
         healthRows={healthRows}
         needsReviewIssues={needsReviewIssues}
+        onFixIssue={handleFixReviewIssue}
+        onJumpIssue={handleJumpReviewIssue}
+        highlightedSummaryRowKey={highlightedSummaryRow}
         showBidAlternates={showBidAlternates}
         showProjectSettings={showProjectSettings}
         alternatesWithCosts={alternatesWithCosts}

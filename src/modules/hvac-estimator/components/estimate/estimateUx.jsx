@@ -38,6 +38,12 @@ function formatPercent(value) {
   return `${(Number(value) || 0).toFixed(1)}%`;
 }
 
+function formatSignedPercent(value) {
+  const next = Number(value) || 0;
+  const sign = next > 0 ? "+" : "";
+  return `${sign}${next.toFixed(1)}%`;
+}
+
 function getMarginColor(pct) {
   if (pct >= 20) return T.green;
   if (pct >= 15) return T.amber;
@@ -208,12 +214,22 @@ export function buildNeedsReviewIssues({
   if (sanityCheck) {
     for (const row of buildEstimateHealthRows(sanityCheck)) {
       if (row.level === "good") continue;
+      const targetRow = row.key === "install" ? "installation" : "controls";
+      const why =
+        row.key === "install"
+          ? "Low install ratio often signals under-counted installation scope or a controls-heavy bid that may lose on price."
+          : row.key === "controlsMaterial"
+            ? "Controls material above 40% may indicate over-specified equipment or a substitution opportunity."
+            : "Controls labor above target can mean the estimate needs a tighter engineering or programming pass.";
       issues.push({
         key: `sanity-${row.key}`,
         severity: row.level === "critical" ? "critical" : "warning",
         title: `${row.label} is outside target`,
         detail: `${formatPercent(row.bucket?.pct || 0)} vs ${formatPercent(row.bucket?.target || 0)}.`,
-        href: "#estimate-health",
+        why,
+        href: `#estimate-command-center-row-${targetRow}`,
+        fixLabel: "Fix",
+        fixTarget: targetRow,
       });
     }
   }
@@ -280,7 +296,10 @@ export function buildNeedsReviewIssues({
       severity: "info",
       title: "Proposal details could use a quick review",
       detail: "Scope name, customer contact, or estimate date is still blank.",
-      href: "#proposal-details",
+      why: "Missing scope name, customer contact, or estimate date will appear blank on the customer proposal.",
+      href: "#proposal-details-entry",
+      fixLabel: "Fix",
+      fixTarget: "proposal-details",
     });
   }
 
@@ -484,6 +503,7 @@ export function EstimateCommandCenter({
   settings,
   statusLabel,
   estimateName,
+  highlightedRowKey = null,
 }) {
   const buckets = deriveEstimatorCostBuckets(estimate, controlsCatalog, settings);
   const install = buckets.install;
@@ -615,11 +635,19 @@ export function EstimateCommandCenter({
               <tr
                 key={row.key}
                 style={{
-                  background: row.emphasized ? "#F7FBFA" : T.surface,
+                  background: highlightedRowKey === row.key ? "#FFFBEA" : row.emphasized ? "#F7FBFA" : T.surface,
                   borderTop: row.emphasized ? "1px solid " + T.border2 : "1px solid " + T.border,
                 }}
               >
-                <td style={{ ...scopeCellStyle, fontWeight: row.emphasized ? 800 : 700, color: row.emphasized ? T.blue : T.text }}>
+                <td
+                  id={`estimate-command-center-row-${row.key}`}
+                  style={{
+                    ...scopeCellStyle,
+                    fontWeight: row.emphasized ? 800 : 700,
+                    color: row.emphasized ? T.blue : T.text,
+                    boxShadow: highlightedRowKey === row.key ? "inset 0 0 0 9999px rgba(250, 204, 21, 0.08)" : "none",
+                  }}
+                >
                   {row.label}
                 </td>
                 {columns.map((column) => {
@@ -679,7 +707,20 @@ const valueCellStyle = {
   whiteSpace: "nowrap",
 };
 
-export function EstimateHealthPanel({ rows }) {
+export function EstimateHealthPanel({ rows, sanityCheck }) {
+  const installLaborRow = sanityCheck?.installLabor
+    ? {
+        key: "install-labor",
+        label: "Installation Labor",
+        bucket: sanityCheck.installLabor,
+        targetLabel: "target 40%",
+        level: getHealthLevel(sanityCheck.installLabor),
+        barValue: clampPct(sanityCheck.installLabor?.pct || 0),
+        targetValue: clampPct(sanityCheck.installLabor?.target || 0),
+      }
+    : null;
+  const displayRows = installLaborRow ? [installLaborRow, ...rows] : rows;
+
   return (
     <section
       id="estimate-health"
@@ -695,18 +736,18 @@ export function EstimateHealthPanel({ rows }) {
           <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
             Estimate Health
           </div>
-          <div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>
-            The 40 / 40 / 20 mix is informational, not a hard stop.
-          </div>
         </div>
       </div>
 
       <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
-        {rows.length ? rows.map((row) => {
+        {displayRows.length ? displayRows.map((row) => {
           const severity = row.level === "good" ? "info" : row.level === "warning" ? "warning" : "critical";
           const badge = getSeverityBadge(severity);
-          const diff = Math.abs((row.bucket?.pct || 0) - (row.bucket?.target || 0));
+          const pct = Number(row.bucket?.pct || 0);
+          const target = Number(row.bucket?.target || 0);
+          const diff = pct - target;
           const statusText = row.level === "good" ? "Good" : row.bucket?.pct < row.bucket?.target ? "Low" : "High";
+          const deltaColor = row.level === "good" ? T.green : row.level === "warning" ? T.amber : T.rose;
           return (
             <div
               key={row.key}
@@ -745,6 +786,9 @@ export function EstimateHealthPanel({ rows }) {
                   <span>{formatPercent(row.targetValue)} target</span>
                   <span>{formatPercent(row.bucket?.pct || 0)} actual</span>
                 </div>
+                <div style={{ marginTop: 4, fontSize: 10, color: deltaColor, fontFamily: T.mono, fontWeight: 700 }}>
+                  {formatPercent(pct)} actual · {formatSignedPercent(diff)} vs. target
+                </div>
               </div>
 
               {row.level !== "good" && (
@@ -766,7 +810,7 @@ export function EstimateHealthPanel({ rows }) {
   );
 }
 
-export function NeedsReviewPanel({ issues }) {
+export function NeedsReviewPanel({ issues, onFixIssue, onJumpIssue }) {
   const sorted = [...(issues || [])].sort((a, b) => {
     const rank = { critical: 0, warning: 1, info: 2 };
     return (rank[a.severity] ?? 3) - (rank[b.severity] ?? 3);
@@ -832,15 +876,55 @@ export function NeedsReviewPanel({ issues }) {
                       </span>
                       <div style={{ fontSize: 12, fontWeight: 700, color: T.text }}>{issue.title}</div>
                     </div>
+                    {issue.why && (
+                      <div style={{ marginTop: 4, fontSize: 11, color: T.muted, lineHeight: 1.45 }}>
+                        {issue.why}
+                      </div>
+                    )}
                     <div style={{ fontSize: 11, color: T.dim, marginTop: 3, lineHeight: 1.45 }}>
                       {issue.detail}
                     </div>
                   </div>
-                  {issue.href && (
-                    <a href={issue.href} style={{ fontSize: 11, fontFamily: T.mono, fontWeight: 700, color: T.blue, whiteSpace: "nowrap" }}>
-                      Jump to section
-                    </a>
-                  )}
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                    {issue.href && (
+                      <a
+                        href={issue.href}
+                        onClick={(event) => {
+                          if (!onJumpIssue) return;
+                          event.preventDefault();
+                          onJumpIssue(issue);
+                        }}
+                        style={{
+                          fontSize: 11,
+                          fontFamily: T.mono,
+                          fontWeight: 700,
+                          color: T.blue,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Jump to section
+                      </a>
+                    )}
+                    {onFixIssue && (
+                      <button
+                        type="button"
+                        onClick={() => onFixIssue(issue)}
+                        style={{
+                          padding: "4px 8px",
+                          border: "1px solid " + T.border2,
+                          borderRadius: 999,
+                          background: T.surface,
+                          color: T.text,
+                          cursor: "pointer",
+                          fontSize: 11,
+                          fontFamily: T.mono,
+                          fontWeight: 700,
+                        }}
+                      >
+                        Fix →
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -968,6 +1052,7 @@ export function EstimatorActionBar({
             <button
               type="button"
               onClick={onProposalDetails}
+              id="proposal-details-entry"
               style={{
                 padding: "8px 12px",
                 border: "1px solid " + T.border2,
@@ -1106,6 +1191,7 @@ export function EstimatorTabPanels({
   controlsCatalog,
   customerMode,
   settings,
+  sanityCheck,
   costs,
   totals,
   ddcInfrastructure,
@@ -1113,6 +1199,9 @@ export function EstimatorTabPanels({
   onToggleDdc,
   healthRows,
   needsReviewIssues,
+  onFixIssue,
+  onJumpIssue,
+  highlightedSummaryRowKey,
   showBidAlternates,
   showProjectSettings,
   alternatesWithCosts,
@@ -1151,8 +1240,8 @@ export function EstimatorTabPanels({
       description: "Health checks and readiness items stay here so the estimate canvas stays calm.",
       children: (
         <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
-          <EstimateHealthPanel rows={healthRows} />
-          <NeedsReviewPanel issues={needsReviewIssues} />
+          <EstimateHealthPanel rows={healthRows} sanityCheck={sanityCheck} />
+          <NeedsReviewPanel issues={needsReviewIssues} onFixIssue={onFixIssue} onJumpIssue={onJumpIssue} />
         </div>
       ),
     });

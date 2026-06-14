@@ -161,6 +161,12 @@ function formatDate(value: string | null | undefined) {
   return date.toLocaleString();
 }
 
+function hasIncompleteProposalDetails(settings: Record<string, unknown> | null | undefined) {
+  return !String(settings?.baseScopeName || "").trim()
+    || !String(settings?.customerContact || "").trim()
+    || !String(settings?.estimateDate || "").trim();
+}
+
 function asString(value: unknown) {
   return typeof value === "string" ? value : "";
 }
@@ -514,6 +520,7 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
     initialEstimateState.recovered ? "pending" : "kept",
   );
   const autosaveTimerRef = useRef<number | null>(null);
+  const proposalDetailsIncomplete = hasIncompleteProposalDetails(body.settings);
 
   const opportunityNumber = asString(body.platformContext?.opportunityNumber);
   const organizationId =
@@ -909,7 +916,20 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
           <Link href="/estimating" className="text-sm text-text-tertiary hover:text-text-primary">
             Back to Estimating
           </Link>
-          <h1 className="mt-2 text-2xl font-semibold text-text-primary">{body.name}</h1>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-semibold text-text-primary">{body.name}</h1>
+            {proposalDetailsIncomplete && (
+              <button
+                type="button"
+                onClick={() => setShowProposalDetails(true)}
+                title="Open proposal details"
+                className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-800 transition hover:bg-amber-200"
+              >
+                <span aria-hidden="true">⚠</span>
+                Proposal details incomplete
+              </button>
+            )}
+          </div>
           <p className="mt-1 text-sm text-text-secondary">
             {body.number || estimate.id}
             {body.customer ? ` · ${body.customer}` : ""}
@@ -1023,6 +1043,7 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
                 <button
                   type="button"
                   onClick={() => setShowProposalDetails((current) => !current)}
+                  id="proposal-details-entry"
                   className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
                     showProposalDetails
                       ? "border-brand-primary bg-brand-subtle text-brand-primary"
