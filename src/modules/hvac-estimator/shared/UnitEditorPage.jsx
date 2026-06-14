@@ -10,6 +10,7 @@ import { SchematicTabs } from "./SchematicTabs.jsx";
 import { DiagramViewer } from "./DiagramViewer.jsx";
 import { PointsList } from "./PointsList.jsx";
 import { AssemblyPickerModal } from "./AssemblyPickerModal.jsx";
+import { UnsavedChangesModal } from "./UnsavedChangesModal.jsx";
 import { getCustomCost, toAssemblyOptions } from "./assemblyPicker.js";
 import { UnitaryFlowDiagram } from "./UnitaryFlowDiagram.jsx";
 import {
@@ -74,6 +75,7 @@ export function UnitEditorPage({
   const [search, setSrch] = useState("");
   const [expanded, setExp] = useState(null);
   const [showModal, setModal] = useState(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   const initialSnapshotRef = useRef("");
 
   useEffect(() => {
@@ -165,8 +167,8 @@ export function UnitEditorPage({
 
   const handleBack = () => {
     if (hasUnsavedChanges && typeof window !== "undefined") {
-      const shouldLeave = window.confirm("Return to the estimate without saving? Any unsaved changes to this line item will be lost.");
-      if (!shouldLeave) return;
+      setShowUnsavedModal(true);
+      return;
     }
     setSubPage(null);
   };
@@ -210,6 +212,14 @@ export function UnitEditorPage({
           onClose={() => setModal(false)}
         />
       )}
+      <UnsavedChangesModal
+        open={showUnsavedModal}
+        onStay={() => setShowUnsavedModal(false)}
+        onDiscard={() => {
+          setShowUnsavedModal(false);
+          setSubPage(null);
+        }}
+      />
 
       <div style={{
         padding: "10px 12px",

@@ -27,6 +27,7 @@ import { SchematicTabs } from "../../shared/SchematicTabs.jsx";
 import { DiagramViewer } from "../../shared/DiagramViewer.jsx";
 import { PointsList } from "../../shared/PointsList.jsx";
 import { TemplateSvgDiagram } from "../../shared/TemplateSvgDiagram.jsx";
+import { UnsavedChangesModal } from "../../shared/UnsavedChangesModal.jsx";
 import {
   buildCableBundleFromPoints,
   CONDUIT_FILL_BUNDLE_KEY,
@@ -505,6 +506,7 @@ export default function VAVPage() {
   const [showModal, setModal] = useState(false);
   const [blockedDefaultIds, setBlockedDefaultIds] = useState([]);
   const [syncDefaults, setSyncDefaults] = useState(() => !isEditing);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   const initialSnapshotRef = useRef("");
 
   const applyTemplate = templateId => {
@@ -710,8 +712,8 @@ export default function VAVPage() {
   const hasUnsavedChanges = initialSnapshotRef.current && initialSnapshotRef.current !== currentSnapshot;
   const handleBack = () => {
     if (hasUnsavedChanges && typeof window !== "undefined") {
-      const shouldLeave = window.confirm("Return to the estimate without saving? Any unsaved changes to this line item will be lost.");
-      if (!shouldLeave) return;
+      setShowUnsavedModal(true);
+      return;
     }
     setSubPage(null);
   };
@@ -1199,7 +1201,7 @@ export default function VAVPage() {
             </div>
           </div>
 
-          <div style={{ padding:"10px 13px", borderTop:"1px solid "+T.border, background:T.panel }}>
+      <div style={{ padding:"10px 13px", borderTop:"1px solid "+T.border, background:T.panel }}>
           <div style={{ marginTop:8 }}>
             <ControlsCostBreakdown
               item={{ qty, selected, custom }}
@@ -1209,6 +1211,14 @@ export default function VAVPage() {
             />
           </div>
         </div>
+        <UnsavedChangesModal
+          open={showUnsavedModal}
+          onStay={() => setShowUnsavedModal(false)}
+          onDiscard={() => {
+            setShowUnsavedModal(false);
+            setSubPage(null);
+          }}
+        />
       </>
     )}
     />

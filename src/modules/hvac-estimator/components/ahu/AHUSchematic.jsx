@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { T, CAT_COLOR } from "../../shared/tokens.js";
 import { fmt$, fmtHr } from "../../shared/utils.js";
 import { AssemblyPickerModal } from "../../shared/AssemblyPickerModal.jsx";
+import { UnsavedChangesModal } from "../../shared/UnsavedChangesModal.jsx";
 import { toAssemblyOptions } from "../../shared/assemblyPicker.js";
 import {
   DEFAULT_AHU_CFG,
@@ -862,6 +863,14 @@ function CompPanel({cfg, visibleComponents, selected,onToggle,onSetCompQty,custo
           onClose={()=>setModal(false)}
         />
       )}
+      <UnsavedChangesModal
+        open={showUnsavedModal}
+        onStay={() => setShowUnsavedModal(false)}
+        onDiscard={() => {
+          setShowUnsavedModal(false);
+          setSubPage(null);
+        }}
+      />
     </div>
   );
 }
@@ -888,6 +897,7 @@ export default function AHUPage() {
   const [tag,setTag]        = useState(() => isEditing ? editingItem.tag : "AHU");
   const [loc,setLoc]        = useState(() => isEditing ? editingItem.location : "Mechanical Room");
   const [isLauncherMode, setIsLauncherMode] = useState(() => !isEditing);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   const initialSnapshotRef = useRef("");
 
   const visibleComponents = useMemo(
@@ -990,8 +1000,8 @@ export default function AHUPage() {
   const hasUnsavedChanges = initialSnapshotRef.current && initialSnapshotRef.current !== currentSnapshot;
   const handleBack = () => {
     if (hasUnsavedChanges && typeof window !== "undefined") {
-      const shouldLeave = window.confirm("Return to the estimate without saving? Any unsaved changes to this line item will be lost.");
-      if (!shouldLeave) return;
+      setShowUnsavedModal(true);
+      return;
     }
     setSubPage(null);
   };
