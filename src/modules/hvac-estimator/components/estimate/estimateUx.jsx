@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ProjectSettingsPanel } from "./ProjectSettingsPanel.jsx";
 import { T } from "../../shared/tokens.js";
 import { fmt$, fmtHr } from "../../shared/utils.js";
@@ -48,6 +48,180 @@ function getMarginColor(pct) {
   if (pct >= 20) return T.green;
   if (pct >= 15) return T.amber;
   return T.rose;
+}
+
+function formatTimestamp(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString();
+}
+
+function TooltipLabel({ label, tooltip }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span>{label}</span>
+      <span title={tooltip} className="cursor-help text-[10px] leading-none text-text-tertiary">
+        ⓘ
+      </span>
+    </span>
+  );
+}
+
+function SettingsToolCard({ title, description, onClick, icon }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-full w-full flex-col rounded-2xl border border-border-default bg-surface-overlay p-4 text-left transition hover:border-brand-primary/40 hover:bg-surface-base"
+    >
+      <div className="flex items-center gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border-default bg-surface-raised text-brand-primary">
+          {icon}
+        </span>
+        <div>
+          <div className="text-sm font-semibold text-text-primary">{title}</div>
+          <div className="mt-0.5 text-xs text-text-tertiary">{description}</div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function EstimateMarkupSettingsSection({ settings, onApply }) {
+  const [draft, setDraft] = useState({
+    overheadPct: Number(settings?.overheadPct ?? 10),
+    profitPct: Number(settings?.profitPct ?? 25),
+    bondPct: Number(settings?.bondPct ?? 4),
+    wageRate: Number(settings?.wageRate ?? 42.95),
+  });
+
+  useEffect(() => {
+    setDraft({
+      overheadPct: Number(settings?.overheadPct ?? 10),
+      profitPct: Number(settings?.profitPct ?? 25),
+      bondPct: Number(settings?.bondPct ?? 4),
+      wageRate: Number(settings?.wageRate ?? 42.95),
+    });
+  }, [settings?.bondPct, settings?.overheadPct, settings?.profitPct, settings?.wageRate]);
+
+  const fields = [
+    {
+      key: "overheadPct",
+      label: "Overhead Rate",
+      tooltip: "Applied to labor + material before profit. This increases the bid price by covering overhead burden.",
+      suffix: "%",
+      step: 0.1,
+    },
+    {
+      key: "profitPct",
+      label: "Profit Rate",
+      tooltip: "Applied after overhead. This determines the target profit portion of the bid price.",
+      suffix: "%",
+      step: 0.1,
+    },
+    {
+      key: "bondPct",
+      label: "Bond Rate",
+      tooltip: "Applied to the subtotal after overhead and profit. It adds the optional payment/performance bond amount.",
+      suffix: "%",
+      step: 0.1,
+    },
+    {
+      key: "wageRate",
+      label: "Installation Labor Rate",
+      tooltip: "Converts raw installation labor hours into labor dollars before markup is applied.",
+      suffix: "$/hr",
+      step: 0.01,
+    },
+  ];
+
+  return (
+    <section className="rounded-2xl border border-border-default bg-surface-raised p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary">
+            Estimate Markup Settings
+          </div>
+          <p className="mt-1 text-sm text-text-secondary">
+            Changes apply to this estimate only. Default rates are set in Project Settings.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {fields.map((field) => (
+          <label key={field.key} className="rounded-xl border border-border-default bg-surface-overlay p-4">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-tertiary">
+              <TooltipLabel label={field.label} tooltip={field.tooltip} />
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                step={field.step}
+                value={draft[field.key]}
+                onChange={(event) => {
+                  const next = event.target.value === "" ? 0 : Number(event.target.value);
+                  setDraft((current) => ({ ...current, [field.key]: Number.isFinite(next) ? next : 0 }));
+                }}
+                className="w-full rounded-xl border border-border-default bg-surface-raised px-3 py-2 text-sm font-medium text-text-primary outline-none transition focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/40"
+              />
+              <span className="shrink-0 text-xs font-semibold text-text-tertiary">{field.suffix}</span>
+            </div>
+          </label>
+        ))}
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <button
+          type="button"
+          onClick={() => onApply?.(draft)}
+          className="rounded-xl bg-brand-primary px-4 py-2.5 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover"
+        >
+          Apply to This Estimate
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function ProposalPreviewPanel({ proposalPreview }) {
+  if (proposalPreview?.html) {
+    return (
+      <section className="rounded-2xl border border-border-default bg-surface-raised p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="text-xs font-semibold tracking-[0.08em] text-text-tertiary">
+              Last generated proposal preview
+            </div>
+            <p className="mt-1 text-sm text-text-secondary">
+              {proposalPreview.generatedAt
+                ? `Generated ${formatTimestamp(proposalPreview.generatedAt)}`
+                : "Generated just now."}
+            </p>
+          </div>
+          {proposalPreview.fileName ? (
+            <div className="text-xs font-mono text-text-tertiary">{proposalPreview.fileName}</div>
+          ) : null}
+        </div>
+        <iframe
+          title="Last generated proposal preview"
+          srcDoc={proposalPreview.html}
+          className="mt-4 h-[600px] w-full rounded-2xl border border-border-default bg-white"
+        />
+      </section>
+    );
+  }
+
+  return (
+    <section className="rounded-2xl border border-border-default bg-surface-raised p-5">
+      <div className="text-sm font-semibold text-text-primary">No proposal generated yet.</div>
+      <p className="mt-1 text-sm text-text-secondary">
+        Click &quot;Generate Proposal&quot; to create one.
+      </p>
+    </section>
+  );
 }
 
 const EQUIPMENT_PICKER_GROUPS = [
@@ -1098,6 +1272,7 @@ export function CostCategorySection({
   onToggle,
   children,
   note,
+  actionLabel = "Show breakdown",
 }) {
   return (
     <section
@@ -1139,8 +1314,8 @@ export function CostCategorySection({
         <div style={{ fontSize: 12, fontWeight: 700, color: T.blue, fontFamily: T.mono }}>
           {fmt$(subtotal)}
         </div>
-        <div style={{ fontSize: 16, color: T.muted, fontFamily: T.mono }}>
-          {expanded ? "▾" : "▸"}
+        <div style={{ justifySelf: "end", fontSize: 12, fontWeight: 700, color: T.blue, fontFamily: T.mono }}>
+          {expanded ? "Hide breakdown ▴" : `${actionLabel} ▾`}
         </div>
       </button>
       {expanded && (
@@ -1219,10 +1394,13 @@ export function EstimatorTabPanels({
   onOpenSystemWizard,
   onUpdateSettings,
   onApplyDefaultInstallType,
+  proposalPreview,
   estimateId,
   rawLbrHrs,
   itemCount,
 }) {
+  const costBuckets = deriveEstimatorCostBuckets(estimate, controlsCatalog, settings);
+
   if (!customerMode && activeTab === "controlsBom") {
     return (
       <ControlsBomTab
@@ -1248,12 +1426,72 @@ export function EstimatorTabPanels({
   }
 
   if (activeTab === "costDetail") {
+    const installTotal = costBuckets.install.sellPrice || costs.total || 0;
+    const controlsTotal = costBuckets.controls.sellPrice || 0;
+    const installRows = [
+      ["Raw Labor $", (totals.lbrHrs || 0) * (settings.wageRate || 0)],
+      ["Raw Material $", totals.mtl || 0],
+      ["Overhead $", costs.overhead || 0],
+      ["Profit $", costs.profit || 0],
+      ["Bond $", costs.bond || 0],
+      ["Total Bid $", installTotal],
+      ["Margin %", installTotal > 0 ? (costs.profit / installTotal) * 100 : 0],
+    ];
+    const controlsRows = [
+      ["Raw Labor $", (totals.controlsLbrHrs || 0) * (settings.controlsWageRate || 0)],
+      ["Raw Material $", totals.controlsMtl || 0],
+      ["Overhead $", costBuckets.controls.markup.overhead || 0],
+      ["Profit $", costBuckets.controls.markup.profit || 0],
+      ["Bond $", costBuckets.controls.markup.bond || 0],
+      ["Total Bid $", controlsTotal],
+      ["Margin %", controlsTotal > 0 ? ((costBuckets.controls.markup.profit || 0) / controlsTotal) * 100 : 0],
+    ];
+
     return panelShell({
       id: "costDetail",
-      title: "Cost Detail",
-      description: "Open backup only when you need to inspect the supporting cost structure.",
+      title: "Cost Breakdown",
+      description: "Full cost reconciliation — see how raw costs build up to the final bid price.",
       children: (
         <div style={{ display: "grid", gap: 12 }}>
+          <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
+            {[
+              { label: "Installation", rows: installRows, accent: T.steel },
+              { label: "Controls", rows: controlsRows, accent: T.blue },
+            ].map((scope) => (
+              <section key={scope.label} style={{ border: "1px solid " + T.border, borderRadius: 12, background: T.surface, overflow: "hidden" }}>
+                <div style={{ padding: "10px 12px", borderBottom: "1px solid " + T.border, display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 10, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
+                      {scope.label}
+                    </div>
+                    <div style={{ fontSize: 12, color: T.dim, marginTop: 2 }}>
+                      Full bid stack with the exact markup buckets used in the estimate.
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: scope.accent, fontFamily: T.mono }}>
+                    {fmt$(scope.rows[5][1])}
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 0 }}>
+                  {scope.rows.map(([label, value]) => {
+                    const isMargin = label === "Margin %";
+                    const isTotal = label === "Total Bid $";
+                    return (
+                      <div key={label} style={{ padding: "10px 12px", borderRight: "1px solid " + T.border, borderBottom: "1px solid " + T.border }}>
+                        <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1 }}>
+                          {label}
+                        </div>
+                        <div style={{ marginTop: 4, fontSize: isMargin ? 16 : 13, fontWeight: 800, fontFamily: T.mono, color: isMargin ? getMarginColor(value) : isTotal ? scope.accent : T.text }}>
+                          {isMargin ? formatPercent(value) : fmt$(value)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+
           {!customerMode && settings.estimateScopeMode === "both" && (
             <div style={{ border: "1px solid " + T.border, borderRadius: 10, background: T.surface, overflow: "hidden" }}>
               <div style={{ padding: "10px 14px", borderBottom: "1px solid " + T.border }}>
@@ -1275,6 +1513,7 @@ export function EstimatorTabPanels({
                     expanded={expandedDdc}
                     note={`Sized from the selected controls devices. Points AI ${ddcInfrastructure.pointCounts.AI}, AO ${ddcInfrastructure.pointCounts.AO}, BI ${ddcInfrastructure.pointCounts.BI}, BO ${ddcInfrastructure.pointCounts.BO}; controllers ${ddcInfrastructure.controllerCount}; equipment instances ${ddcInfrastructure.equipmentCount}.`}
                     onToggle={onToggleDdc}
+                    actionLabel="Show breakdown"
                   >
                     <div style={{ display: "grid", gap: 6 }}>
                       {ddcInfrastructure.rows.map((row) => (
@@ -1321,17 +1560,17 @@ export function EstimatorTabPanels({
           </div>
           {!customerMode && showBidAlternates && (
             <div style={{ border: "1px solid " + T.border, borderRadius: 10, background: T.surface, overflow: "hidden" }}>
-              <div style={{ padding: "10px 14px", borderBottom: "1px solid " + T.border, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ padding: "10px 14px", borderBottom: "1px solid " + T.border }}>
                 <div>
                   <div style={{ fontSize: 10, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
                     Bid Outputs
                   </div>
-                  <div style={{ fontSize: 12, color: T.dim, marginTop: 2 }}>
-                    Optional alternates priced separately from the base estimate.
+                  <div style={{ fontSize: 12, color: T.dim, marginTop: 2, maxWidth: 860 }}>
+                    Bid alternates let you price optional or deductive scope separately from the base estimate - useful for add/deduct scenarios in competitive bids. Each alternate appears as a separate section in the customer proposal.
                   </div>
                 </div>
-                <button type="button" onClick={onCreateBidAlternate} style={{ padding: "7px 10px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: "pointer", fontSize: 11, fontFamily: T.mono, fontWeight: 700 }}>
-                  + Bid Alternate
+                <button type="button" onClick={onCreateBidAlternate} style={{ marginTop: 12, width: "100%", padding: "14px 16px", border: "1px dashed " + T.border2, borderRadius: 12, background: T.surface, color: T.text, cursor: "pointer", fontSize: 13, fontFamily: T.mono, fontWeight: 800 }}>
+                  + Add a Bid Alternate
                 </button>
               </div>
               <div style={{ padding: "12px 14px", display: "grid", gap: 10 }}>
@@ -1359,12 +1598,13 @@ export function EstimatorTabPanels({
                   </div>
                 )) : (
                   <div style={{ fontSize: 12, color: T.muted, border: "1px dashed " + T.border2, borderRadius: 10, padding: "14px 16px" }}>
-                    No bid alternates yet. Use <strong>+ Bid Alternate</strong> to start one.
+                    No bid alternates yet. Use <strong>+ Add a Bid Alternate</strong> to start one.
                   </div>
                 )}
               </div>
             </div>
           )}
+          <ProposalPreviewPanel proposalPreview={proposalPreview} />
         </div>
       ),
     });
@@ -1381,16 +1621,35 @@ export function EstimatorTabPanels({
             <button type="button" onClick={onToggleSettings} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700 }}>
               {showSettings ? "Hide Project Settings" : "Show Project Settings"}
             </button>
-            <button type="button" onClick={onOpenAiParser} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700 }}>
-              AI Parser
-            </button>
-            <button type="button" onClick={onOpenAiSettings} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700 }}>
-              AI Settings
-            </button>
             <button type="button" onClick={onOpenSystemWizard} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700 }}>
               System Wizard
             </button>
           </div>
+          <section style={{ border: "1px solid " + T.border, borderRadius: 10, background: T.surface, padding: "14px 16px", display: "grid", gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 10, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
+                AI Tools
+              </div>
+              <div style={{ fontSize: 12, color: T.dim, marginTop: 4, maxWidth: 860 }}>
+                Use the AI Parser to extract equipment schedules from uploaded PDFs or spreadsheets. AI Settings controls model behavior and data sources.
+              </div>
+            </div>
+            <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+              <SettingsToolCard
+                title="AI Parser"
+                icon="AI"
+                description="Extract schedules from PDFs or spreadsheets."
+                onClick={onOpenAiParser}
+              />
+              <SettingsToolCard
+                title="AI Settings"
+                icon="⚙"
+                description="Tune model behavior and data sources."
+                onClick={onOpenAiSettings}
+              />
+            </div>
+          </section>
+          <EstimateMarkupSettingsSection settings={settings} onApply={onUpdateSettings} />
           {showProjectSettings && showSettings && (
             <ProjectSettingsPanel
               settings={settings}

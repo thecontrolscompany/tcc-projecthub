@@ -201,6 +201,7 @@ export function EstimateDetail({
   const [activeTab, setActiveTab] = useState("estimate");
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [highlightedSummaryRow, setHighlightedSummaryRow] = useState(null);
+  const [proposalPreview, setProposalPreview] = useState(null);
   const summaryHighlightTimerRef = useRef(null);
 
   useEffect(() => {
@@ -460,6 +461,11 @@ export function EstimateDetail({
       const itemsWithComps = buildItemsWithComps(estimate);
       const result = await generateProposal(estimate, itemsWithComps, grandTotal, costs.bond, controlsCatalog);
       if (result?.blob) {
+        setProposalPreview({
+          html: result.html || "",
+          fileName: result.fileName || "",
+          generatedAt: new Date().toISOString(),
+        });
         void uploadGeneratedToSharePoint(result.blob, result.fileName, "proposal_pdf");
       }
     } catch (err) {
@@ -670,7 +676,7 @@ export function EstimateDetail({
           { id: "estimate", label: "Estimate" },
           ...(customerMode ? [] : [{ id: "controlsBom", label: "Controls Parts" }]),
           { id: "review", label: "Review", badge: reviewBadgeLabel },
-          { id: "costDetail", label: "Cost Detail" },
+          { id: "costDetail", label: "Cost Breakdown" },
           { id: "outputs", label: "Outputs" },
           ...(customerMode ? [] : [{ id: "settings", label: "Settings" }]),
         ]}
@@ -1283,6 +1289,7 @@ export function EstimateDetail({
         onOpenSystemWizard={() => setSubPage({ type: "wizard" })}
         onUpdateSettings={updateSettings}
         onApplyDefaultInstallType={applyDefaultInstallType}
+        proposalPreview={proposalPreview}
         estimateId={estimate.id}
         rawLbrHrs={totals.lbrHrs}
         itemCount={estimate.items?.length || 0}
