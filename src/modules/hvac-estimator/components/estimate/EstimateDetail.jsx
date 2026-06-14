@@ -8,7 +8,6 @@ import { DEFAULT_SETTINGS, computeCosts, computeControlsCosts, getSanityCheck, g
 import { useEstimate } from "../../shared/EstimateContext.jsx";
 import { getCurrentUser } from "../../shared/currentUser.js";
 import { AHU_TYPES } from "../ahu/ahuData.js";
-import { AddEquipButtons } from "./AddEquipButtons.jsx";
 import { AiTakeoffModal } from "./AiTakeoffModal.jsx";
 import { ProposalDetailsModal } from "./ProposalDetailsModal.jsx";
 import { applyImportedScopeImportToEstimate } from "../../ai/scopeImportToEstimate.js";
@@ -71,6 +70,28 @@ const STATUS_META = {
 
 function getStatusMeta(status) {
   return STATUS_META[status] || STATUS_META.draft;
+}
+
+function formatPercentValue(value) {
+  const num = Number(value) || 0;
+  return `${Number.isInteger(num) ? num.toFixed(0) : num.toFixed(1)}%`;
+}
+
+function getMarginColor(pct) {
+  if (pct >= 20) return T.green;
+  if (pct >= 15) return T.amber;
+  return T.rose;
+}
+
+function HeaderWithTooltip({ label, tooltip }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span>{label}</span>
+      <span title={tooltip} className="cursor-help text-[10px] leading-none text-text-tertiary">
+        ⓘ
+      </span>
+    </span>
+  );
 }
 
 function EstimateStatusBadge({ status, onChange }) {
@@ -589,6 +610,7 @@ export function EstimateDetail({
         {!customerMode && (
           <EstimatorActionBar
             customerMode={customerMode}
+            estimate={estimate}
             saving={saving}
             onSave={onSave}
             saveChipState={saveChipState}
@@ -693,11 +715,8 @@ export function EstimateDetail({
             <div style={{ fontSize:32, marginBottom:12 }}>⊞</div>
             <div style={{ fontSize:15, color:T.muted, marginBottom:8 }}>No equipment yet</div>
             <div style={{ fontSize:13, color:T.dim, marginBottom:20 }}>
-              Use the buttons above to configure and add equipment to this estimate.
+              Use <strong>+ Add Equipment</strong> in Workflow Actions to start the estimate.
             </div>
-            <AddEquipButtons
-              onAdd={type => setSubPage({type})}
-            />
           </div>
         ) : isMobile ? (
           <div style={{ display:"flex", flexDirection:"column", gap:8, paddingBottom:24 }}>
@@ -725,7 +744,7 @@ export function EstimateDetail({
                           background:customerMode ? T.panel : T.bg, outline:"none", textAlign:"center" }}/>
                     </div>
                     <div>
-                      <div style={{ fontSize:9, color:T.dim, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1 }}>Install</div>
+                      <div style={{ fontSize:9, color:T.dim, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1 }}>Conduit</div>
                       <div style={{ fontSize:12, color:T.muted, fontFamily:T.mono, paddingTop:4 }}>{item.installType}</div>
                     </div>
                     {!customerMode && (
@@ -794,10 +813,34 @@ export function EstimateDetail({
           <table style={{ width:"100%", minWidth:1120, borderCollapse:"collapse", fontSize:13 }}>
             <thead>
               <tr style={{ borderBottom:"2px solid "+T.border }}>
-                {["Tag","Type","Location","Qty","Install","Unit Mtl","Unit Lbr","Total Mtl","Total Lbr","Actions"].map(h=>(
-                  <th key={h} style={{ padding:"8px 10px", textAlign:"left", fontSize:10,
-                    letterSpacing:1.5, textTransform:"uppercase", color:T.muted,
-                    fontFamily:T.mono, fontWeight:600 }}>{h}</th>
+                {[
+                  { label: "Tag" },
+                  { label: "Type" },
+                  { label: "Location" },
+                  { label: "Qty" },
+                  { label: "Conduit", tooltip: "Conduit type used for installation wiring runs" },
+                  { label: "Unit Mtl ($)", tooltip: "Per-unit controls material cost, before multipliers" },
+                  { label: "Unit Lbr (h)", tooltip: "Per-unit installation labor hours" },
+                  { label: "Total Mtl ($)", tooltip: "Extended material cost = Unit Mtl × Qty" },
+                  { label: "Total Lbr (h)", tooltip: "Extended labor hours = Unit Lbr × Qty" },
+                  { label: "Actions" },
+                ].map((header) => (
+                  <th
+                    key={header.label}
+                    style={{
+                      padding: "8px 10px",
+                      textAlign: "left",
+                      fontSize: 10,
+                      letterSpacing: 1.5,
+                      textTransform: "uppercase",
+                      color: T.muted,
+                      fontFamily: T.mono,
+                      fontWeight: 600,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {header.tooltip ? <HeaderWithTooltip label={header.label} tooltip={header.tooltip} /> : header.label}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -1058,28 +1101,38 @@ export function EstimateDetail({
                 <td style={{ padding:"8px 10px", fontFamily:T.mono, color:T.steel }}>{fmtHr(totals.lbrHrs)}</td>
                 <td/>
               </tr>}
+              {!customerMode && <tr>
+                <td colSpan={10} style={{ padding:"0 10px" }}>
+                  <div style={{ height:1, background:T.border, margin:"4px 0 0" }} />
+                </td>
+              </tr>}
               {!customerMode && <tr style={{ background:T.blueFaint }}>
-                <td colSpan={8} style={{ padding:0 }}>
-                  <div style={{ display:"flex", gap:0 }}>
+                <td colSpan={10} style={{ padding:"8px 10px 10px" }}>
+                  <div style={{ fontSize:9, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1.4, marginBottom:8 }}>
+                    Installation Bid Price Breakdown
+                  </div>
+                  <div style={{ display:"flex", gap:0, flexWrap:"wrap" }}>
                     {[
-                      { label:"Labor",    val:costs.labor,    color:T.steel   },
-                      { label:"Material", val:costs.material, color:T.blue    },
-                      { label:"Overhead ("+settings.overheadPct+"%)", val:costs.overhead, color:"#7C3AED" },
-                      { label:"Profit ("+settings.profitPct+"%)",     val:costs.profit,   color:T.green   },
-                      { label:"Bond ("+settings.bondPct+"%)",         val:costs.bond,     color:"#B45309"  },
-                    ].map(({label,val,color}) => (
-                      <div key={label} style={{ flex:1, padding:"6px 10px", borderRight:"1px solid "+T.blueMid }}>
+                      { label:"Labor", value:costs.labor, color:T.steel },
+                      { label:"Material", value:costs.material, color:T.blue },
+                      { label:"Overhead", value:costs.overhead, color:"#7C3AED", pct: settings.overheadPct },
+                      { label:"Profit", value:costs.profit, color:T.green, pct: settings.profitPct },
+                      { label:"Bond", value:costs.bond, color:"#B45309", pct: settings.bondPct },
+                    ].map(({label,value,color,pct}) => (
+                      <div key={label} style={{ flex:"1 1 150px", minWidth:150, padding:"6px 10px", borderRight:"1px solid "+T.blueMid }}>
                         <div style={{ fontSize:9, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1 }}>{label}</div>
-                        <div style={{ fontSize:13, fontWeight:700, color, fontFamily:T.mono }}>{fmt$(val)}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color, fontFamily:T.mono }}>{fmt$(value)}</div>
+                        {pct !== undefined && (
+                          <div style={{ marginTop:2, fontSize:10, color:T.muted, fontFamily:T.mono }}>{formatPercentValue(pct)}</div>
+                        )}
                       </div>
                     ))}
-                    <div style={{ flex:1, padding:"6px 10px", background:T.blueA18 }}>
+                    <div style={{ flex:"1 1 150px", minWidth:150, padding:"6px 10px", background:T.blueA18 }}>
                       <div style={{ fontSize:9, color:T.blue, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1 }}>Total</div>
                       <div style={{ fontSize:14, fontWeight:800, color:T.blue, fontFamily:T.mono }}>{fmt$(costs.total)}</div>
                     </div>
                   </div>
                 </td>
-                <td/>
               </tr>}
               {customerMode && (
                 <tr style={{ background:T.blueFaint }}>

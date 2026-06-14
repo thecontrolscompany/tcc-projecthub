@@ -1,4 +1,3 @@
-import { AddEquipButtons } from "./AddEquipButtons.jsx";
 import { ProjectSettingsPanel } from "./ProjectSettingsPanel.jsx";
 import { T } from "../../shared/tokens.js";
 import { fmt$, fmtHr } from "../../shared/utils.js";
@@ -36,6 +35,119 @@ function clampPct(value) {
 
 function formatPercent(value) {
   return `${(Number(value) || 0).toFixed(1)}%`;
+}
+
+function getMarginColor(pct) {
+  if (pct >= 20) return T.green;
+  if (pct >= 15) return T.amber;
+  return T.rose;
+}
+
+const EQUIPMENT_PICKER_GROUPS = [
+  {
+    label: "Air Handlers",
+    items: [
+      { type: "ahu", abbr: "AHU", name: "Air Handling Unit" },
+    ],
+  },
+  {
+    label: "Terminal Units",
+    items: [
+      { type: "vav", abbr: "VAV", name: "Variable Air Volume Box" },
+      { type: "fcu", abbr: "FCU", name: "Fan Coil Unit" },
+      { type: "uh", abbr: "UH", name: "Unit Heater" },
+      { type: "exhaust-fan", abbr: "EF", name: "Exhaust Fan" },
+    ],
+  },
+  {
+    label: "Refrigerant Systems",
+    items: [
+      { type: "dx", abbr: "DX/HP", name: "Direct Expansion / Heat Pump" },
+      { type: "vrf", abbr: "VRF", name: "Variable Refrigerant Flow" },
+    ],
+  },
+  {
+    label: "Hydronic / Plant",
+    items: [
+      { type: "plant", abbr: "PLANT", name: "Hydronic Plant" },
+      { type: "rtu", abbr: "RTU", name: "Roof Top Unit" },
+    ],
+  },
+  {
+    label: "Infrastructure",
+    items: [
+      { type: "network", abbr: "NET", name: "Controls Network" },
+      { type: "custom", abbr: "CUST", name: "Custom Assembly" },
+    ],
+  },
+];
+
+function getEquipmentCounts(estimate) {
+  return (estimate?.items || []).reduce((acc, item) => {
+    acc[item.type] = (acc[item.type] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function EquipmentPickerModal({ open, counts, onClose, onAdd }) {
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
+      onMouseDown={onClose}
+    >
+      <div
+        className="w-full max-w-3xl overflow-hidden rounded-2xl border border-border-default bg-surface-raised shadow-2xl"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-border-default px-5 py-4">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary">Add Equipment</div>
+            <div className="mt-1 text-sm text-text-secondary">Choose the equipment type to add as a new estimate line item.</div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-border-default px-3 py-1.5 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
+          >
+            Close
+          </button>
+        </div>
+        <div className="grid gap-4 px-5 py-5">
+          {EQUIPMENT_PICKER_GROUPS.map((group) => (
+            <section key={group.label} className="grid gap-2">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary">{group.label}</div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {group.items.map((item) => {
+                  const count = counts[item.type] || 0;
+                  return (
+                    <button
+                      key={item.type}
+                      type="button"
+                      onClick={() => {
+                        onAdd(item.type);
+                        onClose();
+                      }}
+                      className="flex items-center justify-between gap-4 rounded-xl border border-border-default bg-surface-overlay px-4 py-3 text-left transition hover:border-brand-primary/40 hover:bg-brand-subtle/40"
+                    >
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-text-primary">{item.abbr}</div>
+                        <div className="mt-1 text-sm text-text-secondary">{item.name}</div>
+                      </div>
+                      <span className="shrink-0 rounded-full border border-border-default bg-surface-raised px-2.5 py-1 text-xs font-semibold text-text-secondary">
+                        ×{count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function getHealthLevel(bucket) {
@@ -386,6 +498,7 @@ export function EstimateCommandCenter({
         material: install.materialCost,
         overhead: install.markup.overhead,
         profit: install.markup.profit,
+        marginPct: install.sellPrice > 0 ? (install.markup.profit / install.sellPrice) * 100 : 0,
         bond: install.markup.bond,
         total: install.sellPrice,
       },
@@ -399,6 +512,7 @@ export function EstimateCommandCenter({
         material: controls.materialCost,
         overhead: controls.markup.overhead,
         profit: controls.markup.profit,
+        marginPct: controls.sellPrice > 0 ? (controls.markup.profit / controls.sellPrice) * 100 : 0,
         bond: controls.markup.bond,
         total: controls.sellPrice,
       },
@@ -413,6 +527,7 @@ export function EstimateCommandCenter({
         material: install.materialCost + controls.materialCost,
         overhead: install.markup.overhead + controls.markup.overhead,
         profit: install.markup.profit + controls.markup.profit,
+        marginPct: totals.turnkeySellPrice > 0 ? ((install.markup.profit + controls.markup.profit) / totals.turnkeySellPrice) * 100 : 0,
         bond: install.markup.bond + controls.markup.bond,
         total: totals.turnkeySellPrice,
       },
@@ -424,6 +539,7 @@ export function EstimateCommandCenter({
     { key: "material", label: "Material $" },
     { key: "overhead", label: "OH $" },
     { key: "profit", label: "Profit $" },
+    { key: "marginPct", label: "Margin %" },
     { key: "bond", label: "Bond $" },
     { key: "total", label: "Total" },
   ];
@@ -482,7 +598,7 @@ export function EstimateCommandCenter({
       </div>
 
       <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 860 }}>
           <thead>
             <tr style={{ background: T.surface }}>
               <th style={{ ...headerCellStyle, textAlign: "left" }}>Scope</th>
@@ -509,18 +625,20 @@ export function EstimateCommandCenter({
                   const value = row.values[column.key];
                   const isHours = column.key === "laborHours";
                   const isTotal = column.key === "total";
+                  const isMargin = column.key === "marginPct";
+                  const marginPct = Number(value) || 0;
                   return (
                     <td
                       key={column.key}
                       style={{
                         ...valueCellStyle,
                         fontWeight: row.emphasized || isTotal ? 800 : 700,
-                        color: row.emphasized || isTotal ? T.blue : T.steel,
+                        color: isMargin ? getMarginColor(marginPct) : row.emphasized || isTotal ? T.blue : T.steel,
                         fontSize: row.emphasized ? 13 : 12,
                         background: row.emphasized && isTotal ? "#E0F2FE" : "transparent",
                       }}
                     >
-                      {isHours ? fmtHr(value) : fmt$(value)}
+                      {isHours ? fmtHr(value) : isMargin ? formatPercent(value) : fmt$(value)}
                     </td>
                   );
                 })}
@@ -750,6 +868,7 @@ export function NeedsReviewPanel({ issues }) {
 
 export function EstimatorActionBar({
   customerMode,
+  estimate,
   exporting,
   saving,
   onSave,
@@ -760,6 +879,8 @@ export function EstimatorActionBar({
 }) {
   const savedRecently = saveChipState === "saved" && savedAt ? Date.now() - new Date(savedAt).getTime() < 3000 : false;
   const savedMuted = saveChipState === "saved" && !savedRecently;
+  const [showPicker, setShowPicker] = useState(false);
+  const equipmentCounts = useMemo(() => getEquipmentCounts(estimate), [estimate]);
   const chipStyles =
     saveChipState === "saving"
       ? { border: "1px solid " + T.border2, background: T.panel, color: T.muted }
@@ -860,12 +981,23 @@ export function EstimatorActionBar({
             >
               Proposal Details
             </button>
+            <button
+              type="button"
+              onClick={() => setShowPicker(true)}
+              disabled={!onAddEquipment}
+              className="rounded-full bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              + Add Equipment
+            </button>
           </div>
         )}
-        <div style={{ marginLeft: "auto" }}>
-          <AddEquipButtons onAdd={onAddEquipment} compact neutral />
-        </div>
       </div>
+      <EquipmentPickerModal
+        open={showPicker}
+        counts={equipmentCounts}
+        onClose={() => setShowPicker(false)}
+        onAdd={onAddEquipment}
+      />
     </section>
   );
 }
