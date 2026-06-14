@@ -733,7 +733,7 @@ export default function VAVPage({ onNavigateBack = null }) {
       )}
 
       <div style={{ padding:"10px 20px", borderBottom:"1px solid "+T.border,
-        display:"flex", alignItems:"center", gap:12, background:T.surface, flexShrink:0 }}>
+        display:"flex", alignItems:"center", gap:12, background:T.surface, flexShrink:0, flexWrap:"wrap", rowGap:8 }}>
         <div style={{ padding:"3px 10px", background:T.blueFaint, border:"1px solid "+T.blueMid, borderRadius:4 }}>
           <span style={{ fontSize:11, color:T.blue, fontFamily:T.mono, fontWeight:700, letterSpacing:1 }}>VAV</span>
         </div>
@@ -743,7 +743,7 @@ export default function VAVPage({ onNavigateBack = null }) {
         {qty>1 && <span style={{ fontSize:13, color:T.blue, fontFamily:T.mono }}>Qty Multiplier: × {qty}</span>}
         <input value={loc} onChange={e=>setLoc(e.target.value)}
           style={{ background:T.panel, border:"1px solid "+T.border, borderRadius:4,
-            color:T.steel, fontFamily:T.mono, fontSize:12, padding:"4px 8px", width:150, outline:"none" }} />
+            color:T.steel, fontFamily:T.mono, fontSize:12, padding:"4px 8px", flex:"1 1 150px", minWidth:0, maxWidth:240, outline:"none" }} />
         <span style={{ fontSize:11, color:T.blueL, background:T.blueFaint, padding:"2px 8px", borderRadius:10, border:"1px solid "+T.blueMid, fontFamily:T.mono }}>
           {labelFor(VAV_DUCT_TYPES, cfg.ductType)} | {labelFor(VAV_HEAT_TYPES, cfg.heatType)} | {labelFor(VAV_ACTUATOR_TYPES, cfg.actuatorType)}
         </span>

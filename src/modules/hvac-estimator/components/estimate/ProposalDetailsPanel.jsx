@@ -1,6 +1,21 @@
 import { T } from "../../shared/tokens.js";
 import { ESTIMATE_SCOPE_MODES, getEstimateScopeModeLabel, normalizeEstimateScopeMode } from "./projectSettings.js";
 
+function formatDateInputValue(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+  if (/^\d{4}-\d{2}-\d{2}T/.test(text)) return text.slice(0, 10);
+
+  const slashMatch = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (slashMatch) {
+    const [, month, day, year] = slashMatch;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+
+  return "";
+}
+
 export function ProposalDetailsPanel({ settings, onChange }) {
   const S = settings;
 
@@ -34,7 +49,7 @@ export function ProposalDetailsPanel({ settings, onChange }) {
       </span>
       <input
         type="date"
-        value={S[key] || ""}
+        value={formatDateInputValue(S[key])}
         onChange={(e) => onChange({ [key]: e.target.value })}
         style={{
           padding: "5px 8px",
@@ -111,7 +126,7 @@ export function ProposalDetailsPanel({ settings, onChange }) {
   return section(
     <>
       <div style={{ fontSize: 10, color: T.muted }}>
-        Used in the exported customer proposal.
+        Used in the exported customer proposal. Changes auto-save as you edit.
       </div>
       <div style={{ fontSize: 11, color: T.text, background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 6, padding: "6px 8px" }}>
         Current bid version: <strong>{getEstimateScopeModeLabel(S.estimateScopeMode)}</strong>

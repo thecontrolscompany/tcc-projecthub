@@ -61,7 +61,8 @@ export function OpportunityHubSubnav() {
   const items =
     role === "admin"       ? ADMIN_ITEMS :
     role === "ops_manager" ? OPS_ITEMS :
-                             PM_ITEMS;
+    role === "pm"          ? PM_ITEMS :
+                             ADMIN_ITEMS;
 
   return (
     <nav className="rounded-2xl border border-border-default bg-surface-raised p-2">

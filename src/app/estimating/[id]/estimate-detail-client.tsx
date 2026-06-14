@@ -1077,6 +1077,7 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
               settings={body.settings}
               onChange={updateSettings}
               onClose={() => setShowProposalDetails(false)}
+              saveState={saveChipState}
               estimateId={estimate.id}
               sharepointFolder={body.sharepointFolder}
               drawingBasis={asString(body.settings.drawingBasis)}

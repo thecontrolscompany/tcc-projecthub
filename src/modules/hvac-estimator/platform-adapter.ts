@@ -1,5 +1,10 @@
 import { calcEstimate } from "./components/estimate/estimateCalc";
-import { computeCosts, DEFAULT_SETTINGS, normalizeEstimateScopeMode } from "./components/estimate/projectSettings";
+import {
+  computeCosts,
+  DEFAULT_SETTINGS,
+  normalizeEstimateScopeMode,
+} from "./components/estimate/projectSettings";
+import { deriveEstimatorCostBuckets } from "./components/estimate/estimateCalc";
 
 export type HvacEstimateStatus = "draft" | "in_progress" | "ready" | "proposal_exported" | "awarded" | "archived";
 
@@ -78,12 +83,18 @@ export function buildHvacEstimateBody(input: HvacEstimateCreateInput): HvacEstim
 
 export function summarizeHvacEstimate(body: HvacEstimateBody) {
   const raw = calcEstimate(body) as { mtl: number; lbrHrs: number };
+  const normalizedSettings = { ...DEFAULT_SETTINGS, ...(body.settings || {}) };
+  const costBuckets = deriveEstimatorCostBuckets(body, {}, normalizedSettings);
   const costs = computeCosts(raw.mtl, raw.lbrHrs, body.settings, body.items) as {
     total?: number;
     profit?: number;
   };
-  const totalAmount = costs.total ?? null;
-  const grossMarginAmount = costs.profit ?? null;
+  const scopeMode = normalizeEstimateScopeMode(normalizedSettings.estimateScopeMode);
+  const totalAmount =
+    scopeMode === "installation"
+      ? costBuckets.totals.installSellPrice ?? costs.total ?? null
+      : costBuckets.totals.turnkeySellPrice ?? costs.total ?? null;
+  const grossMarginAmount = costBuckets.totals.markupTotal ?? costs.profit ?? null;
 
   return {
     rawMaterial: raw.mtl,

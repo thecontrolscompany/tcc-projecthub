@@ -769,6 +769,7 @@ export function EstimateDetail({
           settings={settings}
           onChange={updateSettings}
           onClose={() => setShowProposalDetails(false)}
+          saveState={saveChipState}
           estimateId={platformEstimateId || estimate.id}
           sharepointFolder={sharepointFolder}
           drawingBasis={drawingBasis}

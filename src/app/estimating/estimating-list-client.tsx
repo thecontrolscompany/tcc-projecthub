@@ -3,6 +3,8 @@
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { OpportunityHubSubnav } from "@/components/opportunity-hub-subnav";
+import { deriveEstimatorCostBuckets } from "@/modules/hvac-estimator/components/estimate/estimateCalc";
+import { DEFAULT_SETTINGS, normalizeEstimateScopeMode } from "@/modules/hvac-estimator/components/estimate/projectSettings";
 import type { EstimateRecord } from "@/types/database";
 
 type ApiResponse = {
@@ -30,6 +32,18 @@ function formatDate(value: string | null | undefined) {
 function getEstimateBodyField(body: Record<string, unknown> | null | undefined, key: string) {
   const value = body?.[key];
   return typeof value === "string" ? value : "";
+}
+
+function getEstimateDisplayTotal(estimate: EstimateRecord) {
+  const body = (estimate.body ?? {}) as Record<string, unknown>;
+  const rawSettings = body.settings && typeof body.settings === "object" ? (body.settings as Record<string, unknown>) : {};
+  const settings = { ...DEFAULT_SETTINGS, ...rawSettings };
+  const buckets = deriveEstimatorCostBuckets(body, {}, settings);
+  const scopeMode = normalizeEstimateScopeMode(settings.estimateScopeMode);
+
+  return scopeMode === "installation"
+    ? buckets.totals.installSellPrice ?? estimate.total_amount ?? 0
+    : buckets.totals.turnkeySellPrice ?? estimate.total_amount ?? 0;
 }
 
 export function EstimatingListClient() {
@@ -308,6 +322,13 @@ export function EstimatingListClient() {
 
   const activeCount = estimates.filter((est) => !est.archived && !getEstimateBodyField(est.body, "parentEstimateId")).length;
   const archivedCount = estimates.filter((est) => est.archived && !getEstimateBodyField(est.body, "parentEstimateId")).length;
+  const displayTotals = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const estimate of estimates) {
+      map.set(estimate.id, getEstimateDisplayTotal(estimate));
+    }
+    return map;
+  }, [estimates]);
 
   function renderSubRow(estimate: EstimateRecord): React.ReactNode {
     const name = (estimate.name ?? getEstimateBodyField(estimate.body, "name")) || "Untitled Estimate";
@@ -331,7 +352,7 @@ export function EstimatingListClient() {
             {estimate.status.replace(/_/g, " ")}
           </span>
         </td>
-        <td className="px-4 py-3 text-right font-medium text-text-primary">{formatCurrency(estimate.total_amount)}</td>
+        <td className="px-4 py-3 text-right font-medium text-text-primary">{formatCurrency(displayTotals.get(estimate.id))}</td>
         <td className="px-4 py-3 text-text-tertiary">{formatDate(estimate.updated_at)}</td>
         <td className="px-4 py-3 text-right">
           <div className="flex justify-end gap-1.5">
@@ -459,7 +480,7 @@ export function EstimatingListClient() {
               {estimate.status.replace(/_/g, " ")}
             </span>
           </td>
-          <td className="px-4 py-3 text-right font-medium text-text-primary">{formatCurrency(estimate.total_amount)}</td>
+          <td className="px-4 py-3 text-right font-medium text-text-primary">{formatCurrency(displayTotals.get(estimate.id))}</td>
           <td className="px-4 py-3 text-text-tertiary">{formatDate(estimate.updated_at)}</td>
           <td className="px-4 py-3 text-right">
             <div className="flex justify-end gap-1.5">
