@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import {
@@ -57,6 +58,11 @@ export async function PUT(
     return NextResponse.json({ error: "Access denied." }, { status: 403 });
   }
 
+  const adminClient = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
   const body = await request.json().catch(() => null);
   const parsed = estimateUpdateSchema.safeParse(body);
   if (!parsed.success) {
@@ -64,7 +70,7 @@ export async function PUT(
   }
 
   const lifecycleFields = deriveEstimateLifecycleFields(parsed.data);
-  const { data, error } = await supabase
+  const { data, error } = await adminClient
     .from("estimates")
     .update({
       ...parsed.data,
@@ -73,9 +79,10 @@ export async function PUT(
     })
     .eq("id", id)
     .select(ESTIMATE_SELECT)
-    .single();
+    .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!data) return NextResponse.json({ error: "Not found." }, { status: 404 });
 
   return NextResponse.json({ estimate: data });
 }
