@@ -24,6 +24,7 @@ const EMPTY_ITEM_FORM = {
   code_number: "",
   description: "",
   qty_required: "0",
+  unit_cost: "",
   notes: "",
 };
 
@@ -70,6 +71,11 @@ function computeBomStatus(item: BomItem, receipts: MaterialReceipt[]): BomItem {
   else status = "surplus";
 
   return { ...item, qty_received: qtyReceived, remain_surplus: remainSurplus, status };
+}
+
+function formatUnitCost(value: number | null | undefined) {
+  if (value === null || value === undefined) return null;
+  return value.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatRemain(value: number) {
@@ -152,7 +158,7 @@ function BomItemForm({
   saving: boolean;
 }) {
   return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.1fr,1fr,1fr,2fr,140px,1.2fr]">
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.1fr,1fr,1fr,2fr,100px,100px,1.2fr]">
       <Field label="Section">
         <input value={form.section} onChange={(event) => onChange({ ...form, section: event.target.value })} className={INPUT_CLASS} />
       </Field>
@@ -168,10 +174,13 @@ function BomItemForm({
       <Field label="Total Qty">
         <input type="number" min="0" value={form.qty_required} onChange={(event) => onChange({ ...form, qty_required: event.target.value })} className={INPUT_CLASS} />
       </Field>
+      <Field label="Unit Cost">
+        <input type="number" min="0" step="0.01" value={form.unit_cost} onChange={(event) => onChange({ ...form, unit_cost: event.target.value })} className={INPUT_CLASS} placeholder="$0.00" />
+      </Field>
       <Field label="Notes">
         <input value={form.notes} onChange={(event) => onChange({ ...form, notes: event.target.value })} className={INPUT_CLASS} />
       </Field>
-      <div className="md:col-span-2 xl:col-span-6 flex justify-end gap-2">
+      <div className="md:col-span-2 xl:col-span-7 flex justify-end gap-2">
         <button type="button" onClick={onCancel} className="rounded-lg border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-secondary transition hover:bg-surface-base">
           Cancel
         </button>
@@ -323,6 +332,7 @@ export function BomTab({ projectId, readOnly = false, allowReceiptEditing = fals
           code_number: itemForm.code_number,
           description: itemForm.description,
           qty_required: Number(itemForm.qty_required || 0),
+          unit_cost: itemForm.unit_cost === "" ? null : Number(itemForm.unit_cost),
           notes: itemForm.notes,
           sort_order: nextSortOrder,
         }),
@@ -363,6 +373,7 @@ export function BomTab({ projectId, readOnly = false, allowReceiptEditing = fals
           code_number: editForm.code_number,
           description: editForm.description,
           qty_required: Number(editForm.qty_required || 0),
+          unit_cost: editForm.unit_cost === "" ? null : Number(editForm.unit_cost),
           notes: editForm.notes,
         }),
       });
@@ -662,6 +673,7 @@ export function BomTab({ projectId, readOnly = false, allowReceiptEditing = fals
                     ) : (
                       <div className={["p-4", ROW_CLASS[item.status ?? "not_received"]].join(" ")}>
                         <p className="font-medium text-text-primary">{item.description}</p>
+                        {formatUnitCost(item.unit_cost) && <p className="mt-1 text-xs text-text-tertiary">Unit Cost: {formatUnitCost(item.unit_cost)}</p>}
                         {item.notes && <p className="mt-1 text-xs text-text-tertiary">{item.notes}</p>}
                         <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                           {item.designation && (
@@ -706,7 +718,7 @@ export function BomTab({ projectId, readOnly = false, allowReceiptEditing = fals
                                 onClick={() => {
                                   setEditingItemId(item.id);
                                   setAddingSection(null);
-                                  setEditForm({ section: item.section, designation: item.designation ?? "", code_number: item.code_number ?? "", description: item.description, qty_required: String(item.qty_required), notes: item.notes ?? "" });
+                                  setEditForm({ section: item.section, designation: item.designation ?? "", code_number: item.code_number ?? "", description: item.description, qty_required: String(item.qty_required), unit_cost: item.unit_cost != null ? String(item.unit_cost) : "", notes: item.notes ?? "" });
                                 }}
                                 className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-secondary transition hover:bg-surface-base"
                               >Edit</button>
@@ -861,6 +873,7 @@ export function BomTab({ projectId, readOnly = false, allowReceiptEditing = fals
                               <td className="break-words px-4 py-3 text-text-secondary">{item.code_number || "-"}</td>
                               <td className="px-4 py-3 text-text-primary">
                                 <div className="break-words font-medium">{item.description}</div>
+                                {formatUnitCost(item.unit_cost) && <div className="mt-1 text-xs text-text-tertiary">Unit Cost: {formatUnitCost(item.unit_cost)}</div>}
                                 {item.notes && <div className="mt-1 text-xs text-text-tertiary">{item.notes}</div>}
                                 <div className="mt-2 text-[11px] font-medium uppercase tracking-wide text-text-tertiary">
                                   Use &quot;View/Add Receipts&quot; to log or edit deliveries
@@ -889,6 +902,7 @@ export function BomTab({ projectId, readOnly = false, allowReceiptEditing = fals
                                           code_number: item.code_number ?? "",
                                           description: item.description,
                                           qty_required: String(item.qty_required),
+                                          unit_cost: item.unit_cost != null ? String(item.unit_cost) : "",
                                           notes: item.notes ?? "",
                                         });
                                       }}

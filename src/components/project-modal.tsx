@@ -11,6 +11,7 @@ import { ChangeOrdersSection } from "@/components/project-modal/change-orders-se
 import { EstimatorAndPocSection } from "@/components/project-modal/poc-setup-section";
 import { WeeklyUpdatesSection } from "@/components/project-modal/weekly-updates-section";
 import { ProjectBillingSection } from "@/components/project-modal/project-billing-section";
+import { ProjectBudgetSection } from "@/components/project-modal/project-budget-section";
 
 export type ProjectCustomerOption = {
   id: string;
@@ -185,7 +186,7 @@ export function ProjectModal({
 }) {
   const customerOptions = useMemo(() => customers, [customers]);
   const [showImportDialog, setShowImportDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "weekly-updates" | "billing" | "change-orders" | "materials">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "weekly-updates" | "billing" | "budget" | "change-orders" | "materials">("overview");
   const [formTab, setFormTab] = useState<"details" | "team" | "compliance" | "history">("details");
 
   // Track unsaved changes
@@ -249,6 +250,7 @@ export function ProjectModal({
                   { id: "overview", label: "Overview" },
                   { id: "weekly-updates", label: "Weekly Updates" },
                   { id: "billing", label: "Billing" },
+                  { id: "budget", label: "Budget" },
                   { id: "change-orders", label: "Change Orders" },
                   { id: "materials", label: "Materials" },
                 ] as const
@@ -640,6 +642,12 @@ export function ProjectModal({
         {editingProject && activeTab === "billing" && (
           <div className="px-6 py-6">
             <ProjectBillingSection projectId={editingProject.id} />
+          </div>
+        )}
+
+        {editingProject && activeTab === "budget" && (
+          <div className="px-6 py-6">
+            <ProjectBudgetSection projectId={editingProject.id} />
           </div>
         )}
 

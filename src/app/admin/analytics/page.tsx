@@ -42,6 +42,18 @@ interface PmWorkloadItem {
   count: number;
 }
 
+interface JobCostingRow {
+  projectId: string;
+  name: string;
+  jobNumber: string | null;
+  customerName: string | null;
+  budgeted: number;
+  actual: number;
+  variance: number;
+}
+
+type JobCostingSortKey = "name" | "budgeted" | "actual" | "variance";
+
 const COLORS = [
   "var(--color-brand-primary)",
   "var(--color-success)",
@@ -59,6 +71,27 @@ const fmt = (n: number) =>
     maximumFractionDigits: 0,
   }).format(n);
 
+const currency = (n: number) =>
+  n.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+function pctOf(actual: number, budgeted: number) {
+  if (budgeted <= 0) return actual > 0 ? Infinity : null;
+  return actual / budgeted;
+}
+
+function formatPct(pct: number | null) {
+  if (pct === null) return "—";
+  if (!Number.isFinite(pct)) return ">999%";
+  return `${Math.round(pct * 100)}%`;
+}
+
+function pctToneClass(pct: number | null) {
+  if (pct === null) return "bg-surface-overlay text-text-secondary";
+  if (!Number.isFinite(pct) || pct > 1) return "bg-status-danger/10 text-status-danger";
+  if (pct >= 0.9) return "bg-status-warning/10 text-status-warning";
+  return "bg-status-success/10 text-status-success";
+}
+
 export default function AnalyticsPage() {
   const [rangeMonths, setRangeMonths] = useState(6);
   const [monthly, setMonthly] = useState<MonthlyData[]>([]);
@@ -73,6 +106,12 @@ export default function AnalyticsPage() {
     projectedMtd: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [jobCosting, setJobCosting] = useState<JobCostingRow[]>([]);
+  const [jobCostingLoading, setJobCostingLoading] = useState(true);
+  const [jobCostingSort, setJobCostingSort] = useState<{ key: JobCostingSortKey; direction: "asc" | "desc" }>({
+    key: "variance",
+    direction: "asc",
+  });
   const [powerBiEnabled] = useState(
     !!(process.env.NEXT_PUBLIC_POWERBI_WORKSPACE_ID && process.env.NEXT_PUBLIC_POWERBI_REPORT_ID)
   );
@@ -81,6 +120,39 @@ export default function AnalyticsPage() {
     void loadAnalytics();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rangeMonths]);
+
+  useEffect(() => {
+    void loadJobCosting();
+  }, []);
+
+  async function loadJobCosting() {
+    setJobCostingLoading(true);
+
+    try {
+      const response = await fetch("/api/admin/job-costing", { credentials: "include" });
+      const json = await safeJson(response);
+      if (!response.ok) throw new Error(json?.error ?? "Failed to load job costing.");
+      setJobCosting((json?.projects as JobCostingRow[]) ?? []);
+    } catch {
+      setJobCosting([]);
+    } finally {
+      setJobCostingLoading(false);
+    }
+  }
+
+  function toggleJobCostingSort(key: JobCostingSortKey) {
+    setJobCostingSort((current) =>
+      current.key === key
+        ? { key, direction: current.direction === "asc" ? "desc" : "asc" }
+        : { key, direction: "asc" }
+    );
+  }
+
+  const sortedJobCosting = [...jobCosting].sort((a, b) => {
+    const direction = jobCostingSort.direction === "asc" ? 1 : -1;
+    if (jobCostingSort.key === "name") return a.name.localeCompare(b.name) * direction;
+    return (a[jobCostingSort.key] - b[jobCostingSort.key]) * direction;
+  });
 
   async function loadAnalytics() {
     setLoading(true);
@@ -242,6 +314,52 @@ export default function AnalyticsPage() {
             <KpiCard label="Projected This Month" value={fmt(summary.projectedMtd)} />
             <KpiCard label="Actual Billed MTD" value={fmt(summary.billedMtd)} accent="emerald" />
           </div>
+
+          <ChartCard title="Job Costing — Budget vs Actual">
+            {jobCostingLoading ? (
+              <div className="py-10 text-center text-text-tertiary">Loading job costing...</div>
+            ) : sortedJobCosting.length === 0 ? (
+              <EmptyChartMessage message="Job costing appears here once active projects have budget or BOM unit cost data." />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-border-default text-sm">
+                  <thead>
+                    <tr>
+                      <JobCostingHeader label="Project" sortKey="name" sort={jobCostingSort} onSort={toggleJobCostingSort} align="left" />
+                      <JobCostingHeader label="Budgeted" sortKey="budgeted" sort={jobCostingSort} onSort={toggleJobCostingSort} />
+                      <JobCostingHeader label="Actual" sortKey="actual" sort={jobCostingSort} onSort={toggleJobCostingSort} />
+                      <JobCostingHeader label="Variance" sortKey="variance" sort={jobCostingSort} onSort={toggleJobCostingSort} />
+                      <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-text-secondary">% Used</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-default">
+                    {sortedJobCosting.map((row) => {
+                      const pct = pctOf(row.actual, row.budgeted);
+                      return (
+                        <tr key={row.projectId}>
+                          <td className="px-3 py-2 text-text-primary">
+                            <div className="font-medium">{row.name}</div>
+                            <div className="text-xs text-text-tertiary">
+                              {[row.jobNumber, row.customerName].filter(Boolean).join(" · ") || "—"}
+                            </div>
+                          </td>
+                          <td className="px-3 py-2 text-right text-text-primary">{currency(row.budgeted)}</td>
+                          <td className="px-3 py-2 text-right text-text-primary">{currency(row.actual)}</td>
+                          <td className="px-3 py-2 text-right text-text-secondary">
+                            {row.variance >= 0 ? "+" : "-"}
+                            {currency(Math.abs(row.variance))}
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${pctToneClass(pct)}`}>{formatPct(pct)}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </ChartCard>
 
           <ChartCard title={`Billing Trend - Last ${rangeMonths === 24 ? "24 months" : `${rangeMonths} months`}`}>
             {monthly.length > 0 ? (
@@ -465,6 +583,35 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
       <h3 className="mb-4 text-sm font-semibold text-text-primary">{title}</h3>
       {children}
     </div>
+  );
+}
+
+function JobCostingHeader({
+  label,
+  sortKey,
+  sort,
+  onSort,
+  align = "right",
+}: {
+  label: string;
+  sortKey: JobCostingSortKey;
+  sort: { key: JobCostingSortKey; direction: "asc" | "desc" };
+  onSort: (key: JobCostingSortKey) => void;
+  align?: "left" | "right";
+}) {
+  const active = sort.key === sortKey;
+  const arrow = active ? (sort.direction === "asc" ? "↑" : "↓") : "";
+
+  return (
+    <th className={`px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-secondary ${align === "left" ? "text-left" : "text-right"}`}>
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className={`transition hover:text-text-primary ${active ? "text-text-primary" : ""}`}
+      >
+        {label} {arrow}
+      </button>
+    </th>
   );
 }
 

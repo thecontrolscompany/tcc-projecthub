@@ -109,6 +109,7 @@ export interface Project {
   customer_po_number: string | null;
   site_address: string | null;
   contract_price: number | null;
+  labor_rate: number;
   general_contractor: string | null;
   mechanical_contractor: string | null;
   electrical_contractor: string | null;
@@ -567,6 +568,7 @@ export interface BomItem {
   code_number: string | null;
   description: string;
   qty_required: number;
+  unit_cost: number | null;
   notes: string | null;
   sort_order: number;
   created_at: string;

@@ -144,6 +144,7 @@ export async function POST(request: Request) {
       code_number: typeof body?.code_number === "string" ? body.code_number.trim() || null : null,
       description: typeof body?.description === "string" ? body.description.trim() : "",
       qty_required: Number(body?.qty_required ?? 0),
+      unit_cost: body?.unit_cost === undefined || body?.unit_cost === null || body?.unit_cost === "" ? null : Number(body.unit_cost),
       notes: typeof body?.notes === "string" ? body.notes.trim() || null : null,
       sort_order: Number(body?.sort_order ?? 0),
     })
@@ -203,7 +204,7 @@ export async function PATCH(request: Request) {
   }
 
   const payload: Record<string, unknown> = {};
-  for (const key of ["section", "designation", "code_number", "description", "qty_required", "notes", "sort_order"]) {
+  for (const key of ["section", "designation", "code_number", "description", "qty_required", "unit_cost", "notes", "sort_order"]) {
     if (key in (body ?? {})) payload[key] = body[key];
   }
 
