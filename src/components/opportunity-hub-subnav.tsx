@@ -39,11 +39,16 @@ const PM_ITEMS = [
   { href: "/crm/tasks",          label: "Tasks" },
 ];
 
-export function OpportunityHubSubnav() {
+export function OpportunityHubSubnav({ role: initialRole = null }: { role?: string | null } = {}) {
   const pathname = usePathname();
-  const [role, setRole] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(initialRole);
 
   useEffect(() => {
+    if (initialRole !== null && initialRole !== undefined) {
+      setRole(initialRole);
+      return;
+    }
+
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
@@ -56,7 +61,7 @@ export function OpportunityHubSubnav() {
           if (data?.role) setRole(data.role);
         });
     });
-  }, []);
+  }, [initialRole]);
 
   const items =
     role === "admin"       ? ADMIN_ITEMS :

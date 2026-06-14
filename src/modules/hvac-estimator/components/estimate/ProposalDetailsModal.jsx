@@ -125,31 +125,34 @@ export function ProposalDetailsModal({
                 settings={settings}
                 onChange={onChange}
               />
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
-                  <span>Proposal fields auto-save as you edit.</span>
-                  <span
-                    className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
-                      saveState === "saving"
-                        ? "border-amber-300 bg-amber-100 text-amber-700"
-                        : saveState === "unsaved"
-                          ? "border-rose-300 bg-rose-100 text-rose-700"
-                          : "border-emerald-300 bg-emerald-100 text-emerald-700"
-                    }`}
-                  >
-                    {saveState === "saving" ? "Saving..." : saveState === "unsaved" ? "Unsaved changes" : "Saved"}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-                >
-                  Apply Changes
-                </button>
-              </div>
             </div>
           )}
+        </div>
+
+        <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-6 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+              <span>Proposal fields auto-save as you edit.</span>
+              <span
+                className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                  saveState === "saving"
+                    ? "border-amber-300 bg-amber-100 text-amber-700"
+                    : saveState === "unsaved"
+                      ? "border-rose-300 bg-rose-100 text-rose-700"
+                      : "border-emerald-300 bg-emerald-100 text-emerald-700"
+                }`}
+              >
+                {saveState === "saving" ? "Saving..." : saveState === "unsaved" ? "Unsaved changes" : "Saved"}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+            >
+              Apply Changes
+            </button>
+          </div>
         </div>
       </div>
     </div>

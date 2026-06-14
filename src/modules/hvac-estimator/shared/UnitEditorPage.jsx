@@ -265,7 +265,9 @@ export function UnitEditorPage({
             fontFamily: T.mono,
             fontSize: 13,
             padding: "4px 8px",
-            width: 100,
+            flex: "1 1 120px",
+            minWidth: 0,
+            maxWidth: 180,
             outline: "none",
             fontWeight: 700,
           }}
@@ -284,6 +286,8 @@ export function UnitEditorPage({
             fontSize: 12,
             padding: "4px 8px",
             flex: "1 1 120px",
+            minWidth: 0,
+            maxWidth: 280,
             outline: "none",
           }}
         />

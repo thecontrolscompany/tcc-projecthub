@@ -4,7 +4,7 @@ import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { OpportunityHubSubnav } from "@/components/opportunity-hub-subnav";
 import { deriveEstimatorCostBuckets } from "@/modules/hvac-estimator/components/estimate/estimateCalc";
-import { DEFAULT_SETTINGS, normalizeEstimateScopeMode } from "@/modules/hvac-estimator/components/estimate/projectSettings";
+import { DEFAULT_SETTINGS } from "@/modules/hvac-estimator/components/estimate/projectSettings";
 import type { EstimateRecord } from "@/types/database";
 
 type ApiResponse = {
@@ -15,6 +15,10 @@ type ApiResponse = {
 type CustomerRecord = {
   id: string;
   name: string;
+};
+
+type EstimatingListClientProps = {
+  role?: string;
 };
 
 function formatCurrency(value: number | null | undefined) {
@@ -39,14 +43,10 @@ function getEstimateDisplayTotal(estimate: EstimateRecord) {
   const rawSettings = body.settings && typeof body.settings === "object" ? (body.settings as Record<string, unknown>) : {};
   const settings = { ...DEFAULT_SETTINGS, ...rawSettings };
   const buckets = deriveEstimatorCostBuckets(body, {}, settings);
-  const scopeMode = normalizeEstimateScopeMode(settings.estimateScopeMode);
-
-  return scopeMode === "installation"
-    ? buckets.totals.installSellPrice ?? estimate.total_amount ?? 0
-    : buckets.totals.turnkeySellPrice ?? estimate.total_amount ?? 0;
+  return buckets.totals.turnkeySellPrice ?? estimate.total_amount ?? 0;
 }
 
-export function EstimatingListClient() {
+export function EstimatingListClient({ role }: EstimatingListClientProps) {
   const [estimates, setEstimates] = useState<EstimateRecord[]>([]);
   const [customers, setCustomers] = useState<CustomerRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -530,7 +530,7 @@ export function EstimatingListClient() {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-6">
-      <OpportunityHubSubnav />
+      <OpportunityHubSubnav role={role} />
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>

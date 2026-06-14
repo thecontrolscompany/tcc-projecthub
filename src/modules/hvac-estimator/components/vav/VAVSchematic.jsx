@@ -739,7 +739,7 @@ export default function VAVPage({ onNavigateBack = null }) {
         </div>
         <input value={tag} onChange={e=>setTag(e.target.value)}
           style={{ background:T.blueFaint, border:"1px solid "+T.blueMid, borderRadius:4,
-            color:T.blue, fontFamily:T.mono, fontSize:13, padding:"4px 8px", width:80, outline:"none", fontWeight:700 }} />
+            color:T.blue, fontFamily:T.mono, fontSize:13, padding:"4px 8px", flex:"1 1 120px", minWidth:0, maxWidth:180, outline:"none", fontWeight:700 }} />
         {qty>1 && <span style={{ fontSize:13, color:T.blue, fontFamily:T.mono }}>Qty Multiplier: × {qty}</span>}
         <input value={loc} onChange={e=>setLoc(e.target.value)}
           style={{ background:T.panel, border:"1px solid "+T.border, borderRadius:4,

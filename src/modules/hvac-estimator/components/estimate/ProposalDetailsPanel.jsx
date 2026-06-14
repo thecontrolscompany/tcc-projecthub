@@ -16,6 +16,13 @@ function formatDateInputValue(value) {
   return "";
 }
 
+function normalizeDateInputValue(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  const formatted = formatDateInputValue(text);
+  return formatted || text;
+}
+
 export function ProposalDetailsPanel({ settings, onChange }) {
   const S = settings;
 
@@ -50,7 +57,9 @@ export function ProposalDetailsPanel({ settings, onChange }) {
       <input
         type="date"
         value={formatDateInputValue(S[key])}
-        onChange={(e) => onChange({ [key]: e.target.value })}
+        onChange={(e) => onChange({ [key]: normalizeDateInputValue(e.currentTarget.value) })}
+        onInput={(e) => onChange({ [key]: normalizeDateInputValue(e.currentTarget.value) })}
+        onBlur={(e) => onChange({ [key]: normalizeDateInputValue(e.currentTarget.value) })}
         style={{
           padding: "5px 8px",
           border: "1px solid " + T.border2,
