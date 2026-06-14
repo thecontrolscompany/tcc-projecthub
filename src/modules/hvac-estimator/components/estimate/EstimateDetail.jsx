@@ -29,12 +29,131 @@ import {
   fmtAuditDate,
   getItemDetails,
 } from "./estimateCalc.js";
+
+const STATUS_META = {
+  draft: {
+    label: "Draft",
+    bg: "#F1F5F9",
+    border: "#CBD5E1",
+    color: "#475569",
+  },
+  in_progress: {
+    label: "In Progress",
+    bg: "#DBEAFE",
+    border: "#93C5FD",
+    color: "#2563EB",
+  },
+  ready: {
+    label: "Ready",
+    bg: "#DCFCE7",
+    border: "#86EFAC",
+    color: "#16A34A",
+  },
+  proposal_exported: {
+    label: "Proposal Exported",
+    bg: "#CCFBF1",
+    border: "#5EEAD4",
+    color: "#0F766E",
+  },
+  awarded: {
+    label: "Awarded",
+    bg: "#D1FAE5",
+    border: "#6EE7B7",
+    color: "#059669",
+  },
+  archived: {
+    label: "Archived",
+    bg: "#E2E8F0",
+    border: "#CBD5E1",
+    color: "#64748B",
+  },
+};
+
+function getStatusMeta(status) {
+  return STATUS_META[status] || STATUS_META.draft;
+}
+
+function EstimateStatusBadge({ status, onChange }) {
+  const [open, setOpen] = useState(false);
+  const selected = getStatusMeta(status);
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        title="Estimate status"
+        className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition hover:brightness-95"
+        style={{
+          background: selected.bg,
+          borderColor: selected.border,
+          color: selected.color,
+        }}
+      >
+        <span>{selected.label}</span>
+        <span aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 overflow-hidden rounded-xl border border-border-default bg-surface-raised p-1 shadow-xl">
+          {Object.entries(STATUS_META).map(([key, meta]) => {
+            const active = key === status;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => {
+                  onChange?.(key);
+                  setOpen(false);
+                }}
+                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ${
+                  active ? "bg-surface-overlay text-text-primary" : "text-text-secondary hover:bg-surface-overlay hover:text-text-primary"
+                }`}
+              >
+                <span>{meta.label}</span>
+                {active ? <span className="text-brand-primary">✓</span> : <span className="text-text-tertiary"> </span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VersionHistoryModal({ open, onClose }) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 px-4 py-6">
+      <div className="w-full max-w-md rounded-2xl border border-border-default bg-surface-raised shadow-2xl">
+        <div className="flex items-center justify-between border-b border-border-default px-5 py-4">
+          <h3 className="text-base font-semibold text-text-primary">Version History</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-border-default px-2.5 py-1 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
+          >
+            Close
+          </button>
+        </div>
+        <div className="px-5 py-5 text-sm text-text-secondary">Version history coming soon.</div>
+      </div>
+    </div>
+  );
+}
 export function EstimateDetail({
   estimate,
   onBack,
   onUpdate,
   onSave = null,
   saving = false,
+  status = "draft",
+  onStatusChange = null,
+  saveChipState = "saved",
+  savedAt = null,
+  recoveryState = "kept",
+  onKeepRecoveredDraft = null,
+  onDiscardRecoveredDraft = null,
   customerMode = false,
   showProjectSettings = true,
   showBidAlternates = true,
@@ -50,6 +169,7 @@ export function EstimateDetail({
   const [showProposalDetails, setShowProposalDetails] = useState(false);
   const [showAiParser, setShowAiParser] = useState(false);
   const [activeTab, setActiveTab] = useState("estimate");
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
 
   useEffect(() => {
     if (initialProposalTab === "documents") {
@@ -355,30 +475,6 @@ export function EstimateDetail({
                 borderRadius:4, color:T.muted, cursor:"pointer", fontSize:12,
                 fontFamily:T.mono, padding:"6px 11px", whiteSpace:"nowrap" }}>← All Estimates</button>
 
-              {!customerMode && <div style={{ display:"flex", alignItems:"center", gap:6, flex:"0 0 auto", flexWrap:"wrap" }}>
-                <button onClick={exportProposal} disabled={exporting||!estimate.items?.length}
-                  title="Generate customer proposal (.html)"
-                  style={{ display:"flex", alignItems:"center", gap:5,
-                    padding:"8px 13px", border:"none", borderRadius:5,
-                    background:estimate.items?.length?"#01766A":T.faint,
-                    color:estimate.items?.length?"#fff":T.dim,
-                    cursor:estimate.items?.length?"pointer":"default",
-                    fontSize:12, fontWeight:600, fontFamily:T.mono, whiteSpace:"nowrap",
-                    opacity:exporting?0.7:1 }}>
-                  {exporting?"Generating...":"Generate Proposal"}
-                </button>
-                <button onClick={exportInternal} disabled={!estimate.items?.length}
-                  title="Generate readable internal estimate report (.html)"
-                  style={{ display:"flex", alignItems:"center", gap:5,
-                    padding:"8px 13px", border:"1px solid "+T.border2, borderRadius:5,
-                    background:estimate.items?.length?T.surface:T.faint,
-                    color:estimate.items?.length?T.text:T.dim,
-                    cursor:estimate.items?.length?"pointer":"default",
-                    fontSize:12, fontWeight:600, fontFamily:T.mono, whiteSpace:"nowrap" }}>
-                  Internal Report
-                </button>
-              </div>}
-
               <div style={{ flex:"1 1 420px", minWidth:280, maxWidth:"100%" }}>
                 <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:3 }}>
                   <span style={{ fontSize:18, lineHeight:1.25, fontWeight:800, color:T.text, overflowWrap:"break-word" }}>
@@ -387,9 +483,6 @@ export function EstimateDetail({
                   {estimate.number && <span style={{ fontSize:11, color:T.muted, background:T.panel,
                     padding:"1px 6px", borderRadius:8, fontFamily:T.mono, border:"1px solid "+T.border }}>
                     #{estimate.number}</span>}
-                  {estimate.version && <span style={{ fontSize:11, color:T.blue, background:T.blueFaint,
-                    padding:"1px 6px", borderRadius:8, fontFamily:T.mono, border:"1px solid "+T.blueMid }}>
-                    v{estimate.version}</span>}
                   {estimate.customer && <span style={{ fontSize:12, color:T.muted }}>· {estimate.customer}</span>}
                   {(estimate.bidder||estimate.body?.bidder) && <span style={{ fontSize:12, color:T.blue, background:T.blueFaint, padding:"1px 6px", borderRadius:8, fontFamily:T.mono, border:"1px solid "+T.blueMid }}>Bidder: {estimate.bidder||estimate.body?.bidder}</span>}
                   <button onClick={()=>setEditHeader(true)} style={{ background:"none", border:"none",
@@ -402,6 +495,20 @@ export function EstimateDetail({
                     {createdBy && updatedBy && " | "}
                     {updatedBy && `Last updated by ${updatedBy}${updatedOn ? ` on ${updatedOn}` : ""}`}
                   </div>
+                )}
+              </div>
+
+              <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginLeft:"auto" }}>
+                <EstimateStatusBadge status={status} onChange={onStatusChange} />
+                {estimate.version && (
+                  <button
+                    type="button"
+                    onClick={() => setShowVersionHistory(true)}
+                    title="Estimate version — increments when a proposal is exported. Click to view version history."
+                    className="rounded-full border border-border-default px-3 py-1 text-xs font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
+                  >
+                    v{estimate.version}
+                  </button>
                 )}
               </div>
 
@@ -451,12 +558,41 @@ export function EstimateDetail({
         ]}
       />
 
+      {recoveryState === "pending" && (
+        <div className="mx-6 mt-4 rounded-xl border border-amber-300 bg-amber-100 px-4 py-3 text-sm text-amber-950">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-2">
+              <span className="mt-0.5 text-base font-bold">⚠</span>
+              <span>A locally recovered draft was loaded — your last saved version may differ.</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={onKeepRecoveredDraft}
+                className="rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-700"
+              >
+                Keep this draft
+              </button>
+              <button
+                type="button"
+                onClick={onDiscardRecoveredDraft}
+                className="rounded-lg border border-amber-400 bg-white px-3 py-2 text-sm font-semibold text-amber-950 transition hover:bg-amber-50"
+              >
+                Discard &amp; load saved
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ padding:"0 24px 16px", display: activeTab === "estimate" ? "grid" : "none", gap:12 }}>
         {!customerMode && (
           <EstimatorActionBar
             customerMode={customerMode}
             saving={saving}
             onSave={onSave}
+            saveChipState={saveChipState}
+            savedAt={savedAt}
             onProposalDetails={() => setShowProposalDetails((value) => !value)}
             onBidAlternate={() => createBidAlternate("installation", "Bid Alternate")}
             onSystemWizard={() => setSubPage({ type: "wizard" })}
@@ -536,6 +672,7 @@ export function EstimateDetail({
           }}
         />
       )}
+      <VersionHistoryModal open={showVersionHistory} onClose={() => setShowVersionHistory(false)} />
 
       {/* ── LINE ITEMS TABLE ── */}
       <div style={{ display: activeTab === "estimate" ? "block" : "none", flex:1, overflow:"auto", padding:"20px 24px" }}>

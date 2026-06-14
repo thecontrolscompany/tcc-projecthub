@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Fragment, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { calcEstimate, calcItem, COMPS_MAP, TYPE_META } from "@/modules/hvac-estimator/components/estimate/estimateCalc";
 import { AddEquipButtons } from "@/modules/hvac-estimator/components/estimate/AddEquipButtons";
 import { AiTakeoffModal } from "@/modules/hvac-estimator/components/estimate/AiTakeoffModal";
@@ -409,6 +409,67 @@ function buildItemFromForm(form: AddItemForm): EstimateItem {
   };
 }
 
+function EstimateStatusBadge({
+  status,
+  onChange,
+}: {
+  status: EstimateStatus;
+  onChange: (nextStatus: EstimateStatus) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const statusMeta: Record<EstimateStatus, { label: string; bg: string; border: string; color: string }> = {
+    draft: { label: "Draft", bg: "#F1F5F9", border: "#CBD5E1", color: "#475569" },
+    in_progress: { label: "In Progress", bg: "#DBEAFE", border: "#93C5FD", color: "#2563EB" },
+    ready: { label: "Ready", bg: "#DCFCE7", border: "#86EFAC", color: "#16A34A" },
+    proposal_exported: { label: "Proposal Exported", bg: "#CCFBF1", border: "#5EEAD4", color: "#0F766E" },
+    awarded: { label: "Awarded", bg: "#D1FAE5", border: "#6EE7B7", color: "#059669" },
+    archived: { label: "Archived", bg: "#E2E8F0", border: "#CBD5E1", color: "#64748B" },
+  };
+  const selected = statusMeta[status];
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition hover:brightness-95"
+        style={{
+          background: selected.bg,
+          borderColor: selected.border,
+          color: selected.color,
+        }}
+      >
+        <span>{selected.label}</span>
+        <span aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 overflow-hidden rounded-xl border border-border-default bg-surface-raised p-1 shadow-xl">
+          {statusOptions.map((option) => {
+            const meta = statusMeta[option];
+            const active = option === status;
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => {
+                  onChange(option);
+                  setOpen(false);
+                }}
+                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ${
+                  active ? "bg-surface-overlay text-text-primary" : "text-text-secondary hover:bg-surface-overlay hover:text-text-primary"
+                }`}
+              >
+                <span>{meta.label}</span>
+                {active ? <span className="text-brand-primary">✓</span> : <span className="text-text-tertiary"> </span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -424,6 +485,13 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
   }, []);
 
   const initialEstimateState = getInitialEstimateState(estimate);
+  const serverEstimateState = useMemo(
+    () => ({
+      body: normalizeBody(estimate),
+      status: estimate.status,
+    }),
+    [estimate],
+  );
   const [body, setBody] = useState<EstimateBody>(() => initialEstimateState.body);
   const [status, setStatus] = useState<EstimateStatus>(() => initialEstimateState.status);
   const [addForm, setAddForm] = useState<AddItemForm>(() => buildAddForm());
@@ -435,8 +503,17 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [dirty, setDirty] = useState(() => initialEstimateState.recovered);
-  const [message, setMessage] = useState<string | null>(() => (initialEstimateState.recovered ? "Recovered unsaved local draft." : null));
   const [error, setError] = useState<string | null>(null);
+  const [saveChipState, setSaveChipState] = useState<"saved" | "saving" | "unsaved">(
+    initialEstimateState.recovered ? "unsaved" : "saved",
+  );
+  const [savedAt, setSavedAt] = useState<string | null>(
+    initialEstimateState.recovered ? null : new Date().toISOString(),
+  );
+  const [recoveryState, setRecoveryState] = useState<"pending" | "kept" | "discarded">(
+    initialEstimateState.recovered ? "pending" : "kept",
+  );
+  const autosaveTimerRef = useRef<number | null>(null);
 
   const opportunityNumber = asString(body.platformContext?.opportunityNumber);
   const organizationId =
@@ -478,7 +555,7 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
       updatedAt: new Date().toISOString(),
     }));
     setDirty(true);
-    setMessage(null);
+    setSaveChipState("unsaved");
     setError(null);
   }
 
@@ -600,8 +677,9 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
       importedCount: number;
     };
 
-    await persistEstimate(nextEstimate, { showSuccessMessage: false });
-    setMessage(`Imported ${importedCount} system${importedCount === 1 ? "" : "s"} into the estimate.`);
+    await persistEstimate(nextEstimate, status);
+    setSaveChipState("saved");
+    setSavedAt(new Date().toISOString());
   }
 
   useEffect(() => {
@@ -609,17 +687,15 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
     writeLocalDraft(estimate.id, body, status);
   }, [dirty, body, status, estimate.id]);
 
-  async function persistEstimate(nextBody: EstimateBody, options: { showSuccessMessage?: boolean } = {}) {
-    const { showSuccessMessage = true } = options;
-
+  async function persistEstimate(nextBody: EstimateBody, nextStatus: EstimateStatus) {
     const summary = summarizeHvacEstimate(nextBody);
 
     const res = await fetch(`/api/estimates/${estimate.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        status,
-        archived: status === "archived",
+        status: nextStatus,
+        archived: nextStatus === "archived",
         body: nextBody,
         total_amount: summary.totalAmount,
         gross_margin_amount: summary.grossMarginAmount,
@@ -633,19 +709,17 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
     }
 
     setBody(nextBody);
+    setStatus(nextStatus);
     setDirty(false);
     clearLocalDraft(estimate.id);
-    if (showSuccessMessage) {
-      setMessage("Estimate saved.");
-    } else {
-      setMessage(null);
-    }
+    setSaveChipState("saved");
+    setSavedAt(new Date().toISOString());
   }
 
   async function handleSave() {
     setSaving(true);
-    setMessage(null);
     setError(null);
+    setSaveChipState("saving");
 
     const nextBody = {
       ...body,
@@ -653,22 +727,86 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
     };
 
     try {
-      await persistEstimate(nextBody, { showSuccessMessage: true });
+      await persistEstimate(nextBody, status);
       setError(null);
     } catch (error) {
+      setSaveChipState("unsaved");
       setError(error instanceof Error ? error.message : "Unable to save estimate.");
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleAutosave(nextBody: EstimateBody) {
+  async function handleAutosave(nextBody: EstimateBody, nextStatus: EstimateStatus) {
+    setSaving(true);
+    setSaveChipState("saving");
     try {
-      await persistEstimate(nextBody, { showSuccessMessage: false });
+      await persistEstimate(nextBody, nextStatus);
       setError(null);
     } catch (error) {
+      setSaveChipState("unsaved");
       setError(error instanceof Error ? error.message : "Unable to save estimate.");
+    } finally {
+      setSaving(false);
     }
+  }
+
+  useEffect(() => {
+    if (recoveryState === "pending") return;
+    if (!dirty || saving) return;
+
+    if (autosaveTimerRef.current) {
+      window.clearTimeout(autosaveTimerRef.current);
+    }
+
+    autosaveTimerRef.current = window.setTimeout(() => {
+      void handleAutosave(
+        {
+          ...body,
+          updatedAt: new Date().toISOString(),
+        },
+        status,
+      );
+    }, 2000);
+
+    return () => {
+      if (autosaveTimerRef.current) {
+        window.clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
+    };
+  }, [body, dirty, recoveryState, saving, status]);
+
+  useEffect(
+    () => () => {
+      if (autosaveTimerRef.current) {
+        window.clearTimeout(autosaveTimerRef.current);
+      }
+    },
+    [],
+  );
+
+  function keepRecoveredDraft() {
+    setRecoveryState("kept");
+    setError(null);
+  }
+
+  function discardRecoveredDraft() {
+    clearLocalDraft(estimate.id);
+    setBody(serverEstimateState.body);
+    setStatus(serverEstimateState.status);
+    setDirty(false);
+    setSaveChipState("saved");
+    setSavedAt(null);
+    setRecoveryState("discarded");
+    setError(null);
+  }
+
+  function handleStatusChange(nextStatus: EstimateStatus) {
+    setStatus(nextStatus);
+    setDirty(true);
+    setSaveChipState("unsaved");
+    setError(null);
   }
 
   async function handleDelete() {
@@ -678,7 +816,6 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
     if (!confirmed) return;
 
     setDeleting(true);
-    setMessage(null);
     setError(null);
 
     try {
@@ -699,6 +836,7 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
   }
 
   const useLegacyUi = true;
+  const LegacyWorkspace = LegacyEstimatorWorkspace as any;
   if (useLegacyUi) {
     return (
       <ProjectHubEstimateProvider
@@ -724,28 +862,11 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {(message || error) && (
-                <span className={`text-sm ${error ? "text-status-danger" : "text-status-success"}`}>
-                  {error ?? message}
-                </span>
-              )}
-              <select
-                value={status}
-                onChange={(event) => {
-                  setStatus(event.target.value as EstimateStatus);
-                  setDirty(true);
-                }}
-                className="rounded-lg border border-border-default bg-surface-raised px-2 py-1 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
-              >
-                {statusOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option.replace(/_/g, " ")}
-                  </option>
-                ))}
-              </select>
+              {error && <span className="text-sm text-status-danger">{error}</span>}
+              <EstimateStatusBadge status={status} onChange={handleStatusChange} />
             </div>
           </div>
-          <LegacyEstimatorWorkspace
+          <LegacyWorkspace
             estimate={body}
             onUpdate={updateBody}
             onBack={() => {
@@ -757,6 +878,13 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
             deleting={deleting}
             platformEstimateId={estimate.id}
             initialProposalTab={initialProposalTab}
+            status={status}
+            onStatusChange={handleStatusChange}
+            saveChipState={saveChipState}
+            savedAt={savedAt}
+            recoveryState={recoveryState}
+            onKeepRecoveredDraft={keepRecoveredDraft}
+            onDiscardRecoveredDraft={discardRecoveredDraft}
           />
           <AiTakeoffModal
             open={showAiParser}
@@ -792,7 +920,7 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
             type="button"
             onClick={handleSave}
             disabled={saving || deleting}
-            className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-xl border border-border-default bg-transparent px-4 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? "Saving..." : dirty ? "Save Changes" : "Save"}
           </button>
@@ -815,15 +943,11 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
         </div>
       </div>
 
-      {(message || error) && (
+      {error && (
         <div
-          className={`mb-4 rounded-xl border px-3 py-2 text-sm ${
-            error
-              ? "border-status-danger/30 bg-status-danger/10 text-status-danger"
-              : "border-status-success/30 bg-status-success/10 text-status-success"
-          }`}
+          className="mb-4 rounded-xl border border-status-danger/30 bg-status-danger/10 px-3 py-2 text-sm text-status-danger"
         >
-          {error ?? message}
+          {error}
         </div>
       )}
 

@@ -23,6 +23,13 @@ import SelectionWizardPage from "../selectionWizard";
  * @property {(() => void) | null} [onDelete]
  * @property {boolean} [saving]
  * @property {boolean} [deleting]
+ * @property {string} [status]
+ * @property {(status: string) => void} [onStatusChange]
+ * @property {"saved" | "saving" | "unsaved"} [saveChipState]
+ * @property {string | null} [savedAt]
+ * @property {"pending" | "kept" | "discarded"} [recoveryState]
+ * @property {(() => void) | null} [onKeepRecoveredDraft]
+ * @property {(() => void) | null} [onDiscardRecoveredDraft]
  * @property {boolean} [allowBidAlternateEditor]
  * @property {(() => import("react").ReactNode) | null} [renderBidAlternateEditor]
  * @property {boolean} [showProjectSettings]
@@ -34,21 +41,30 @@ import SelectionWizardPage from "../selectionWizard";
 /**
  * @param {EstimateEditorWorkspaceProps} props
  */
-export function EstimateEditorWorkspace({
-  estimate,
-  onBack,
-  onUpdate,
-  onSave = null,
-  onDelete = null,
-  saving = false,
-  deleting = false,
-  allowBidAlternateEditor = false,
-  renderBidAlternateEditor = null,
-  showProjectSettings = false,
-  showBidAlternates = false,
-  platformEstimateId = null,
-  initialProposalTab = null,
-}) {
+export function EstimateEditorWorkspace(props) {
+  /** @type {EstimateEditorWorkspaceProps} */
+  const {
+    estimate,
+    onBack,
+    onUpdate,
+    onSave = null,
+    onDelete = null,
+    saving = false,
+    deleting = false,
+    status = "draft",
+    onStatusChange = null,
+    saveChipState = "saved",
+    savedAt = null,
+    recoveryState = "kept",
+    onKeepRecoveredDraft = null,
+    onDiscardRecoveredDraft = null,
+    allowBidAlternateEditor = false,
+    renderBidAlternateEditor = null,
+    showProjectSettings = false,
+    showBidAlternates = false,
+    platformEstimateId = null,
+    initialProposalTab = null,
+  } = props;
   const { subPage, setSubPage } = useEstimate();
 
   if (subPage?.type === "wizard") {
@@ -102,6 +118,13 @@ export function EstimateEditorWorkspace({
               onDelete={onDelete}
               saving={saving}
               deleting={deleting}
+              status={status}
+              onStatusChange={onStatusChange}
+              saveChipState={saveChipState}
+              savedAt={savedAt}
+              recoveryState={recoveryState}
+              onKeepRecoveredDraft={onKeepRecoveredDraft}
+              onDiscardRecoveredDraft={onDiscardRecoveredDraft}
               showProjectSettings={showProjectSettings}
               showBidAlternates={showBidAlternates}
               platformEstimateId={platformEstimateId}
@@ -118,6 +141,13 @@ export function EstimateEditorWorkspace({
               onDelete={onDelete}
               saving={saving}
               deleting={deleting}
+              status={status}
+              onStatusChange={onStatusChange}
+              saveChipState={saveChipState}
+              savedAt={savedAt}
+              recoveryState={recoveryState}
+              onKeepRecoveredDraft={onKeepRecoveredDraft}
+              onDiscardRecoveredDraft={onDiscardRecoveredDraft}
               showProjectSettings={showProjectSettings}
               showBidAlternates={showBidAlternates}
               platformEstimateId={platformEstimateId}
@@ -143,6 +173,13 @@ export function EstimateEditorWorkspace({
       onDelete={onDelete}
       saving={saving}
       deleting={deleting}
+      status={status}
+      onStatusChange={onStatusChange}
+      saveChipState={saveChipState}
+      savedAt={savedAt}
+      recoveryState={recoveryState}
+      onKeepRecoveredDraft={onKeepRecoveredDraft}
+      onDiscardRecoveredDraft={onDiscardRecoveredDraft}
       showProjectSettings={showProjectSettings}
       showBidAlternates={showBidAlternates}
       platformEstimateId={platformEstimateId}

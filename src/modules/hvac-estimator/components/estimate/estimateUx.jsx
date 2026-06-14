@@ -753,9 +753,28 @@ export function EstimatorActionBar({
   exporting,
   saving,
   onSave,
+  saveChipState = "saved",
+  savedAt = null,
   onProposalDetails,
   onAddEquipment,
 }) {
+  const savedRecently = saveChipState === "saved" && savedAt ? Date.now() - new Date(savedAt).getTime() < 3000 : false;
+  const savedMuted = saveChipState === "saved" && !savedRecently;
+  const chipStyles =
+    saveChipState === "saving"
+      ? { border: "1px solid " + T.border2, background: T.panel, color: T.muted }
+      : saveChipState === "unsaved"
+        ? { border: "1px solid #FCD34D", background: "#FFFBEB", color: T.amber }
+        : savedMuted
+          ? { border: "1px solid " + T.border2, background: T.panel, color: T.muted }
+          : { border: "1px solid #86EFAC", background: "#DCFCE7", color: T.green };
+  const chipLabel =
+    saveChipState === "saving"
+      ? "Saving..."
+      : saveChipState === "unsaved"
+        ? "Unsaved changes"
+        : "Saved";
+
   return (
     <section
       id="estimator-actions"
@@ -773,25 +792,56 @@ export function EstimatorActionBar({
               Workflow Actions
             </div>
             {onSave && (
-              <button
-                type="button"
-                onClick={onSave}
-                disabled={saving}
-                style={{
-                  padding: "8px 12px",
-                  border: "1px solid " + T.border2,
-                  borderRadius: 999,
-                  background: T.surface,
-                  color: T.text,
-                  cursor: saving ? "default" : "pointer",
-                  fontSize: 12,
-                  fontFamily: T.mono,
-                  fontWeight: 700,
-                  opacity: saving ? 0.75 : 1,
-                }}
-              >
-                {saving ? "Saving..." : "Save"}
-              </button>
+              <>
+                <span
+                  aria-live="polite"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "7px 11px",
+                    borderRadius: 999,
+                    fontSize: 12,
+                    fontFamily: T.mono,
+                    fontWeight: 700,
+                    whiteSpace: "nowrap",
+                    transition: "all 180ms ease",
+                    ...chipStyles,
+                    opacity: savedMuted ? 0.78 : 1,
+                  }}
+                >
+                  {saveChipState === "saving" ? (
+                    <span
+                      aria-hidden="true"
+                      className="inline-block h-2.5 w-2.5 animate-spin rounded-full border-2 border-current border-t-transparent"
+                    />
+                  ) : saveChipState === "unsaved" ? (
+                    <span aria-hidden="true">⚠</span>
+                  ) : (
+                    <span aria-hidden="true">✓</span>
+                  )}
+                  <span>{chipLabel}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={onSave}
+                  disabled={saving}
+                  style={{
+                    padding: "8px 12px",
+                    border: "1px solid " + T.border2,
+                    borderRadius: 999,
+                    background: T.surface,
+                    color: T.text,
+                    cursor: saving ? "default" : "pointer",
+                    fontSize: 12,
+                    fontFamily: T.mono,
+                    fontWeight: 700,
+                    opacity: saving ? 0.75 : 1,
+                  }}
+                >
+                  {saving ? "Saving..." : "Save"}
+                </button>
+              </>
             )}
             <button
               type="button"
