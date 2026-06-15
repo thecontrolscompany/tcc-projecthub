@@ -3,28 +3,35 @@
 import { useEffect, useMemo, useState } from "react";
 import { T, CAT_COLOR } from "../../shared/tokens.js";
 import { loadStarred, saveStarred } from "../../shared/starredItemsStore.js";
+import { buildDefaultPartsIndex } from "../../shared/defaultPartsIndex.js";
 
-function TableHeader() {
+const DEFAULT_TABLE_COLUMNS = ["★", "Description", "Material", "Labor", "Default For"];
+
+function TableHeader({ columns = DEFAULT_TABLE_COLUMNS }) {
   return (
     <thead>
       <tr style={{ borderBottom: "2px solid " + T.border }}>
-        {["★", "Description", "Material", "Labor", ""].map((h) => (
-          <th
-            key={h}
-            style={{
-              padding: "7px 10px",
-              textAlign: "left",
-              fontSize: 10,
-              letterSpacing: 1.5,
-              textTransform: "uppercase",
-              color: T.muted,
-              fontFamily: T.mono,
-              fontWeight: 600,
-            }}
-          >
-            {h}
-          </th>
-        ))}
+        {columns.map((column) => {
+          const key = typeof column === "string" ? column : column.key;
+          const label = typeof column === "string" ? column : column.label;
+          return (
+            <th
+              key={key}
+              style={{
+                padding: "7px 10px",
+                textAlign: "left",
+                fontSize: 10,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                color: T.muted,
+                fontFamily: T.mono,
+                fontWeight: 600,
+              }}
+            >
+              {label}
+            </th>
+          );
+        })}
       </tr>
     </thead>
   );
@@ -104,7 +111,9 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
   const [installRows, setInstallRows] = useState(() => cloneCatalog(installCatalog));
   const [controlsRows, setControlsRows] = useState(() => cloneCatalog(controlsCatalog));
   const [search, setSearch] = useState("");
+  const [assignmentSearch, setAssignmentSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [defaultsOnly, setDefaultsOnly] = useState(false);
   const [recentKey, setRecentKey] = useState(null);
   const [savingKey, setSavingKey] = useState(null);
   const [starred, setStarred] = useState(() => {
@@ -123,20 +132,60 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
     setControlsRows(cloneCatalog(controlsCatalog));
   }, [controlsCatalog]);
 
+  const defaultPartsIndex = useMemo(() => buildDefaultPartsIndex(), []);
   const activeCatalogType = activeTab === "installation" ? "install" : "controls";
   const activeCatalog = activeTab === "installation" ? installRows : controlsRows;
+  const defaultsByCatalogId =
+    activeTab === "controls" ? defaultPartsIndex.controlsDefaultsByCatalogId : defaultPartsIndex.installDefaultsByCatalogId;
   const activeRows = useMemo(() => sortCatalogRows(activeCatalog), [activeCatalog]);
-  const starredItems = useMemo(() => activeRows.filter((row) => starred.includes(row.id)), [activeRows, starred]);
+  const scopedRows = useMemo(
+    () => (defaultsOnly ? activeRows.filter((row) => defaultsByCatalogId.has(row.id)) : activeRows),
+    [activeRows, defaultsByCatalogId, defaultsOnly],
+  );
+  const starredItems = useMemo(() => scopedRows.filter((row) => starred.includes(row.id)), [scopedRows, starred]);
   const filteredRows = useMemo(() => {
-    if (!search.trim()) return showAll ? activeRows : [];
+    if (!search.trim()) return showAll ? scopedRows : [];
     const query = search.toLowerCase();
-    return activeRows.filter(
-      (row) => row.desc.toLowerCase().includes(query) || row.id.includes(query) || (row.category ?? "").toLowerCase().includes(query),
-    );
-  }, [activeRows, search, showAll]);
 
-  const currentRows = search.trim() ? filteredRows : activeRows;
+    return scopedRows.filter((row) => {
+      const defaultUsages = defaultsByCatalogId.get(row.id) ?? [];
+      return (
+        row.desc.toLowerCase().includes(query) ||
+        row.id.toLowerCase().includes(query) ||
+        (row.category ?? "").toLowerCase().includes(query) ||
+        defaultUsages.some(
+          (usage) =>
+            usage.pointName.toLowerCase().includes(query) || usage.equipmentType.toLowerCase().includes(query),
+        )
+      );
+    });
+  }, [defaultsByCatalogId, scopedRows, search, showAll]);
+  const currentRows = search.trim() ? filteredRows : scopedRows;
   const shouldShowTable = Boolean(search.trim()) || showAll;
+
+  const assignmentRows = useMemo(() => {
+    const query = assignmentSearch.trim().toLowerCase();
+    if (!query) return defaultPartsIndex.assignments;
+
+    return defaultPartsIndex.assignments.filter((assignment) => {
+      const controlsRow = assignment.controlsCatalogId ? controlsRows[assignment.controlsCatalogId] : null;
+      const installRow = assignment.installCatalogId ? installRows[assignment.installCatalogId] : null;
+      const installRowPlenum = assignment.installCatalogIdPlenum ? installRows[assignment.installCatalogIdPlenum] : null;
+      return [
+        assignment.equipmentType,
+        assignment.pointName,
+        assignment.category ?? "",
+        assignment.controlsCatalogId ?? "",
+        assignment.installCatalogId ?? "",
+        controlsRow?.desc ?? "",
+        controlsRow?.partNumber ?? "",
+        installRow?.desc ?? "",
+        installRow?.partNumber ?? "",
+        installRowPlenum?.desc ?? "",
+        installRowPlenum?.partNumber ?? "",
+      ].some((value) => String(value).toLowerCase().includes(query));
+    });
+  }, [assignmentSearch, controlsRows, defaultPartsIndex.assignments, installRows]);
 
   const toggleStar = (id) => {
     const updated = starred.includes(id) ? starred.filter((value) => value !== id) : [...starred, id];
@@ -249,9 +298,10 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
   };
 
   const exportCSV = () => {
-    const rows = activeCatalogType === "controls"
-      ? [["Item ID", "Description", "Category", "Part #", "Manufacturer", "Mtl Unit", "Mtl Per", "Hrs Unit", "Hrs Per"]]
-      : [["Item ID", "Description", "Category", "Mtl Unit", "Mtl Per", "Hrs Unit", "Hrs Per"]];
+    const rows =
+      activeCatalogType === "controls"
+        ? [["Item ID", "Description", "Category", "Part #", "Manufacturer", "Mtl Unit", "Mtl Per", "Hrs Unit", "Hrs Per"]]
+        : [["Item ID", "Description", "Category", "Mtl Unit", "Mtl Per", "Hrs Unit", "Hrs Per"]];
     for (const item of activeRows) {
       rows.push(
         activeCatalogType === "controls"
@@ -266,15 +316,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
               item.hrsUnit,
               item.hrsPer,
             ]
-          : [
-              item.id,
-              item.desc,
-              item.category ?? "",
-              item.mtlUnit,
-              item.mtlPer,
-              item.hrsUnit,
-              item.hrsPer,
-            ],
+          : [item.id, item.desc, item.category ?? "", item.mtlUnit, item.mtlPer, item.hrsUnit, item.hrsPer],
       );
     }
 
@@ -308,8 +350,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
       if (!Number.isFinite(nextMtl) || !Number.isFinite(nextHrs)) continue;
 
       const shouldSave =
-        Math.abs(nextMtl - row.mtlUnit) > 0.000001 ||
-        Math.abs(nextHrs - row.hrsUnit) > 0.000001;
+        Math.abs(nextMtl - row.mtlUnit) > 0.000001 || Math.abs(nextHrs - row.hrsUnit) > 0.000001;
 
       if (!shouldSave) continue;
 
@@ -354,6 +395,13 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
   const ItemRow = ({ item, idx }) => {
     const color = CAT_COLOR[item.category] || T.steel;
     const isStarred = starred.includes(item.id);
+    const defaultUsages = defaultsByCatalogId.get(item.id) ?? [];
+    const defaultTooltip = defaultUsages
+      .map(
+        (usage) =>
+          `${usage.equipmentType}: ${usage.pointName}${usage.conditional ? " (conditional)" : ""}${usage.installType ? ` [${usage.installType}]` : ""}`,
+      )
+      .join("\n");
     const perLabel = item.mtlPer === "C" ? "/100" : item.mtlPer === "M" ? "/1000" : "/ea";
     const lbrLabel = item.hrsPer === "C" ? "/100" : item.hrsPer === "M" ? "/1000" : "/ea";
     const saveMtlKey = `${item.id}:mtlUnit`;
@@ -390,7 +438,17 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
           {activeTab === "controls" && (
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
               <label style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ fontSize: 9, color: T.dim, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1 }}>Part #</span>
+                <span
+                  style={{
+                    fontSize: 9,
+                    color: T.dim,
+                    fontFamily: T.mono,
+                    textTransform: "uppercase",
+                    letterSpacing: 1,
+                  }}
+                >
+                  Part #
+                </span>
                 <input
                   type="text"
                   defaultValue={item.partNumber ?? ""}
@@ -410,7 +468,17 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                 />
               </label>
               <label style={{ display: "flex", flexDirection: "column", gap: 2, flex: "1 1 140px", minWidth: 140 }}>
-                <span style={{ fontSize: 9, color: T.dim, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1 }}>Manufacturer</span>
+                <span
+                  style={{
+                    fontSize: 9,
+                    color: T.dim,
+                    fontFamily: T.mono,
+                    textTransform: "uppercase",
+                    letterSpacing: 1,
+                  }}
+                >
+                  Manufacturer
+                </span>
                 <input
                   type="text"
                   defaultValue={item.manufacturer ?? ""}
@@ -488,14 +556,114 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
           <div style={{ fontSize: 10, color: T.dim, fontFamily: T.mono, marginTop: 2 }}>{item.hrsUnit}h</div>
         </td>
         <td style={{ padding: "7px 10px", color: T.muted, fontSize: 11, fontFamily: T.mono }}>
-          Live catalog
+          {defaultUsages.length > 0 ? (
+            <span
+              title={defaultTooltip}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "3px 8px",
+                borderRadius: 999,
+                border: "1px solid " + T.green + "55",
+                background: T.green + "10",
+                color: T.green,
+                fontSize: 11,
+                fontFamily: T.mono,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Default ×{defaultUsages.length}
+            </span>
+          ) : (
+            <span style={{ color: T.dim }}>—</span>
+          )}
         </td>
       </tr>
     );
   };
 
-  const tabLabel = activeTab === "installation" ? "Installation" : "Controls";
+  const AssignmentRow = ({ assignment, idx }) => {
+    const color = CAT_COLOR[assignment.category] || T.steel;
+    const controlsRow = assignment.controlsCatalogId ? controlsRows[assignment.controlsCatalogId] : null;
+    const installRow = assignment.installCatalogId ? installRows[assignment.installCatalogId] : null;
+    const installRowPlenum = assignment.installCatalogIdPlenum ? installRows[assignment.installCatalogIdPlenum] : null;
+    const controlsLabel = assignment.controlsCatalogId
+      ? `${assignment.controlsCatalogId}${controlsRow?.desc ? ` — ${controlsRow.desc}` : ""}`
+      : "—";
+    const installLabel = assignment.installCatalogId
+      ? `${assignment.installCatalogId}${installRow?.desc ? ` — ${installRow.desc}` : ""}${
+          installRowPlenum
+            ? ` / ${assignment.installCatalogIdPlenum}${installRowPlenum?.desc ? ` (Plenum) — ${installRowPlenum.desc}` : ""}`
+            : ""
+        }`
+      : "—";
+
+    return (
+      <tr
+        style={{
+          borderBottom: "1px solid " + T.border,
+          background: idx % 2 === 0 ? T.surface : T.faint,
+        }}
+      >
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12, fontFamily: T.mono, whiteSpace: "nowrap" }}>
+          {assignment.equipmentType}
+        </td>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12 }}>
+          <span>{assignment.pointName}</span>
+          {assignment.conditional && (
+            <span
+              title={assignment.conditionSource ?? ""}
+              style={{ marginLeft: 4, color: T.amber, fontFamily: T.mono, fontSize: 11, cursor: "help" }}
+            >
+              *
+            </span>
+          )}
+        </td>
+        <td style={{ padding: "7px 10px", color, fontSize: 11, fontFamily: T.mono, whiteSpace: "nowrap" }}>
+          {assignment.category ?? "Uncategorized"}
+        </td>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12, fontFamily: T.mono }}>
+          {controlsLabel}
+        </td>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12, fontFamily: T.mono, whiteSpace: "nowrap" }}>
+          {controlsRow?.partNumber ?? "—"}
+        </td>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12, fontFamily: T.mono, whiteSpace: "nowrap" }}>
+          {controlsRow?.manufacturer ?? "—"}
+        </td>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12, fontFamily: T.mono, whiteSpace: "nowrap" }}>
+          {controlsRow ? fmt4(controlsRow.mtlUnit) : "—"}
+        </td>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12, fontFamily: T.mono }}>
+          {installLabel}
+        </td>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12, fontFamily: T.mono, whiteSpace: "nowrap" }}>
+          {installRow ? fmt4(installRow.mtlUnit) : "—"}
+        </td>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12, fontFamily: T.mono, whiteSpace: "nowrap" }}>
+          {installRow ? `${fmt4(installRow.hrsUnit)}` : "—"}
+        </td>
+      </tr>
+    );
+  };
+
+  const tabLabel =
+    activeTab === "installation" ? "Installation" : activeTab === "controls" ? "Controls" : "Default Assignments";
+  const isCatalogTab = activeTab !== "defaults";
   const emptyControls = activeTab === "controls" && activeRows.length === 0;
+  const defaultAssignmentColumns = [
+    { key: "equipment", label: "Equipment" },
+    { key: "point", label: "Point" },
+    { key: "category", label: "Category" },
+    { key: "controls-part", label: "Default Controls Part" },
+    { key: "part-number", label: "Part #" },
+    { key: "manufacturer", label: "Mfr" },
+    { key: "controls-price", label: "Controls $/ea" },
+    { key: "install-part", label: "Default Install Assembly" },
+    { key: "install-price", label: "Install $/ea" },
+    { key: "install-hours", label: "Install hrs" },
+  ];
 
   return (
     <div style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px" }}>
@@ -503,51 +671,58 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
         <div>
           <div style={{ fontSize: 22, fontWeight: 700, color: T.text, marginBottom: 4 }}>Price Book</div>
           <div style={{ fontSize: 13, color: T.muted }}>
-            Live catalog pricing for the {tabLabel.toLowerCase()} assembly book.
+            {activeTab === "defaults"
+              ? "Reverse lookup of default assignments across the equipment catalogs."
+              : `Live catalog pricing for the ${tabLabel.toLowerCase()} assembly book.`}
           </div>
           <div style={{ fontSize: 12, color: T.dim, marginTop: 4 }}>
-            Click ★ on any item to pin it to the top. Export CSV to edit in Excel, then reimport.
+            {activeTab === "defaults"
+              ? "Search by equipment type, point name, or part number to trace defaults back to the catalog."
+              : "Click ★ on any item to pin it to the top. Export CSV to edit in Excel, then reimport."}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-          <button
-            type="button"
-            onClick={exportCSV}
-            style={{
-              padding: "8px 16px",
-              border: "1px solid " + T.blue,
-              borderRadius: 5,
-              background: T.blueFaint,
-              color: T.blue,
-              cursor: "pointer",
-              fontSize: 12,
-              fontFamily: T.mono,
-            }}
-          >
-            ↓ Export CSV
-          </button>
-          <label
-            style={{
-              padding: "8px 16px",
-              border: "1px solid " + T.border2,
-              borderRadius: 5,
-              background: "none",
-              color: T.muted,
-              cursor: "pointer",
-              fontSize: 12,
-              fontFamily: T.mono,
-            }}
-          >
-            ↑ Import CSV
-            <input type="file" accept=".csv" onChange={(event) => void importCSV(event)} style={{ display: "none" }} />
-          </label>
-        </div>
+        {isCatalogTab && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <button
+              type="button"
+              onClick={exportCSV}
+              style={{
+                padding: "8px 16px",
+                border: "1px solid " + T.blue,
+                borderRadius: 5,
+                background: T.blueFaint,
+                color: T.blue,
+                cursor: "pointer",
+                fontSize: 12,
+                fontFamily: T.mono,
+              }}
+            >
+              ↓ Export CSV
+            </button>
+            <label
+              style={{
+                padding: "8px 16px",
+                border: "1px solid " + T.border2,
+                borderRadius: 5,
+                background: "none",
+                color: T.muted,
+                cursor: "pointer",
+                fontSize: 12,
+                fontFamily: T.mono,
+              }}
+            >
+              ↑ Import CSV
+              <input type="file" accept=".csv" onChange={(event) => void importCSV(event)} style={{ display: "none" }} />
+            </label>
+          </div>
+        )}
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
         {[
           { id: "installation", label: `Installation (${Object.keys(installRows).length})` },
           { id: "controls", label: `Controls (${Object.keys(controlsRows).length})` },
+          { id: "defaults", label: `Default Assignments (${defaultPartsIndex.assignments.length})` },
         ].map((tab) => {
           const selected = activeTab === tab.id;
           return (
@@ -558,6 +733,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                 setActiveTab(tab.id);
                 setSearch("");
                 setShowAll(false);
+                setDefaultsOnly(false);
               }}
               style={{
                 padding: "8px 14px",
@@ -576,60 +752,206 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
         })}
       </div>
 
-      {starredItems.length > 0 && (
-        <div style={{ marginBottom: 32 }}>
-          <div
-            style={{
-              fontSize: 11,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              color: T.amber,
-              fontFamily: T.mono,
-              marginBottom: 10,
-            }}
-          >
-            ★ Starred Items
-          </div>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <TableHeader />
-            <tbody>
-              {starredItems.map((item, idx) => (
-                <ItemRow key={item.id} item={item} idx={idx} />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {isCatalogTab ? (
+        <>
+          {starredItems.length > 0 && (
+            <div style={{ marginBottom: 32 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  color: T.amber,
+                  fontFamily: T.mono,
+                  marginBottom: 10,
+                }}
+              >
+                ★ Starred Items
+              </div>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <TableHeader />
+                <tbody>
+                  {starredItems.map((item, idx) => (
+                    <ItemRow key={item.id} item={item} idx={idx} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-      {starredItems.length === 0 && activeRows.length > 0 && (
-        <div
-          style={{
-            marginBottom: 24,
-            padding: "12px 16px",
-            border: "1px dashed " + T.border,
-            borderRadius: 6,
-            background: T.panel,
-            fontSize: 12,
-            color: T.dim,
-          }}
-        >
-          Click ★ on any item below to pin it here for quick access.
-        </div>
-      )}
+          {starredItems.length === 0 && scopedRows.length > 0 && (
+            <div
+              style={{
+                marginBottom: 24,
+                padding: "12px 16px",
+                border: "1px dashed " + T.border,
+                borderRadius: 6,
+                background: T.panel,
+                fontSize: 12,
+                color: T.dim,
+              }}
+            >
+              Click ★ on any item below to pin it here for quick access.
+            </div>
+          )}
 
-      {emptyControls ? (
-        <div
-          style={{
-            padding: "20px 18px",
-            border: "1px dashed " + T.border,
-            borderRadius: 8,
-            background: T.panel,
-            color: T.muted,
-            fontSize: 13,
-          }}
-        >
-          Controls catalog is empty. Populated in a future update.
-        </div>
+          {emptyControls ? (
+            <div
+              style={{
+                padding: "20px 18px",
+                border: "1px dashed " + T.border,
+                borderRadius: 8,
+                background: T.panel,
+                color: T.muted,
+                fontSize: 13,
+              }}
+            >
+              Controls catalog is empty. Populated in a future update.
+            </div>
+          ) : (
+            <div style={{ borderTop: "1px solid " + T.border, paddingTop: 24 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  color: T.muted,
+                  fontFamily: T.mono,
+                  marginBottom: 12,
+                }}
+              >
+                {scopedRows.length} Items
+              </div>
+
+              <div style={{ display: "flex", gap: 10, marginBottom: 16, alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ position: "relative", flex: "1 1 320px" }}>
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: 10,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      fontSize: 13,
+                      color: T.dim,
+                    }}
+                  >
+                    🔍
+                  </span>
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search by item #, description, category, or default usage..."
+                    style={{
+                      width: "100%",
+                      padding: "8px 10px 8px 32px",
+                      border: "1px solid " + T.border2,
+                      borderRadius: 5,
+                      fontSize: 13,
+                      background: T.bg,
+                      color: T.text,
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => setSearch("")}
+                      style={{
+                        position: "absolute",
+                        right: 8,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "none",
+                        border: "none",
+                        color: T.dim,
+                        cursor: "pointer",
+                        fontSize: 16,
+                      }}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAll((current) => !current)}
+                  style={{
+                    padding: "8px 14px",
+                    border: "1px solid " + T.border2,
+                    borderRadius: 5,
+                    background: "none",
+                    color: showAll ? T.blue : T.muted,
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontFamily: T.mono,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {showAll ? "Hide all" : "Show all"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDefaultsOnly((current) => !current)}
+                  style={{
+                    padding: "8px 14px",
+                    border: "1px solid " + T.border2,
+                    borderRadius: 5,
+                    background: defaultsOnly ? T.green + "10" : "none",
+                    color: defaultsOnly ? T.green : T.muted,
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontFamily: T.mono,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {defaultsOnly ? "All items" : "Defaults only"}
+                </button>
+              </div>
+
+              {shouldShowTable && currentRows.length > 0 && (
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <TableHeader />
+                  <tbody>
+                    {currentRows.map((item, idx) => (
+                      <ItemRow key={item.id} item={item} idx={idx} />
+                    ))}
+                  </tbody>
+                </table>
+              )}
+
+              {shouldShowTable && currentRows.length === 0 && (
+                <div
+                  style={{
+                    padding: "24px",
+                    textAlign: "center",
+                    border: "2px dashed " + T.border,
+                    borderRadius: 8,
+                    background: T.panel,
+                  }}
+                >
+                  <div style={{ fontSize: 13, color: T.muted }}>No catalog items matched your search.</div>
+                </div>
+              )}
+
+              {!shouldShowTable && (
+                <div
+                  style={{
+                    padding: "24px",
+                    textAlign: "center",
+                    border: "2px dashed " + T.border,
+                    borderRadius: 8,
+                    background: T.panel,
+                  }}
+                >
+                  <div style={{ fontSize: 13, color: T.muted }}>
+                    Search for a specific item or click "Show all" to browse the live catalog.
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </>
       ) : (
         <div style={{ borderTop: "1px solid " + T.border, paddingTop: 24 }}>
           <div
@@ -642,7 +964,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
               marginBottom: 12,
             }}
           >
-            {activeRows.length} Items
+            {assignmentRows.length} Assignments
           </div>
 
           <div style={{ display: "flex", gap: 10, marginBottom: 16, alignItems: "center" }}>
@@ -660,9 +982,9 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                 🔍
               </span>
               <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search by item #, description, or category..."
+                value={assignmentSearch}
+                onChange={(event) => setAssignmentSearch(event.target.value)}
+                placeholder="Search equipment, point, category, or catalog part..."
                 style={{
                   width: "100%",
                   padding: "8px 10px 8px 32px",
@@ -675,10 +997,10 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                   boxSizing: "border-box",
                 }}
               />
-              {search && (
+              {assignmentSearch && (
                 <button
                   type="button"
-                  onClick={() => setSearch("")}
+                  onClick={() => setAssignmentSearch("")}
                   style={{
                     position: "absolute",
                     right: 8,
@@ -695,63 +1017,33 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                 </button>
               )}
             </div>
-            <button
-              type="button"
-              onClick={() => setShowAll((current) => !current)}
-              style={{
-                padding: "8px 14px",
-                border: "1px solid " + T.border2,
-                borderRadius: 5,
-                background: "none",
-                color: showAll ? T.blue : T.muted,
-                cursor: "pointer",
-                fontSize: 12,
-                fontFamily: T.mono,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {showAll ? "Hide all" : "Show all"}
-            </button>
           </div>
 
-          {shouldShowTable && currentRows.length > 0 && (
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <TableHeader />
-              <tbody>
-                {currentRows.map((item, idx) => (
-                  <ItemRow key={item.id} item={item} idx={idx} />
-                ))}
-              </tbody>
-            </table>
-          )}
-
-          {shouldShowTable && currentRows.length === 0 && (
-            <div
-              style={{
-                padding: "24px",
-                textAlign: "center",
-                border: "2px dashed " + T.border,
-                borderRadius: 8,
-                background: T.panel,
-              }}
-            >
-              <div style={{ fontSize: 13, color: T.muted }}>No catalog items matched your search.</div>
-            </div>
-          )}
-
-          {!shouldShowTable && (
-            <div
-              style={{
-                padding: "24px",
-                textAlign: "center",
-                border: "2px dashed " + T.border,
-                borderRadius: 8,
-                background: T.panel,
-              }}
-            >
-              <div style={{ fontSize: 13, color: T.muted }}>
-                Search for a specific item or click "Show all" to browse the live catalog.
+          {assignmentRows.length > 0 ? (
+            <>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <TableHeader columns={defaultAssignmentColumns} />
+                <tbody>
+                  {assignmentRows.map((assignment, idx) => (
+                    <AssignmentRow key={`${assignment.equipmentType}::${assignment.pointName}::${idx}`} assignment={assignment} idx={idx} />
+                  ))}
+                </tbody>
+              </table>
+              <div style={{ marginTop: 10, fontSize: 12, color: T.dim, fontFamily: T.mono }}>
+                * = conditional default - only applies for certain equipment configurations (hover for the condition)
               </div>
+            </>
+          ) : (
+            <div
+              style={{
+                padding: "24px",
+                textAlign: "center",
+                border: "2px dashed " + T.border,
+                borderRadius: 8,
+                background: T.panel,
+              }}
+            >
+              <div style={{ fontSize: 13, color: T.muted }}>No default assignments matched your search.</div>
             </div>
           )}
         </div>
