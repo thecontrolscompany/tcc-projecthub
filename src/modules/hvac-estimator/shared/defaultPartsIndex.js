@@ -33,8 +33,8 @@ function dedupeUsages(usages) {
   return [...seen.values()];
 }
 
-export function buildDefaultPartsIndex() {
-  const components = getAllEquipmentComponents().filter(isDefaultComponent);
+export function buildDefaultPartsIndex(overridesByKey = {}) {
+  const components = getAllEquipmentComponents(overridesByKey).filter(isDefaultComponent);
 
   const controlsDefaultsByCatalogId = new Map();
   const installDefaultsByCatalogId = new Map();
@@ -72,6 +72,9 @@ export function buildDefaultPartsIndex() {
       assignmentSeen.add(assignmentKey);
       assignments.push({
         ...usage,
+        componentKey: component.componentKey ?? null,
+        builtInControlsCatalogId: component.builtInControlsId ?? null,
+        controlsOverridden: Boolean(component.controlsOverridden),
         controlsCatalogId: component.controlsId ?? null,
         installCatalogId: emtAID ?? plnAID ?? null,
         installCatalogIdPlenum: plnAID && plnAID !== emtAID ? plnAID : null,

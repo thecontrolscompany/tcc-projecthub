@@ -12,6 +12,7 @@ import { PLANT_COMPS } from "../components/plant/plantData.js";
 import { NETWORK_COMPS } from "../components/network/networkData.js";
 import { EXHAUST_FAN_COMPS } from "../components/exhaustFan/exhaustFanData.js";
 import { getAllEquipmentComponents } from "./componentCatalog.js";
+import { setControlsDefaultOverrides } from "../components/estimate/estimateCalc.js";
 
 const Ctx = createContext(null);
 
@@ -86,8 +87,10 @@ export function ProjectHubEstimateProvider({
   onAutosave,
   installCatalog,
   controlsCatalog,
+  controlsDefaultOverrides = {},
   children,
 }) {
+  setControlsDefaultOverrides(controlsDefaultOverrides);
   const [subPage, setSubPage] = useState(null);
   const activeId = estimate?.id || null;
   const activeInstallCatalog = getActiveInstallCatalog(installCatalog);
@@ -226,7 +229,8 @@ export function ProjectHubEstimateProvider({
     setSubPage,
     editingItem,
     controlsCatalog,
-  }), [estimate, activeId, editingItem, installCatalog, subPage, controlsCatalog]);
+    controlsDefaultOverrides,
+  }), [estimate, activeId, editingItem, installCatalog, subPage, controlsCatalog, controlsDefaultOverrides]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

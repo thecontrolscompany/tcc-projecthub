@@ -9,6 +9,17 @@ import { mapCatalogRows } from "@/modules/hvac-estimator/shared/catalogStore";
 
 export const dynamic = "force-dynamic";
 
+function buildControlsDefaultOverrides(
+  rows: Array<{ component_key: string; controls_catalog_id: string | null }> = [],
+) {
+  return rows.reduce<Record<string, string>>((acc, row) => {
+    if (typeof row.component_key !== "string" || !row.component_key.trim()) return acc;
+    if (typeof row.controls_catalog_id !== "string" || !row.controls_catalog_id.trim()) return acc;
+    acc[row.component_key.trim()] = row.controls_catalog_id.trim();
+    return acc;
+  }, {});
+}
+
 export default async function EstimateDetailPage({
   params,
 }: {
@@ -33,7 +44,7 @@ export default async function EstimateDetailPage({
 
   if (error || !estimate) notFound();
 
-  const [linkedProjectResult, fallbackProjectResult, installCatalogResult, controlsCatalogResult] = await Promise.all([
+  const [linkedProjectResult, fallbackProjectResult, installCatalogResult, controlsCatalogResult, controlsDefaultsResult] = await Promise.all([
     estimate.linked_project_id
       ? supabase
           .from("projects")
@@ -56,11 +67,17 @@ export default async function EstimateDetailPage({
       .select("id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, alternate_ids, part_number, manufacturer")
       .eq("organization_id", estimate.organization_id)
       .order("id", { ascending: true }),
+    supabase
+      .from("estimator_controls_defaults")
+      .select("component_key, controls_catalog_id")
+      .eq("organization_id", estimate.organization_id)
+      .order("component_key", { ascending: true }),
   ]);
 
   const sourceProject = linkedProjectResult.data ?? fallbackProjectResult.data ?? null;
   const installCatalog = mapCatalogRows(installCatalogResult.data ?? []);
   const controlsCatalog = mapCatalogRows(controlsCatalogResult.data ?? []);
+  const controlsDefaultOverrides = buildControlsDefaultOverrides(controlsDefaultsResult.data ?? []);
 
   const projectRootFolder =
     typeof sourceProject?.sharepoint_folder === "string" && sourceProject.sharepoint_folder.trim()
@@ -88,6 +105,7 @@ export default async function EstimateDetailPage({
         estimate={hydratedEstimate as EstimateRecord}
         installCatalog={installCatalog}
         controlsCatalog={controlsCatalog}
+        controlsDefaultOverrides={controlsDefaultOverrides}
       />
     </div>
   );

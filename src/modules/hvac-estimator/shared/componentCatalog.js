@@ -26,10 +26,24 @@ function getComponentDisplayLabel(component) {
   return component.label || component.name || component.id;
 }
 
-export function getAllEquipmentComponents() {
+export function getAllEquipmentComponents(overridesByKey = {}) {
   return EQUIPMENT_GROUPS.flatMap((group) =>
     group.components.map((component) => ({
       ...component,
+      componentKey: `${group.type}:${component.id}`,
+      builtInControlsId: component.controlsId ?? null,
+      controlsId: (() => {
+        const overrideValue = overridesByKey?.[`${group.type}:${component.id}`];
+        return typeof overrideValue === "string" && overrideValue.trim() ? overrideValue.trim() : component.controlsId ?? null;
+      })(),
+      controlsOverridden: (() => {
+        const overrideValue = overridesByKey?.[`${group.type}:${component.id}`];
+        return (
+          typeof overrideValue === "string" &&
+          Boolean(overrideValue.trim()) &&
+          overrideValue.trim() !== String(component.controlsId ?? "")
+        );
+      })(),
       sourceType: group.type,
       sourceLabel: group.label,
     })),
@@ -45,4 +59,3 @@ export function getCustomComponentOptions() {
     component,
   }));
 }
-

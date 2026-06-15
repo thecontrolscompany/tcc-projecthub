@@ -106,7 +106,7 @@ async function patchCatalogRow({ organizationId, catalogType, id, mtlUnit, hrsUn
   return json?.row ?? null;
 }
 
-export default function PriceBookPage({ installCatalog, controlsCatalog, organizationId }) {
+export default function PriceBookPage({ installCatalog, controlsCatalog, controlsDefaultOverrides = {}, organizationId }) {
   const [activeTab, setActiveTab] = useState("installation");
   const [installRows, setInstallRows] = useState(() => cloneCatalog(installCatalog));
   const [controlsRows, setControlsRows] = useState(() => cloneCatalog(controlsCatalog));
@@ -132,7 +132,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
     setControlsRows(cloneCatalog(controlsCatalog));
   }, [controlsCatalog]);
 
-  const defaultPartsIndex = useMemo(() => buildDefaultPartsIndex(), []);
+  const defaultPartsIndex = useMemo(() => buildDefaultPartsIndex(controlsDefaultOverrides), [controlsDefaultOverrides]);
   const activeCatalogType = activeTab === "installation" ? "install" : "controls";
   const activeCatalog = activeTab === "installation" ? installRows : controlsRows;
   const defaultsByCatalogId =

@@ -28,6 +28,7 @@ type Props = {
   accounts: AccountOption[];
   installCatalog: Record<string, unknown>;
   controlsCatalog: Record<string, unknown>;
+  controlsDefaultOverrides: Record<string, string>;
 };
 
 const inputClassName =

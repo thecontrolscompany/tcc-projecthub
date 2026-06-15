@@ -30,6 +30,17 @@ async function resolveDefaultOrganizationId(supabase: Awaited<ReturnType<typeof 
   return typeof tccOrganization?.id === "string" ? tccOrganization.id : null;
 }
 
+function buildControlsDefaultOverrides(
+  rows: Array<{ component_key: string; controls_catalog_id: string | null }> = [],
+) {
+  return rows.reduce<Record<string, string>>((acc, row) => {
+    if (typeof row.component_key !== "string" || !row.component_key.trim()) return acc;
+    if (typeof row.controls_catalog_id !== "string" || !row.controls_catalog_id.trim()) return acc;
+    acc[row.component_key.trim()] = row.controls_catalog_id.trim();
+    return acc;
+  }, {});
+}
+
 export default async function EstimatingPriceBookPage() {
   const supabase = await createClient();
   const {
@@ -41,7 +52,7 @@ export default async function EstimatingPriceBookPage() {
   const organizationId = await resolveDefaultOrganizationId(supabase, user.id);
   if (!organizationId) notFound();
 
-  const [installCatalogResult, controlsCatalogResult] = await Promise.all([
+  const [installCatalogResult, controlsCatalogResult, controlsDefaultsResult] = await Promise.all([
     supabase
       .from("install_assembly_catalog")
       .select("id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, freq, alternate_ids")
@@ -52,10 +63,16 @@ export default async function EstimatingPriceBookPage() {
       .select("id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, alternate_ids, part_number, manufacturer")
       .eq("organization_id", organizationId)
       .order("id", { ascending: true }),
+    supabase
+      .from("estimator_controls_defaults")
+      .select("component_key, controls_catalog_id")
+      .eq("organization_id", organizationId)
+      .order("component_key", { ascending: true }),
   ]);
 
   const installCatalog = mapCatalogRows(installCatalogResult.data ?? []);
   const controlsCatalog = mapCatalogRows(controlsCatalogResult.data ?? []);
+  const controlsDefaultOverrides = buildControlsDefaultOverrides(controlsDefaultsResult.data ?? []);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-6">
@@ -68,6 +85,7 @@ export default async function EstimatingPriceBookPage() {
         <PriceBookPage
           installCatalog={installCatalog}
           controlsCatalog={controlsCatalog}
+          controlsDefaultOverrides={controlsDefaultOverrides}
           organizationId={organizationId}
         />
       </div>

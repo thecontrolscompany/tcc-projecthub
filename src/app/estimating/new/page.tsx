@@ -5,6 +5,17 @@ import { mapCatalogRows } from "@/modules/hvac-estimator/shared/catalogStore";
 
 export const dynamic = "force-dynamic";
 
+function buildControlsDefaultOverrides(
+  rows: Array<{ component_key: string; controls_catalog_id: string | null }> = [],
+) {
+  return rows.reduce<Record<string, string>>((acc, row) => {
+    if (typeof row.component_key !== "string" || !row.component_key.trim()) return acc;
+    if (typeof row.controls_catalog_id !== "string" || !row.controls_catalog_id.trim()) return acc;
+    acc[row.component_key.trim()] = row.controls_catalog_id.trim();
+    return acc;
+  }, {});
+}
+
 type SearchParams = {
   opportunityId?: string;
   opportunity_id?: string;
@@ -74,7 +85,7 @@ export default async function NewEstimatePage({
     estimateNumberQuery = estimateNumberQuery.eq("organization_id", currentOrganizationId);
   }
 
-  const [accountsResult, installCatalogResult, controlsCatalogResult, estimatesResult] = await Promise.all([
+  const [accountsResult, installCatalogResult, controlsCatalogResult, controlsDefaultsResult, estimatesResult] = await Promise.all([
     supabase
       .from("crm_accounts")
       .select("id, company_name")
@@ -89,12 +100,18 @@ export default async function NewEstimatePage({
       .select("id, description, mtl_unit, mtl_per, hrs_unit, hrs_per, category, alternate_ids, part_number, manufacturer")
       .eq("organization_id", currentOrganizationId)
       .order("id", { ascending: true }),
+    supabase
+      .from("estimator_controls_defaults")
+      .select("component_key, controls_catalog_id")
+      .eq("organization_id", currentOrganizationId)
+      .order("component_key", { ascending: true }),
     estimateNumberQuery,
   ]);
 
   const nextEstimateNumber = buildNextEstimateNumber((estimatesResult.data ?? []).map((estimate) => estimate.number));
   const installCatalog = mapCatalogRows(installCatalogResult.data ?? []);
   const controlsCatalog = mapCatalogRows(controlsCatalogResult.data ?? []);
+  const controlsDefaultOverrides = buildControlsDefaultOverrides(controlsDefaultsResult.data ?? []);
 
   let initialEstimate = {
     organizationId: currentOrganizationId,
@@ -140,6 +157,7 @@ export default async function NewEstimatePage({
       accounts={accountsResult.data ?? []}
       installCatalog={installCatalog}
       controlsCatalog={controlsCatalog}
+      controlsDefaultOverrides={controlsDefaultOverrides}
     />
   );
 }

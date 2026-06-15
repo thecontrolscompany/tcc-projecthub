@@ -51,7 +51,7 @@ function nextAltArray(parentEstimate, nextAlternate) {
 }
 
 export function BidAlternateEditor({ estimate, alternateId, onBack, onUpdate }) {
-  const { controlsCatalog } = useEstimate();
+  const { controlsCatalog, controlsDefaultOverrides } = useEstimate();
   const alternates = Array.isArray(estimate.alternates) ? estimate.alternates : [];
   const alternate = alternates.find((entry) => entry.id === alternateId) || null;
 
@@ -101,7 +101,11 @@ export function BidAlternateEditor({ estimate, alternateId, onBack, onUpdate }) 
   }
 
   return (
-    <ProjectHubEstimateProvider estimate={alternateEstimate} onChange={handleUpdate}>
+    <ProjectHubEstimateProvider
+      estimate={alternateEstimate}
+      onChange={handleUpdate}
+      controlsDefaultOverrides={controlsDefaultOverrides}
+    >
       <EstimateEditorWorkspace
         estimate={alternateEstimate}
         onBack={onBack}

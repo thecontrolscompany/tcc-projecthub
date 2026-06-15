@@ -14,6 +14,7 @@ import { getAllEquipmentComponents } from "../../shared/componentCatalog.js";
 import { calcAssembly } from "../../shared/assemblyData.js";
 
 const CUSTOM_COMPS = getAllEquipmentComponents();
+let controlsDefaultOverrides = {};
 
 export const COMPS_MAP = {
   vav: VAV_COMPS,
@@ -47,6 +48,27 @@ export const shouldIncludeProposalComp = (comp) => {
   return !name.includes("home run conduit");
 };
 
+export function setControlsDefaultOverrides(overridesByKey = {}) {
+  controlsDefaultOverrides = overridesByKey && typeof overridesByKey === "object" ? { ...overridesByKey } : {};
+}
+
+function applyControlsDefaultsOverride(component, sourceType) {
+  const builtInControlsId = component.controlsId ?? component.builtInControlsId ?? null;
+  const componentKey = component.componentKey || `${sourceType || "unknown"}:${component.id}`;
+  const overrideValue = controlsDefaultOverrides?.[componentKey];
+  const overrideId = typeof overrideValue === "string" && overrideValue.trim() ? overrideValue.trim() : null;
+  const controlsId =
+    overrideId || builtInControlsId;
+
+  return {
+    ...component,
+    componentKey,
+    builtInControlsId,
+    controlsId,
+    controlsOverridden: Boolean(overrideId && overrideId !== String(builtInControlsId ?? "")),
+  };
+}
+
 function resolveItemComps(item) {
   let comps = COMPS_MAP[item.type] || [];
   if (item.type === "plant" && item.cfg?.plantType) {
@@ -55,7 +77,7 @@ function resolveItemComps(item) {
     const selected = comps.find((component) => component.id === item.cfg.componentId);
     comps = selected ? [selected] : comps;
   }
-  return comps;
+  return comps.map((component) => applyControlsDefaultsOverride(component, component.sourceType || item.type));
 }
 
 function getCompQty(item, id) {

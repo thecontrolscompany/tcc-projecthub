@@ -33,6 +33,7 @@ type Props = {
   estimate: EstimateRecord;
   installCatalog: Record<string, unknown>;
   controlsCatalog: Record<string, unknown>;
+  controlsDefaultOverrides: Record<string, string>;
 };
 
 type EstimateItem = {
@@ -476,7 +477,7 @@ function EstimateStatusBadge({
   );
 }
 
-export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog }: Props) {
+export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog, controlsDefaultOverrides }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -852,6 +853,7 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
         onAutosave={handleAutosave}
         installCatalog={installCatalog}
         controlsCatalog={controlsCatalog}
+        controlsDefaultOverrides={controlsDefaultOverrides}
       >
         <div
           className="min-h-[calc(100vh-7.5rem)] overflow-hidden rounded-xl border border-border-default bg-surface-raised"
