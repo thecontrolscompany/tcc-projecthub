@@ -20,7 +20,7 @@ function TableHeader({ columns = DEFAULT_TABLE_COLUMNS }) {
               style={{
                 padding: "7px 10px",
                 textAlign: "left",
-                fontSize: 10,
+                fontSize: 11,
                 letterSpacing: 1.5,
                 textTransform: "uppercase",
                 color: T.muted,
@@ -396,6 +396,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
     const color = CAT_COLOR[item.category] || T.steel;
     const isStarred = starred.includes(item.id);
     const defaultUsages = defaultsByCatalogId.get(item.id) ?? [];
+    const visibleDefaultUsages = defaultUsages.slice(0, 3);
     const defaultTooltip = defaultUsages
       .map(
         (usage) =>
@@ -430,17 +431,17 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
           >
             ★
           </button>
-          <span style={{ fontSize: 10, color: T.dim, fontFamily: T.mono }}>{item.id}</span>
+          <span style={{ fontSize: 11, color: T.dim, fontFamily: T.mono }}>{item.id}</span>
         </td>
         <td style={{ padding: "7px 10px", maxWidth: 280 }}>
-          <div style={{ fontSize: 13, color: T.text, fontWeight: 500 }}>{item.desc}</div>
-          <div style={{ fontSize: 10, color: color, fontFamily: T.mono }}>{item.category || "Uncategorized"}</div>
+          <div style={{ fontSize: 14, color: T.text, fontWeight: 500 }}>{item.desc}</div>
+          <div style={{ fontSize: 11, color: color, fontFamily: T.mono }}>{item.category || "Uncategorized"}</div>
           {activeTab === "controls" && (
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
               <label style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 <span
                   style={{
-                    fontSize: 9,
+                    fontSize: 10,
                     color: T.dim,
                     fontFamily: T.mono,
                     textTransform: "uppercase",
@@ -459,7 +460,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                     padding: "3px 6px",
                     border: "1px solid " + color,
                     borderRadius: 4,
-                    fontSize: 11,
+                    fontSize: 12,
                     fontFamily: T.mono,
                     background: color + "10",
                     color: T.text,
@@ -470,7 +471,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
               <label style={{ display: "flex", flexDirection: "column", gap: 2, flex: "1 1 140px", minWidth: 140 }}>
                 <span
                   style={{
-                    fontSize: 9,
+                    fontSize: 10,
                     color: T.dim,
                     fontFamily: T.mono,
                     textTransform: "uppercase",
@@ -489,7 +490,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                     padding: "3px 6px",
                     border: "1px solid " + color,
                     borderRadius: 4,
-                    fontSize: 11,
+                    fontSize: 12,
                     fontFamily: T.mono,
                     background: color + "10",
                     color: T.text,
@@ -502,7 +503,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
         </td>
         <td style={{ padding: "7px 10px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <span style={{ fontSize: 11, color: T.dim }}>$</span>
+            <span style={{ fontSize: 12, color: T.dim }}>$</span>
             <input
               type="number"
               min="0"
@@ -515,7 +516,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                 padding: "3px 6px",
                 border: "1px solid " + (savingKey === saveMtlKey ? T.blue : color),
                 borderRadius: 4,
-                fontSize: 12,
+                fontSize: 14,
                 fontFamily: T.mono,
                 background: color + "10",
                 color: T.text,
@@ -524,9 +525,9 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                 boxShadow: recentKey === saveMtlKey ? `0 0 0 2px ${T.blueFaint}` : "none",
               }}
             />
-            <span style={{ fontSize: 10, color: T.dim, fontFamily: T.mono }}>{perLabel}</span>
+            <span style={{ fontSize: 11, color: T.dim, fontFamily: T.mono }}>{perLabel}</span>
           </div>
-          <div style={{ fontSize: 10, color: T.dim, fontFamily: T.mono, marginTop: 2 }}>{fmt4(item.mtlUnit)}</div>
+          <div style={{ fontSize: 11, color: T.dim, fontFamily: T.mono, marginTop: 2 }}>{fmt4(item.mtlUnit)}</div>
         </td>
         <td style={{ padding: "7px 10px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
@@ -542,7 +543,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                 padding: "3px 6px",
                 border: "1px solid " + (savingKey === saveHrsKey ? T.blue : color),
                 borderRadius: 4,
-                fontSize: 12,
+                fontSize: 14,
                 fontFamily: T.mono,
                 background: color + "10",
                 color: T.text,
@@ -551,30 +552,42 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                 boxShadow: recentKey === saveHrsKey ? `0 0 0 2px ${T.blueFaint}` : "none",
               }}
             />
-            <span style={{ fontSize: 10, color: T.dim, fontFamily: T.mono }}>h{lbrLabel}</span>
+            <span style={{ fontSize: 11, color: T.dim, fontFamily: T.mono }}>h{lbrLabel}</span>
           </div>
-          <div style={{ fontSize: 10, color: T.dim, fontFamily: T.mono, marginTop: 2 }}>{item.hrsUnit}h</div>
+          <div style={{ fontSize: 11, color: T.dim, fontFamily: T.mono, marginTop: 2 }}>{item.hrsUnit}h</div>
         </td>
-        <td style={{ padding: "7px 10px", color: T.muted, fontSize: 11, fontFamily: T.mono }}>
+        <td style={{ padding: "7px 10px", color: T.muted, fontSize: 13, fontFamily: T.mono }}>
           {defaultUsages.length > 0 ? (
-            <span
-              title={defaultTooltip}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "3px 8px",
-                borderRadius: 999,
-                border: "1px solid " + T.green + "55",
-                background: T.green + "10",
-                color: T.green,
-                fontSize: 11,
-                fontFamily: T.mono,
-                whiteSpace: "nowrap",
-              }}
-            >
-              Default ×{defaultUsages.length}
-            </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              {visibleDefaultUsages.map((usage) => (
+                <div
+                  key={`${usage.equipmentType}::${usage.pointName}::${usage.installType ?? ""}`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "baseline",
+                    gap: 4,
+                    color: T.green,
+                    fontSize: 12,
+                    fontFamily: T.mono,
+                    lineHeight: 1.3,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span>{usage.equipmentType}: {usage.pointName}</span>
+                  {usage.conditional && (
+                    <span title={usage.conditionSource ?? ""} style={{ color: T.amber, cursor: "help" }}>
+                      *
+                    </span>
+                  )}
+                  {usage.installType && <span>[{usage.installType}]</span>}
+                </div>
+              ))}
+              {defaultUsages.length > 3 && (
+                <div title={defaultTooltip} style={{ color: T.dim, fontSize: 12, fontFamily: T.mono, lineHeight: 1.3 }}>
+                  +{defaultUsages.length - 3} more
+                </div>
+              )}
+            </div>
           ) : (
             <span style={{ color: T.dim }}>—</span>
           )}
@@ -606,42 +619,42 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
           background: idx % 2 === 0 ? T.surface : T.faint,
         }}
       >
-        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12, fontFamily: T.mono, whiteSpace: "nowrap" }}>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 13, fontFamily: T.mono, whiteSpace: "nowrap" }}>
           {assignment.equipmentType}
         </td>
-        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12 }}>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 13 }}>
           <span>{assignment.pointName}</span>
           {assignment.conditional && (
             <span
               title={assignment.conditionSource ?? ""}
-              style={{ marginLeft: 4, color: T.amber, fontFamily: T.mono, fontSize: 11, cursor: "help" }}
+              style={{ marginLeft: 4, color: T.amber, fontFamily: T.mono, fontSize: 12, cursor: "help" }}
             >
               *
             </span>
           )}
         </td>
-        <td style={{ padding: "7px 10px", color, fontSize: 11, fontFamily: T.mono, whiteSpace: "nowrap" }}>
+        <td style={{ padding: "7px 10px", color, fontSize: 13, fontFamily: T.mono, whiteSpace: "nowrap" }}>
           {assignment.category ?? "Uncategorized"}
         </td>
-        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12, fontFamily: T.mono }}>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 13, fontFamily: T.mono }}>
           {controlsLabel}
         </td>
-        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12, fontFamily: T.mono, whiteSpace: "nowrap" }}>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 13, fontFamily: T.mono, whiteSpace: "nowrap" }}>
           {controlsRow?.partNumber ?? "—"}
         </td>
-        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12, fontFamily: T.mono, whiteSpace: "nowrap" }}>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 13, fontFamily: T.mono, whiteSpace: "nowrap" }}>
           {controlsRow?.manufacturer ?? "—"}
         </td>
-        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12, fontFamily: T.mono, whiteSpace: "nowrap" }}>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 13, fontFamily: T.mono, whiteSpace: "nowrap" }}>
           {controlsRow ? fmt4(controlsRow.mtlUnit) : "—"}
         </td>
-        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12, fontFamily: T.mono }}>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 13, fontFamily: T.mono }}>
           {installLabel}
         </td>
-        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12, fontFamily: T.mono, whiteSpace: "nowrap" }}>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 13, fontFamily: T.mono, whiteSpace: "nowrap" }}>
           {installRow ? fmt4(installRow.mtlUnit) : "—"}
         </td>
-        <td style={{ padding: "7px 10px", color: T.text, fontSize: 12, fontFamily: T.mono, whiteSpace: "nowrap" }}>
+        <td style={{ padding: "7px 10px", color: T.text, fontSize: 13, fontFamily: T.mono, whiteSpace: "nowrap" }}>
           {installRow ? `${fmt4(installRow.hrsUnit)}` : "—"}
         </td>
       </tr>
@@ -670,12 +683,12 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
         <div>
           <div style={{ fontSize: 22, fontWeight: 700, color: T.text, marginBottom: 4 }}>Price Book</div>
-          <div style={{ fontSize: 13, color: T.muted }}>
+          <div style={{ fontSize: 14, color: T.muted }}>
             {activeTab === "defaults"
               ? "Reverse lookup of default assignments across the equipment catalogs."
               : `Live catalog pricing for the ${tabLabel.toLowerCase()} assembly book.`}
           </div>
-          <div style={{ fontSize: 12, color: T.dim, marginTop: 4 }}>
+          <div style={{ fontSize: 14, color: T.dim, marginTop: 4 }}>
             {activeTab === "defaults"
               ? "Search by equipment type, point name, or part number to trace defaults back to the catalog."
               : "Click ★ on any item to pin it to the top. Export CSV to edit in Excel, then reimport."}
@@ -693,7 +706,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                 background: T.blueFaint,
                 color: T.blue,
                 cursor: "pointer",
-                fontSize: 12,
+                fontSize: 14,
                 fontFamily: T.mono,
               }}
             >
@@ -707,7 +720,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                 background: "none",
                 color: T.muted,
                 cursor: "pointer",
-                fontSize: 12,
+                fontSize: 13,
                 fontFamily: T.mono,
               }}
             >
@@ -742,7 +755,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                 background: selected ? T.blueFaint : "transparent",
                 color: selected ? T.blue : T.muted,
                 cursor: "pointer",
-                fontSize: 12,
+                fontSize: 13,
                 fontFamily: T.mono,
               }}
             >
@@ -758,7 +771,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
             <div style={{ marginBottom: 32 }}>
               <div
                 style={{
-                  fontSize: 11,
+                  fontSize: 12,
                   letterSpacing: 2,
                   textTransform: "uppercase",
                   color: T.amber,
@@ -803,7 +816,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                 borderRadius: 8,
                 background: T.panel,
                 color: T.muted,
-                fontSize: 13,
+                fontSize: 14,
               }}
             >
               Controls catalog is empty. Populated in a future update.
@@ -846,7 +859,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                       padding: "8px 10px 8px 32px",
                       border: "1px solid " + T.border2,
                       borderRadius: 5,
-                      fontSize: 13,
+                      fontSize: 14,
                       background: T.bg,
                       color: T.text,
                       outline: "none",
@@ -883,7 +896,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                     background: "none",
                     color: showAll ? T.blue : T.muted,
                     cursor: "pointer",
-                    fontSize: 12,
+                    fontSize: 13,
                     fontFamily: T.mono,
                     whiteSpace: "nowrap",
                   }}
@@ -900,7 +913,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                     background: defaultsOnly ? T.green + "10" : "none",
                     color: defaultsOnly ? T.green : T.muted,
                     cursor: "pointer",
-                    fontSize: 12,
+                    fontSize: 13,
                     fontFamily: T.mono,
                     whiteSpace: "nowrap",
                   }}
@@ -930,7 +943,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                     background: T.panel,
                   }}
                 >
-                  <div style={{ fontSize: 13, color: T.muted }}>No catalog items matched your search.</div>
+                  <div style={{ fontSize: 14, color: T.muted }}>No catalog items matched your search.</div>
                 </div>
               )}
 
@@ -944,7 +957,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                     background: T.panel,
                   }}
                 >
-                  <div style={{ fontSize: 13, color: T.muted }}>
+                  <div style={{ fontSize: 14, color: T.muted }}>
                     Search for a specific item or click "Show all" to browse the live catalog.
                   </div>
                 </div>
@@ -956,7 +969,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
         <div style={{ borderTop: "1px solid " + T.border, paddingTop: 24 }}>
           <div
             style={{
-              fontSize: 11,
+              fontSize: 12,
               letterSpacing: 2,
               textTransform: "uppercase",
               color: T.muted,
@@ -990,7 +1003,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                   padding: "8px 10px 8px 32px",
                   border: "1px solid " + T.border2,
                   borderRadius: 5,
-                  fontSize: 13,
+                  fontSize: 14,
                   background: T.bg,
                   color: T.text,
                   outline: "none",
@@ -1029,7 +1042,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                   ))}
                 </tbody>
               </table>
-              <div style={{ marginTop: 10, fontSize: 12, color: T.dim, fontFamily: T.mono }}>
+              <div style={{ marginTop: 10, fontSize: 13, color: T.dim, fontFamily: T.mono }}>
                 * = conditional default - only applies for certain equipment configurations (hover for the condition)
               </div>
             </>
@@ -1043,7 +1056,7 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, organiz
                 background: T.panel,
               }}
             >
-              <div style={{ fontSize: 13, color: T.muted }}>No default assignments matched your search.</div>
+              <div style={{ fontSize: 14, color: T.muted }}>No default assignments matched your search.</div>
             </div>
           )}
         </div>
