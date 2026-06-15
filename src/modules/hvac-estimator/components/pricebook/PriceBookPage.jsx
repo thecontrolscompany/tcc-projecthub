@@ -106,16 +106,44 @@ async function patchCatalogRow({ organizationId, catalogType, id, mtlUnit, hrsUn
   return json?.row ?? null;
 }
 
-export default function PriceBookPage({ installCatalog, controlsCatalog, controlsDefaultOverrides = {}, organizationId }) {
+async function patchControlsDefault({ organizationId, componentKey, controlsCatalogId }) {
+  const response = await fetch("/api/estimating/controls-defaults", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ organizationId, componentKey, controlsCatalogId }),
+  });
+  const json = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(typeof json?.error === "string" ? json.error : "Unable to save default.");
+  }
+  return json?.overrides ?? {};
+}
+
+async function deleteControlsDefault({ organizationId, componentKey }) {
+  const response = await fetch("/api/estimating/controls-defaults", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ organizationId, componentKey }),
+  });
+  const json = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(typeof json?.error === "string" ? json.error : "Unable to reset default.");
+  }
+  return json?.overrides ?? {};
+}
+
+export default function PriceBookPage({ installCatalog, controlsCatalog, controlsDefaultOverrides: controlsDefaultOverridesProp = {}, organizationId }) {
   const [activeTab, setActiveTab] = useState("installation");
   const [installRows, setInstallRows] = useState(() => cloneCatalog(installCatalog));
   const [controlsRows, setControlsRows] = useState(() => cloneCatalog(controlsCatalog));
+  const [controlsDefaultOverrides, setControlsDefaultOverrides] = useState(() => ({ ...(controlsDefaultOverridesProp ?? {}) }));
   const [search, setSearch] = useState("");
   const [assignmentSearch, setAssignmentSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
   const [defaultsOnly, setDefaultsOnly] = useState(false);
   const [recentKey, setRecentKey] = useState(null);
   const [savingKey, setSavingKey] = useState(null);
+  const [savingDefaultKey, setSavingDefaultKey] = useState(null);
   const [starred, setStarred] = useState(() => {
     try {
       return loadStarred();
@@ -131,6 +159,10 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, control
   useEffect(() => {
     setControlsRows(cloneCatalog(controlsCatalog));
   }, [controlsCatalog]);
+
+  useEffect(() => {
+    setControlsDefaultOverrides({ ...(controlsDefaultOverridesProp ?? {}) });
+  }, [controlsDefaultOverridesProp]);
 
   const defaultPartsIndex = useMemo(() => buildDefaultPartsIndex(controlsDefaultOverrides), [controlsDefaultOverrides]);
   const activeCatalogType = activeTab === "installation" ? "install" : "controls";
@@ -186,6 +218,46 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, control
       ].some((value) => String(value).toLowerCase().includes(query));
     });
   }, [assignmentSearch, controlsRows, defaultPartsIndex.assignments, installRows]);
+
+  function controlsOptionsForAssignment(assignment) {
+    const all = sortCatalogRows(controlsRows);
+    const sameCategory = assignment.category ? all.filter((row) => row.category === assignment.category) : all;
+    const options = sameCategory.length > 0 ? sameCategory : all;
+    if (assignment.controlsCatalogId && !options.some((row) => row.id === assignment.controlsCatalogId)) {
+      const current = controlsRows[assignment.controlsCatalogId];
+      if (current) return [current, ...options];
+    }
+    return options;
+  }
+
+  const updateControlsDefault = async (assignment, controlsCatalogId) => {
+    if (!controlsCatalogId || controlsCatalogId === assignment.controlsCatalogId) return;
+    setSavingDefaultKey(assignment.componentKey);
+    try {
+      const overrides = await patchControlsDefault({
+        organizationId,
+        componentKey: assignment.componentKey,
+        controlsCatalogId,
+      });
+      setControlsDefaultOverrides(overrides);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Unable to save default.");
+    } finally {
+      setSavingDefaultKey(null);
+    }
+  };
+
+  const resetControlsDefault = async (assignment) => {
+    setSavingDefaultKey(assignment.componentKey);
+    try {
+      const overrides = await deleteControlsDefault({ organizationId, componentKey: assignment.componentKey });
+      setControlsDefaultOverrides(overrides);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Unable to reset default.");
+    } finally {
+      setSavingDefaultKey(null);
+    }
+  };
 
   const toggleStar = (id) => {
     const updated = starred.includes(id) ? starred.filter((value) => value !== id) : [...starred, id];
@@ -601,9 +673,6 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, control
     const controlsRow = assignment.controlsCatalogId ? controlsRows[assignment.controlsCatalogId] : null;
     const installRow = assignment.installCatalogId ? installRows[assignment.installCatalogId] : null;
     const installRowPlenum = assignment.installCatalogIdPlenum ? installRows[assignment.installCatalogIdPlenum] : null;
-    const controlsLabel = assignment.controlsCatalogId
-      ? `${assignment.controlsCatalogId}${controlsRow?.desc ? ` — ${controlsRow.desc}` : ""}`
-      : "—";
     const installLabel = assignment.installCatalogId
       ? `${assignment.installCatalogId}${installRow?.desc ? ` — ${installRow.desc}` : ""}${
           installRowPlenum
@@ -637,7 +706,76 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, control
           {assignment.category ?? "Uncategorized"}
         </td>
         <td style={{ padding: "7px 10px", color: T.text, fontSize: 13, fontFamily: T.mono }}>
-          {controlsLabel}
+          {assignment.controlsCatalogId ? (
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <select
+                value={assignment.controlsCatalogId}
+                disabled={savingDefaultKey === assignment.componentKey}
+                onChange={(event) => void updateControlsDefault(assignment, event.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "4px 6px",
+                  border: "1px solid " + color,
+                  borderRadius: 4,
+                  fontSize: 12,
+                  fontFamily: T.mono,
+                  background: color + "10",
+                  color: T.text,
+                  outline: "none",
+                }}
+              >
+                {controlsOptionsForAssignment(assignment).map((row) => (
+                  <option key={row.id} value={row.id}>
+                    {row.id} — {row.desc}
+                  </option>
+                ))}
+              </select>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
+                {assignment.controlsOverridden ? (
+                  <span
+                    title={`Built-in default: ${assignment.builtInControlsCatalogId ?? "none"}`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      padding: "1px 8px",
+                      borderRadius: 999,
+                      background: T.blueFaint,
+                      color: T.blue,
+                      fontSize: 11,
+                      fontFamily: T.mono,
+                      fontWeight: 600,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Org Default
+                  </span>
+                ) : null}
+                {savingDefaultKey === assignment.componentKey ? (
+                  <span style={{ color: T.dim, fontSize: 11, fontFamily: T.mono }}>Saving...</span>
+                ) : assignment.controlsOverridden ? (
+                  <button
+                    type="button"
+                    onClick={() => void resetControlsDefault(assignment)}
+                    disabled={savingDefaultKey === assignment.componentKey}
+                    style={{
+                      border: "none",
+                      background: "none",
+                      color: T.blue,
+                      cursor: "pointer",
+                      fontSize: 11,
+                      fontFamily: T.mono,
+                      textDecoration: "underline",
+                      padding: 0,
+                    }}
+                  >
+                    Reset to built-in
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ) : (
+            "—"
+          )}
         </td>
         <td style={{ padding: "7px 10px", color: T.text, fontSize: 13, fontFamily: T.mono, whiteSpace: "nowrap" }}>
           {controlsRow?.partNumber ?? "—"}
@@ -1044,6 +1182,11 @@ export default function PriceBookPage({ installCatalog, controlsCatalog, control
               </table>
               <div style={{ marginTop: 10, fontSize: 13, color: T.dim, fontFamily: T.mono }}>
                 * = conditional default - only applies for certain equipment configurations (hover for the condition)
+              </div>
+              <div style={{ marginTop: 4, fontSize: 13, color: T.dim, fontFamily: T.mono }}>
+                "Default Controls Part" is editable - changes apply org-wide to new estimate items and to existing draft estimates the next time they're recalculated.
+                {" "}
+                "Org Default" = overridden from the built-in default; "Reset to built-in" removes the override.
               </div>
             </>
           ) : (
