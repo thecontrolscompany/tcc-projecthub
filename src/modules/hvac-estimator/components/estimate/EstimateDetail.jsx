@@ -920,6 +920,7 @@ export function EstimateDetail({
           open={showAiParser}
           onClose={() => setShowAiParser(false)}
           estimate={estimate}
+          estimateId={platformEstimateId || estimate.id}
           organizationId={organizationId}
           onManageConnections={() => {
             setShowAiParser(false);

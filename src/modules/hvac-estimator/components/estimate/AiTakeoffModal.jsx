@@ -47,7 +47,7 @@ async function readResponseJson(response) {
   }
 }
 
-export function AiTakeoffModal({ open, onClose, estimate, organizationId, onManageConnections, onImport }) {
+export function AiTakeoffModal({ open, onClose, estimate, estimateId, organizationId, onManageConnections, onImport }) {
   const [connections, setConnections] = useState([]);
   const [provider, setProvider] = useState("");
   const [scopeText, setScopeText] = useState("");
@@ -119,17 +119,18 @@ export function AiTakeoffModal({ open, onClose, estimate, organizationId, onMana
     setMessage("");
     setResult(null);
     try {
+      const activeEstimateId = estimateId || estimate.id;
       const totalSize = files.reduce((sum, f) => sum + f.size, 0);
       const useSharePoint = totalSize > DIRECT_UPLOAD_LIMIT && files.length > 0;
 
       const formData = new FormData();
-      formData.set("estimateId", estimate.id);
+      formData.set("estimateId", activeEstimateId);
       formData.set("provider", provider);
       formData.set("scopeText", scopeText);
 
       if (useSharePoint) {
         setMessage("Uploading large files to SharePoint…");
-        const tempItems = await Promise.all(files.map((f) => stageFileViaSharePoint(estimate.id, f)));
+        const tempItems = await Promise.all(files.map((f) => stageFileViaSharePoint(activeEstimateId, f)));
         setMessage("");
         formData.set("tempItems", JSON.stringify(tempItems));
       } else {

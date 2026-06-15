@@ -897,6 +897,7 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
             open={showAiParser}
             onClose={() => setShowAiParser(false)}
             estimate={body}
+            estimateId={estimate.id}
             organizationId={organizationId}
             onManageConnections={() => {
               setShowAiParser(false);
