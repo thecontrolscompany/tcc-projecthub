@@ -583,7 +583,7 @@ export function EstimateDetail({
                     <button
                       type="button"
                       onClick={() => setShowProposalDetails(true)}
-                      title="Open proposal details"
+                      title="Proposal details incomplete"
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
@@ -598,10 +598,15 @@ export function EstimateDetail({
                         fontFamily: T.mono,
                         fontWeight: 700,
                         whiteSpace: "nowrap",
+                        maxWidth: "min(100%, 240px)",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
                       <span aria-hidden="true">⚠</span>
-                      Proposal details incomplete
+                      <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
+                        Proposal details incomplete
+                      </span>
                     </button>
                   )}
                   {estimate.number && <span style={{ fontSize:11, color:T.muted, background:T.panel,

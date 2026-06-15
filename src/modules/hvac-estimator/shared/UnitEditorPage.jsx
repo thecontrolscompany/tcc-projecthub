@@ -230,6 +230,10 @@ export function UnitEditorPage({
         background: T.surface,
         flexShrink: 0,
         flexWrap: "wrap",
+        position: "sticky",
+        top: 0,
+        zIndex: 25,
+        boxShadow: "0 8px 18px rgba(15, 23, 42, 0.04)",
       }}>
         <button
           type="button"

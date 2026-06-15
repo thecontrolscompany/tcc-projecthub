@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { T, CAT_COLOR } from "../../shared/tokens.js";
 import { SidebarLayout } from "../../shared/SidebarLayout.jsx";
 import { fmt$, fmtHr } from "../../shared/utils.js";

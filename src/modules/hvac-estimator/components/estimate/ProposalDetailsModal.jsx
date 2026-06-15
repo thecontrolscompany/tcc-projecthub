@@ -48,7 +48,7 @@ export function ProposalDetailsModal({
       onClick={onClose}
     >
       <div
-        className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
+        className="flex max-h-[92vh] min-h-0 w-full max-w-6xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex flex-col gap-4 border-b border-slate-200 px-6 py-5">
@@ -98,7 +98,7 @@ export function ProposalDetailsModal({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6">
           {activeTab === "documents" ? (
             estimateId ? (
               <EstimateDocumentsPanel

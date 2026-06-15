@@ -229,6 +229,7 @@ const EQUIPMENT_PICKER_GROUPS = [
     label: "Air Handlers",
     items: [
       { type: "ahu", abbr: "AHU", name: "Air Handling Unit" },
+      { type: "rtu", abbr: "RTU", name: "Roof Top Unit" },
     ],
   },
   {
@@ -251,7 +252,6 @@ const EQUIPMENT_PICKER_GROUPS = [
     label: "Hydronic / Plant",
     items: [
       { type: "plant", abbr: "PLANT", name: "Hydronic Plant" },
-      { type: "rtu", abbr: "RTU", name: "Roof Top Unit" },
     ],
   },
   {

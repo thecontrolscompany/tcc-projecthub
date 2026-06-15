@@ -535,7 +535,7 @@ function AhuPrimaryCfgFields({ cfg, onCfgChange, columns = "1fr 1fr" }) {
   );
 }
 
-function AhuConfigLauncher({ cfg, onCfgChange, onStart }) {
+function AhuConfigLauncher({ cfg, onCfgChange, onStart, onCancel }) {
   return (
     <div style={{ flex:1, overflowY:"auto", padding:"28px 24px 40px" }}>
       <div style={{ maxWidth:980, margin:"0 auto" }}>
@@ -587,10 +587,28 @@ function AhuConfigLauncher({ cfg, onCfgChange, onStart }) {
         </div>
 
         <div style={{ marginTop:18, display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap" }}>
-          <div style={{ fontSize:12, color:T.muted }}>
+          <button
+            type="button"
+            onClick={onCancel}
+            style={{
+              padding:"12px 18px",
+              border:"1px solid "+T.border2,
+              borderRadius:8,
+              background:"transparent",
+              color:T.muted,
+              fontWeight:700,
+              cursor:"pointer",
+              fontFamily:T.mono,
+              fontSize:13,
+            }}
+          >
+            ← Cancel
+          </button>
+          <div style={{ fontSize:12, color:T.muted, flex:1, textAlign:"center" }}>
             The full AHU diagram editor will open using this normalized cfg.
           </div>
           <button
+            type="button"
             onClick={onStart}
             style={{
               padding:"12px 18px",
@@ -1005,6 +1023,13 @@ export default function AHUPage({ onNavigateBack = null }) {
           cfg={cfg}
           onCfgChange={handleCfgChange}
           onStart={() => setIsLauncherMode(false)}
+          onCancel={() => {
+            if (typeof onNavigateBack === "function") {
+              onNavigateBack();
+              return;
+            }
+            setIsLauncherMode(false);
+          }}
         />
       </div>
     );
@@ -1013,7 +1038,9 @@ export default function AHUPage({ onNavigateBack = null }) {
   return (
     <div style={{display:"flex",flexDirection:"column",height:"calc(100vh - 52px)",overflow:"hidden"}}>
       <>
-          <div style={{padding:"10px 20px",borderBottom:"1px solid "+T.border,
+          <div style={{
+            padding:"10px 20px",
+            borderBottom:"1px solid "+T.border,
             display:"flex",alignItems:"center",gap:12,background:T.surface,flexShrink:0,flexWrap:"wrap",rowGap:8}}>
             <div style={{padding:"3px 10px",background:T.blueFaint,border:"1px solid "+T.blueMid,borderRadius:4}}>
               <span style={{fontSize:11,color:T.blue,fontFamily:T.mono,fontWeight:700,letterSpacing:1}}>AHU</span>
