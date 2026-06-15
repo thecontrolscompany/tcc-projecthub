@@ -148,7 +148,8 @@ export async function POST(request: Request) {
       return badRequest("Provide pasted scope text or upload at least one file.");
     }
 
-    const { data: estimate, error: estimateError } = await auth.supabase
+    const admin = createServiceClient();
+    const { data: estimate, error: estimateError } = await admin
       .from("estimates")
       .select("id, organization_id, name, body")
       .eq("id", estimateId)
@@ -165,7 +166,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: access.error instanceof Error ? access.error.message : "Unable to verify access." }, { status: 403 });
     }
 
-    const admin = createServiceClient();
     const { data: connection, error: connectionError } = await admin
       .from("estimator_ai_connections")
       .select("id, provider, label, model, endpoint, encrypted_api_key")
