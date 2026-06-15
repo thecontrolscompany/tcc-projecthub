@@ -51,6 +51,30 @@ body {
   --color-warning:           #d97706;
   --color-danger:            #dc2626;
   --color-info:              #0284c7;
+
+  /* HVAC estimator legacy theme tokens (T.* in shared/tokens.js) */
+  --t-bg:           var(--color-surface-raised);
+  --t-surface:      var(--color-surface-base);
+  --t-panel:        var(--color-surface-overlay);
+  --t-border:       var(--color-border-strong);
+  --t-border2:      var(--color-text-tertiary);
+  --t-text:         var(--color-text-primary);
+  --t-muted:        var(--color-text-secondary);
+  --t-dim:          var(--color-text-tertiary);
+  --t-faint:        var(--color-border-default);
+  --t-green:        var(--color-success);
+  --t-amber:        var(--color-warning);
+  --t-rose:         var(--color-danger);
+  --t-steel:        var(--color-text-secondary);
+  --t-blue:         #2563EB;
+  --t-blue-l:       #60A5FA;
+  --t-blue-faint:   #EFF6FF;
+  --t-blue-mid:     #93C5FD;
+  --t-blue-mid-a60: rgba(147, 197, 253, 0.6);
+  --t-blue-a18:     rgba(37, 99, 235, 0.18);
+  --t-purple:       #7C3AED;
+  --t-teal:         #0D9488;
+  --t-cyan:         #0891B2;
 }
 @font-face { font-family: "Raleway"; src: url("/fonts/raleway-regular.woff2") format("woff2"), url("/fonts/raleway-regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "Raleway"; src: url("/fonts/raleway-medium.woff2") format("woff2"), url("/fonts/raleway-medium.ttf") format("truetype"); font-weight: 500; font-display: swap; }
@@ -86,7 +110,6 @@ body {
   --color-danger:            #f87171;
   --color-info:              #38bdf8;
 }
-
 
 
 
