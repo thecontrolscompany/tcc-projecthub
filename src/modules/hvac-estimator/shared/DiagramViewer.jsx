@@ -117,6 +117,19 @@ export function DiagramViewer({ svgPath, selectedIds = [], allIds = [], fallback
     if (containerRef.current) containerRef.current.style.cursor = "grab";
   }, []);
 
+  const zoomBy = useCallback((factor) => {
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    const t = xform.current;
+    const ns = Math.max(0.15, Math.min(12, t.scale * factor));
+    const ratio = ns / t.scale;
+    xform.current = { scale: ns, x: cx - ratio * (cx - t.x), y: cy - ratio * (cy - t.y) };
+    applyTransform();
+  }, [applyTransform]);
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -146,16 +159,24 @@ export function DiagramViewer({ svgPath, selectedIds = [], allIds = [], fallback
         style={{ width:"100%", height:"100%", transformOrigin:"0 0" }}
         dangerouslySetInnerHTML={{ __html: svgText }}
       />
-      <button
-        title="Reset zoom (or double-click diagram)"
+      <div
         onMouseDown={e => e.stopPropagation()}
-        onClick={resetView}
-        style={{ position:"absolute", bottom:10, right:10, padding:"3px 8px",
-                 border:"1px solid "+T.border2, borderRadius:4, background:T.surface,
-                 color:T.muted, fontSize:11, fontFamily:T.mono, cursor:"pointer", opacity:0.75 }}
+        style={{ position:"absolute", bottom:10, right:10, display:"flex", gap:4, opacity:0.85 }}
       >
-        ⊡ reset
-      </button>
+        {[
+          { label:"+", title:"Zoom in",  onClick:() => zoomBy(1.25) },
+          { label:"−", title:"Zoom out", onClick:() => zoomBy(1/1.25) },
+          { label:"⊡", title:"Reset zoom (double-click diagram)", onClick:resetView },
+        ].map(({ label, title, onClick }) => (
+          <button key={label} title={title} onClick={onClick}
+            style={{ width:28, height:28, border:"1px solid "+T.border2, borderRadius:4,
+                     background:T.surface, color:T.muted, fontSize:15, lineHeight:1,
+                     cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
