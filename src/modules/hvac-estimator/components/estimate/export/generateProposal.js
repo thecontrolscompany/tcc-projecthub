@@ -100,6 +100,10 @@ function getCustomerContact(estimate, settings) {
   return estimate.customerContact || settings.customerContact || estimate.platformContext?.customerContact || "";
 }
 
+function getProposalCustomerName(estimate) {
+  return estimate.bidder || estimate.customer || estimate.platformContext?.customer || "-";
+}
+
 function formatEstimateDate(value) {
   if (!value) return todayStr();
 
@@ -700,7 +704,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   const tokens = {
     PAGE_HEADER_PROJECT: `${projectName} | HVAC Controls Estimate`,
     PROJECT_NAME: `${projectName}${versionSuffix}`,
-    CUSTOMER_NAME: estimate.customer || "-",
+    CUSTOMER_NAME: getProposalCustomerName(estimate),
     CUSTOMER_CONTACT: getCustomerContact(estimate, settings) || "-",
     SITE_ADDRESS: getSiteAddress(settings) || "-",
     DRAWING_BASIS: getDrawingBasis(settings),

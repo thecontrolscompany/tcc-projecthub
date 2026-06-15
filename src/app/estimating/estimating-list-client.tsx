@@ -36,6 +36,15 @@ function getEstimateBodyField(body: Record<string, unknown> | null | undefined, 
   return typeof value === "string" ? value : "";
 }
 
+function getEstimateParentId(body: Record<string, unknown> | null | undefined) {
+  return (
+    getEstimateBodyField(body, "parentEstimateId") ||
+    getEstimateBodyField(body, "parent_estimate_id") ||
+    getEstimateBodyField(body, "copiedFromEstimateId") ||
+    getEstimateBodyField(body, "copied_from_estimate_id")
+  );
+}
+
 function getEstimateDisplayTotal(estimate: EstimateRecord) {
   return estimate.total_amount ?? 0;
 }
@@ -110,7 +119,7 @@ export function EstimatingListClient({ role }: EstimatingListClientProps) {
   const childrenByParentId = useMemo(() => {
     const map = new Map<string, EstimateRecord[]>();
     for (const est of estimates) {
-      const parentId = getEstimateBodyField(est.body, "parentEstimateId");
+      const parentId = getEstimateParentId(est.body);
       if (!parentId) continue;
       const list = map.get(parentId) ?? [];
       list.push(est);
@@ -245,11 +254,20 @@ export function EstimatingListClient({ role }: EstimatingListClientProps) {
     setMessage(null);
 
     const baseBody = (parent.body ?? {}) as Record<string, unknown>;
+    const parentCustomer = getEstimateBodyField(parent.body, "customer");
     const nextBody = {
       ...baseBody,
       id: crypto.randomUUID(),
+      customer: bidderName,
       bidder: bidderName,
       parentEstimateId: parent.id,
+      platformContext: {
+        ...(typeof baseBody.platformContext === "object" && baseBody.platformContext !== null
+          ? (baseBody.platformContext as Record<string, unknown>)
+          : {}),
+        parentEstimateId: parent.id,
+        parentCustomer: parentCustomer || undefined,
+      },
       sharepointFolder: null,
       sharepointItemId: null,
       number: "",
@@ -303,7 +321,7 @@ export function EstimatingListClient({ role }: EstimatingListClientProps) {
     const query = search.trim().toLowerCase();
 
     return estimates.filter((est) => {
-      if (getEstimateBodyField(est.body, "parentEstimateId")) return false; // children handled separately
+      if (getEstimateParentId(est.body)) return false; // children handled separately
       if (Boolean(est.archived) !== archived) return false;
       if (!query) return true;
       const name = est.name ?? getEstimateBodyField(est.body, "name");
@@ -314,8 +332,8 @@ export function EstimatingListClient({ role }: EstimatingListClientProps) {
     });
   }, [estimates, tab, search]);
 
-  const activeCount = estimates.filter((est) => !est.archived && !getEstimateBodyField(est.body, "parentEstimateId")).length;
-  const archivedCount = estimates.filter((est) => est.archived && !getEstimateBodyField(est.body, "parentEstimateId")).length;
+  const activeCount = estimates.filter((est) => !est.archived && !getEstimateParentId(est.body)).length;
+  const archivedCount = estimates.filter((est) => est.archived && !getEstimateParentId(est.body)).length;
   const displayTotals = useMemo(() => {
     const map = new Map<string, number>();
     for (const estimate of estimates) {
@@ -687,12 +705,18 @@ export function EstimatingListClient({ role }: EstimatingListClientProps) {
               className="w-full max-w-sm rounded-2xl bg-surface-raised p-6 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="mb-1 text-base font-semibold text-text-primary">Add Bidder</div>
+              <div className="mb-1 flex items-center gap-2">
+                <div className="text-base font-semibold text-text-primary">Choose Bidder</div>
+                <span className="rounded-full border border-brand-primary/20 bg-brand-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-primary">
+                  Combo box
+                </span>
+              </div>
               <div className="mb-4 text-sm text-text-secondary">
-                Linked estimate for{" "}
+                Select the bidder for{" "}
                 <span className="font-medium text-text-primary">
                   {(addBidderTarget.name ?? getEstimateBodyField(addBidderTarget.body, "name")) || "this estimate"}
                 </span>
+                . You can pick an existing name or type a new one.
               </div>
 
               <div className="relative">
@@ -701,7 +725,7 @@ export function EstimatingListClient({ role }: EstimatingListClientProps) {
                   value={bidderInput}
                   onChange={(e) => { setBidderInput(e.target.value); setBidderHighlight(-1); }}
                   onKeyDown={handleKey}
-                  placeholder="Type to search or enter a new name"
+                  placeholder="Search bidders or type a new name"
                   className="w-full rounded-xl border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
                 />
                 {filtered.length > 0 && (
@@ -726,7 +750,7 @@ export function EstimatingListClient({ role }: EstimatingListClientProps) {
                 )}
               </div>
               <p className="mt-1.5 text-xs text-text-tertiary">
-                Select an existing name above, or type a new one and click Add Bidder.
+                Use the list to choose an existing bidder, or type a new bidder name and click Choose Bidder.
               </p>
 
               <div className="mt-5 flex justify-end gap-2">
@@ -743,7 +767,7 @@ export function EstimatingListClient({ role }: EstimatingListClientProps) {
                   disabled={!bidderInput.trim()}
                   className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Add Bidder
+                  Choose Bidder
                 </button>
               </div>
             </div>
