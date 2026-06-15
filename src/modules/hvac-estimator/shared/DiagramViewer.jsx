@@ -1,11 +1,17 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { T } from "./tokens.js";
 
 export function DiagramViewer({ svgPath, selectedIds = [], allIds = [], fallback = null }) {
   const [svgText, setSvgText] = useState(null);
   const [notFound, setNotFound] = useState(false);
-  const divRef = useRef(null);
+  const containerRef = useRef(null);
+  const innerRef = useRef(null);
   const previousSelectedRef = useRef(new Set());
+
+  // Pan/zoom via refs to avoid re-renders during drag
+  const xform = useRef({ scale: 1, x: 0, y: 0 });
+  const isDragging = useRef(false);
+  const lastMouse = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     let active = true;
@@ -21,51 +27,102 @@ export function DiagramViewer({ svgPath, selectedIds = [], allIds = [], fallback
     return () => { active = false; };
   }, [svgPath]);
 
+  // Fit SVG to container on initial load — "meet" shows entire diagram
   useEffect(() => {
-    if (!svgText || !divRef.current) return;
-    const svgEl = divRef.current.querySelector("svg");
+    if (!svgText || !innerRef.current) return;
+    const svgEl = innerRef.current.querySelector("svg");
     if (svgEl) {
       svgEl.style.width = "100%";
       svgEl.style.height = "100%";
       svgEl.style.display = "block";
-      svgEl.setAttribute("preserveAspectRatio", "xMidYMid slice");
+      svgEl.setAttribute("preserveAspectRatio", "xMidYMid meet");
     }
   }, [svgText]);
 
+  // Dim all, highlight selected
   useEffect(() => {
-    if (!svgText || !divRef.current) return;
+    if (!svgText || !innerRef.current) return;
     allIds.forEach(id => {
-      const el = divRef.current.querySelector("#" + CSS.escape(id));
+      const el = innerRef.current.querySelector("#" + CSS.escape(id));
       if (el) el.style.opacity = "0.15";
     });
     selectedIds.forEach(id => {
-      const el = divRef.current.querySelector("#" + CSS.escape(id));
+      const el = innerRef.current.querySelector("#" + CSS.escape(id));
       if (el) el.style.opacity = "1";
     });
   }, [svgText, selectedIds, allIds]);
 
+  // Yellow pulse on newly toggled elements
   useEffect(() => {
-    if (!svgText || !divRef.current) return;
+    if (!svgText || !innerRef.current) return;
     const prev = previousSelectedRef.current;
     const next = new Set(selectedIds);
     const changed = [...new Set([...prev, ...next])].filter(id => prev.has(id) !== next.has(id));
-    const escapeId = value => (window.CSS?.escape ? window.CSS.escape(value) : value.replace(/[^a-zA-Z0-9_-]/g, "\\$&"));
-
+    const esc = v => (window.CSS?.escape ? window.CSS.escape(v) : v.replace(/[^a-zA-Z0-9_-]/g, "\\$&"));
     changed.forEach(id => {
-      const el = divRef.current?.querySelector("#" + escapeId(id));
+      const el = innerRef.current?.querySelector("#" + esc(id));
       if (!el || typeof el.animate !== "function") return;
       el.animate([
-        { filter: "drop-shadow(0 0 0px rgba(250, 204, 21, 0))", transform: "scale(1)" },
-        { filter: "drop-shadow(0 0 8px rgba(250, 204, 21, 0.95))", transform: "scale(1.03)" },
-        { filter: "drop-shadow(0 0 0px rgba(250, 204, 21, 0))", transform: "scale(1)" },
-      ], {
-        duration: 500,
-        easing: "ease-out",
-      });
+        { filter: "drop-shadow(0 0 0px rgba(250,204,21,0))",    transform: "scale(1)" },
+        { filter: "drop-shadow(0 0 8px rgba(250,204,21,0.95))", transform: "scale(1.03)" },
+        { filter: "drop-shadow(0 0 0px rgba(250,204,21,0))",    transform: "scale(1)" },
+      ], { duration: 500, easing: "ease-out" });
     });
-
     previousSelectedRef.current = next;
   }, [svgText, selectedIds]);
+
+  const applyTransform = useCallback(() => {
+    if (!innerRef.current) return;
+    const { scale, x, y } = xform.current;
+    innerRef.current.style.transform = `translate(${x}px,${y}px) scale(${scale})`;
+  }, []);
+
+  const resetView = useCallback(() => {
+    xform.current = { scale: 1, x: 0, y: 0 };
+    applyTransform();
+  }, [applyTransform]);
+
+  // Wheel zoom toward cursor
+  const onWheel = useCallback(e => {
+    e.preventDefault();
+    const rect = containerRef.current.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+    const t = xform.current;
+    const ns = Math.max(0.15, Math.min(12, t.scale * factor));
+    const ratio = ns / t.scale;
+    xform.current = { scale: ns, x: mx - ratio * (mx - t.x), y: my - ratio * (my - t.y) };
+    applyTransform();
+  }, [applyTransform]);
+
+  const onMouseDown = useCallback(e => {
+    if (e.button !== 0) return;
+    isDragging.current = true;
+    lastMouse.current = { x: e.clientX, y: e.clientY };
+    containerRef.current.style.cursor = "grabbing";
+    e.preventDefault();
+  }, []);
+
+  const onMouseMove = useCallback(e => {
+    if (!isDragging.current) return;
+    xform.current.x += e.clientX - lastMouse.current.x;
+    xform.current.y += e.clientY - lastMouse.current.y;
+    lastMouse.current = { x: e.clientX, y: e.clientY };
+    applyTransform();
+  }, [applyTransform]);
+
+  const stopDrag = useCallback(() => {
+    isDragging.current = false;
+    if (containerRef.current) containerRef.current.style.cursor = "grab";
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [onWheel]);
 
   if (notFound) return fallback;
   if (!svgText) return (
@@ -76,9 +133,29 @@ export function DiagramViewer({ svgPath, selectedIds = [], allIds = [], fallback
   );
 
   return (
-    <div ref={divRef}
-      style={{ width:"100%", height:"100%", overflow:"hidden" }}
-      dangerouslySetInnerHTML={{ __html: svgText }}
-    />
+    <div ref={containerRef}
+      style={{ width:"100%", height:"100%", overflow:"hidden", position:"relative",
+               cursor:"grab", userSelect:"none" }}
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={stopDrag}
+      onMouseLeave={stopDrag}
+      onDoubleClick={resetView}
+    >
+      <div ref={innerRef}
+        style={{ width:"100%", height:"100%", transformOrigin:"0 0" }}
+        dangerouslySetInnerHTML={{ __html: svgText }}
+      />
+      <button
+        title="Reset zoom (or double-click diagram)"
+        onMouseDown={e => e.stopPropagation()}
+        onClick={resetView}
+        style={{ position:"absolute", bottom:10, right:10, padding:"3px 8px",
+                 border:"1px solid "+T.border2, borderRadius:4, background:T.surface,
+                 color:T.muted, fontSize:11, fontFamily:T.mono, cursor:"pointer", opacity:0.75 }}
+      >
+        ⊡ reset
+      </button>
+    </div>
   );
 }
