@@ -1069,7 +1069,12 @@ export default function AHUPage({ onNavigateBack = null }) {
                 overflow:"hidden",minHeight:0}}>
                 <SchematicTabs>{{
                   flow: (
-                    <AHUSchematic cfg={cfg} visibleComponents={visibleComponents} selected={selected} onToggle={toggle}/>
+                    <DiagramViewer
+                      svgPath="/diagrams/ahu-flow.svg"
+                      selectedIds={selected.map(s=>s.id)}
+                      allIds={AHU_COMPS.map(c=>c.id)}
+                      fallback={<AHUSchematic cfg={cfg} visibleComponents={visibleComponents} selected={selected} onToggle={toggle}/>}
+                    />
                   ),
                   elec: (
                     <DiagramViewer
