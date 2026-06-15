@@ -1569,7 +1569,7 @@ export function EstimatorTabPanels({
                     Bid alternates let you price optional or deductive scope separately from the base estimate - useful for add/deduct scenarios in competitive bids. Each alternate appears as a separate section in the customer proposal.
                   </div>
                 </div>
-                <button type="button" onClick={onCreateBidAlternate} style={{ marginTop: 12, width: "100%", padding: "14px 16px", border: "1px dashed " + T.border2, borderRadius: 12, background: T.surface, color: T.text, cursor: "pointer", fontSize: 13, fontFamily: T.mono, fontWeight: 800 }}>
+                <button type="button" onClick={onCreateBidAlternate} data-testid="bid-alternate-launch" style={{ marginTop: 12, width: "100%", padding: "14px 16px", border: "1px dashed " + T.border2, borderRadius: 12, background: T.surface, color: T.text, cursor: "pointer", fontSize: 13, fontFamily: T.mono, fontWeight: 800 }}>
                   + Add a Bid Alternate
                 </button>
               </div>

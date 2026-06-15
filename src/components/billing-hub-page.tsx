@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { format, startOfMonth, subMonths, addMonths } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
-import { AdminProjectsTab } from "@/components/admin-projects-tab";
-import { FeedbackTab, WeeklyUpdatesTab } from "@/components/admin-weekly-feedback";
-import { BillingTable } from "@/components/billing-table";
 import { calcToBill, generatePmEmailDrafts, rollForwardRows } from "@/lib/billing/calculations";
 import type { BillingRow, BillingPeriod } from "@/types/database";
 import { safeJson } from "@/lib/utils/safe-json";
@@ -31,6 +29,26 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
+const BillingTable = dynamic(() => import("@/components/billing-table").then((mod) => mod.BillingTable), {
+  ssr: false,
+  loading: () => <PanelLoadingState label="Loading billing table..." />,
+});
+
+const AdminProjectsTab = dynamic(() => import("@/components/admin-projects-tab").then((mod) => mod.AdminProjectsTab), {
+  ssr: false,
+  loading: () => <PanelLoadingState label="Loading project setup..." />,
+});
+
+const WeeklyUpdatesTab = dynamic(() => import("@/components/admin-weekly-feedback").then((mod) => mod.WeeklyUpdatesTab), {
+  ssr: false,
+  loading: () => <PanelLoadingState label="Loading weekly updates..." />,
+});
+
+const FeedbackTab = dynamic(() => import("@/components/admin-weekly-feedback").then((mod) => mod.FeedbackTab), {
+  ssr: false,
+  loading: () => <PanelLoadingState label="Loading feedback..." />,
+});
+
 export function BillingHubPage() {
   const [tab, setTab] = useState<Tab>("overview");
   const [periodMonth, setPeriodMonth] = useState<Date>(startOfMonth(new Date()));
@@ -40,19 +58,134 @@ export function BillingHubPage() {
   const [authReady, setAuthReady] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [actionStatus, setActionStatus] = useState<string | null>(null);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   const monthLabel = format(periodMonth, "MMMM yyyy");
+
+  const loadProjectOptions = useCallback(async () => {
+    try {
+      const response = await fetch("/api/admin/data?section=projects", {
+        credentials: "include",
+      });
+      const json = await safeJson(response);
+      if (!response.ok) {
+        setProjectOptions([]);
+        return;
+      }
+
+      const nextProjects = (((json?.projects as Array<{ id: string; name: string }> | undefined) ?? [])).map((project) => ({
+        id: project.id,
+        name: project.name,
+      }));
+      setProjectOptions(nextProjects.sort((a, b) => a.name.localeCompare(b.name)));
+    } catch {
+      setProjectOptions([]);
+    }
+  }, []);
+
+  const loadBillingData = useCallback(async () => {
+    setLoading(true);
+    const monthStr = format(periodMonth, "yyyy-MM-dd");
+
+    try {
+      const res = await fetch(`/api/admin/data?section=billing&month=${encodeURIComponent(monthStr)}`, {
+        credentials: "include",
+      });
+      const json = await safeJson(res);
+      const data = json?.periods;
+      const error = !res.ok ? { message: json?.error ?? "Failed to load billing data." } : null;
+
+      if (!error && data) {
+        const activePeriods = (
+          data as Array<{
+            id: string;
+            period_month: string;
+            pct_complete: number;
+            prior_pct: number;
+            prev_billed: number;
+            actual_billed: number | null;
+            invoice_number?: string | null;
+            estimated_income_snapshot: number;
+            notes?: string | null;
+            synced_from_onedrive?: boolean | null;
+            project:
+              | {
+                  id: string;
+                  name: string;
+                  job_number?: string | null;
+                  is_active?: boolean | null;
+                  customer?: { name: string } | Array<{ name: string }>;
+                  pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
+                  pm_directory?:
+                    | { id: string; first_name?: string | null; last_name?: string | null; email?: string | null }
+                    | Array<{ id: string; first_name?: string | null; last_name?: string | null; email?: string | null }>;
+                  project_assignments?: Array<{
+                    role_on_project?: string | null;
+                    profile?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }> | null;
+                    pm_directory?:
+                      | { first_name?: string | null; last_name?: string | null; email?: string | null }
+                      | Array<{ first_name?: string | null; last_name?: string | null; email?: string | null }>
+                      | null;
+                  }>;
+                }
+              | Array<{
+                  id: string;
+                  name: string;
+                  job_number?: string | null;
+                  is_active?: boolean | null;
+                  customer?: { name: string } | Array<{ name: string }>;
+                  pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
+                  pm_directory?:
+                    | { id: string; first_name?: string | null; last_name?: string | null; email?: string | null }
+                    | Array<{ id: string; first_name?: string | null; last_name?: string | null; email?: string | null }>;
+                  project_assignments?: Array<{
+                    role_on_project?: string | null;
+                    profile?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }> | null;
+                    pm_directory?:
+                      | { first_name?: string | null; last_name?: string | null; email?: string | null }
+                      | Array<{ first_name?: string | null; last_name?: string | null; email?: string | null }>
+                      | null;
+                  }>;
+                }>;
+          }>
+        ).filter((period) => {
+          const project = Array.isArray(period.project) ? period.project[0] : period.project;
+          return project?.is_active !== false;
+        });
+
+        const mapped = mapFallbackBillingRows(activePeriods)
+          .filter((row) => row.project_id !== "")
+          .sort((a, b) => a.customer_name.localeCompare(b.customer_name));
+
+        const recentUpdateProjectIds = new Set(((json?.recentUpdateProjectIds as string[] | undefined) ?? []));
+        const pocDrivenProjectIds = new Set(((json?.pocDrivenProjectIds as string[] | undefined) ?? []));
+
+        setRows(
+          mapped.map((row) => ({
+            ...row,
+            has_recent_update: recentUpdateProjectIds.has(row.project_id),
+            poc_driven: pocDrivenProjectIds.has(row.project_id),
+          }))
+        );
+      } else {
+        setRows([]);
+      }
+    } catch {
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [periodMonth]);
 
   useEffect(() => {
     let active = true;
 
     async function bootstrapAuth() {
-      const { data, error } = await supabase.auth.getUser();
+      const { data, error } = await supabase.auth.getSession();
 
       if (!active) return;
 
-      if (error || !data.user) {
+      if (error || !data.session?.user) {
         setAuthError("Your browser session is not ready yet. Please refresh or sign in again.");
         setAuthReady(false);
         setLoading(false);
@@ -61,6 +194,7 @@ export function BillingHubPage() {
 
       setAuthReady(true);
       setAuthError(null);
+      setLoading(true);
 
     }
 
@@ -83,41 +217,17 @@ export function BillingHubPage() {
       active = false;
       subscription.unsubscribe();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     if (!authReady || !["overview", "billing"].includes(tab)) return;
     loadBillingData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authReady, tab, periodMonth]);
+  }, [authReady, loadBillingData, tab]);
 
   useEffect(() => {
     if (!authReady) return;
     void loadProjectOptions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authReady]);
-
-  async function loadProjectOptions() {
-    try {
-      const response = await fetch("/api/admin/data?section=projects", {
-        credentials: "include",
-      });
-      const json = await safeJson(response);
-      if (!response.ok) {
-        setProjectOptions([]);
-        return;
-      }
-
-      const nextProjects = (((json?.projects as Array<{ id: string; name: string }> | undefined) ?? [])).map((project) => ({
-        id: project.id,
-        name: project.name,
-      }));
-      setProjectOptions(nextProjects.sort((a, b) => a.name.localeCompare(b.name)));
-    } catch {
-      setProjectOptions([]);
-    }
-  }
+  }, [authReady, loadProjectOptions]);
 
   function mapFallbackBillingRows(
     periods: Array<{
@@ -218,100 +328,6 @@ export function BillingHubPage() {
         has_recent_update: false,
       };
     });
-  }
-
-  async function loadBillingData() {
-    setLoading(true);
-    const monthStr = format(periodMonth, "yyyy-MM-dd");
-
-    try {
-      const res = await fetch(`/api/admin/data?section=billing&month=${encodeURIComponent(monthStr)}`, {
-        credentials: "include",
-      });
-      const json = await safeJson(res);
-      const data = json?.periods;
-      const error = !res.ok ? { message: json?.error ?? "Failed to load billing data." } : null;
-
-      if (!error && data) {
-        const activePeriods = (
-          data as Array<{
-            id: string;
-            period_month: string;
-            pct_complete: number;
-            prior_pct: number;
-            prev_billed: number;
-            actual_billed: number | null;
-            invoice_number?: string | null;
-            estimated_income_snapshot: number;
-            notes?: string | null;
-            synced_from_onedrive?: boolean | null;
-            project:
-              | {
-                  id: string;
-                  name: string;
-                  job_number?: string | null;
-                  is_active?: boolean | null;
-                  customer?: { name: string } | Array<{ name: string }>;
-                  pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
-                  pm_directory?:
-                    | { id: string; first_name?: string | null; last_name?: string | null; email?: string | null }
-                    | Array<{ id: string; first_name?: string | null; last_name?: string | null; email?: string | null }>;
-                  project_assignments?: Array<{
-                    role_on_project?: string | null;
-                    profile?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }> | null;
-                    pm_directory?:
-                      | { first_name?: string | null; last_name?: string | null; email?: string | null }
-                      | Array<{ first_name?: string | null; last_name?: string | null; email?: string | null }>
-                      | null;
-                  }>;
-                }
-              | Array<{
-                  id: string;
-                  name: string;
-                  job_number?: string | null;
-                  is_active?: boolean | null;
-                  customer?: { name: string } | Array<{ name: string }>;
-                  pm?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }>;
-                  pm_directory?:
-                    | { id: string; first_name?: string | null; last_name?: string | null; email?: string | null }
-                    | Array<{ id: string; first_name?: string | null; last_name?: string | null; email?: string | null }>;
-                  project_assignments?: Array<{
-                    role_on_project?: string | null;
-                    profile?: { email?: string | null; full_name?: string | null } | Array<{ email?: string | null; full_name?: string | null }> | null;
-                    pm_directory?:
-                      | { first_name?: string | null; last_name?: string | null; email?: string | null }
-                      | Array<{ first_name?: string | null; last_name?: string | null; email?: string | null }>
-                      | null;
-                  }>;
-                }>;
-          }>
-        ).filter((period) => {
-          const project = Array.isArray(period.project) ? period.project[0] : period.project;
-          return project?.is_active !== false;
-        });
-
-        const mapped = mapFallbackBillingRows(activePeriods)
-          .filter((row) => row.project_id !== "")
-          .sort((a, b) => a.customer_name.localeCompare(b.customer_name));
-
-        const recentUpdateProjectIds = new Set(((json?.recentUpdateProjectIds as string[] | undefined) ?? []));
-        const pocDrivenProjectIds = new Set(((json?.pocDrivenProjectIds as string[] | undefined) ?? []));
-
-        setRows(
-          mapped.map((row) => ({
-            ...row,
-            has_recent_update: recentUpdateProjectIds.has(row.project_id),
-            poc_driven: pocDrivenProjectIds.has(row.project_id),
-          }))
-        );
-      } else {
-        setRows([]);
-      }
-    } catch {
-      setRows([]);
-    } finally {
-      setLoading(false);
-    }
   }
 
   async function handleRollForward() {
@@ -464,7 +480,7 @@ export function BillingHubPage() {
         ) : null}
 
         {!authReady ? (
-          <div className="py-16 text-center text-text-tertiary">Loading admin data...</div>
+          <BillingHubLoadingState />
         ) : (
           <>
         {tab === "overview" && (
@@ -744,6 +760,44 @@ function ShortcutLink({ href, label }: { href: string; label: string }) {
       <span>{label}</span>
       <span aria-hidden="true">-&gt;</span>
     </Link>
+  );
+}
+
+function PanelLoadingState({ label }: { label: string }) {
+  return (
+    <div className="rounded-2xl border border-border-default bg-surface-raised px-5 py-10 text-center text-sm text-text-tertiary">
+      {label}
+    </div>
+  );
+}
+
+function BillingHubLoadingState() {
+  return (
+    <div className="space-y-6">
+      <section className="rounded-3xl border border-border-default bg-surface-raised p-6">
+        <div className="h-4 w-32 animate-pulse rounded bg-surface-overlay" />
+        <div className="mt-3 h-8 w-80 max-w-full animate-pulse rounded bg-surface-overlay" />
+        <div className="mt-2 h-4 w-[30rem] max-w-full animate-pulse rounded bg-surface-overlay" />
+        <div className="mt-6 flex flex-wrap gap-2">
+          <div className="h-10 w-36 animate-pulse rounded-xl bg-surface-overlay" />
+          <div className="h-10 w-28 animate-pulse rounded-xl bg-surface-overlay" />
+        </div>
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="h-28 animate-pulse rounded-2xl border border-border-default bg-surface-overlay" />
+        ))}
+      </section>
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr),minmax(360px,0.65fr)]">
+        <div className="h-[24rem] animate-pulse rounded-2xl border border-border-default bg-surface-overlay" />
+        <div className="space-y-4">
+          <div className="h-40 animate-pulse rounded-2xl border border-border-default bg-surface-overlay" />
+          <div className="h-48 animate-pulse rounded-2xl border border-border-default bg-surface-overlay" />
+        </div>
+      </div>
+    </div>
   );
 }
 

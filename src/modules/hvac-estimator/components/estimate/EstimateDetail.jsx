@@ -171,6 +171,123 @@ function VersionHistoryModal({ open, onClose }) {
     document.body
   );
 }
+
+function BidAlternateNameModal({ open, defaultName, onClose, onConfirm }) {
+  const inputRef = useRef(null);
+  const [name, setName] = useState(defaultName);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    setName(defaultName);
+    const focusTimer = window.setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select?.();
+    }, 0);
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [defaultName, onClose, open]);
+
+  useEffect(() => {
+    if (open) return;
+    setName(defaultName);
+  }, [defaultName, open]);
+
+  if (!open) return null;
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/55 px-4" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bid-alternate-modal-title"
+        aria-describedby="bid-alternate-modal-desc"
+        data-testid="bid-alternate-modal"
+        className="w-full max-w-lg rounded-3xl border border-border-default bg-surface-raised shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-border-default px-6 py-5">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-text-tertiary">Bid Alternate</div>
+            <h3 id="bid-alternate-modal-title" className="mt-1 text-lg font-semibold text-text-primary">
+              Name this bid alternate
+            </h3>
+            <p id="bid-alternate-modal-desc" className="mt-2 text-sm text-text-secondary">
+              The dialog is keyboard-friendly and exposes test hooks for automation.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full border border-border-default px-3 py-1.5 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
+          >
+            Close
+          </button>
+        </div>
+
+        <form
+          className="space-y-4 px-6 py-5"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const trimmed = name.trim();
+            if (!trimmed) return;
+            onConfirm(trimmed);
+          }}
+        >
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-text-primary">Bid Alternate Name</span>
+            <input
+              ref={inputRef}
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  onClose();
+                }
+              }}
+              placeholder="Bid Alternate Name"
+              aria-label="Bid Alternate Name"
+              data-testid="bid-alternate-name-input"
+              className="w-full rounded-xl border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:border-brand-primary focus:outline-none"
+            />
+          </label>
+
+          <div className="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              data-testid="cancel-bid-alternate"
+              className="rounded-xl border border-border-default bg-surface-base px-4 py-2 text-sm font-semibold text-text-secondary transition hover:bg-surface-overlay hover:text-text-primary"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              data-testid="confirm-bid-alternate"
+              className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover"
+            >
+              Create
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>,
+    document.body
+  );
+}
 export function EstimateDetail({
   estimate,
   onBack,
@@ -200,6 +317,7 @@ export function EstimateDetail({
   const [showAiParser, setShowAiParser] = useState(false);
   const [activeTab, setActiveTab] = useState("estimate");
   const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [bidAlternateDialog, setBidAlternateDialog] = useState(null);
   const [highlightedSummaryRow, setHighlightedSummaryRow] = useState(null);
   const [proposalPreview, setProposalPreview] = useState(null);
   const summaryHighlightTimerRef = useRef(null);
@@ -376,24 +494,32 @@ export function EstimateDetail({
     return JSON.parse(JSON.stringify(items || []));
   }, []);
 
-  const createBidAlternate = useCallback((scopeMode = "installation", defaultPrefix = "Bid Alternate", seedWithCurrentItems = false) => {
-    const defaultName = `${defaultPrefix} ${alternates.length + 1}`;
-    const entered = window.prompt("Name this bid alternate", defaultName);
-    const name = String(entered || "").trim();
-    if (!name) return;
+  const openBidAlternateDialog = useCallback((scopeMode = "installation", defaultPrefix = "Bid Alternate", seedWithCurrentItems = false) => {
+    setBidAlternateDialog({
+      scopeMode,
+      defaultPrefix,
+      seedWithCurrentItems,
+      name: `${defaultPrefix} ${alternates.length + 1}`,
+    });
+  }, [alternates.length]);
+
+  const createBidAlternate = useCallback((name, options = bidAlternateDialog) => {
+    const trimmedName = String(name || "").trim();
+    if (!trimmedName || !options) return;
 
     const next = {
       id: crypto.randomUUID(),
-      name,
-      settings: { ...(estimate.settings || {}), estimateScopeMode: scopeMode },
-      items: seedWithCurrentItems ? cloneItems(estimate.items || []) : [],
+      name: trimmedName,
+      settings: { ...(estimate.settings || {}), estimateScopeMode: options.scopeMode },
+      items: options.seedWithCurrentItems ? cloneItems(estimate.items || []) : [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
     updateAlternates([...alternates, next]);
     setSubPage({ type: "alternate", alternateId: next.id });
-  }, [alternates, cloneItems, estimate.items, estimate.settings, setSubPage, updateAlternates]);
+    setBidAlternateDialog(null);
+  }, [alternates, bidAlternateDialog, cloneItems, estimate.items, estimate.settings, setSubPage, updateAlternates]);
 
   const openBidAlternate = useCallback((alternateId) => {
     setSubPage({ type: "alternate", alternateId });
@@ -724,7 +850,7 @@ export function EstimateDetail({
             saveChipState={saveChipState}
             savedAt={savedAt}
             onProposalDetails={() => setShowProposalDetails((value) => !value)}
-            onBidAlternate={() => createBidAlternate("installation", "Bid Alternate")}
+            onBidAlternate={() => openBidAlternateDialog("installation", "Bid Alternate")}
             onSystemWizard={() => setSubPage({ type: "wizard" })}
             onAiParser={() => setShowAiParser((value) => !value)}
             onSettings={() => setShowSettings((value) => !value)}
@@ -790,7 +916,7 @@ export function EstimateDetail({
       )}
 
       {!customerMode && (
-          <AiTakeoffModal
+        <AiTakeoffModal
           open={showAiParser}
           onClose={() => setShowAiParser(false)}
           estimate={estimate}
@@ -804,6 +930,12 @@ export function EstimateDetail({
           }}
         />
       )}
+      <BidAlternateNameModal
+        open={Boolean(bidAlternateDialog)}
+        defaultName={bidAlternateDialog?.name || ""}
+        onClose={() => setBidAlternateDialog(null)}
+        onConfirm={(name) => createBidAlternate(name)}
+      />
       <VersionHistoryModal open={showVersionHistory} onClose={() => setShowVersionHistory(false)} />
 
       {/* ── LINE ITEMS TABLE ── */}
@@ -1285,7 +1417,7 @@ export function EstimateDetail({
         onOpenProposalDetails={() => setShowProposalDetails(true)}
         onExportInternal={exportInternal}
         onExportProposal={exportProposal}
-        onCreateBidAlternate={() => createBidAlternate("installation", "Bid Alternate")}
+        onCreateBidAlternate={() => openBidAlternateDialog("installation", "Bid Alternate")}
         onOpenBidAlternate={openBidAlternate}
         onRemoveBidAlternate={removeBidAlternate}
         showSettings={showSettings}
