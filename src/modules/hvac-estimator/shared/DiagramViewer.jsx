@@ -23,6 +23,16 @@ export function DiagramViewer({ svgPath, selectedIds = [], allIds = [], fallback
 
   useEffect(() => {
     if (!svgText || !divRef.current) return;
+    const svgEl = divRef.current.querySelector("svg");
+    if (svgEl) {
+      svgEl.style.width = "100%";
+      svgEl.style.height = "100%";
+      svgEl.style.display = "block";
+    }
+  }, [svgText]);
+
+  useEffect(() => {
+    if (!svgText || !divRef.current) return;
     allIds.forEach(id => {
       const el = divRef.current.querySelector("#" + CSS.escape(id));
       if (el) el.style.opacity = "0.15";
