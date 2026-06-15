@@ -28,6 +28,7 @@ export function DiagramViewer({ svgPath, selectedIds = [], allIds = [], fallback
       svgEl.style.width = "100%";
       svgEl.style.height = "100%";
       svgEl.style.display = "block";
+      svgEl.setAttribute("preserveAspectRatio", "xMidYMid slice");
     }
   }, [svgText]);
 
@@ -76,7 +77,7 @@ export function DiagramViewer({ svgPath, selectedIds = [], allIds = [], fallback
 
   return (
     <div ref={divRef}
-      style={{ width:"100%", height:"100%", overflow:"auto" }}
+      style={{ width:"100%", height:"100%", overflow:"hidden" }}
       dangerouslySetInnerHTML={{ __html: svgText }}
     />
   );
