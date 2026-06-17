@@ -453,12 +453,19 @@ export async function loadWeeklyUpdateEmailData(admin: AdminClient, updateId: st
 }
 
 export async function loadWeeklyUpdateRecipients(admin: AdminClient, projectId: string): Promise<WeeklyUpdateRecipient[]> {
-  const { data, error } = await admin
+  const [{ data, error }, projectResult] = await Promise.all([
+    admin
     .from("project_customer_contacts")
     .select("profile_id, portal_access, email_digest, profile:profiles(full_name, email)")
     .eq("project_id", projectId)
     .eq("email_digest", true)
-    .order("profile_id");
+    .order("profile_id"),
+    admin
+      .from("projects")
+      .select("customer:customers(contact_email)")
+      .eq("id", projectId)
+      .maybeSingle(),
+  ]);
 
   if (error) {
     throw new Error(error.message);
@@ -484,6 +491,26 @@ export async function loadWeeklyUpdateRecipients(admin: AdminClient, projectId: 
       emailDigest: Boolean(row.email_digest),
     }];
   });
+
+  if (recipients.length === 0) {
+    const project = projectResult.data as
+      | {
+          customer?: { contact_email: string | null } | Array<{ contact_email: string | null }> | null;
+        }
+      | null;
+    const customer = normalizeSingle(project?.customer) as { contact_email: string | null } | null;
+    const fallbackEmail = customer?.contact_email?.trim();
+
+    if (fallbackEmail) {
+      recipients.push({
+        profileId: projectId,
+        fullName: null,
+        email: fallbackEmail,
+        portalAccess: true,
+        emailDigest: true,
+      });
+    }
+  }
 
   const seen = new Set<string>();
   return recipients.filter((recipient) => {
