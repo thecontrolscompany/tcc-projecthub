@@ -1135,6 +1135,8 @@ export function EstimatorActionBar({
   savedAt = null,
   onProposalDetails,
   onAddEquipment,
+  onUpdateAllPrices,
+  updatingPrices = false,
 }) {
   const savedRecently = saveChipState === "saved" && savedAt ? Date.now() - new Date(savedAt).getTime() < 3000 : false;
   const savedMuted = saveChipState === "saved" && !savedRecently;
@@ -1241,6 +1243,28 @@ export function EstimatorActionBar({
             >
               Proposal Details
             </button>
+            {onUpdateAllPrices && (
+              <button
+                type="button"
+                onClick={onUpdateAllPrices}
+                disabled={updatingPrices}
+                title="Re-capture current equipment install pricing for every line item. Controls/DDC pricing is always live and updates automatically."
+                style={{
+                  padding: "8px 12px",
+                  border: "1px solid " + T.border2,
+                  borderRadius: 999,
+                  background: T.surface,
+                  color: T.text,
+                  cursor: updatingPrices ? "default" : "pointer",
+                  fontSize: 12,
+                  fontFamily: T.mono,
+                  fontWeight: 700,
+                  opacity: updatingPrices ? 0.75 : 1,
+                }}
+              >
+                {updatingPrices ? "Updating Prices..." : "Update All Prices"}
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setShowPicker(true)}

@@ -307,7 +307,8 @@ export function EstimateDetail({
   platformEstimateId = null,
   initialProposalTab = null,
 }) {
-  const { subPage, setSubPage, applyDefaultInstallType, controlsCatalog } = useEstimate();
+  const { subPage, setSubPage, applyDefaultInstallType, refreshAllPrices, controlsCatalog } = useEstimate();
+  const [updatingPrices, setUpdatingPrices] = useState(false);
   const isMobile = useIsMobile();
   const [editHeader, setEditHeader] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
@@ -628,6 +629,21 @@ export function EstimateDetail({
     window.location.href = `/estimating/settings?organizationId=${encodeURIComponent(organizationId)}`;
   }, [organizationId]);
 
+  const handleUpdateAllPrices = useCallback(() => {
+    const estimateId = platformEstimateId || estimate.id || estimate.body?.estimateId;
+    if (!estimateId) return;
+    const confirmed = window.confirm(
+      "Update all equipment material/labor pricing to current price book values?\n\nThis re-captures every line item's price snapshot. Controls/DDC pricing always reflects the latest catalog automatically and is not affected by this action."
+    );
+    if (!confirmed) return;
+    setUpdatingPrices(true);
+    try {
+      refreshAllPrices(estimateId);
+    } finally {
+      setUpdatingPrices(false);
+    }
+  }, [platformEstimateId, estimate.id, estimate.body, refreshAllPrices]);
+
   const handleFixReviewIssue = useCallback((issue) => {
     if (!issue) return;
     if (issue.fixTarget === "proposal-details") {
@@ -856,6 +872,8 @@ export function EstimateDetail({
             onSettings={() => setShowSettings((value) => !value)}
             onAiSettings={openAiSettings}
             onAddEquipment={(type) => setSubPage({ type })}
+            onUpdateAllPrices={handleUpdateAllPrices}
+            updatingPrices={updatingPrices}
             showBidAlternates={showBidAlternates}
             showProjectSettings={showProjectSettings}
           />
