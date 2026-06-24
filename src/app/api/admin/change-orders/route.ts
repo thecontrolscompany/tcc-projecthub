@@ -3,6 +3,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import type { ChangeOrder, ChangeOrderStatus, UserRole } from "@/types/database";
+import { mapChangeOrderRow } from "@/lib/change-orders/server";
 
 type RouteContext =
   | {
@@ -117,23 +118,7 @@ async function canReadProject(admin: ReturnType<typeof adminClient>, projectId: 
 }
 
 function toChangeOrder(row: Record<string, unknown>): ChangeOrder {
-  return {
-    id: String(row.id),
-    project_id: String(row.project_id),
-    co_number: String(row.co_number),
-    title: String(row.title),
-    description: typeof row.description === "string" ? row.description : null,
-    amount: Number(row.amount ?? 0),
-    status: row.status as ChangeOrderStatus,
-    submitted_date: typeof row.submitted_date === "string" ? row.submitted_date : null,
-    approved_date: typeof row.approved_date === "string" ? row.approved_date : null,
-    submitted_by: typeof row.submitted_by === "string" ? row.submitted_by : null,
-    approved_by: typeof row.approved_by === "string" ? row.approved_by : null,
-    reference_doc: typeof row.reference_doc === "string" ? row.reference_doc : null,
-    notes: typeof row.notes === "string" ? row.notes : null,
-    created_at: String(row.created_at),
-    updated_at: String(row.updated_at),
-  };
+  return mapChangeOrderRow(row);
 }
 
 function isApprovedStatus(status: string) {
