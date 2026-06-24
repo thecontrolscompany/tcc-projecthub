@@ -27,7 +27,24 @@ export type OpportunityStage =
   | "lost"
   | "archived";
 export type WeeklyUpdateStatus = "draft" | "submitted";
-export type ChangeOrderStatus = "pending" | "approved" | "approved_po" | "approved_email" | "rejected" | "void";
+export type ChangeOrderUiStatus =
+  | "draft"
+  | "needs_pricing"
+  | "ready_to_submit"
+  | "submitted"
+  | "in_review"
+  | "approved"
+  | "rejected"
+  | "voided"
+  | "superseded"
+  | "executed"
+  | "billed"
+  | "paid";
+export type ChangeOrderLegacyStatus = "pending" | "needs_revision" | "approved_po" | "approved_email" | "void";
+export type ChangeOrderStatus = ChangeOrderUiStatus | ChangeOrderLegacyStatus;
+export type ChangeOrderPricingMode = "quick_total" | "detailed";
+export type ChangeOrderLineItemCategory = "labor" | "material" | "equipment" | "subcontractor" | "other";
+export type ChangeOrderAttachmentKind = "backup" | "supporting" | "photo" | "pdf" | "signed" | "customer";
 export type WipStatus = "not_started" | "in_progress" | "blocked" | "in_review" | "complete";
 export type WipPriority = "low" | "medium" | "high";
 export type BomStatus = "not_received" | "partial" | "received" | "surplus";
@@ -528,17 +545,116 @@ export interface PortalFeedback {
 export interface ChangeOrder {
   id: string;
   project_id: string;
+  cor_number: string;
   co_number: string;
+  sequence_number: number;
+  number_prefix: string;
+  number_padding: number;
   title: string;
   description: string | null;
   amount: number;
   status: ChangeOrderStatus;
+  pricing_mode: ChangeOrderPricingMode;
+  requested_amount: number;
+  approved_amount: number;
+  requested_days: number;
+  approved_days: number;
+  requested_by_name: string | null;
+  customer_contact_name: string | null;
+  customer_contact_email: string | null;
+  source: string | null;
+  what_happened: string | null;
+  work_required: string | null;
+  reason: string | null;
+  terms_note: string | null;
+  status_reason: string | null;
+  internal_notes: string | null;
   submitted_date: string | null;
   approved_date: string | null;
   submitted_by: string | null;
   approved_by: string | null;
   reference_doc: string | null;
   notes: string | null;
+  submitted_at: string | null;
+  approved_at: string | null;
+  executed_at: string | null;
+  billed_at: string | null;
+  paid_at: string | null;
+  voided_at: string | null;
+  rejected_at: string | null;
+  superseded_at: string | null;
+  combined_at: string | null;
+  superseded_by_change_order_id: string | null;
+  combined_into_change_order_id: string | null;
+  modified_by: string | null;
+  labor_amount: number;
+  material_amount: number;
+  equipment_amount: number;
+  subcontractor_amount: number;
+  other_amount: number;
+  created_at: string;
+  updated_at: string;
+  // joined / bundled
+  project?: Project | null;
+  line_items?: ChangeOrderLineItem[];
+  attachments?: ChangeOrderAttachment[];
+  status_history?: ChangeOrderStatusHistory[];
+}
+
+export interface ChangeOrderLineItem {
+  id: string;
+  change_order_id: string;
+  category: ChangeOrderLineItemCategory;
+  sort_order: number;
+  description: string;
+  role: string | null;
+  people_count: number | null;
+  hours_per_person: number | null;
+  days: number | null;
+  hourly_rate: number | null;
+  quantity: number | null;
+  unit: string | null;
+  unit_cost: number | null;
+  lump_sum: number | null;
+  markup_percent: number;
+  base_amount: number;
+  total: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChangeOrderAttachment {
+  id: string;
+  change_order_id: string;
+  attachment_kind: ChangeOrderAttachmentKind;
+  title: string | null;
+  description: string | null;
+  file_name: string;
+  content_type: string | null;
+  storage_provider: string;
+  storage_path: string | null;
+  storage_web_url: string | null;
+  file_size_bytes: number | null;
+  sort_order: number;
+  is_customer_visible: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChangeOrderStatusHistory {
+  id: string;
+  change_order_id: string;
+  previous_status: ChangeOrderStatus | null;
+  new_status: ChangeOrderStatus;
+  reason: string | null;
+  changed_by: string | null;
+  changed_at: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface ProjectChangeOrderSequence {
+  project_id: string;
+  next_sequence: number;
   created_at: string;
   updated_at: string;
 }

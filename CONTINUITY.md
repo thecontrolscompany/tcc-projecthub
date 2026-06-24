@@ -1,6 +1,6 @@
 # TCC ProjectHub — Continuity Document
 
-> Last updated: 2026-05-12 · HEAD: b6776d4
+> Last updated: 2026-06-24 · HEAD: b6776d4
 
 This document is written for the next Claude session. Read it alongside `CLAUDE.md` (project overview) and `ROADMAP.md` (feature backlog).
 
@@ -70,6 +70,23 @@ All numbered migrations (001–052) plus:
 | Tenant middleware | `resolveOrgFromRequest()` hits the database on every request — no caching. Fine for current traffic. | Low |
 | Supabase CLI migrations | Local migration history is slightly out of sync with remote (orphaned `20260415` entry). Use the Supabase SQL editor directly for DDL rather than `supabase db push` until this is cleaned up. | Medium |
 | Share page view counter | `void supabase.update()` is fire-and-forget — may drop on fast serverless cold starts. Acceptable for a non-critical counter. | Low |
+
+## Change Orders Handoff
+
+V1 change-order code is implemented and validated in the app, but the live Supabase migrations still need to be applied and verified before final merge/deploy:
+
+- `supabase/migrations/053_change_order_v1_enum.sql`
+- `supabase/migrations/054_change_order_v1_schema.sql`
+
+After applying the migrations in live Supabase, verify:
+
+- existing change orders still exist
+- existing rows have `cor_number`, `sequence_number`, and `co_number`
+- new rows get project-scoped sequential numbers
+- `co_number` remains populated
+- no `combined` status exists
+- status history works
+- line-item total recalculation works
 
 ---
 
