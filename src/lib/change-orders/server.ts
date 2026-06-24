@@ -569,7 +569,7 @@ export async function loadChangeOrderBundle(
   admin: SupabaseClient,
   changeOrderId: string,
   role?: UserRole | null
-) {
+) : Promise<ChangeOrderBundle | null> {
   const { data: changeOrderRows, error: changeOrderError } = await admin
     .from("change_orders")
     .select(
@@ -611,8 +611,9 @@ export async function loadChangeOrderBundle(
   if (attachmentsResult.error) throw attachmentsResult.error;
   if (statusHistoryResult.error) throw statusHistoryResult.error;
 
-  const change_order = mapChangeOrderRow(changeOrderRows as Record<string, unknown>);
-  const project = normalizeSingle(change_order.project);
+  const changeOrderRecord = changeOrderRows as Record<string, unknown>;
+  const change_order = mapChangeOrderRow(changeOrderRecord);
+  const project = normalizeSingle(changeOrderRecord.project) as Project | null;
   const line_items = (lineItemsResult.data ?? []).map((row) => mapChangeOrderLineItemRow(row as Record<string, unknown>));
   const attachments = (attachmentsResult.data ?? []).map((row) => mapChangeOrderAttachmentRow(row as Record<string, unknown>));
   const status_history = (statusHistoryResult.data ?? []).map((row) =>
@@ -633,7 +634,7 @@ export async function loadChangeOrderBundle(
       summary,
     },
     role
-  );
+  ) as ChangeOrderBundle;
 }
 
 type ChangeOrderChildSaveInput = {
