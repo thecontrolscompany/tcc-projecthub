@@ -262,6 +262,35 @@ export default async function CustomerChangeOrdersReportPage({ searchParams }: P
             color: #374151;
           }
 
+          .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 18px 0;
+          }
+
+          .summary-card {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 12px 14px;
+            text-align: center;
+          }
+
+          .summary-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #6b7280;
+            margin-bottom: 4px;
+          }
+
+          .summary-value {
+            font-size: 17px;
+            font-weight: 700;
+            color: #017a6f;
+          }
+
           table {
             width: 100%;
             border-collapse: collapse;
@@ -287,13 +316,6 @@ export default async function CustomerChangeOrdersReportPage({ searchParams }: P
           .number-cell {
             text-align: right;
             white-space: nowrap;
-          }
-
-          .summary-line {
-            margin-top: 10px;
-            font-size: 14px;
-            font-weight: 700;
-            text-align: right;
           }
 
           .footer {
@@ -399,8 +421,20 @@ export default async function CustomerChangeOrdersReportPage({ searchParams }: P
               </tbody>
             </table>
 
-            <div className="summary-line">Total Requested: {fmtCurrency(requestedTotal)}</div>
-            <div className="summary-line">Total Approved: {fmtCurrency(approvedTotal)}</div>
+            <div className="summary-grid">
+              <div className="summary-card">
+                <div className="summary-label">Total Requested</div>
+                <div className="summary-value">{fmtCurrency(requestedTotal)}</div>
+              </div>
+              <div className="summary-card">
+                <div className="summary-label">Total Approved</div>
+                <div className="summary-value">{fmtCurrency(approvedTotal)}</div>
+              </div>
+              <div className="summary-card">
+                <div className="summary-label">Total Outstanding</div>
+                <div className="summary-value">{fmtCurrency(requestedTotal - approvedTotal)}</div>
+              </div>
+            </div>
 
             <footer className="footer">
               <div>The Controls Company, LLC | thecontrolscompany.com</div>
