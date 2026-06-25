@@ -713,9 +713,11 @@ export default async function ChangeOrderReportPage({ params }: PageProps) {
               </>
             )}
 
-            <div className="section-divider">
-              <h2>Line Items</h2>
-            </div>
+            {(bundle.line_items.length > 0 || changeOrder.pricing_mode === "detailed") && (
+              <div className="section-divider">
+                <h2>Line Items</h2>
+              </div>
+            )}
 
             {bundle.line_items.length > 0 ? (
               <table>
@@ -762,16 +764,12 @@ export default async function ChangeOrderReportPage({ params }: PageProps) {
                   </tr>
                 </tbody>
               </table>
-            ) : (
+            ) : changeOrder.pricing_mode === "detailed" ? (
               <div className="callout">
                 <strong>No detailed line items</strong>
-                <div>
-                  {changeOrder.pricing_mode === "detailed"
-                    ? "This change order is marked detailed, but no calculator line items were saved."
-                    : "This change order uses quick total pricing."}
-                </div>
+                <div>This change order is marked detailed, but no calculator line items were saved.</div>
               </div>
-            )}
+            ) : null}
 
             {bundle.attachments.length > 0 && (
               <>
