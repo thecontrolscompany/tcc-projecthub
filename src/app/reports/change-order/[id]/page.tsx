@@ -599,13 +599,8 @@ export default async function ChangeOrderReportPage({ params }: PageProps) {
 
               <span className="meta-label">Project Number:</span>
               <span>{project.job_number ?? "—"}</span>
-              <span className="meta-label">Primary Number:</span>
-              <span>{displayChangeOrderNumber(changeOrder)}</span>
-
               <span className="meta-label">Legacy CO #:</span>
               <span>{changeOrder.co_number || "—"}</span>
-              <span className="meta-label">Pricing Mode:</span>
-              <span>{changeOrder.pricing_mode === "detailed" ? "Detailed calculator" : "Quick total"}</span>
 
               <span className="meta-label">Source:</span>
               <span>{changeOrder.source || "—"}</span>
