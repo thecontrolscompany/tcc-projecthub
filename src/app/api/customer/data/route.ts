@@ -151,10 +151,10 @@ export async function GET(request: Request) {
         .in("role_on_project", ["pm", "lead", "ops_manager"]),
       adminClient
         .from("change_orders")
-        .select("id, project_id, co_number, title, amount, status, submitted_date, approved_date, reference_doc")
+        .select("id, project_id, co_number, title, amount, status, submitted_date, approved_date, reference_doc, sequence_number")
         .in("project_id", projectIds)
         .in("status", ["submitted", "in_review", "approved", "executed", "billed", "paid", "rejected"])
-        .order("submitted_date", { ascending: true }),
+        .order("sequence_number", { ascending: true }),
       adminClient
         .from("project_photos")
         .select("project_id")
