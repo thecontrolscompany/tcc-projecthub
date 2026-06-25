@@ -39,6 +39,14 @@ interface CustomerChangeOrder {
   reference_doc: string | null;
 }
 
+function isApprovedCoStatus(status: string): boolean {
+  return ["approved", "approved_po", "approved_email", "executed", "billed", "paid"].includes(status);
+}
+
+function isPendingCoStatus(status: string): boolean {
+  return ["pending", "submitted", "in_review"].includes(status);
+}
+
 interface CustomerProject {
   id: string;
   name: string;
@@ -1003,17 +1011,18 @@ function ProjectDetail({
             <p className="text-sm text-slate-400">No change orders on record.</p>
           ) : (
             project.change_orders.map((co) => {
-              const isApproved = co.status === "approved" || co.status === "approved_po" || co.status === "approved_email";
+              const isApproved = isApprovedCoStatus(co.status);
+              const isPending = isPendingCoStatus(co.status);
               const badgeClasses = isApproved
                   ? "rounded-full border border-green-200 bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700"
-                  : co.status === "pending"
+                  : isPending
                   ? "rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700"
                   : "rounded-full border border-red-200 bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700";
               const badgeLabel =
                 co.status === "approved_po" ? "Approved (PO)"
                 : co.status === "approved_email" ? "Approved (Email)"
                 : isApproved ? "Approved"
-                : co.status === "pending" ? "In Review"
+                : isPending ? "In Review"
                 : "Not Approved";
               return (
                 <div
@@ -1033,7 +1042,7 @@ function ProjectDetail({
                         Approved {format(new Date(co.approved_date), "MMM d, yyyy")}
                       </p>
                     )}
-                    {!isApproved && co.status === "pending" && co.submitted_date && (
+                    {!isApproved && isPending && co.submitted_date && (
                       <p className="text-xs text-slate-400">
                         Submitted {format(new Date(co.submitted_date), "MMM d, yyyy")}
                       </p>
@@ -1067,15 +1076,17 @@ function ProjectDetail({
           )}
         </div>
         {project.change_orders.length > 0 && (() => {
-          const pendingTotal = project.change_orders.filter((co) => co.status === "pending").reduce((sum, co) => sum + co.amount, 0);
+          const pendingTotal = project.change_orders.filter((co) => isPendingCoStatus(co.status)).reduce((sum, co) => sum + co.amount, 0);
           const approvedPoTotal = project.change_orders.filter((co) => co.status === "approved_po").reduce((sum, co) => sum + co.amount, 0);
           const approvedEmailTotal = project.change_orders.filter((co) => co.status === "approved_email").reduce((sum, co) => sum + co.amount, 0);
-          const approvedLegacyTotal = project.change_orders.filter((co) => co.status === "approved").reduce((sum, co) => sum + co.amount, 0);
+          const approvedLegacyTotal = project.change_orders
+            .filter((co) => ["approved", "executed", "billed", "paid"].includes(co.status))
+            .reduce((sum, co) => sum + co.amount, 0);
           const rejectedTotal = project.change_orders.filter((co) => co.status === "rejected").reduce((sum, co) => sum + co.amount, 0);
-          const hasPending = project.change_orders.some((co) => co.status === "pending");
+          const hasPending = project.change_orders.some((co) => isPendingCoStatus(co.status));
           const hasApprovedPo = project.change_orders.some((co) => co.status === "approved_po");
           const hasApprovedEmail = project.change_orders.some((co) => co.status === "approved_email");
-          const hasApprovedLegacy = project.change_orders.some((co) => co.status === "approved");
+          const hasApprovedLegacy = project.change_orders.some((co) => ["approved", "executed", "billed", "paid"].includes(co.status));
           const hasRejected = project.change_orders.some((co) => co.status === "rejected");
           const cardCount = [hasPending, hasApprovedPo, hasApprovedEmail, hasApprovedLegacy, hasRejected].filter(Boolean).length;
           const gridClass = cardCount === 1 ? "grid-cols-1" : cardCount === 2 ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3";
@@ -1455,7 +1466,7 @@ function CustomerHelpDialog({ onClose }: { onClose: () => void }) {
             <HelpCard
               title="Change Orders and Team Contacts"
               items={[
-                "Only approved change orders appear in the customer portal.",
+                "Change orders appear here once submitted to you for review, and update to Approved or Not Approved once decided.",
                 "The project team section lists the primary people to contact for questions.",
                 "If you need clarification, start with the listed Project Manager when available.",
               ]}
@@ -2055,7 +2066,7 @@ function getProjectBilledToDate(project: CustomerProject) {
 
 function getProjectApprovedCoTotal(project: CustomerProject): number {
   return project.change_orders
-    .filter((co) => co.status === "approved" || co.status === "approved_po" || co.status === "approved_email")
+    .filter((co) => isApprovedCoStatus(co.status))
     .reduce((sum, co) => sum + co.amount, 0);
 }
 
