@@ -329,7 +329,7 @@ export default async function CustomerChangeOrdersReportPage({ searchParams }: P
 
           @media print {
             body {
-              background: #ffffff;
+              background: #ffffff !important;
             }
 
             .no-print {
