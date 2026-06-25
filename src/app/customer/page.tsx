@@ -998,13 +998,26 @@ function ProjectDetail({
         className="customer-print-card rounded-3xl border bg-white p-6 shadow-sm"
         style={{ borderColor: BORDER }}
       >
-        <div className="mb-4">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: HEADER_BG }}>
-            Change Orders
-          </p>
-          <h3 className="text-xl font-bold" style={{ color: CHARCOAL }}>
-            Change Orders
-          </h3>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em]" style={{ color: HEADER_BG }}>
+              Change Orders
+            </p>
+            <h3 className="text-xl font-bold" style={{ color: CHARCOAL }}>
+              Change Orders
+            </h3>
+          </div>
+          {project.change_orders.length > 0 && (
+            <a
+              href={`/reports/customer/change-orders?projectId=${project.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium"
+              style={{ borderColor: BORDER, color: ACCENT }}
+            >
+              Print Change Order Log
+            </a>
+          )}
         </div>
         <div className="space-y-3">
           {project.change_orders.length === 0 ? (
