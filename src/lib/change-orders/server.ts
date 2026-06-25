@@ -60,7 +60,7 @@ const CHANGE_ORDER_STATUS_LABELS: Record<ChangeOrderUiStatus, string> = {
   needs_pricing: "Needs Pricing",
   ready_to_submit: "Ready to Submit",
   submitted: "Submitted",
-  in_review: "In Review",
+  in_review: "Submitted",
   approved: "Approved",
   rejected: "Rejected",
   voided: "Voided",

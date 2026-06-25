@@ -1035,7 +1035,7 @@ function ProjectDetail({
                 co.status === "approved_po" ? "Approved (PO)"
                 : co.status === "approved_email" ? "Approved (Email)"
                 : isApproved ? "Approved"
-                : isPending ? "In Review"
+                : isPending ? "Submitted"
                 : "Not Approved";
               return (
                 <div
@@ -1107,7 +1107,7 @@ function ProjectDetail({
             <div className={`mt-4 grid gap-3 ${gridClass}`}>
               {hasPending && (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">In Review</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">Submitted</p>
                   <p className="mt-1 text-base font-bold text-amber-700">{currency(pendingTotal)}</p>
                 </div>
               )}
