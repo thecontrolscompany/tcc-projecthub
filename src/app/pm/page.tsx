@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { ViewReportLink } from "@/components/view-report-link";
 import { BomTab } from "@/components/bom-tab";
 import { CustomerContactsSection } from "@/components/project-modal/customer-contacts-section";
+import { ChangeOrdersSection } from "@/components/project-modal/change-orders-section";
 import type { WeeklyUpdateRecipient } from "@/lib/reports/weekly-update-email";
 import { formatWeekEndingSaturday, normalizeWeekEndingSaturday } from "@/lib/utils/week-ending";
 import type { ChangeOrder, LaborHoursWorker } from "@/types/database";
@@ -22,6 +23,7 @@ import type {
 import { fmtCurrency } from "@/lib/utils/format";
 import { ROLE_LABELS, ROLE_BADGE_STYLES_WITH_BORDER } from "@/lib/project/roles";
 import { safeJson } from "@/lib/utils/safe-json";
+import { compressImageForUpload } from "@/lib/utils/compress-image";
 
 type ProjectTab = "overview" | "contacts" | "update" | "poc" | "change-orders" | "rfis" | "photos" | "bom";
 
@@ -2512,98 +2514,7 @@ function UpdateForm({
         </div>
       )}
 
-      {activeTab === "change-orders" && (
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-base font-semibold text-text-primary">Change Orders</h3>
-            <p className="mt-1 text-sm text-text-tertiary">
-              Change orders on this project. Contact admin to add or update change orders.
-            </p>
-          </div>
-
-          {coError ? (
-            <p className="text-sm text-status-danger">{coError}</p>
-          ) : changeOrders.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border-default px-6 py-10 text-center">
-              <p className="text-sm font-medium text-text-secondary">No change orders on file.</p>
-              <p className="mt-1 text-xs text-text-tertiary">Change orders will appear here once added by admin.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {changeOrders.map((co) => (
-                <div
-                  key={co.id}
-                  className={[
-                    "flex items-center justify-between rounded-xl border px-4 py-3 text-sm",
-                    co.status === "void"
-                      ? "border-border-default bg-surface-base opacity-50"
-                      : "border-border-default bg-surface-raised",
-                  ].join(" ")}
-                >
-                  <div className="space-y-0.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium text-text-primary">{co.co_number}</span>
-                      <span className="text-text-secondary">-</span>
-                      <span className="text-text-primary">{co.title}</span>
-                      <span
-                        className={[
-                          "rounded-full px-2 py-0.5 text-xs font-medium capitalize",
-                          co.status === "approved"
-                            ? "bg-status-success/10 text-status-success"
-                            : co.status === "rejected"
-                              ? "bg-status-danger/10 text-status-danger"
-                              : co.status === "void"
-                                ? "bg-surface-overlay text-text-tertiary"
-                                : "bg-status-warning/10 text-status-warning",
-                        ].join(" ")}
-                      >
-                        {co.status}
-                      </span>
-                    </div>
-                    {co.reference_doc && (
-                      <p className="text-xs text-text-tertiary">Ref: {co.reference_doc}</p>
-                    )}
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <span
-                      className={[
-                        "font-semibold",
-                        co.status === "void"
-                          ? "text-text-tertiary"
-                          : co.amount >= 0
-                            ? "text-status-success"
-                            : "text-status-danger",
-                      ].join(" ")}
-                    >
-                      {co.amount >= 0 ? "+" : ""}
-                      {fmtCurrency(co.amount)}
-                    </span>
-                    {co.status !== "void" && (
-                      <a
-                        href={`/reports/change-order/${co.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-status-success hover:underline"
-                      >
-                        View/Print
-                      </a>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {changeOrders.filter((co) => co.status === "approved").length > 0 && (
-            <div className="rounded-xl border border-status-success/20 bg-status-success/5 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary">Total Approved CO Value</p>
-              <p className="mt-1 text-base font-bold text-status-success">
-                {fmtCurrency(changeOrders.filter((co) => co.status === "approved").reduce((sum, co) => sum + co.amount, 0))}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
+      {activeTab === "change-orders" && <ChangeOrdersSection projectId={project.id} />}
 
       {activeTab === "rfis" && (
         <RfiTab
@@ -3418,8 +3329,9 @@ function PhotosTab({ projectId }: { projectId: string }) {
     setUploading(true);
     setUploadError(null);
     try {
+      const uploadReady = await compressImageForUpload(file);
       const fd = new FormData();
-      fd.append("file", file);
+      fd.append("file", uploadReady);
       fd.append("projectId", projectId);
       if (pendingCaption.trim()) fd.append("caption", pendingCaption.trim());
       if (pendingDate) fd.append("takenDate", pendingDate);
@@ -3497,7 +3409,7 @@ function PhotosTab({ projectId }: { projectId: string }) {
           >
             {uploading ? "Uploading..." : "Choose Photos"}
           </button>
-          <span className="ml-3 text-xs text-text-tertiary">Images only, max 20 MB each</span>
+          <span className="ml-3 text-xs text-text-tertiary">Images only — large photos are auto-compressed before upload</span>
         </div>
         {uploadError && (
           <div className="flex flex-wrap items-center gap-2 text-sm text-status-danger">

@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   canReadChangeOrders,
   canWriteChangeOrders,
+  formatZodError,
   getChangeOrderRequestContext,
   loadChangeOrderBundle,
   saveChangeOrderChildren,
@@ -150,7 +151,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
     const parsed = patchSchema.safeParse(await request.json().catch(() => null));
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
     }
 
     const payload = parsed.data;

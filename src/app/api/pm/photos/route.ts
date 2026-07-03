@@ -101,8 +101,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Only image files are supported." }, { status: 400 });
   }
 
-  if (file.size > 20 * 1024 * 1024) {
-    return NextResponse.json({ error: "File too large (max 20 MB per photo)." }, { status: 400 });
+  // Vercel enforces a hard ~4.5 MB request body cap on serverless functions
+  // that cannot be raised via app config, so this must stay well under it.
+  if (file.size > 4 * 1024 * 1024) {
+    return NextResponse.json({ error: "File too large (max 4 MB per photo)." }, { status: 400 });
   }
 
   const hasAccess = await verifyProjectAccess(projectId, user.id, role);

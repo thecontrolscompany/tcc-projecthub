@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { fmtCurrency } from "@/lib/utils/format";
 import type {
@@ -784,7 +785,8 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(json?.error ?? "Failed to save change order.");
+        const message = typeof json?.error === "string" ? json.error : "Failed to save change order.";
+        throw new Error(message);
       }
 
       closeEditor();
@@ -826,7 +828,8 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(json?.error ?? "Failed to update status.");
+        const message = typeof json?.error === "string" ? json.error : "Failed to update status.";
+        throw new Error(message);
       }
       setStatusModal(null);
       await loadData();
@@ -869,13 +872,21 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
             Track change order requests, approvals, and print-ready customer reports for this project.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={openCreateForm}
-          className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover"
-        >
-          Add Change
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/reports/project/change-orders?projectId=${encodeURIComponent(projectId)}`}
+            className="rounded-xl border border-border-default bg-surface-base px-4 py-2 text-sm font-semibold text-text-primary transition hover:border-brand-primary hover:text-brand-primary"
+          >
+            Project report
+          </Link>
+          <button
+            type="button"
+            onClick={openCreateForm}
+            className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover"
+          >
+            Add Change
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">

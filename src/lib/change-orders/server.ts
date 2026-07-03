@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { ZodError } from "zod";
 import { createClient as createSupabaseAdminClient, type SupabaseClient, type User } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import { normalizeSingle } from "@/lib/utils/normalize";
@@ -151,6 +152,15 @@ function normalizePricingMode(value: unknown): ChangeOrderPricingMode {
   return (CHANGE_ORDER_PRICING_MODES as readonly string[]).includes(mode)
     ? (mode as ChangeOrderPricingMode)
     : "quick_total";
+}
+
+export function formatZodError(error: ZodError): string {
+  const messages = error.issues.map((issue) => {
+    const path = issue.path.join(".");
+    return path ? `${path}: ${issue.message}` : issue.message;
+  });
+
+  return messages.length > 0 ? messages.join("; ") : "Invalid request.";
 }
 
 export function normalizeChangeOrderStatus(rawStatus: string | null | undefined): ChangeOrderUiStatus {

@@ -5,6 +5,7 @@ import {
   canWriteChangeOrders,
   computeChangeOrderSummary,
   displayChangeOrderNumber,
+  formatZodError,
   getChangeOrderRequestContext,
   mapChangeOrderAttachmentRow,
   mapChangeOrderLineItemRow,
@@ -273,7 +274,7 @@ export async function POST(request: Request, { params }: RouteContext) {
 
     const parsed = createChangeOrderSchema.safeParse(await request.json().catch(() => null));
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
     }
 
     const payload = parsed.data;

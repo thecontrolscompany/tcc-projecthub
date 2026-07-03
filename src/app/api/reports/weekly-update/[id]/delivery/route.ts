@@ -247,7 +247,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
   });
 }
 
-export async function POST(_request: Request, { params }: RouteContext) {
+export async function POST(request: Request, { params }: RouteContext) {
   const { id } = await params;
   const supabase = await createServerClient();
   const {
@@ -283,6 +283,34 @@ export async function POST(_request: Request, { params }: RouteContext) {
 
   if (previewLookup.data.status !== "submitted") {
     return NextResponse.json({ error: "Only submitted reports can be delivered." }, { status: 400 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const force = searchParams.get("force") === "true";
+
+  if (!force) {
+    // Guards against duplicate sends from double-clicks, network retries, or a
+    // race between the auto-send-on-submit flow and a manual resend — not
+    // against intentional resends after a later edit, which is why this only
+    // looks a couple minutes back rather than "ever sent".
+    const dedupeWindowStart = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    const { data: priorSends } = await admin
+      .from("report_email_send_attempts")
+      .select("recipient_email")
+      .eq("report_id", id)
+      .eq("status", "sent")
+      .gte("created_at", dedupeWindowStart);
+
+    if ((priorSends ?? []).length > 0) {
+      return NextResponse.json({
+        sent: true,
+        alreadySent: true,
+        sentCount: priorSends!.length,
+        recipientEmails: priorSends!.map((row) => row.recipient_email),
+        failedCount: 0,
+        failedRecipients: [],
+      });
+    }
   }
 
   const emailContext = await loadWeeklyUpdateEmailData(admin, id);
