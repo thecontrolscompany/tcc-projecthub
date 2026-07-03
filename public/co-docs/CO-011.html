@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Change Order Request CO-011 &mdash; Mobile Arena</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+
+    @page {
+      size: letter;
+      margin: 1in 0.75in 0.9in 0.75in;
+      @top-left {
+        content: "The Controls Company, LLC";
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 8pt; color: #4b5563;
+        vertical-align: bottom; padding-bottom: 6pt;
+        border-bottom: 1pt solid #017a6f;
+      }
+      @top-right {
+        content: "Mobile Arena \2014 CO-011 Schedule Delay & Compression";
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 8pt; color: #4b5563;
+        vertical-align: bottom; padding-bottom: 6pt;
+        border-bottom: 1pt solid #017a6f;
+      }
+      @bottom-left {
+        content: "thecontrolscompany.com  |  Service Disabled Veteran Owned Small Business";
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 7.5pt; color: #9ca3af;
+        vertical-align: top; padding-top: 6pt;
+      }
+      @bottom-right {
+        content: "Page " counter(page) " of " counter(pages);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 8pt; color: #4b5563;
+        vertical-align: top; padding-top: 6pt;
+      }
+    }
+
+    body {
+      margin: 0;
+      background: #f4f7f6;
+      color: #111827;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .page { max-width: 8in; margin: 0 auto; padding: 24px; }
+    .no-print { display: flex; gap: 12px; justify-content: flex-end; margin-bottom: 18px; }
+    .no-print button {
+      border: 1px solid #d1d5db; background: #ffffff; color: #111827;
+      border-radius: 999px; padding: 10px 18px; font-size: 14px;
+      font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .no-print button:hover { border-color: #017a6f; color: #017a6f; }
+
+    .report { background: #ffffff; padding: 28px; border: 1px solid #d1d5db; }
+    .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .logo { width: 100px; height: 100px; object-fit: contain; }
+    .badge { width: 80px; height: 80px; object-fit: contain; }
+    .brand-copy { flex: 1; text-align: center; }
+    .brand-copy h1 { margin: 0 0 4px; font-size: 18px; color: #017a6f; letter-spacing: 0.04em; }
+    .brand-copy p { margin: 0; font-size: 12px; color: #4b5563; }
+
+    .doc-title {
+      margin: 16px 0 0; text-align: center;
+      font-size: 20px; font-weight: 700; color: #111827;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .doc-subtitle {
+      text-align: center; font-size: 12px; color: #6b7280;
+      margin: 4px 0 0; letter-spacing: 0.04em;
+    }
+
+    .section-divider { margin: 22px 0 12px; padding-bottom: 6px; border-bottom: 2px solid #017a6f; }
+    .section-divider h2 {
+      margin: 0; font-size: 13px; font-weight: 700;
+      color: #017a6f; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    .meta-grid {
+      display: grid; grid-template-columns: 180px 1fr 180px 1fr;
+      gap: 8px 16px; margin-top: 14px; font-size: 13px;
+    }
+    .meta-label { font-weight: 700; color: #374151; }
+
+    p { margin: 8px 0; line-height: 1.6; font-size: 14px; }
+
+    .milestone-box {
+      margin: 18px 0; padding: 16px 20px;
+      background: #fef2f2; border-left: 6px solid #dc2626; border-radius: 2px;
+    }
+    .milestone-box .mb-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: #991b1b; margin-bottom: 10px;
+    }
+    .milestone-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .milestone-cell {
+      text-align: center; padding: 10px 8px;
+      background: #fff; border: 1px solid #fca5a5; border-radius: 3px;
+    }
+    .milestone-cell .val { font-size: 18px; font-weight: 700; color: #dc2626; line-height: 1.1; }
+    .milestone-cell .lbl { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+
+    .evidence-box {
+      margin: 14px 0; padding: 12px 16px;
+      background: #f0f4ff; border: 1px solid #c7d2fe;
+      border-left: 4px solid #4f46e5; border-radius: 2px;
+      font-size: 13px; line-height: 1.6;
+    }
+    .evidence-box strong { display: block; margin-bottom: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #3730a3; }
+
+    .exclusion-box {
+      margin: 14px 0; padding: 12px 16px;
+      background: #fffbeb; border: 1px solid #fcd34d;
+      border-left: 4px solid #d97706; border-radius: 2px;
+      font-size: 13px; line-height: 1.6;
+    }
+    .exclusion-box strong { color: #92400e; }
+
+    .reservation-box {
+      margin: 18px 0; padding: 14px 18px;
+      background: #f0f4ff; border: 1px solid #c7d2fe;
+      border-left: 5px solid #4f46e5; border-radius: 2px;
+    }
+    .reservation-box .rb-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #3730a3; margin-bottom: 8px; }
+
+    .amount-box {
+      margin: 22px 0; padding: 20px 24px;
+      background: #f0faf8; border: 1px solid #b2dbd7;
+      border-top: 4px solid #017a6f; border-radius: 3px;
+    }
+    .amount-box .amount-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+    .amount-box .amount-label { font-size: 13px; font-weight: 700; color: #374151; }
+    .amount-box .amount-sub { font-size: 12px; color: #6b7280; margin-top: 4px; }
+    .amount-box .amount-val { font-size: 32px; font-weight: 700; color: #017a6f; white-space: nowrap; }
+    .amount-line-items { margin-top: 14px; border-collapse: collapse; width: 100%; font-size: 12px; }
+    .amount-line-items th, .amount-line-items td { border: 1px solid #b2dbd7; padding: 6px 10px; }
+    .amount-line-items thead th { background: #eef8f6; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .amount-line-items .total-row td { font-weight: 700; background: #eef8f6; }
+
+    table { border-collapse: collapse; width: 100%; margin-top: 8px; font-size: 12px; }
+    th, td { border: 1px solid #d1d5db; padding: 7px 10px; text-align: left; vertical-align: middle; }
+    thead th {
+      background: #eef8f6; color: #0f172a;
+      font-size: 10px; letter-spacing: 0.06em;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    .center { text-align: center; }
+    tr.evidence-row td { background: #fff3f3; }
+    tr.warn-row td { background: #fffbeb; }
+
+    .signature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 32px; }
+    .signature-block { min-height: 100px; border-top: 1px solid #9ca3af; padding-top: 10px; font-size: 12px; line-height: 2; }
+
+    @media print {
+      body { background: #ffffff; }
+      .no-print { display: none !important; }
+      .page { max-width: none; margin: 0; padding: 0; }
+      .report { border: 0; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="no-print">
+    <button onclick="window.print()">&#x1F5A8; Print / Save PDF</button>
+  </div>
+
+  <article class="report">
+
+    <!-- HEADER -->
+    <div class="brand-row">
+      <img src="data:image/png;base64,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"
+           alt="The Controls Company" class="logo" onerror="this.style.display='none'">
+      <div class="brand-copy">
+        <h1>THE CONTROLS COMPANY, LLC</h1>
+        <p>Service Disabled Veteran Owned Small Business</p>
+        <p style="margin-top:4px">thecontrolscompany.com</p>
+      </div>
+      <img src="data:image/jpeg;base64,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"
+           alt="SDVOSB" class="badge" onerror="this.style.display='none'">
+    </div>
+
+    <h2 class="doc-title">Change Order Request CO-011</h2>
+    <p class="doc-subtitle">Schedule Delay &amp; Compression &nbsp;&bull;&nbsp; Predecessor Access Delays &nbsp;&bull;&nbsp; Part-Time Scheduler Cost</p>
+
+    <!-- PROJECT INFORMATION -->
+    <div class="section-divider" style="margin-top:18px"><h2>Project Information</h2></div>
+    <div class="meta-grid">
+      <span class="meta-label">Project:</span><span>Mobile Arena</span>
+      <span class="meta-label">Date:</span><span>03 Jul 2026</span>
+      <span class="meta-label">To:</span><span>Engineered Cooling Service / BLHI</span>
+      <span class="meta-label">Prepared By:</span><span>Timothy J. Collins</span>
+      <span class="meta-label">Change No.:</span><span>CO-011</span>
+      <span class="meta-label">Contract Ref.:</span><span>C25-1257</span>
+      <span class="meta-label">Subject:</span><span>Cumulative Schedule Delay, Execution Window Compression, Predecessor Access Delays, and Part-Time Scheduler Cost — five GC schedule revisions, Mar 2026 &ndash; Jun 2026</span>
+    </div>
+
+    <!-- EXECUTIVE SUMMARY -->
+    <div class="section-divider" style="margin-top:20px"><h2>Executive Summary</h2></div>
+    <p>Since the start of TCC&rsquo;s mobilization, BLHI has issued five revisions to the project master schedule. Each successive revision has pushed controls-related milestone dates later, compressed TCC&rsquo;s available execution window, and increased the number of areas running concurrently under adverse conditions. The 7/1/26 site walk confirmed that multiple predecessor activities are past their scheduled completion dates with no work performed — including four AHUs unset at or past their scheduled dates and a critical framing wall that blocks installation of four control panels.</p>
+    <p>This change order presents three discrete cost items arising from these conditions, totaling <strong>$21,560.55</strong>. Detailed pricing basis for each item is included below. TCC reserves rights for additional costs beyond those quantified here, as noted in the Reservation of Rights section.</p>
+
+    <!-- ITEM 1 — PART-TIME SCHEDULER -->
+    <div class="section-divider" style="margin-top:20px"><h2>Item 1 &mdash; Part-Time Scheduler Cost</h2></div>
+
+    <p>TCC engaged a part-time scheduler to track, analyze, and prepare formal written responses to recurring GC schedule revisions on this project. This cost is outside TCC&rsquo;s original scope and was not included in TCC&rsquo;s contract price. The frequency and volume of schedule revisions on this project is beyond what should be expected on a properly coordinated project and has imposed an ongoing administrative cost that TCC is entitled to recover.</p>
+
+    <div class="evidence-box">
+      <strong>Schedule Revisions Tracked &mdash; Five Issues Requiring Formal Analysis</strong>
+      <table style="margin-top:8px">
+        <thead>
+          <tr>
+            <th>GC Schedule Issue</th>
+            <th>Data Date</th>
+            <th>TCC Analysis Date</th>
+            <th>Key Change Documented</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>OPS 251201</td><td>01 Dec 25</td><td>09 Mar 26</td><td>Baseline established; controls schedule window set</td>
+          </tr>
+          <tr>
+            <td>OPS 260309</td><td>09 Mar 26</td><td>06 Apr 26</td><td>Initial area-level drift identified</td>
+          </tr>
+          <tr>
+            <td>OPS 260406</td><td>06 Apr 26</td><td>27 Apr 26</td><td>Compression and stacking first quantified</td>
+          </tr>
+          <tr>
+            <td>OPS 260427</td><td>27 Apr 26</td><td>28 May 26</td><td>Execution window reduction documented</td>
+          </tr>
+          <tr>
+            <td>OPS 260528</td><td>28 May 26</td><td>15 Jun 26</td><td>Punch list extended +34 days (CO-007)</td>
+          </tr>
+          <tr class="evidence-row">
+            <td>OPS 260615</td><td>15 Jun 26</td><td>03 Jul 26</td><td>Window compressed 62&rarr;54 days; all 8 areas slip 5&ndash;14 days</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin:8px 0 0; font-size:12px; color:#374151;">Each revision required review of the updated P6 schedule, extraction and comparison of all TCC-related activities, preparation of a formal written Schedule Impact Review, and internal coordination. TCC&rsquo;s 15 Jun 2026 Schedule Impact Review has been provided to ECS/BLHI.</p>
+    </div>
+
+    <div class="exclusion-box">
+      <strong>Basis for Recovery:</strong> The cost of administering and responding to schedule revisions that are not of TCC&rsquo;s making — including engaging outside scheduling expertise — is compensable as an impact cost and is not included in TCC&rsquo;s original contract. The six revisions tracked above, each requiring a formal written response, represent a material and continuous administrative burden imposed on TCC by project conditions outside its control. To be direct: six schedule revisions in under eight months, each materially shifting controls-related activities, is not a characteristic of a well-coordinated project. TCC contracted to install controls, not to staff a schedule monitoring function in response to recurring replanning. The need for this line item exists entirely because of how this project has been managed above TCC&rsquo;s tier — and that cost belongs with the parties responsible for it.
+    </div>
+
+    <table style="margin-top:12px; margin-bottom:4px">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th class="center">Qty</th>
+          <th class="center">Rate</th>
+          <th style="text-align:right">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Principal scheduling time &mdash; Timothy J. Collins</td>
+          <td class="center">20 hrs</td>
+          <td class="center">$125.00/hr</td>
+          <td style="text-align:right">$2,500.00</td>
+        </tr>
+        <tr>
+          <td>Margin (10%)</td>
+          <td class="center">&mdash;</td>
+          <td class="center">&mdash;</td>
+          <td style="text-align:right">$250.00</td>
+        </tr>
+        <tr class="total-row" style="font-weight:700">
+          <td colspan="3">Item 1 Total</td>
+          <td style="text-align:right">$2,750.00</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>Amount &mdash; Item 1:</strong> <strong>$2,750.00</strong> &mdash; 20 hours of principal scheduling time at $125.00/hr, plus 10% margin. Detailed log of hours by schedule revision available upon request.</p>
+
+    <!-- ITEM 2 — SCHEDULE COMPRESSION -->
+    <div class="section-divider" style="margin-top:20px"><h2>Item 2 &mdash; Schedule Compression &amp; Execution Window Reduction</h2></div>
+
+    <p>Between the April 27, 2026 and June 15, 2026 GC schedule issues, TCC&rsquo;s aggregate execution window has been compressed by eight calendar days while simultaneously adding eight days of three-or-more-area concurrent work. All eight tracked areas have been pushed later, with individual area slippage ranging from five to fourteen days. This is not a single area anomaly — it is a systemic compression affecting TCC&rsquo;s entire scope of controls work.</p>
+
+    <div class="milestone-box">
+      <div class="mb-label">&#9888; Execution Window Compressed &mdash; Concurrency Increased &mdash; GC Schedule OPS 260615 vs. OPS 260427</div>
+      <div class="milestone-grid">
+        <div class="milestone-cell">
+          <div class="val">62 &rarr; 54 days</div>
+          <div class="lbl">Execution Window<br>&minus;8 Calendar Days</div>
+        </div>
+        <div class="milestone-cell">
+          <div class="val">20 &rarr; 28 days</div>
+          <div class="lbl">3+ Concurrent Areas<br>+8 Days of Stacking</div>
+        </div>
+        <div class="milestone-cell">
+          <div class="val">Sep 18 &rarr; Sep 23</div>
+          <div class="lbl">Final Controls Finish<br>+5 Calendar Days</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="evidence-box">
+      <strong>Area-by-Area Controls Shift &mdash; OPS 260427 vs. OPS 260615 (from TCC Schedule Impact Review, 15 Jun 2026)</strong>
+      <table style="margin-top:8px">
+        <thead>
+          <tr>
+            <th>Area</th>
+            <th class="center">Prior Finish (OPS 260427)</th>
+            <th class="center">Current Finish (OPS 260615)</th>
+            <th class="center">Slip</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Concourse A</td><td class="center">09 Jul 26</td><td class="center">23 Jul 26</td><td class="center"><strong>+14 days</strong></td></tr>
+          <tr><td>Suite A</td><td class="center">17 Jul 26</td><td class="center">27 Jul 26</td><td class="center"><strong>+10 days</strong></td></tr>
+          <tr><td>Suite B</td><td class="center">31 Jul 26</td><td class="center">10 Aug 26</td><td class="center"><strong>+10 days</strong></td></tr>
+          <tr><td>Event C</td><td class="center">19 Aug 26</td><td class="center">28 Aug 26</td><td class="center"><strong>+9 days</strong></td></tr>
+          <tr><td>Event A</td><td class="center">16 Jul 26</td><td class="center">23 Jul 26</td><td class="center"><strong>+7 days</strong></td></tr>
+          <tr><td>Suite D</td><td class="center">01 Sep 26</td><td class="center">08 Sep 26</td><td class="center"><strong>+7 days</strong></td></tr>
+          <tr><td>Suite C</td><td class="center">18 Aug 26</td><td class="center">24 Aug 26</td><td class="center"><strong>+6 days</strong></td></tr>
+          <tr class="evidence-row"><td>Event D</td><td class="center">18 Sep 26</td><td class="center">23 Sep 26</td><td class="center"><strong>+5 days</strong></td></tr>
+        </tbody>
+      </table>
+      <p style="margin:8px 0 0; font-size:12px; color:#374151;">In addition to later finish dates, the 15 Jun 2026 schedule identifies 6 newly reduced work windows between predecessor and downstream activities and 6 newly stacked area pairs — each representing further execution pressure independent of the window compression above.</p>
+    </div>
+
+    <p>The compression of TCC&rsquo;s execution window directly impacts manpower planning, sequencing flexibility, material staging, and the ability to complete work before downstream trades (ceiling grid, lay-in tile) close out above-ceiling access. In three area/section combinations, controls work is currently scheduled concurrent with lay-in ceiling tile installation, creating conditions under which above-ceiling work requires tile removal, additional handling time, and increased risk of tile damage.</p>
+
+    <table style="margin-top:12px; margin-bottom:4px">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th class="center">Qty</th>
+          <th class="center">Rate</th>
+          <th style="text-align:right">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>OT labor &mdash; 4 installers &times; 8 days &times; 10 hrs (320 hrs total)</td>
+          <td class="center">320 hrs</td>
+          <td class="center">$50.625/hr</td>
+          <td style="text-align:right">$16,200.00</td>
+        </tr>
+        <tr>
+          <td>Margin (10%)</td>
+          <td class="center">&mdash;</td>
+          <td class="center">&mdash;</td>
+          <td style="text-align:right">$1,620.00</td>
+        </tr>
+        <tr class="total-row" style="font-weight:700">
+          <td colspan="3">Item 2 Total</td>
+          <td style="text-align:right">$17,820.00</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>Amount &mdash; Item 2:</strong> <strong>$17,820.00</strong> &mdash; OT premium for 4-installer crew, 8 days &times; 10 hours per day at the 1.5&times; overtime rate of $50.625/hour, plus 10% margin. Rate basis consistent with CO-002 (Apr 2026).</p>
+
+    <!-- ITEM 3 — PREDECESSOR / ACCESS DELAYS -->
+    <div class="section-divider" style="margin-top:20px"><h2>Item 3 &mdash; Predecessor &amp; Access Delays</h2></div>
+
+    <p>TCC&rsquo;s 7/1/26 site walk confirmed that multiple predecessor activities are past their scheduled completion dates with no work performed in the field. TCC cannot begin or progress HVAC controls work in any area until predecessor work (AHU setting, drywall/framing, panel mounting locations) is complete. The conditions documented below directly prevent TCC from executing per the current schedule and represent delays imposed on TCC by others.</p>
+
+    <p style="font-weight:700; margin-top:16px;">3A &mdash; AHU Predecessor Delays</p>
+    <p>Four air handling units are past their scheduled set dates as of the 7/1/26 site walk. TCC cannot begin controls wiring, connection, or programming for any AHU until the unit is set, powered, and accessible.</p>
+
+    <div class="evidence-box">
+      <strong>AHU Setting Status &mdash; 7/1/26 Field Verification vs. OPS 260615 Schedule Dates</strong>
+      <table style="margin-top:8px">
+        <thead>
+          <tr>
+            <th>Activity ID</th>
+            <th>Description</th>
+            <th class="center">Scheduled Date (OPS 260615)</th>
+            <th class="center">Field Status &mdash; 7/1/26</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="warn-row"><td>A26090</td><td>Set AHU 5</td><td class="center">29 Jun 26</td><td class="center"><strong>Not installed</strong></td></tr>
+          <tr class="warn-row"><td>A26100</td><td>Set AHU 7</td><td class="center">01 Jul 26</td><td class="center"><strong>Not installed</strong></td></tr>
+          <tr class="warn-row"><td>A26110</td><td>Set AHU 12</td><td class="center">01 Jul 26</td><td class="center"><strong>Not installed</strong></td></tr>
+          <tr class="evidence-row"><td>A26120</td><td>Set AHU 8</td><td class="center">01 Jul 26</td><td class="center"><strong>Not installed</strong></td></tr>
+        </tbody>
+      </table>
+      <p style="margin:8px 0 0; font-size:12px; color:#374151;">All four AHUs are at or past their scheduled set date as of 7/1/26 with no units in place. These delays are not of TCC&rsquo;s making and are documented in TCC&rsquo;s 7/1/26 correspondence to Blane Ivey (ECS).</p>
+    </div>
+
+    <p style="font-weight:700; margin-top:16px;">3B &mdash; Event D Wall &mdash; Critical Path Impact (Four Control Panels)</p>
+    <p>The wall designated to carry TCC&rsquo;s Cooling Tower control panel and three AHU control panels in the Event D area was not framed as of the 7/1/26 site walk. TCC cannot mount any of these four panels, run conduit to panel locations, or begin wiring until this wall is constructed. These are not incidental panels — they represent a concentration of critical controls infrastructure for the building&rsquo;s primary cooling and air handling systems.</p>
+
+    <div class="evidence-box">
+      <strong>Event D Control Panel Wall &mdash; Status as of 7/1/26</strong>
+      Wall for Cooling Tower control panel and AHU 5, AHU 7, AHU 8, and AHU 12 control panels: <strong>Not framed. No substrate exists for panel mounting. Zero conduit or panel work can proceed.</strong> This condition was documented and communicated to ECS/Blane Ivey via correspondence dated 7/1/26.
+    </div>
+
+    <p style="font-weight:700; margin-top:16px;">3C &mdash; Inaccurate &ldquo;Actual&rdquo; Completion Dates in GC Schedule</p>
+    <p>TCC&rsquo;s site walk identified multiple GC schedule activities marked as &ldquo;Actual&rdquo; (complete) that are demonstrably not complete in the field. This pattern of inaccurate reporting masks the true predecessor status of TCC&rsquo;s work and impairs TCC&rsquo;s ability to plan resource deployment based on the issued schedule. Specific examples verified 7/1/26:</p>
+
+    <div class="evidence-box">
+      <strong>Schedule Activities Marked &ldquo;Actual&rdquo; — Contradicted by Field Conditions, 7/1/26</strong>
+      <table style="margin-top:8px">
+        <thead>
+          <tr>
+            <th>Activity ID</th>
+            <th>Description</th>
+            <th class="center">Reported &ldquo;Actual&rdquo; Date</th>
+            <th>Field Condition &mdash; 7/1/26</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="evidence-row">
+            <td>INT-1-1730</td><td>Hang &amp; Finish Drywall</td>
+            <td class="center">06 Mar 26</td>
+            <td>Area unstarted &mdash; bare block/framing, no drywall present</td>
+          </tr>
+          <tr class="evidence-row">
+            <td>INT-1-6590</td><td>Metal Stud &amp; H/M Frames</td>
+            <td class="center">03 Dec 25</td>
+            <td>Not built as of 7/1/26 &mdash; framing not present</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin:8px 0 0; font-size:12px; color:#374151;">These are not isolated data entry errors. The pattern of reporting predecessor activities as &ldquo;Actual&rdquo; when field conditions contradict that status deprives TCC of meaningful schedule data on which to base resource and procurement decisions. TCC reserves the right to identify additional impacted activities as the project progresses.</p>
+    </div>
+
+    <table style="margin-top:12px; margin-bottom:4px">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th class="center">Qty</th>
+          <th class="center">Rate</th>
+          <th style="text-align:right">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Principal time &mdash; Timothy J. Collins &mdash; 7/1/26 site walk</td>
+          <td class="center">4 hrs</td>
+          <td class="center">$125.00/hr</td>
+          <td style="text-align:right">$500.00</td>
+        </tr>
+        <tr>
+          <td>Installer standby &mdash; 2 installers &times; 4 hrs (blocked from productive work)</td>
+          <td class="center">8 hrs</td>
+          <td class="center">$33.75/hr</td>
+          <td style="text-align:right">$270.00</td>
+        </tr>
+        <tr>
+          <td>Travel &mdash; 3 personnel &times; IRS mileage rate</td>
+          <td class="center">3 trips</td>
+          <td class="center">$43.50/trip</td>
+          <td style="text-align:right">$130.50</td>
+        </tr>
+        <tr>
+          <td>Margin (10%)</td>
+          <td class="center">&mdash;</td>
+          <td class="center">&mdash;</td>
+          <td style="text-align:right">$90.05</td>
+        </tr>
+        <tr class="total-row" style="font-weight:700">
+          <td colspan="3">Item 3 Total</td>
+          <td style="text-align:right">$990.55</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><strong>Amount &mdash; Item 3:</strong> <strong>$990.55</strong> &mdash; Principal time and installer standby on 7/1/26 site walk; 4 hours principal, 2 installers &times; 4 hours, travel for 3 personnel. This represents a single documented instance; additional instances and ongoing predecessor delay costs are reserved.</p>
+
+    <!-- AMOUNT SUMMARY -->
+    <div class="section-divider" style="margin-top:20px"><h2>Amount Requested</h2></div>
+
+    <div class="amount-box">
+      <div class="amount-header">
+        <div>
+          <div class="amount-label">CO-011 &mdash; Total Amount Requested</div>
+          <div class="amount-sub">Items 1 &ndash; 3 combined. Detailed cost backup available upon request.</div>
+        </div>
+        <div class="amount-val">$21,560.55</div>
+      </div>
+      <table class="amount-line-items" style="margin-top:14px">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Description</th>
+            <th style="text-align:right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Item 1</td>
+            <td>Part-Time Scheduler Cost — tracking and analysis of six GC schedule revisions</td>
+            <td style="text-align:right">$2,750.00</td>
+          </tr>
+          <tr>
+            <td>Item 2</td>
+            <td>Schedule Compression / Execution Window Reduction — 62 &rarr; 54 days, all 8 areas impacted</td>
+            <td style="text-align:right">$17,820.00</td>
+          </tr>
+          <tr>
+            <td>Item 3</td>
+            <td>Predecessor &amp; Access Delays — AHU non-setting, Event D wall, false &ldquo;Actual&rdquo; dates</td>
+            <td style="text-align:right">$990.55</td>
+          </tr>
+          <tr class="total-row">
+            <td colspan="2" style="text-align:right">Total CO-011</td>
+            <td style="text-align:right">$21,560.55</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- RESERVATION OF RIGHTS -->
+    <div class="reservation-box">
+      <div class="rb-label">Scope Limitation &amp; Reservation of Rights</div>
+      <p style="margin: 0 0 8px; font-size: 13px; line-height: 1.6;">CO-011 is submitted for the three discrete impact categories identified above. This change order does not address, and <strong>is not intended to eliminate, settle, waive, or prejudice</strong>, any prior or pending change order requests, reserved rights, or future claims.</p>
+      <p style="margin: 0; font-size: 13px; line-height: 1.6;">Approval of CO-011 shall not be construed as a waiver of or release from: <strong>(a)</strong> any rights or amounts pending under CO-001 through CO-009; <strong>(b)</strong> any rights reserved in TCC&rsquo;s prior schedule impact reviews (dated 09 Mar 26, 06 Apr 26, 27 Apr 26, 28 May 26, and 15 Jun 26); <strong>(c)</strong> any claim for damage to TCC&rsquo;s installed work by others, including removed J-hooks, panel brackets, cut communication cables, removed strut, and repeated roof penetration repair for which no approved change order has been received; <strong>(d)</strong> any claim for directed change in means and methods, including but not limited to any direction to install conduit on strut/hangers in lieu of drywall surfaces contrary to TCC&rsquo;s submitted Schedule Durations Worksheet (4/21/25); or <strong>(e)</strong> any rights arising from future schedule revisions, liquidated damages assertions, or additional access denials. CO-011 is additive to all prior submittals and does not supersede, modify, or release any claim previously made or reserved by TCC.</p>
+    </div>
+
+    <!-- COMMERCIAL POSITION -->
+    <div class="section-divider"><h2>Commercial Position</h2></div>
+    <p>The conditions underlying this change order are documented in the GC&rsquo;s own issued schedules (OPS 260427 and OPS 260615) and TCC&rsquo;s own field observations on 7/1/26 — conditions that are not the result of any TCC performance issue, delay, or default. TCC&rsquo;s original contract price was developed against a baseline scope of work performed in a defined sequence, within a defined execution window, against predecessor activities completed per the governing schedule. The cumulative effect of five schedule revisions, compressing the execution window by eight days, driving all eight areas later, and leaving critical predecessor work incomplete at or past its scheduled date, constitutes a material departure from the conditions under which TCC contracted.</p>
+    <p>TCC has continued to perform in good faith throughout these changes and has provided formal written documentation of each schedule revision&rsquo;s impact. TCC reserves all rights for further cost and schedule impacts arising from additional revisions, predecessor delays, directed changes in means and methods, or conditions outside TCC&rsquo;s control.</p>
+
+    <!-- SIGNATURE BLOCKS -->
+    <div class="section-divider"><h2>Approval &amp; Acknowledgment</h2></div>
+    <div class="signature-grid">
+      <div class="signature-block">
+        <strong>Submitted By &mdash; The Controls Company, LLC</strong><br>
+        Signature: ___________________________________<br>
+        Name: Timothy J. Collins<br>
+        Title: Principal<br>
+        Date: ___________________________________
+      </div>
+      <div class="signature-block">
+        <strong>Approved By &mdash; Engineered Cooling Service / BLHI</strong><br>
+        Signature: ___________________________________<br>
+        Name: ___________________________________<br>
+        Title: ___________________________________<br>
+        Date: ___________________________________
+      </div>
+    </div>
+
+    <div style="margin-top:28px; padding-top:14px; border-top:2px solid #017a6f;
+                text-align:center; font-size:12px; color:#4b5563;">
+      The Controls Company, LLC &nbsp;&bull;&nbsp; thecontrolscompany.com &nbsp;&bull;&nbsp; Service Disabled Veteran Owned Small Business
+    </div>
+
+  </article>
+</div>
+</body>
+</html>

@@ -10,7 +10,7 @@ const REPORT_TYPE = "mobile_arena_schedule_review";
 const REPORT_ROOT =
   "C:\\Users\\TimothyCollins\\OneDrive - The Controls Company, LLC\\Projects\\Mobile Arena\\Schedule\\reports";
 
-const reportDates = ["2026-03-09", "2026-04-06", "2026-04-27"];
+const reportDates = ["2026-03-09", "2026-04-06", "2026-04-27", "2026-06-15"];
 
 const changeOrders = [
   {
@@ -28,6 +28,15 @@ const changeOrders = [
     amount: 49587.45,
     status: "pending",
     submitted_date: "2026-04-14",
+  },
+  {
+    project_id: PROJECT_ID,
+    co_number: "CO-011",
+    title: "Schedule Delay & Compression — Predecessor Access Delays — Part-Time Scheduler Cost",
+    amount: 21560.55,
+    status: "pending",
+    submitted_date: "2026-07-03",
+    reference_doc: "/co-docs/CO-011.html",
   },
 ];
 
@@ -81,7 +90,7 @@ async function main() {
 
   const { data: existingChangeOrders, error: existingCoError } = await supabase
     .from("change_orders")
-    .select("co_number")
+    .select("id, co_number")
     .eq("project_id", PROJECT_ID)
     .in("co_number", changeOrders.map((co) => co.co_number));
 
@@ -89,23 +98,28 @@ async function main() {
     throw existingCoError;
   }
 
-  const existingCoNumbers = new Set((existingChangeOrders ?? []).map((co) => co.co_number));
-  const missingChangeOrders = changeOrders.filter((co) => !existingCoNumbers.has(co.co_number));
+  const existingById = new Map((existingChangeOrders ?? []).map((co) => [co.co_number, co.id]));
+  const toInsert = changeOrders.filter((co) => !existingById.has(co.co_number));
+  const toUpdate = changeOrders.filter((co) => existingById.has(co.co_number));
 
-  if (missingChangeOrders.length > 0) {
-    const { error: coError } = await supabase
+  if (toInsert.length > 0) {
+    const { error: insertError } = await supabase.from("change_orders").insert(toInsert);
+    if (insertError) throw insertError;
+  }
+
+  for (const co of toUpdate) {
+    const rowId = existingById.get(co.co_number);
+    const { error: updateError } = await supabase
       .from("change_orders")
-      .insert(missingChangeOrders);
-
-    if (coError) {
-      throw coError;
-    }
+      .update({ reference_doc: co.reference_doc ?? null, title: co.title, amount: co.amount, status: co.status })
+      .eq("id", rowId);
+    if (updateError) throw updateError;
   }
 
   console.log("Mobile Arena ProjectHub seed complete.");
   console.log(`- Schedule review packets upserted: ${packets.length}`);
-  console.log(`- Change orders inserted: ${missingChangeOrders.map((co) => co.co_number).join(", ") || "none"}`);
-  console.log(`- Change orders already present: ${[...existingCoNumbers].join(", ") || "none"}`);
+  console.log(`- Change orders inserted: ${toInsert.map((co) => co.co_number).join(", ") || "none"}`);
+  console.log(`- Change orders updated: ${toUpdate.map((co) => co.co_number).join(", ") || "none"}`);
 }
 
 main().catch((error) => {

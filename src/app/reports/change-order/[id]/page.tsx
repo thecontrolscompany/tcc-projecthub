@@ -174,6 +174,11 @@ export default async function ChangeOrderReportPage({ params }: PageProps) {
   if (!bundle) notFound();
 
   const changeOrder = bundle.change_order;
+
+  if (changeOrder.reference_doc) {
+    redirect(changeOrder.reference_doc);
+  }
+
   const project = normalizeSingle(bundle.project ?? changeOrder.project);
   if (!project) notFound();
 
