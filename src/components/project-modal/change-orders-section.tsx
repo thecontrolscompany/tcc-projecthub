@@ -455,7 +455,7 @@ function buildPayload(form: ChangeOrderFormState) {
   const requestedDays = parsePositiveInt(form.requested_days);
   const approvedDays = parsePositiveInt(form.approved_days);
   const status = normalizeStatus(form.status);
-  const saveStatus: ChangeOrderUiStatus = status === "draft" ? "ready_to_submit" : status;
+  const saveStatus: ChangeOrderUiStatus = status === "draft" ? "submitted" : status;
   const statusReason = form.status_reason.trim() || null;
 
   const lineItems = form.pricing_mode === "detailed"

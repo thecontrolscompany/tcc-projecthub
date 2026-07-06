@@ -50,60 +50,14 @@ function fileSafeName(value: string) {
   return value.replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, " ").trim();
 }
 
-function lineItemDetails(item: {
-  category: string;
-  role: string | null;
-  people_count: number | null;
-  hours_per_person: number | null;
-  days: number | null;
-  hourly_rate: number | null;
-  quantity: number | null;
-  unit: string | null;
-  unit_cost: number | null;
-  lump_sum: number | null;
-  markup_percent: number;
-  base_amount: number;
-}) {
-  if (item.category === "labor") {
-    const people = item.people_count ?? 0;
-    const hours = item.hours_per_person ?? 0;
-    const days = item.days ?? 0;
-    const rate = item.hourly_rate ?? 0;
-    return [
-      item.role ? `Role: ${item.role}` : null,
-      `Crew: ${people} people`,
-      `Hours/Person: ${hours}`,
-      `Days: ${days}`,
-      `Rate: ${fmtCurrency(rate)}`,
-      `Base: ${fmtCurrency(item.base_amount)}`,
-      `Markup: ${item.markup_percent.toFixed(2)}%`,
-    ]
-      .filter(Boolean)
-      .join(" | ");
-  }
-
-  if (item.category === "material") {
-    const qty = item.quantity ?? 0;
-    const unit = item.unit?.trim() || "ea";
-    const unitCost = item.unit_cost ?? 0;
-    return [
-      `Qty: ${qty} ${unit}`,
-      `Unit Cost: ${fmtCurrency(unitCost)}`,
-      `Base: ${fmtCurrency(item.base_amount)}`,
-      `Markup: ${item.markup_percent.toFixed(2)}%`,
-    ].join(" | ");
-  }
-
-  const qtyText = item.quantity != null ? `Qty: ${item.quantity}` : null;
-  const costText = item.lump_sum != null
-    ? `Lump Sum: ${fmtCurrency(item.lump_sum)}`
-    : item.unit_cost != null
-      ? `Unit Cost: ${fmtCurrency(item.unit_cost)}`
-      : null;
-
-  return [qtyText, costText, `Base: ${fmtCurrency(item.base_amount)}`, `Markup: ${item.markup_percent.toFixed(2)}%`]
-    .filter(Boolean)
-    .join(" | ");
+function sumLineItemCategory(
+  items: Array<{
+    category: string;
+    total: number;
+  }>,
+  category: "labor" | "material"
+) {
+  return items.filter((item) => item.category === category).reduce((sum, item) => sum + (item.total ?? 0), 0);
 }
 
 function attachmentLabel(kind: string) {
@@ -201,8 +155,9 @@ export default async function ChangeOrderReportPage({ params }: PageProps) {
 
   const totalRequested = bundle.summary.requested_amount || changeOrder.requested_amount || changeOrder.amount;
   const totalApproved = bundle.summary.approved_amount || changeOrder.approved_amount || 0;
+  const laborTotal = sumLineItemCategory(bundle.line_items, "labor") || changeOrder.labor_amount || 0;
+  const materialTotal = sumLineItemCategory(bundle.line_items, "material") || changeOrder.material_amount || 0;
   const internalVisible = context.role === "admin" || context.role === "ops_manager";
-  const currencyDelta = totalApproved - totalRequested;
 
   return (
     <html lang="en">
@@ -633,34 +588,12 @@ export default async function ChangeOrderReportPage({ params }: PageProps) {
                 <div className={`summary-value ${totalApproved < 0 ? "negative" : "positive"}`}>{fmtCurrency(totalApproved)}</div>
               </div>
               <div className="summary-card">
-                <div className="summary-label">Requested Days</div>
-                <div className="summary-value">{changeOrder.requested_days}</div>
-              </div>
-              <div className="summary-card">
-                <div className="summary-label">Approved Days</div>
-                <div className="summary-value">{changeOrder.approved_days}</div>
-              </div>
-              <div className="summary-card">
                 <div className="summary-label">Labor</div>
-                <div className="summary-value">{fmtCurrency(changeOrder.labor_amount)}</div>
+                <div className="summary-value">{fmtCurrency(laborTotal)}</div>
               </div>
               <div className="summary-card">
                 <div className="summary-label">Material</div>
-                <div className="summary-value">{fmtCurrency(changeOrder.material_amount)}</div>
-              </div>
-              <div className="summary-card">
-                <div className="summary-label">Equipment</div>
-                <div className="summary-value">{fmtCurrency(changeOrder.equipment_amount)}</div>
-              </div>
-              <div className="summary-card">
-                <div className="summary-label">Other</div>
-                <div className="summary-value">{fmtCurrency(changeOrder.other_amount + changeOrder.subcontractor_amount)}</div>
-              </div>
-              <div className="summary-card">
-                <div className="summary-label">Delta</div>
-                <div className={`summary-value ${currencyDelta < 0 ? "negative" : currencyDelta > 0 ? "positive" : ""}`}>
-                  {fmtCurrency(currencyDelta)}
-                </div>
+                <div className="summary-value">{fmtCurrency(materialTotal)}</div>
               </div>
             </div>
 
@@ -714,62 +647,59 @@ export default async function ChangeOrderReportPage({ params }: PageProps) {
             )}
 
             {(bundle.line_items.length > 0 || changeOrder.pricing_mode === "detailed") && (
-              <div className="section-divider">
-                <h2>Line Items</h2>
-              </div>
-            )}
+              <>
+                <div className="section-divider">
+                  <h2>Pricing Breakdown</h2>
+                </div>
 
-            {bundle.line_items.length > 0 ? (
-              <table>
-                <thead>
-                  <tr>
-                    <th style={{ width: "18%" }}>Category</th>
-                    <th>Description / Inputs</th>
-                    <th style={{ width: "16%" }} className="amount-cell">
-                      Base
-                    </th>
-                    <th style={{ width: "12%" }} className="amount-cell">
-                      Markup
-                    </th>
-                    <th style={{ width: "16%" }} className="amount-cell">
-                      Total
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bundle.line_items.map((item) => (
-                    <tr key={item.id}>
-                      <td>
-                        <div className="line-item-category">{item.category}</div>
-                        <div>{item.role || item.category}</div>
-                      </td>
-                      <td>
-                        <div>{item.description}</div>
-                        <div className="line-item-detail">{lineItemDetails(item)}</div>
-                      </td>
-                      <td className="amount-cell">{fmtCurrency(item.base_amount)}</td>
-                      <td className="amount-cell">{item.markup_percent.toFixed(2)}%</td>
-                      <td className="amount-cell" style={item.total < 0 ? { color: "#991b1b" } : undefined}>
-                        {fmtCurrency(item.total)}
-                      </td>
-                    </tr>
-                  ))}
-                  <tr>
-                    <td colSpan={4} style={{ textAlign: "right", fontWeight: 700 }}>
-                      Requested Total
-                    </td>
-                    <td className="amount-cell" style={{ fontWeight: 700 }}>
-                      {fmtCurrency(totalRequested)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            ) : changeOrder.pricing_mode === "detailed" ? (
-              <div className="callout">
-                <strong>No detailed line items</strong>
-                <div>This change order is marked detailed, but no calculator line items were saved.</div>
-              </div>
-            ) : null}
+                {bundle.line_items.length > 0 ? (
+                  <table>
+                    <thead>
+                      <tr>
+                        <th style={{ width: "25%" }}>Category</th>
+                        <th>Description</th>
+                        <th style={{ width: "18%" }} className="amount-cell">
+                          Amount
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <div className="line-item-category">labor</div>
+                        </td>
+                        <td>Labor subtotal</td>
+                        <td className="amount-cell" style={{ fontWeight: 700 }}>
+                          {fmtCurrency(laborTotal)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div className="line-item-category">material</div>
+                        </td>
+                        <td>Material subtotal</td>
+                        <td className="amount-cell" style={{ fontWeight: 700 }}>
+                          {fmtCurrency(materialTotal)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td colSpan={2} style={{ textAlign: "right", fontWeight: 700 }}>
+                          Requested Total
+                        </td>
+                        <td className="amount-cell" style={{ fontWeight: 700 }}>
+                          {fmtCurrency(totalRequested)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                ) : changeOrder.pricing_mode === "detailed" ? (
+                  <div className="callout">
+                    <strong>No detailed line items</strong>
+                    <div>This change order is marked detailed, but no calculator line items were saved.</div>
+                  </div>
+                ) : null}
+              </>
+            )}
 
             {bundle.attachments.length > 0 && (
               <>
