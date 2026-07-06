@@ -5,6 +5,7 @@ import {
   canWriteChangeOrders,
   getChangeOrderRequestContext,
   mapChangeOrderLineItemRow,
+  refreshChangeOrderTotals,
 } from "@/lib/change-orders/server";
 import type { ChangeOrderRequestContextSuccess } from "@/lib/change-orders/server";
 
@@ -83,6 +84,8 @@ export async function GET(_request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    await refreshChangeOrderTotals(adminClient, id);
+
     return NextResponse.json({
       lineItems: (data ?? []).map((row) => mapChangeOrderLineItemRow(row as Record<string, unknown>)),
     });
@@ -138,6 +141,8 @@ export async function POST(request: Request, { params }: RouteContext) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    await refreshChangeOrderTotals(adminClient, id);
 
     return NextResponse.json({ lineItem: mapChangeOrderLineItemRow(data as Record<string, unknown>) });
   } catch (error) {
@@ -233,6 +238,8 @@ export async function DELETE(request: Request, { params }: RouteContext) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    await refreshChangeOrderTotals(adminClient, id);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

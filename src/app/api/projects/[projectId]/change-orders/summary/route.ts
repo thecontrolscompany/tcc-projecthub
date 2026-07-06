@@ -79,12 +79,27 @@ export async function GET(_request: Request, { params }: RouteContext) {
 
     const changeOrders = (data ?? []).map((row) => mapChangeOrderRow(row as Record<string, unknown>));
     const summary = computeChangeOrderSummary(changeOrders);
-    const openPendingRequestedTotal = sumForStatuses(changeOrders, ["draft", "needs_pricing", "ready_to_submit", "submitted", "in_review"], "requested_amount");
-    const activeRequestedTotal = sumForStatuses(
-      changeOrders,
-      ["draft", "needs_pricing", "ready_to_submit", "submitted", "in_review", "approved", "executed", "billed", "paid"],
-      "requested_amount"
-    );
+    const changeOrderIds = changeOrders.map((changeOrder) => changeOrder.id);
+    const requestedTotalsByOrder = new Map<string, number>();
+
+    if (changeOrderIds.length > 0) {
+      const { data: lineItemRows, error: lineItemError } = await adminClient
+        .from("change_order_line_items")
+        .select("change_order_id, total")
+        .in("change_order_id", changeOrderIds);
+
+      if (lineItemError) {
+        return NextResponse.json({ error: lineItemError.message }, { status: 500 });
+      }
+
+      for (const row of (lineItemRows ?? []) as Array<{ change_order_id: string; total: number }>) {
+        requestedTotalsByOrder.set(row.change_order_id, (requestedTotalsByOrder.get(row.change_order_id) ?? 0) + (row.total ?? 0));
+      }
+    }
+
+    const requestedAmountFor = (changeOrder: { id: string; requested_amount: number; amount?: number }) =>
+      requestedTotalsByOrder.get(changeOrder.id) ?? changeOrder.requested_amount ?? changeOrder.amount ?? 0;
+
     const approvedTotal = sumForStatuses(changeOrders, ["approved", "executed", "billed", "paid"], "approved_amount");
     const executedTotal = sumForStatuses(changeOrders, ["executed"], "approved_amount");
     const billedTotal = sumForStatuses(changeOrders, ["billed"], "approved_amount");
@@ -93,9 +108,17 @@ export async function GET(_request: Request, { params }: RouteContext) {
 
     return NextResponse.json({
       summaryCards: {
-        approved_total: approvedTotal,
-        open_pending_requested_total: openPendingRequestedTotal,
-        active_requested_total: activeRequestedTotal,
+      approved_total: approvedTotal,
+        open_pending_requested_total: changeOrders
+          .filter((changeOrder) => ["draft", "needs_pricing", "ready_to_submit", "submitted", "in_review"].includes(normalizeChangeOrderStatus(changeOrder.status)))
+          .reduce((sum, changeOrder) => sum + requestedAmountFor(changeOrder), 0),
+        active_requested_total: changeOrders
+          .filter((changeOrder) =>
+            ["draft", "needs_pricing", "ready_to_submit", "submitted", "in_review", "approved", "executed", "billed", "paid"].includes(
+              normalizeChangeOrderStatus(changeOrder.status)
+            )
+          )
+          .reduce((sum, changeOrder) => sum + requestedAmountFor(changeOrder), 0),
         executed_total: executedTotal,
         billed_total: billedTotal,
         paid_total: paidTotal,

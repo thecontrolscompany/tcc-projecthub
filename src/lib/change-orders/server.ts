@@ -195,7 +195,6 @@ function calculateChangeOrderLineItemAmounts(item: {
 
 function aggregateChangeOrderLineItems(lineItems: Array<{
   category: ChangeOrderLineItemCategory;
-  base_amount: number;
   total: number;
 }>) {
   return lineItems.reduce(
@@ -790,26 +789,7 @@ export async function saveChangeOrderChildren(
       saved.line_items = (data ?? []).map((row) => mapChangeOrderLineItemRow(row as Record<string, unknown>));
     }
 
-    const totals = aggregateChangeOrderLineItems(saved.line_items.length > 0 ? saved.line_items : payload.map((item) => ({
-      category: item.category,
-      base_amount: item.base_amount,
-      total: item.total,
-    })));
-
-    const { error: updateError } = await admin
-      .from("change_orders")
-      .update({
-        requested_amount: totals.requested_amount,
-        amount: totals.requested_amount,
-        labor_amount: totals.labor_amount,
-        material_amount: totals.material_amount,
-        equipment_amount: totals.equipment_amount,
-        subcontractor_amount: totals.subcontractor_amount,
-        other_amount: totals.other_amount,
-      })
-      .eq("id", changeOrderId);
-
-    if (updateError) throw updateError;
+    await refreshChangeOrderTotals(admin, changeOrderId, saved.line_items.length > 0 ? saved.line_items : null);
   }
 
   if (input.attachments) {
@@ -862,4 +842,42 @@ export async function saveChangeOrderChildren(
   }
 
   return saved;
+}
+
+export async function refreshChangeOrderTotals(
+  admin: SupabaseClient,
+  changeOrderId: string,
+  lineItems?: Array<Pick<ChangeOrderLineItem, "category" | "total">> | null
+) {
+  let items: Array<{ category: ChangeOrderLineItemCategory; total: number }>;
+
+  if (lineItems) {
+    items = lineItems;
+  } else {
+    const { data, error } = await admin
+      .from("change_order_line_items")
+      .select("category, total")
+      .eq("change_order_id", changeOrderId)
+      .order("sort_order", { ascending: true });
+
+    if (error) throw error;
+    items = (data ?? []) as Array<{ category: ChangeOrderLineItemCategory; total: number }>;
+  }
+
+  const totals = aggregateChangeOrderLineItems(items);
+
+  const { error: updateError } = await admin
+    .from("change_orders")
+    .update({
+      requested_amount: totals.requested_amount,
+      amount: totals.requested_amount,
+      labor_amount: totals.labor_amount,
+      material_amount: totals.material_amount,
+      equipment_amount: totals.equipment_amount,
+      subcontractor_amount: totals.subcontractor_amount,
+      other_amount: totals.other_amount,
+    })
+    .eq("id", changeOrderId);
+
+  if (updateError) throw updateError;
 }
