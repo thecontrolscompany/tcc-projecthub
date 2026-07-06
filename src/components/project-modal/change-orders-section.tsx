@@ -782,6 +782,7 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
     setError(null);
 
     try {
+      const currentStatus = normalizeStatus(form.status);
       const payload = buildPayload(form);
       const res = await fetch(editingId ? `/api/change-orders/${editingId}` : `/api/projects/${encodeURIComponent(projectId)}/change-orders`, {
         method: editingId ? "PATCH" : "POST",
@@ -794,6 +795,33 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
       if (!res.ok) {
         const message = typeof json?.error === "string" ? json.error : "Failed to save change order.";
         throw new Error(message);
+      }
+
+      const savedChangeOrderId =
+        typeof json?.changeOrder?.change_order?.id === "string"
+          ? json.changeOrder.change_order.id
+          : typeof json?.changeOrder?.id === "string"
+            ? json.changeOrder.id
+            : editingId;
+
+      if (currentStatus === "draft" && savedChangeOrderId) {
+        const statusRes = await fetch(`/api/change-orders/${savedChangeOrderId}/status`, {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            status: "submitted",
+            status_reason: null,
+            superseded_by_change_order_id: null,
+            combined_into_change_order_id: null,
+          }),
+        });
+
+        if (!statusRes.ok) {
+          const statusJson = await statusRes.json().catch(() => ({}));
+          const message = typeof statusJson?.error === "string" ? statusJson.error : "Failed to promote change order status.";
+          throw new Error(message);
+        }
       }
 
       closeEditor();
