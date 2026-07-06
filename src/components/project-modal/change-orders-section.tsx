@@ -656,8 +656,14 @@ export function ChangeOrdersSection({ projectId }: { projectId: string }) {
 
     try {
       const [listResponse, summaryResponse] = await Promise.allSettled([
-        fetch(`/api/projects/${encodeURIComponent(projectId)}/change-orders`, { credentials: "include" }),
-        fetch(`/api/projects/${encodeURIComponent(projectId)}/change-orders/summary`, { credentials: "include" }),
+        fetch(`/api/projects/${encodeURIComponent(projectId)}/change-orders`, {
+          credentials: "include",
+          cache: "no-store",
+        }),
+        fetch(`/api/projects/${encodeURIComponent(projectId)}/change-orders/summary`, {
+          credentials: "include",
+          cache: "no-store",
+        }),
       ]);
 
       let listJson: ChangeOrdersListResponse | null = null;
