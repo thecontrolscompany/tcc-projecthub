@@ -455,6 +455,7 @@ function buildPayload(form: ChangeOrderFormState) {
   const requestedDays = parsePositiveInt(form.requested_days);
   const approvedDays = parsePositiveInt(form.approved_days);
   const status = normalizeStatus(form.status);
+  const saveStatus: ChangeOrderUiStatus = status === "draft" ? "ready_to_submit" : status;
   const statusReason = form.status_reason.trim() || null;
 
   const lineItems = form.pricing_mode === "detailed"
@@ -498,7 +499,7 @@ function buildPayload(form: ChangeOrderFormState) {
   return {
     title: form.title.trim(),
     description: form.description.trim() || null,
-    status,
+    status: saveStatus,
     pricing_mode: form.pricing_mode,
     amount: requestedAmount,
     requested_amount: requestedAmount,
@@ -515,14 +516,14 @@ function buildPayload(form: ChangeOrderFormState) {
     terms_note: form.terms_note.trim() || null,
     status_reason: statusReason,
     internal_notes: form.internal_notes.trim() || null,
-    submitted_at: form.submitted_at.trim() || (status === "submitted" ? approvalDateForStatus(status) : null),
-    approved_at: form.approved_at.trim() || (status === "approved" ? approvalDateForStatus(status) : null),
-    executed_at: form.executed_at.trim() || (status === "executed" ? approvalDateForStatus(status) : null),
-    billed_at: form.billed_at.trim() || (status === "billed" ? approvalDateForStatus(status) : null),
-    paid_at: form.paid_at.trim() || (status === "paid" ? approvalDateForStatus(status) : null),
-    voided_at: form.voided_at.trim() || (status === "voided" ? approvalDateForStatus(status) : null),
-    rejected_at: form.rejected_at.trim() || (status === "rejected" ? approvalDateForStatus(status) : null),
-    superseded_at: form.superseded_at.trim() || (status === "superseded" ? approvalDateForStatus(status) : null),
+    submitted_at: form.submitted_at.trim() || (saveStatus === "submitted" ? approvalDateForStatus(saveStatus) : null),
+    approved_at: form.approved_at.trim() || (saveStatus === "approved" ? approvalDateForStatus(saveStatus) : null),
+    executed_at: form.executed_at.trim() || (saveStatus === "executed" ? approvalDateForStatus(saveStatus) : null),
+    billed_at: form.billed_at.trim() || (saveStatus === "billed" ? approvalDateForStatus(saveStatus) : null),
+    paid_at: form.paid_at.trim() || (saveStatus === "paid" ? approvalDateForStatus(saveStatus) : null),
+    voided_at: form.voided_at.trim() || (saveStatus === "voided" ? approvalDateForStatus(saveStatus) : null),
+    rejected_at: form.rejected_at.trim() || (saveStatus === "rejected" ? approvalDateForStatus(saveStatus) : null),
+    superseded_at: form.superseded_at.trim() || (saveStatus === "superseded" ? approvalDateForStatus(saveStatus) : null),
     combined_at: form.combined_at.trim() || null,
     superseded_by_change_order_id: form.superseded_by_change_order_id.trim() || null,
     combined_into_change_order_id: form.combined_into_change_order_id.trim() || null,
