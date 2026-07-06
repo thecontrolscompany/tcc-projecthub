@@ -48,6 +48,7 @@ const attachmentSchema = z.object({
 const patchSchema = z.object({
   title: z.string().trim().min(1).optional(),
   description: z.string().trim().nullable().optional(),
+  status: z.enum(["draft", "needs_pricing", "ready_to_submit", "submitted", "in_review", "approved", "rejected", "voided", "superseded", "executed", "billed", "paid"]).optional(),
   pricing_mode: z.enum(["quick_total", "detailed"]).optional(),
   amount: z.coerce.number().finite().nullable().optional(),
   requested_amount: z.coerce.number().finite().nullable().optional(),
@@ -155,11 +156,34 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     }
 
     const payload = parsed.data;
+
+    if (["rejected", "voided", "superseded"].includes(payload.status ?? "") && !payload.status_reason?.trim()) {
+      return NextResponse.json(
+        { error: "status_reason is required for rejected, voided, and superseded statuses." },
+        { status: 400 }
+      );
+    }
+
+    if (payload.status === "superseded" && !payload.superseded_by_change_order_id) {
+      return NextResponse.json(
+        { error: "superseded_by_change_order_id is required when status is superseded." },
+        { status: 400 }
+      );
+    }
+
+    if (payload.combined_into_change_order_id && !["voided", "superseded"].includes(payload.status ?? "")) {
+      return NextResponse.json(
+        { error: "combined_into_change_order_id can only be set when the status is voided or superseded." },
+        { status: 400 }
+      );
+    }
+
     const updatePayload: Record<string, unknown> = { modified_by: user.id };
 
     for (const key of [
       "title",
       "description",
+      "status",
       "pricing_mode",
       "requested_amount",
       "approved_amount",

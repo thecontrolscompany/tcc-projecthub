@@ -154,6 +154,71 @@ function normalizePricingMode(value: unknown): ChangeOrderPricingMode {
     : "quick_total";
 }
 
+function roundMoney(value: number) {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
+function calculateChangeOrderLineItemAmounts(item: {
+  category?: ChangeOrderLineItemCategory | null;
+  people_count?: number | null;
+  hours_per_person?: number | null;
+  days?: number | null;
+  hourly_rate?: number | null;
+  lump_sum?: number | null;
+  quantity?: number | null;
+  unit_cost?: number | null;
+  markup_percent?: number | null;
+}) {
+  const category = normalizeLineItemCategory(item.category);
+  const markupPercent = asNumber(item.markup_percent, 0);
+
+  let baseAmount = 0;
+  if (category === "labor") {
+    baseAmount =
+      asNumber(item.people_count, 0) *
+      asNumber(item.hours_per_person, 0) *
+      asNumber(item.days, 0) *
+      asNumber(item.hourly_rate, 0);
+  } else if (item.lump_sum !== null && item.lump_sum !== undefined) {
+    baseAmount = asNumber(item.lump_sum, 0);
+  } else {
+    baseAmount = asNumber(item.quantity, 0) * asNumber(item.unit_cost, 0);
+  }
+
+  const total = roundMoney(baseAmount * (1 + markupPercent / 100));
+
+  return {
+    base_amount: roundMoney(baseAmount),
+    total,
+  };
+}
+
+function aggregateChangeOrderLineItems(lineItems: Array<{
+  category: ChangeOrderLineItemCategory;
+  base_amount: number;
+  total: number;
+}>) {
+  return lineItems.reduce(
+    (acc, item) => {
+      acc.requested_amount += item.total;
+      acc.labor_amount += item.category === "labor" ? item.total : 0;
+      acc.material_amount += item.category === "material" ? item.total : 0;
+      acc.equipment_amount += item.category === "equipment" ? item.total : 0;
+      acc.subcontractor_amount += item.category === "subcontractor" ? item.total : 0;
+      acc.other_amount += item.category === "other" ? item.total : 0;
+      return acc;
+    },
+    {
+      requested_amount: 0,
+      labor_amount: 0,
+      material_amount: 0,
+      equipment_amount: 0,
+      subcontractor_amount: 0,
+      other_amount: 0,
+    }
+  );
+}
+
 export function formatZodError(error: ZodError): string {
   const messages = error.issues.map((issue) => {
     const path = issue.path.join(".");
@@ -491,6 +556,30 @@ export function computeChangeOrderSummary(changeOrders: ChangeOrder[]): ChangeOr
   return summary;
 }
 
+export function computeChangeOrderBundleSummary(changeOrder: ChangeOrder, lineItems: ChangeOrderLineItem[]) {
+  const lineItemTotals = aggregateChangeOrderLineItems(lineItems);
+
+  return {
+    count: 1,
+    requested_amount: lineItems.length > 0 ? lineItemTotals.requested_amount : asNumber(changeOrder.requested_amount, changeOrder.amount),
+    approved_amount: asNumber(changeOrder.approved_amount, 0),
+    requested_days: asNumber(changeOrder.requested_days, 0),
+    approved_days: asNumber(changeOrder.approved_days, 0),
+    status_counts: Object.fromEntries(CHANGE_ORDER_UI_STATUSES.map((status) => [status, status === changeOrder.status ? 1 : 0])) as Record<ChangeOrderUiStatus, number>,
+    status_requested_amounts: Object.fromEntries(
+      CHANGE_ORDER_UI_STATUSES.map((status) => [
+        status,
+        status === changeOrder.status
+          ? (lineItems.length > 0 ? lineItemTotals.requested_amount : asNumber(changeOrder.requested_amount, changeOrder.amount))
+          : 0,
+      ])
+    ) as Record<ChangeOrderUiStatus, number>,
+    status_approved_amounts: Object.fromEntries(
+      CHANGE_ORDER_UI_STATUSES.map((status) => [status, status === changeOrder.status ? asNumber(changeOrder.approved_amount, 0) : 0])
+    ) as Record<ChangeOrderUiStatus, number>,
+  } satisfies ChangeOrderSummary;
+}
+
 export type ChangeOrderBundle = {
   change_order: ChangeOrder;
   project: Project | null;
@@ -629,7 +718,7 @@ export async function loadChangeOrderBundle(
   const status_history = (statusHistoryResult.data ?? []).map((row) =>
     mapChangeOrderStatusHistoryRow(row as Record<string, unknown>)
   );
-  const summary = computeChangeOrderSummary([change_order]);
+  const summary = computeChangeOrderBundleSummary(change_order, line_items);
 
   return sanitizeChangeOrderForRole(
     {
@@ -692,6 +781,7 @@ export async function saveChangeOrderChildren(
       unit: item.unit ?? null,
       unit_cost: item.unit_cost ?? null,
       lump_sum: item.lump_sum ?? null,
+      ...calculateChangeOrderLineItemAmounts(item),
     }));
 
     if (payload.length > 0) {
@@ -699,6 +789,27 @@ export async function saveChangeOrderChildren(
       if (error) throw error;
       saved.line_items = (data ?? []).map((row) => mapChangeOrderLineItemRow(row as Record<string, unknown>));
     }
+
+    const totals = aggregateChangeOrderLineItems(saved.line_items.length > 0 ? saved.line_items : payload.map((item) => ({
+      category: item.category,
+      base_amount: item.base_amount,
+      total: item.total,
+    })));
+
+    const { error: updateError } = await admin
+      .from("change_orders")
+      .update({
+        requested_amount: totals.requested_amount,
+        amount: totals.requested_amount,
+        labor_amount: totals.labor_amount,
+        material_amount: totals.material_amount,
+        equipment_amount: totals.equipment_amount,
+        subcontractor_amount: totals.subcontractor_amount,
+        other_amount: totals.other_amount,
+      })
+      .eq("id", changeOrderId);
+
+    if (updateError) throw updateError;
   }
 
   if (input.attachments) {
