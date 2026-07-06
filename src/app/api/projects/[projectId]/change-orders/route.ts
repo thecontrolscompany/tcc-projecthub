@@ -281,6 +281,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     const hasLineItems = (payload.line_items?.length ?? 0) > 0;
     const hasAttachments = (payload.attachments?.length ?? 0) > 0;
     const pricingMode = payload.pricing_mode ?? (hasLineItems ? "detailed" : "quick_total");
+    const effectiveStatus = payload.status && payload.status !== "draft" ? payload.status : "submitted";
     const requestedAmount = payload.requested_amount ?? payload.amount ?? 0;
     const approvedAmount = payload.approved_amount ?? 0;
     const lineItems = payload.line_items?.map((item, index) => ({
@@ -318,7 +319,7 @@ export async function POST(request: Request, { params }: RouteContext) {
         project_id: projectId,
         title: payload.title,
         description: payload.description ?? null,
-        status: payload.status ?? "draft",
+        status: effectiveStatus,
         pricing_mode: pricingMode,
         amount: requestedAmount,
         requested_amount: requestedAmount,
@@ -339,7 +340,7 @@ export async function POST(request: Request, { params }: RouteContext) {
         notes: payload.notes ?? null,
         submitted_date: payload.submitted_date ?? null,
         approved_date: payload.approved_date ?? null,
-        submitted_at: payload.submitted_at ?? null,
+        submitted_at: payload.submitted_at ?? (effectiveStatus === "submitted" ? new Date().toISOString() : null),
         approved_at: payload.approved_at ?? null,
         executed_at: payload.executed_at ?? null,
         billed_at: payload.billed_at ?? null,

@@ -93,7 +93,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
   try {
     const { data: lookup, error: lookupError } = await adminClient
       .from("change_orders")
-      .select("project_id")
+      .select("project_id, status")
       .eq("id", id)
       .maybeSingle();
 
@@ -156,22 +156,26 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     }
 
     const payload = parsed.data;
+    const lookupRecord = lookup as Record<string, unknown>;
+    const existingStatus = typeof lookupRecord.status === "string" ? lookupRecord.status : "draft";
+    const incomingStatus = payload.status ?? existingStatus;
+    const effectiveStatus = existingStatus === "draft" && (!payload.status || payload.status === "draft") ? "submitted" : incomingStatus;
 
-    if (["rejected", "voided", "superseded"].includes(payload.status ?? "") && !payload.status_reason?.trim()) {
+    if (["rejected", "voided", "superseded"].includes(effectiveStatus) && !payload.status_reason?.trim()) {
       return NextResponse.json(
         { error: "status_reason is required for rejected, voided, and superseded statuses." },
         { status: 400 }
       );
     }
 
-    if (payload.status === "superseded" && !payload.superseded_by_change_order_id) {
+    if (effectiveStatus === "superseded" && !payload.superseded_by_change_order_id) {
       return NextResponse.json(
         { error: "superseded_by_change_order_id is required when status is superseded." },
         { status: 400 }
       );
     }
 
-    if (payload.combined_into_change_order_id && !["voided", "superseded"].includes(payload.status ?? "")) {
+    if (payload.combined_into_change_order_id && !["voided", "superseded"].includes(effectiveStatus)) {
       return NextResponse.json(
         { error: "combined_into_change_order_id can only be set when the status is voided or superseded." },
         { status: 400 }
@@ -183,7 +187,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     for (const key of [
       "title",
       "description",
-      "status",
       "pricing_mode",
       "requested_amount",
       "approved_amount",
@@ -221,6 +224,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     }
     if (typeof payload.amount === "number" || payload.amount === null) {
       updatePayload.amount = payload.amount;
+    }
+    updatePayload.status = effectiveStatus;
+    if (effectiveStatus === "submitted" && !payload.submitted_at) {
+      updatePayload.submitted_at = new Date().toISOString();
     }
 
     const { error } = await adminClient
