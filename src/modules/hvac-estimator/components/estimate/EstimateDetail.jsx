@@ -821,7 +821,7 @@ export function EstimateDetail({
         onChange={setActiveTab}
       tabs={[
           { id: "estimate", label: "Estimate" },
-          ...(customerMode ? [] : [{ id: "controlsBom", label: "Controls Parts" }]),
+          ...(customerMode || settings.estimateScopeMode !== "both" ? [] : [{ id: "controlsBom", label: "Controls Parts" }]),
           { id: "review", label: "Review", badge: reviewBadgeLabel },
           { id: "costDetail", label: "Cost Breakdown" },
           { id: "outputs", label: "Outputs" },

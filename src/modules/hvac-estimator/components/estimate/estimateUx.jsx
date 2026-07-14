@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ProjectSettingsPanel } from "./ProjectSettingsPanel.jsx";
 import { T } from "../../shared/tokens.js";
 import { fmt$, fmtHr } from "../../shared/utils.js";
-import { getEstimateScopeModeLabel } from "./projectSettings.js";
+import { getEstimateScopeModeLabel, normalizeEstimateScopeMode } from "./projectSettings.js";
 import { TYPE_META, calcItem, deriveEstimatorCostBuckets } from "./estimateCalc.js";
 import { ControlsBomTab } from "./ControlsBomTab.jsx";
 
@@ -683,6 +683,18 @@ export function EstimateCommandCenter({
   const install = buckets.install;
   const controls = buckets.controls;
   const totals = buckets.totals;
+  const isTurnkey = normalizeEstimateScopeMode(settings.estimateScopeMode) === "both";
+  // Display-only: an Install Only estimate shows its own scope total here, not the
+  // combined turnkeySellPrice. This does not change what gets saved as total_amount.
+  const displayTotal = isTurnkey ? totals.turnkeySellPrice : install.sellPrice;
+  const displayLabor = isTurnkey ? install.laborCost + controls.engineeringLaborCost : install.laborCost;
+  const displayLaborHours = isTurnkey
+    ? buckets.diagnostics.installRawLaborHours + buckets.diagnostics.controlsRawLaborHours
+    : buckets.diagnostics.installRawLaborHours;
+  const displayMaterial = isTurnkey ? install.materialCost + controls.materialCost : install.materialCost;
+  const displayOverhead = isTurnkey ? install.markup.overhead + controls.markup.overhead : install.markup.overhead;
+  const displayProfit = isTurnkey ? install.markup.profit + controls.markup.profit : install.markup.profit;
+  const displayBond = isTurnkey ? install.markup.bond + controls.markup.bond : install.markup.bond;
   const rows = [
     {
       key: "installation",
@@ -698,33 +710,37 @@ export function EstimateCommandCenter({
         total: install.sellPrice,
       },
     },
-    {
-      key: "controls",
-      label: "Controls",
-      values: {
-        labor: controls.engineeringLaborCost,
-        laborHours: buckets.diagnostics.controlsRawLaborHours,
-        material: controls.materialCost,
-        overhead: controls.markup.overhead,
-        profit: controls.markup.profit,
-        marginPct: controls.sellPrice > 0 ? (controls.markup.profit / controls.sellPrice) * 100 : 0,
-        bond: controls.markup.bond,
-        total: controls.sellPrice,
-      },
-    },
+    ...(isTurnkey
+      ? [
+          {
+            key: "controls",
+            label: "Controls",
+            values: {
+              labor: controls.engineeringLaborCost,
+              laborHours: buckets.diagnostics.controlsRawLaborHours,
+              material: controls.materialCost,
+              overhead: controls.markup.overhead,
+              profit: controls.markup.profit,
+              marginPct: controls.sellPrice > 0 ? (controls.markup.profit / controls.sellPrice) * 100 : 0,
+              bond: controls.markup.bond,
+              total: controls.sellPrice,
+            },
+          },
+        ]
+      : []),
     {
       key: "total",
       label: "Total",
       emphasized: true,
       values: {
-        labor: install.laborCost + controls.engineeringLaborCost,
-        laborHours: buckets.diagnostics.installRawLaborHours + buckets.diagnostics.controlsRawLaborHours,
-        material: install.materialCost + controls.materialCost,
-        overhead: install.markup.overhead + controls.markup.overhead,
-        profit: install.markup.profit + controls.markup.profit,
-        marginPct: totals.turnkeySellPrice > 0 ? ((install.markup.profit + controls.markup.profit) / totals.turnkeySellPrice) * 100 : 0,
-        bond: install.markup.bond + controls.markup.bond,
-        total: totals.turnkeySellPrice,
+        labor: displayLabor,
+        laborHours: displayLaborHours,
+        material: displayMaterial,
+        overhead: displayOverhead,
+        profit: displayProfit,
+        marginPct: displayTotal > 0 ? (displayProfit / displayTotal) * 100 : 0,
+        bond: displayBond,
+        total: displayTotal,
       },
     },
   ];
@@ -766,7 +782,7 @@ export function EstimateCommandCenter({
       }}>
         <div>
           <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.4 }}>
-            Turnkey Estimate Summary
+            {isTurnkey ? "Turnkey Estimate Summary" : "Installation Estimate Summary"}
           </div>
           <div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>
             {estimateName || "Untitled estimate"} · {statusLabel}
@@ -785,9 +801,6 @@ export function EstimateCommandCenter({
             fontFamily: T.mono,
           }}>
             {statusLabel}
-          </span>
-          <span style={{ fontSize: 11, color: T.muted, fontFamily: T.mono }}>
-            Install + controls
           </span>
         </div>
       </div>
@@ -1450,6 +1463,7 @@ export function EstimatorTabPanels({
   }
 
   if (activeTab === "costDetail") {
+    const isTurnkey = normalizeEstimateScopeMode(settings.estimateScopeMode) === "both";
     const installTotal = costBuckets.install.sellPrice || costs.total || 0;
     const controlsTotal = costBuckets.controls.sellPrice || 0;
     const installRows = [
@@ -1480,7 +1494,7 @@ export function EstimatorTabPanels({
           <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
             {[
               { label: "Installation", rows: installRows, accent: T.steel },
-              { label: "Controls", rows: controlsRows, accent: T.blue },
+              ...(isTurnkey ? [{ label: "Controls", rows: controlsRows, accent: T.blue }] : []),
             ].map((scope) => (
               <section key={scope.label} style={{ border: "1px solid " + T.border, borderRadius: 12, background: T.surface, overflow: "hidden" }}>
                 <div style={{ padding: "10px 12px", borderBottom: "1px solid " + T.border, display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
