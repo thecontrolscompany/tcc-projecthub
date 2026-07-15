@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { T } from "../../shared/tokens.js";
 import { fmt$, fmtHr } from "../../shared/utils.js";
-import { VERTICAL_MARKETS } from "./projectSettings.js";
+import { VERTICAL_MARKETS, ESTIMATE_SCOPE_MODES, normalizeEstimateScopeMode } from "./projectSettings.js";
 export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, itemCount, estimateId, onApplyDefaultInstallType }) {
   const S = settings;
   const [geoStatus, setGeoStatus] = useState("");
@@ -164,6 +164,31 @@ export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, ite
 
       {/* Settings sections */}
       <div style={{ padding:"14px 20px", display:"flex", gap:12, flexWrap:"wrap" }}>
+
+        {/* Bid version */}
+        {section("Bid Version", "#0F766E", <>
+          <div style={{ display:"grid", gap:8, gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))" }}>
+            {ESTIMATE_SCOPE_MODES.map((mode) => {
+              const checked = normalizeEstimateScopeMode(S.estimateScopeMode) === mode.id;
+              return (
+                <label key={mode.id} style={{ display:"flex", gap:8, alignItems:"flex-start", cursor:"pointer",
+                  border:`1px solid ${checked ? "#2563EB" : T.border2}`, background: checked ? "#EFF6FF" : T.bg,
+                  borderRadius:6, padding:"8px 10px" }}>
+                  <input type="radio" name="estimateScopeMode" checked={checked}
+                    onChange={() => onChange({ estimateScopeMode: mode.id })}
+                    style={{ marginTop:2, accentColor:T.blue, cursor:"pointer" }} />
+                  <div style={{ minWidth:0 }}>
+                    <div style={{ fontSize:12, color:T.text, fontFamily:T.mono }}>{mode.label}</div>
+                    <div style={{ fontSize:10, color:T.muted, lineHeight:1.4 }}>{mode.description}</div>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+          <div style={{ fontSize:10, color:T.dim, lineHeight:1.5 }}>
+            Turnkey automatically computes Controls Material and Controls Engineering Labor from the same equipment selection using the controls catalog - no separate draft needed.
+          </div>
+        </>)}
 
         {/* Markups */}
         {section("Markups & Rates", T.blue, <>

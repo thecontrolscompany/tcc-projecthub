@@ -1069,7 +1069,6 @@ export function EstimatorActionBar({
   customerMode,
   estimate,
   exporting,
-  onProposalDetails,
   onAddEquipment,
   onSystemWizard,
   onAiParser,
@@ -1095,24 +1094,6 @@ export function EstimatorActionBar({
             <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3, marginRight: 4 }}>
               Workflow Actions
             </div>
-            <button
-              type="button"
-              onClick={onProposalDetails}
-              id="proposal-details-entry"
-              style={{
-                padding: "8px 12px",
-                border: "1px solid " + T.border2,
-                borderRadius: 999,
-                background: T.surface,
-                color: T.text,
-                cursor: "pointer",
-                fontSize: 12,
-                fontFamily: T.mono,
-                fontWeight: 700,
-              }}
-            >
-              Proposal Details
-            </button>
             {onUpdateAllPrices && (
               <button
                 type="button"

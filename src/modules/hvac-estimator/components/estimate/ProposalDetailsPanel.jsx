@@ -1,5 +1,5 @@
 import { T } from "../../shared/tokens.js";
-import { ESTIMATE_SCOPE_MODES, getEstimateScopeModeLabel, normalizeEstimateScopeMode } from "./projectSettings.js";
+import { getEstimateScopeModeLabel } from "./projectSettings.js";
 
 function formatDateInputValue(value) {
   const text = String(value || "").trim();
@@ -138,7 +138,7 @@ export function ProposalDetailsPanel({ settings, onChange }) {
         Used in the exported customer proposal. Changes auto-save as you edit.
       </div>
       <div style={{ fontSize: 11, color: T.text, background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 6, padding: "6px 8px" }}>
-        Current bid version: <strong>{getEstimateScopeModeLabel(S.estimateScopeMode)}</strong>
+        Bid version: <strong>{getEstimateScopeModeLabel(S.estimateScopeMode)}</strong> · change this in the Settings tab
       </div>
       {selectField(
         "proposalScopeMode",
@@ -149,46 +149,6 @@ export function ProposalDetailsPanel({ settings, onChange }) {
         ],
         "Brief shows a short summary. Detailed spells out selected components.",
       )}
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <span style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1 }}>
-          Bid Version
-        </span>
-        <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
-          {ESTIMATE_SCOPE_MODES.map((mode) => {
-            const checked = normalizeEstimateScopeMode(S.estimateScopeMode) === mode.id;
-            return (
-              <label
-                key={mode.id}
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  alignItems: "flex-start",
-                  cursor: "pointer",
-                  border: `1px solid ${checked ? "#2563EB" : T.border2}`,
-                  background: checked ? "#EFF6FF" : T.bg,
-                  borderRadius: 6,
-                  padding: "8px 10px",
-                }}
-              >
-                <input
-                  type="radio"
-                  name="estimateScopeMode"
-                  checked={checked}
-                  onChange={() => onChange({ estimateScopeMode: mode.id })}
-                  style={{ marginTop: 2, accentColor: T.blue, cursor: "pointer" }}
-                />
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 12, color: T.text, fontFamily: T.mono }}>{mode.label}</div>
-                  <div style={{ fontSize: 10, color: T.muted, lineHeight: 1.4 }}>{mode.description}</div>
-                </div>
-              </label>
-            );
-          })}
-        </div>
-        <div style={{ fontSize: 10, color: T.dim, lineHeight: 1.5 }}>
-          Turnkey automatically computes Controls Material and Controls Engineering Labor from the same equipment selection using the controls catalog - no separate draft needed.
-        </div>
-      </div>
       {textField("baseScopeName", "Base Scope Name", "Scope")}
       {textField("customerContact", "Customer Contact", "Attn line for proposal")}
       {dateField("estimateDate", "Estimate Date")}

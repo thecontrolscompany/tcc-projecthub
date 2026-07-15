@@ -656,17 +656,14 @@ export function EstimateDetail({
   const handleJumpReviewIssue = useCallback((issue) => {
     if (!issue) return;
     if (issue.fixTarget === "proposal-details") {
-      setActiveTab("estimate");
-      window.setTimeout(() => {
-        document.getElementById("proposal-details-entry")?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 60);
+      setShowProposalDetails(true);
       return;
     }
     if (issue.fixTarget) {
       setActiveTab("estimate");
       setHighlightedSummaryRow(issue.fixTarget);
     }
-  }, [setActiveTab, setHighlightedSummaryRow]);
+  }, [setActiveTab, setHighlightedSummaryRow, setShowProposalDetails]);
 
   useEffect(() => {
     if (!highlightedSummaryRow) return undefined;
@@ -860,7 +857,6 @@ export function EstimateDetail({
           <EstimatorActionBar
             customerMode={customerMode}
             estimate={estimate}
-            onProposalDetails={() => setShowProposalDetails((value) => !value)}
             onSystemWizard={() => setSubPage({ type: "wizard" })}
             onAiParser={() => setShowAiParser((value) => !value)}
             onAddEquipment={(type) => setSubPage({ type })}

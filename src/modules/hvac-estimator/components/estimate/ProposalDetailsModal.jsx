@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { EstimateDocumentsPanel } from "./EstimateDocumentsPanel.tsx";
 import { ProposalDetailsPanel } from "./ProposalDetailsPanel.jsx";
 import { ProposalScopePanel } from "./ProposalScopePanel.jsx";
@@ -34,6 +35,7 @@ export function ProposalDetailsModal({
   }, [open, onClose, initialTab]);
 
   if (!open) return null;
+  if (typeof document === "undefined") return null;
 
   const tabButtonStyle = (isActive) => ({
     backgroundColor: isActive ? "#1f3c5a" : "#ffffff",
@@ -42,7 +44,7 @@ export function ProposalDetailsModal({
     boxShadow: isActive ? "0 10px 24px rgba(31, 60, 90, 0.22)" : "none",
   });
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-8"
       onClick={onClose}
@@ -155,6 +157,7 @@ export function ProposalDetailsModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
