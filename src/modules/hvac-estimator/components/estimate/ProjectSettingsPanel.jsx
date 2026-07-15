@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { T } from "../../shared/tokens.js";
 import { fmt$, fmtHr } from "../../shared/utils.js";
 import { VERTICAL_MARKETS, ESTIMATE_SCOPE_MODES, normalizeEstimateScopeMode } from "./projectSettings.js";
-export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, itemCount, estimateId, onApplyDefaultInstallType }) {
+export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, itemCount, estimateId, onApplyDefaultInstallType, onUpdateAllPrices, updatingPrices = false }) {
   const S = settings;
   const [geoStatus, setGeoStatus] = useState("");
   const onChangeRef = useRef(onChange);
@@ -224,6 +224,22 @@ export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, ite
                 Apply {S.defaultInstallType} to {itemCount || 0} item{itemCount === 1 ? "" : "s"}
               </button>
             </div>,
+            onUpdateAllPrices && (
+              <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
+                <span style={{ fontSize:9, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1 }}>Re-capture Install Pricing</span>
+                <button
+                  onClick={onUpdateAllPrices}
+                  disabled={updatingPrices}
+                  title="Re-capture current equipment install pricing for every line item. Controls/DDC pricing is always live and updates automatically."
+                  style={{ padding:"6px 10px", border:"1px solid "+T.border2, borderRadius:4,
+                    background:T.surface, color:T.text,
+                    cursor:updatingPrices ? "default" : "pointer", fontSize:12, fontFamily:T.mono, textAlign:"left",
+                    opacity:updatingPrices ? 0.75 : 1 }}
+                >
+                  {updatingPrices ? "Updating Prices..." : "Update All Prices"}
+                </button>
+              </div>
+            ),
           )}
         </>)}
 

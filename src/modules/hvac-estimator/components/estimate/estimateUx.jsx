@@ -1072,8 +1072,6 @@ export function EstimatorActionBar({
   onAddEquipment,
   onSystemWizard,
   onAiParser,
-  onUpdateAllPrices,
-  updatingPrices = false,
 }) {
   const [showPicker, setShowPicker] = useState(false);
   const equipmentCounts = useMemo(() => getEquipmentCounts(estimate), [estimate]);
@@ -1094,28 +1092,6 @@ export function EstimatorActionBar({
             <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3, marginRight: 4 }}>
               Workflow Actions
             </div>
-            {onUpdateAllPrices && (
-              <button
-                type="button"
-                onClick={onUpdateAllPrices}
-                disabled={updatingPrices}
-                title="Re-capture current equipment install pricing for every line item. Controls/DDC pricing is always live and updates automatically."
-                style={{
-                  padding: "8px 12px",
-                  border: "1px solid " + T.border2,
-                  borderRadius: 999,
-                  background: T.surface,
-                  color: T.text,
-                  cursor: updatingPrices ? "default" : "pointer",
-                  fontSize: 12,
-                  fontFamily: T.mono,
-                  fontWeight: 700,
-                  opacity: updatingPrices ? 0.75 : 1,
-                }}
-              >
-                {updatingPrices ? "Updating Prices..." : "Update All Prices"}
-              </button>
-            )}
             <div
               style={{
                 display: "flex",
@@ -1317,6 +1293,8 @@ export function EstimatorTabPanels({
   onRemoveBidAlternate,
   onUpdateSettings,
   onApplyDefaultInstallType,
+  onUpdateAllPrices,
+  updatingPrices = false,
   proposalPreview,
   estimateId,
   rawLbrHrs,
@@ -1550,6 +1528,8 @@ export function EstimatorTabPanels({
               itemCount={itemCount}
               estimateId={estimateId}
               onApplyDefaultInstallType={onApplyDefaultInstallType}
+              onUpdateAllPrices={onUpdateAllPrices}
+              updatingPrices={updatingPrices}
             />
           )}
         </div>

@@ -860,8 +860,6 @@ export function EstimateDetail({
             onSystemWizard={() => setSubPage({ type: "wizard" })}
             onAiParser={() => setShowAiParser((value) => !value)}
             onAddEquipment={(type) => setSubPage({ type })}
-            onUpdateAllPrices={handleUpdateAllPrices}
-            updatingPrices={updatingPrices}
           />
         )}
 
@@ -1427,6 +1425,8 @@ export function EstimateDetail({
         onRemoveBidAlternate={removeBidAlternate}
         onUpdateSettings={updateSettings}
         onApplyDefaultInstallType={applyDefaultInstallType}
+        onUpdateAllPrices={handleUpdateAllPrices}
+        updatingPrices={updatingPrices}
         proposalPreview={proposalPreview}
         estimateId={estimate.id}
         rawLbrHrs={totals.lbrHrs}
