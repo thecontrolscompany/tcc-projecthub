@@ -1199,7 +1199,7 @@ export function EstimateDetail({
                                 <div style={{ minWidth:0 }}>
                                   <div style={{ fontSize:12, color:T.text }}>{entry.label}</div>
                                   <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono }}>Qty {entry.qty}</div>
-                                  {!customerMode && entry.controlsId && (() => {
+                                  {!customerMode && isTurnkey && entry.controlsId && (() => {
                                     const optionMap = new Map();
                                     const options = [
                                       { id: entry.controlsId, desc: entry.controlsAlternates.find((alt) => alt.id === entry.controlsId)?.desc || entry.controlsId },
@@ -1278,7 +1278,7 @@ export function EstimateDetail({
                                   <div style={{ textAlign:"right", flexShrink:0 }}>
                                     <div style={{ fontSize:11, color:T.blue, fontFamily:T.mono }}>{fmt$(entry.mtl)}</div>
                                     <div style={{ fontSize:10, color:T.muted, fontFamily:T.mono }}>{fmtHr(entry.lbr)}</div>
-                                    {settings.estimateScopeMode === "both" && entry.controlsId && (
+                                    {isTurnkey && entry.controlsId && (
                                       <div style={{ fontSize:10, color:T.purple, fontFamily:T.mono, marginTop:2 }}>
                                         Ctrl {fmt$(entry.controlsMtl)} / {fmtHr(entry.controlsLbr)}
                                       </div>
@@ -1323,7 +1323,7 @@ export function EstimateDetail({
                             )}
                           </div>
                         </div>
-                        {(details.selected.some((entry) => entry.controlsId || entry.controlsCustomPart) || details.custom.length > 0) && (
+                        {isTurnkey && (details.selected.some((entry) => entry.controlsId || entry.controlsCustomPart) || details.custom.length > 0) && (
                           <div style={{ marginTop: 12 }}>
                             <ControlsCostBreakdown
                               item={item}
