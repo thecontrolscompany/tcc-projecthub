@@ -4,23 +4,27 @@
 
 **Assessed:** July 2026. Eve version referenced: v0.24.3 (beta).
 
+**Revision note:** This version reflects a clarified operating context — Timothy Collins is currently the sole user of the estimator module, while the rest of ProjectHub (auth, projects, change orders, reports, other Hubs) is live and must not be disrupted. The recommendation, risk posture, testing scope, approval workflow, and success criteria below are revised accordingly. The repository architecture findings (Sections 4–10) are unchanged factual research and remain accurate regardless of this operating-context clarification.
+
 ---
 
 ## 1. Executive Summary
 
 TCC ProjectHub already contains a working, single-shot AI feature — the HVAC Estimator's "AI Takeoff" scope parser — that turns pasted or uploaded scope text into estimate line items via a hand-tuned prompt, a real multi-provider LLM call, Zod-schema validation, and a deterministic assembly-catalog resolver. It is genuinely functional, not a stub. Beyond that one feature, the repository has **zero agentic infrastructure**: no MCP, no tool-calling loop, no multi-step orchestration, and no automated tests of any kind anywhere in the codebase.
 
-Eve is a real, actively developed, Apache-2.0-licensed open-source framework from Vercel that directly targets the capability this project is missing: durable, multi-step, tool-using agent sessions with first-class human-approval checkpoints, subagent delegation, and native MCP support. Conceptually, it is a strong match for "read a drawing package, cross-check it against a spec, flag conflicts, draft RFIs, and pause for an estimator's sign-off before touching estimate data." That is a different capability tier than a single prompt-response call, and building it by hand would mean re-implementing durable execution, pause/resume, and approval gating from scratch.
+Eve is a real, actively developed, Apache-2.0-licensed open-source framework from Vercel that directly targets the capability this project is missing: durable, multi-step, tool-using agent sessions with first-class human-approval checkpoints, subagent delegation, and native MCP support. It is currently in **public beta** (v0.24.3, released roughly one month before this assessment), and an independent reviewer explicitly warns to "pin your versions with care and pilot before you commit" after hitting silent webhook failures and mid-session breakage from pre-release dependency versions.
 
-However, Eve is in **public beta**, released roughly one month before this assessment, on a framework version below 1.0, with an independent reviewer explicitly warning to "pin your versions with care and pilot before you commit" after hitting silent webhook failures and mid-session breakage from pre-release dependency versions. TCC ProjectHub is a small-team, no-test-suite, revenue-critical estimating system for a business that cannot absorb framework churn the way Vercel's own engineering org can. Betting the estimating pipeline on pre-1.0 infrastructure now would be premature.
+Given the clarified operating context — one user, estimator module explicitly experimental and tolerant of breakage, rest of ProjectHub must stay untouched — the correct posture is not cautious multi-user production hardening. It is: **move fast inside a hard boundary.** The estimator's zero test coverage and the framework's beta status are real facts, but they are risks *to the estimator experiment itself*, not to the live application, as long as the experiment is structurally incapable of touching protected-zone code, data, or the shared build/deploy pipeline. The rest of this document is organized around making that boundary real, not around slowing the experiment down.
 
-## 2. Recommendation: **Pilot**
+## 2. Recommendation: **Pilot, via an isolated sidecar, moving fast inside the estimator boundary**
 
-Run one narrow, low-stakes, benchmarked proof of concept (Section 16) alongside the current application — not inside it, and never writing to approved estimate data. Do not adopt Eve as production infrastructure yet. Do not reject it either: no other option in Section 11 gives you durable multi-step document review with built-in approval gates for less total effort than Eve provides today, and the deterministic groundwork this pilot requires (an approved-assembly lookup tool, a labor-standard lookup tool, a findings-staging table) is valuable regardless of which orchestration layer eventually sits on top of it.
+Build the Eve proof of concept as a **separate service/repository** (Option 2, Section 11.1) rather than adding Eve's dependency tree and build step directly into the existing Next.js/Vercel deployment (Option 1). This is the deciding safeguard for the protected zone: Eve compiles to its own runtime with its own build (`eve build && eve start`), not a lightweight library import, so embedding it inside ProjectHub's single Vercel deployment risks the shared build and dependency tree exactly where the user has said risk is unacceptable. A sidecar gets 100% of Eve's real capability (durable sessions, approval gates, subagents, MCP) with zero exposure of the protected zone to Eve's beta instability.
+
+Inside that sidecar, however, there is no reason to be cautious. Prototype directly with Eve rather than first hand-rolling the same workflow with plain LLM calls — the whole point of testing Eve is to learn whether it's worth using, and a single-user, break-tolerant estimator experiment is exactly the low-stakes environment to learn that in quickly.
 
 ## 3. Confidence Level
 
-**Moderate-high** on the repository findings (all traced file-to-file, cited below, cross-checked against my own direct reads of the estimator module from prior work in this codebase this session). **Moderate** on the Eve assessment: sourced from Vercel's own current documentation, the Eve GitHub repository, and one independent third-party review, but the framework is one month old, so there is limited independent production track record beyond Vercel's own dogfooding claims, which I treat with appropriate skepticism (Section 10).
+**Moderate-high** on the repository findings (all traced file-to-file, cited below). **Moderate** on the Eve assessment (Section 10), sourced from Vercel's official documentation, the Eve GitHub repository, and one independent third-party review — the framework is one month old, so independent production track record beyond Vercel's own dogfooding claims is limited. **High** on the sidecar-vs-embedded recommendation specifically: it follows directly from how Eve's own documentation describes its build/deploy model (a compiled, separately-run app), not from speculation.
 
 ---
 
@@ -40,73 +44,76 @@ Run one narrow, low-stakes, benchmarked proof of concept (Section 16) alongside 
 | `billing/`, `ops/`, `admin/` | Billing, operations, and admin hubs |
 | `installer/`, `customer/` | Role-scoped portals |
 
-**Auth:** Supabase Auth. Microsoft SSO (Azure AD OAuth) for `@controlsco.net` addresses, email/password otherwise (`src/app/login/page.tsx`). Role resolution is centralized in `src/lib/auth/resolve-user-role.ts`; roles are `admin | pm | lead | installer | ops_manager | customer` (`src/types/database.ts`), with route-level enforcement in `src/lib/supabase/middleware.ts`.
+**Auth:** Supabase Auth. Microsoft SSO (Azure AD OAuth) for `@controlsco.net` addresses, email/password otherwise (`src/app/login/page.tsx`). Role resolution is centralized in `src/lib/auth/resolve-user-role.ts`; roles are `admin | pm | lead | installer | ops_manager | customer` (`src/types/database.ts`), with route-level enforcement in `src/lib/supabase/middleware.ts`. **This is protected-zone infrastructure — see Section 15.**
 
-**Multi-tenancy:** Real and in progress — a documented "Trim+Respond" SaaS pivot (`codex/roadmap-trimrespond-saas-pivot.md`, `docs/saas-module-platform-architecture.md`). Subdomain-based org resolution (`src/lib/tenant/context.ts`) injects `x-org-id` per request. A second `OrganizationMemberRole` enum (`owner | admin | manager | member | customer`) layers on top of the legacy role system. The project's own roadmap doc states organization-scoped RLS is implemented for `estimates` only — "all other tables rely on role-based RLS only." This is a self-documented gap, not my inference.
+**Multi-tenancy:** Real and in progress — a documented "Trim+Respond" SaaS pivot (`codex/roadmap-trimrespond-saas-pivot.md`, `docs/saas-module-platform-architecture.md`). Subdomain-based org resolution (`src/lib/tenant/context.ts`) injects `x-org-id` per request. The project's own roadmap doc states organization-scoped RLS is implemented for `estimates` only. Not a blocker for a single-org, single-user estimator experiment, but a reason to keep the sidecar's database credential scoped narrowly rather than assuming org isolation is airtight everywhere.
 
-**Deployment:** Vercel-native, no Docker. Two Vercel Cron jobs total (`vercel.json`): a nightly QuickBooks Time sync and a nightly demo-org data reset. No queue system (no BullMQ, Inngest, or similar).
+**Deployment:** Vercel-native, no Docker. Two Vercel Cron jobs total (`vercel.json`): a nightly QuickBooks Time sync and a nightly demo-org data reset. No queue system.
 
-**Security boundaries:** Row Level Security exists but is inconsistently applied — 26 of 79 migration files touch RLS policies, and per the app's own roadmap doc, org-scoping is complete only for `estimates`. 56 of 117 API route files instantiate a Supabase **service-role** client directly, bypassing RLS and relying on route-level authorization checks instead. No rate limiting exists anywhere in the codebase.
+**Security boundaries:** Row Level Security exists but is inconsistently applied — 26 of 79 migration files touch RLS policies, and org-scoping is complete only for `estimates`. 56 of 117 API route files instantiate a Supabase **service-role** client directly, bypassing RLS. No rate limiting exists anywhere. **The existing broad service-role key already used across 56 routes should not be reused by the sidecar — see Section 15.**
 
-**Testing:** None. Zero `*.test.ts`, `*.spec.ts`, `__tests__` directories, or test-framework dependencies anywhere in the repository.
+**Testing:** None. Zero `*.test.ts`, `*.spec.ts`, `__tests__` directories, or test-framework dependencies anywhere in the repository. **Per the revised scope (Section 17), this is not a prerequisite to fix before experimenting — it is a reason to add a small, targeted protection check around the boundary, not broad coverage.**
 
-**Data model:** `estimates` table (`supabase/migrations/023_estimates.sql` + later extensions) stores `id`, `organization_id`, `status`, `total_amount`, `gross_margin_amount`, `gross_margin_pct` as real columns, but **all line-item/equipment data lives inside a single `body JSONB` column** — there is no relational `estimate_line_items` table. Material/labor catalogs (`install_assembly_catalog`, `controls_assembly_catalog`) store unit cost/hours, category, and part number/manufacturer, but have **no `quote_date`, `cost_source`, `price_freshness`, or `confidence` columns at all**.
+**Data model:** `estimates` table stores `id`, `organization_id`, `status`, `total_amount`, `gross_margin_amount`, `gross_margin_pct` as real columns, but **all line-item/equipment data lives inside a single `body JSONB` column** — no relational `estimate_line_items` table. Material/labor catalogs (`install_assembly_catalog`, `controls_assembly_catalog`) have **no `quote_date`, `cost_source`, `price_freshness`, or `confidence` columns**. All of these tables are **experimental-zone** (Section 15) — they are estimator-domain data, safe to extend or temporarily destabilize.
 
-**Audit trail:** Minimal. The only genuine append-only log in the system, `user_activity_events` (`051_user_activity_events.sql`), is scoped to authentication events only (login, password change, portal access). There is no change-history or version log for estimates, pricing, or project data — just `updated_at`/`created_by`/`modified_by` columns that overwrite on each change.
+**Audit trail:** Minimal. The only genuine append-only log, `user_activity_events`, is scoped to authentication events only. No change-history exists for estimates or pricing.
 
-**Existing AI/LLM integration:** Exactly one feature — the HVAC Estimator's "AI Takeoff" scope parser (Section 6). No Vercel AI SDK, no official provider SDKs; all LLM calls are raw `fetch()` against OpenAI/Anthropic/Gemini/xAI/Azure OpenAI REST endpoints. No MCP anywhere in the repository. No agent framework, tool-calling loop, or multi-step orchestration anywhere.
+**Existing AI/LLM integration:** Exactly one feature — the HVAC Estimator's "AI Takeoff" scope parser (Section 6). No Vercel AI SDK, no official provider SDKs; raw `fetch()` against OpenAI/Anthropic/Gemini/xAI/Azure OpenAI. No MCP anywhere. No agent framework, tool-calling loop, or multi-step orchestration anywhere.
 
-**Document integration:** A mature, non-AI SharePoint/OneDrive layer via Microsoft Graph (`src/lib/graph/client.ts`, 764 lines, used across ~35 files) handles document storage, folder provisioning, and a SharePoint reconciliation/archive-scanning feature. This is reused by the AI Takeoff pipeline for large-file staging but is otherwise entirely deterministic.
+**Document integration:** A mature, non-AI SharePoint/OneDrive layer via Microsoft Graph (`src/lib/graph/client.ts`, 764 lines, used across ~35 files). Reused by the AI Takeoff pipeline for large-file staging, otherwise deterministic.
 
-### Diagram — Current Application Architecture
+### Diagram — Current Application Architecture, with Risk Zones
 
 ```mermaid
 flowchart TB
-    subgraph Client["Browser"]
-        UI["Next.js App Router UI\n(CRM · Estimating · ProjectHub · Time · Billing · Ops · Admin)"]
+    subgraph Protected["PROTECTED ZONE — must not break"]
+        Auth["Auth & middleware\n(Supabase + Azure SSO,\nrole resolution)"]
+        Nav["Shared navigation/layout"]
+        Projects["Projects / PM workflows"]
+        CO["Change orders"]
+        Reports["Reports"]
+        OtherDB[("projects, profiles, change_orders,\nauth.users, and all non-estimator tables")]
     end
 
-    subgraph Vercel["Vercel (Next.js 16, no Docker/CI)"]
-        MW["Middleware\n(session refresh, tenant resolution,\nrole-based route gating)"]
-        API["117 API route handlers\n(56 use service-role client directly)"]
-        Cron["2 Vercel Crons\n(QB Time sync, demo reset)"]
+    subgraph Experimental["EXPERIMENTAL ZONE — may break, single user"]
+        EstUI["Estimator UI\n(src/modules/hvac-estimator/**)"]
+        EstDB[("estimates, install/controls\nassembly catalogs\n(estimator-specific tables)")]
+        AITakeoff["AI Takeoff\n(existing, single-shot)"]
     end
 
-    subgraph Supabase["Supabase (Postgres + Auth)"]
-        AuthDB[("auth.users / profiles")]
-        EstDB[("estimates\n(body JSONB = all line items)")]
-        CatDB[("install/controls\nassembly catalogs\n(no price-freshness fields)")]
-        CRMDB[("crm_accounts / opportunities /\npursuits / opportunity_* extraction tables")]
-        ActDB[("user_activity_events\n(auth events only)")]
-        AIDB[("estimator_ai_connections\n(AES-256-GCM encrypted keys)")]
+    subgraph SharedInfra["Shared infrastructure — touch with care"]
+        VercelBuild["One Vercel deployment,\none build, one dependency tree"]
+        Graph["Microsoft Graph client"]
+        SupaProj["Supabase project"]
     end
 
-    subgraph External["External services"]
-        Graph["Microsoft Graph\n(SharePoint/OneDrive, Outlook)"]
-        LLM["LLM providers\n(OpenAI / Anthropic / Gemini / xAI / Azure)\nvia raw fetch(), no SDK"]
-        QBT["QuickBooks Time"]
-        PBI["Power BI Embedded"]
-    end
+    Auth --> VercelBuild
+    Nav --> VercelBuild
+    Projects --> VercelBuild
+    CO --> VercelBuild
+    Reports --> VercelBuild
+    EstUI --> VercelBuild
+    Projects --> OtherDB
+    CO --> OtherDB
+    EstUI --> EstDB
+    AITakeoff --> EstDB
+    EstUI --> Graph
+    OtherDB --> SupaProj
+    EstDB --> SupaProj
 
-    UI -->|cookies/session| MW --> API
-    API --> AuthDB
-    API --> EstDB
-    API --> CatDB
-    API --> CRMDB
-    API --> ActDB
-    API -->|ai-takeoff route| AIDB
-    API -->|ai-takeoff route| LLM
-    API --> Graph
-    Cron --> QBT
-    Cron --> Supabase
-    UI --> PBI
+    classDef protected fill:#f8d7da,stroke:#842029
+    classDef experimental fill:#d1e7dd,stroke:#0f5132
+    classDef shared fill:#fff3cd,stroke:#997404
+    class Auth,Nav,Projects,CO,Reports,OtherDB protected
+    class EstUI,EstDB,AITakeoff experimental
+    class VercelBuild,Graph,SupaProj shared
 ```
 
 ---
 
 ## 5. Current-State Estimating Workflow
 
-Reconstructed from the HVAC Estimator module (`src/modules/hvac-estimator/**`), traced through UI, API, and database.
+*(Unchanged from prior research — reproduced for completeness.)*
 
 ```text
 Create estimate (blank, or via AI Takeoff scope paste/upload)
@@ -121,16 +128,7 @@ Create estimate (blank, or via AI Takeoff scope paste/upload)
   → save — total_amount/gross_margin persisted to the estimates row
 ```
 
-| Stage | User action | Input | Component | DB effect | Calculation | Output | Manual work remaining | Failure modes / gaps |
-|---|---|---|---|---|---|---|---|---|
-| Create | Click "New Estimate," fill name/customer/Bid Version | Form fields | `new-estimate-client.tsx` | Insert `estimates` row, `body` seeded | None | Draft estimate | — | None significant (fixed this session) |
-| Populate scope | Quick Add / Guided Wizard / **AI Takeoff** | Manual selection, or pasted/uploaded scope text | `EquipmentPickerModal`, `SelectionWizardPage`, `AiTakeoffModal` | `body.items[]` mutated (JSONB, no relational rows) | Assembly resolver maps free text → catalog IDs | Line items with `selected[]` components | Estimator still reviews every AI-imported line before trusting it — there is **no formal approval gate**, just visual review | AI Takeoff is single-shot: it cannot review a multi-sheet drawing package, cross-reference a spec, or flag a conflict across documents |
-| Price | (automatic) | `body.items`, `settings`, assembly catalogs | `estimateCalc.js`, `projectSettings.js` | None (computed, not stored per-item) | `computeCosts`, `deriveEstimatorCostBuckets` — labor/material/overhead/profit/bond by scope mode | Live totals | — | Material/labor catalog has no cost-freshness or confidence field — a stale quote looks identical to a fresh one |
-| Review | Estimator reads Review tab | Computed health rows | `EstimateHealthPanel`, `NeedsReviewPanel` | None | 40/40/20 sanity check | Warnings/info items | Estimator manually resolves each flagged item | No systematic scope-gap or missing-equipment detection — only ratio-based sanity checks |
-| Finalize proposal | Fill Proposal Details, generate proposal | Scope name, contact, brief/detailed toggle | `ProposalDetailsModal`, `generateProposal.js` | `settings` mutated, `proposal_exported_at` set, version increments | None (formatting) | Exported document | Assumptions/exclusions/RFIs are free-text fields — there is no structured, traceable-to-source assumption/RFI object | Nothing prevents exporting before scope is fully reviewed |
-| Save | Autosave / manual Save | Current `body` | `persistEstimate` → `summarizeHvacEstimate` | `estimates.total_amount`/`gross_margin_*` updated | Scope-aware total (fixed this session) | Persisted row | — | No history — each save overwrites the prior `body`; no version/scenario table exists |
-
-**Separately, at the pre-estimate (opportunity/pursuit) stage**, `47_opportunity_hub_document_ingestion.sql` defines `opportunity_documents`, `opportunity_pricing_items`, `opportunity_scope_items`, `opportunity_equipment_groups`, `opportunity_estimate_summaries`, and — notably — **`opportunity_extraction_reviews`**. This is an existing precedent inside this very codebase for a "staged extraction + human review" pattern, though it operates at the sales-pipeline stage, not inside the estimator itself, and I did not find evidence it is AI-driven versus manually populated. It is worth reusing this pattern's shape (not necessarily its code) for the takeoff-findings staging table proposed in Section 14.
+All stages above are estimator-domain (`estimates` table + `src/modules/hvac-estimator/**`) — entirely inside the **experimental zone**.
 
 ### Diagram — Current Estimating Workflow
 
@@ -156,411 +154,453 @@ flowchart LR
     class G,H,K gap
 ```
 
+Every node above is entirely inside the estimator module (`estimates` table + `src/modules/hvac-estimator/**`) — the whole diagram sits in the **experimental zone**.
+
 ---
 
 ## 6. Current Strengths
 
-1. **The AI Takeoff pipeline is real, not a demo.** Per-organization encrypted multi-provider credentials (AES-256-GCM), real OCR/document extraction (tesseract.js, unpdf, mammoth), a mature hand-tuned prompt encoding real HVAC-controls domain rules, Zod schema validation, and a deterministic assembly-catalog resolver (exact match → alias table → heuristic → fuzzy score). This is a solid foundation to build on, not throw away.
-2. **The pricing engine is sound and now scope-aware.** `computeCosts`/`deriveEstimatorCostBuckets` correctly separate install and controls cost pools by Bid Version, fixed for correctness this session.
-3. **Document infrastructure (SharePoint/Graph) is mature** and already handles the "where do project documents live" problem — a real asset for any future document-review agent.
-4. **An existing "staged extraction + review" precedent** already exists in the Opportunity Hub (`opportunity_extraction_reviews`), showing the team has already reached for this pattern once.
-5. **Multi-tenant groundwork is underway**, which matters if this becomes a company-wide or multi-org platform later.
+1. **The AI Takeoff pipeline is real, not a demo.** Per-organization encrypted multi-provider credentials, real OCR/document extraction, a mature hand-tuned domain prompt, Zod schema validation, and a deterministic assembly-catalog resolver.
+2. **The pricing engine is sound and scope-aware** (`computeCosts`/`deriveEstimatorCostBuckets`).
+3. **Document infrastructure (SharePoint/Graph) is mature.**
+4. **An existing "staged extraction + review" precedent** already exists in the Opportunity Hub (`opportunity_extraction_reviews`).
+5. **Everything estimator-domain is already cleanly separated by module and table**, which is exactly what makes the two-zone strategy in this revision practical rather than theoretical — the estimator was already largely isolated before this evaluation began.
 
 ## 7. Current Gaps and Technical Debt
 
-1. **Zero automated tests anywhere in the repository.** Any new agent-driven workflow touching real bid data is being added to a codebase with no regression safety net.
-2. **No structured line-item storage.** All estimate data lives in a single JSONB blob with no schema enforcement at the database layer — fine for a hand-built UI, risky as an agent write target without a staging layer (Section 14).
-3. **No price freshness, cost source, or confidence tracking anywhere in the material/labor catalogs.** An agent (or a human) cannot currently distinguish a quote from last week from one from two years ago.
-4. **No real audit/version history for estimates or pricing** — only auth events are append-only logged. Any AI-assisted workflow needs its own audit trail (Section 14), because the platform doesn't provide one to inherit.
-5. **RLS and service-role usage are inconsistent** — nearly half of API routes bypass RLS entirely. This matters directly for agent tool permission boundaries: a tool built naively on top of an existing service-role route inherits a broad blast radius by default.
-6. **AI Takeoff is single-shot, not iterative.** It cannot review a 40-sheet drawing package, cross-reference a spec section, or ask a follow-up question. This is the actual capability gap Eve (or an equivalent) would close.
-7. **The assembly-training feedback UI stores corrections in `localStorage`** with no confirmed automatic feedback loop back into the resolver — flagged as needing verification, not confirmed broken.
-8. **No rate limiting anywhere**, which matters for cost control once LLM-calling tools are exposed more broadly.
+1. **Zero automated tests anywhere in the repository.** For the protected zone, this means any change touching shared code needs a manual verification pass (Section 16.1) since there is no regression suite to lean on. For the experimental zone, this is simply accepted risk per the revised scope — not a blocker.
+2. **No structured line-item storage** — all estimate data lives in a single JSONB blob. Experimental-zone concern only.
+3. **No price freshness, cost source, or confidence tracking** in the material/labor catalogs. Experimental-zone concern.
+4. **No real audit/version history for estimates or pricing.** Directly relevant to the simplified single-user approval model (Section 15.2) — the finding-state history *is* the audit trail for POC 1, since nothing else exists to lean on.
+5. **RLS and service-role usage are inconsistent** — nearly half of API routes bypass RLS. This is the concrete reason the sidecar must mint its own narrowly-scoped credential rather than reuse the existing broad service-role key (Section 15.1).
+6. **AI Takeoff is single-shot, not iterative.** The actual capability gap this evaluation is about.
+7. **The assembly-training feedback UI stores corrections in `localStorage`** with no confirmed automatic feedback loop — flagged as needing verification, not confirmed broken.
+8. **No rate limiting anywhere.** Worth a basic budget alert on the sidecar's model spend even for a single-user POC (cheap, prevents an unattended runaway loop from generating a surprise bill).
 
 ---
 
 ## 8. Optimized Future Workflow
 
-This refines the assignment's suggested workflow to reflect what the current tool already supports (assembly resolver, catalog lookups, cost engine, proposal export) versus what's net-new (document inventory, iterative multi-document review, structured findings staging, explicit approval gates).
+*(Revised to use the simplified single-user approval vocabulary from Section 15.2.)*
 
 ```text
 Create estimate (existing)
-  → connect project document folder (SharePoint — infrastructure exists, wiring is new)
-  → inventory and classify documents (drawing / spec / addendum / quote / schedule) — NEW, AI-assisted
-  → estimator confirms document set is complete — HUMAN GATE
-  → extract equipment inventory + point counts from drawings/specs — NEW, AI-assisted, multi-step
-  → write findings to a staging table with source citations (sheet/page/excerpt) — NEW
-  → estimator reviews and approves/edits/rejects each finding — HUMAN GATE
-  → approved findings resolved against the EXISTING assembly catalog (reuse assemblyResolver.js) — deterministic
-  → approved findings become real estimate line items (reuse existing item-creation logic) — deterministic
-  → cost/labor pricing applied via EXISTING computeCosts/deriveEstimatorCostBuckets — deterministic, unchanged
-  → agent drafts assumptions, exclusions, and RFIs FROM the same source citations — NEW, AI-assisted
-  → estimator reviews/edits assumptions and RFIs — HUMAN GATE
-  → independent scope audit pass (a second, fresh-context review of the draft estimate against the source documents) — NEW, AI-assisted
+  → connect project document folder (SharePoint — infrastructure exists)
+  → inventory and classify documents — NEW, AI-assisted, sidecar
+  → estimator confirms document set is complete — HUMAN GATE (single user: Timothy)
+  → extract equipment inventory + point counts from drawings/specs — NEW, AI-assisted, multi-step, sidecar
+  → write findings to a staging table with source citations — NEW (status: generated)
+  → estimator reviews each finding: accept / edit / reject — HUMAN GATE
+  → approved (accepted or edited) findings promoted into a real estimate line item
+    via the EXISTING /api/estimates/[id] route — status: promoted
+  → cost/labor pricing applied via EXISTING computeCosts/deriveEstimatorCostBuckets — unchanged
+  → agent drafts assumptions, exclusions, and RFIs from the same source citations — NEW, AI-assisted
+  → estimator reviews/edits — HUMAN GATE
   → estimator approves final estimate — HUMAN GATE (existing status field: ready)
   → generate customer-facing proposal — EXISTING generateProposal.js, reused as-is
-  → all findings, sources, assumptions, approvals, and agent run metadata preserved — NEW (Section 14)
+  → generated/accepted/edited/rejected/promoted history preserved per finding — NEW (Section 14)
 ```
-
-The system never converts an uncertain document interpretation into final pricing without a human approval step landing between "agent proposed" and "estimate row exists." This is enforced structurally, not by instruction, per Section 14.
 
 ### Diagram — Recommended Optimized Workflow
 
 ```mermaid
 flowchart TD
     A["Create estimate\n(existing)"] --> B["Connect project\ndocument folder"]
-    B --> C["Inventory & classify\ndocuments — AI-assisted"]
+    B --> C["Inventory & classify\ndocuments — AI-assisted, sidecar"]
     C --> D{"Estimator confirms\ndocument set"}
     D -->|incomplete| B
-    D -->|confirmed| E["Extract equipment/points\nfrom drawings+specs\nmulti-step, cited to source — AI-assisted"]
-    E --> F[("Takeoff findings\nstaging table")]
-    F --> G{"Estimator reviews\nfindings"}
-    G -->|reject/edit| F
-    G -->|approve| H["Resolve against\napproved assembly catalog\n(existing assemblyResolver.js)"]
-    H --> I["Create real estimate\nline items (existing)"]
-    I --> J["Price via existing\ncomputeCosts /\nderiveEstimatorCostBuckets"]
-    J --> K["Draft assumptions,\nexclusions, RFIs\ncited to source — AI-assisted"]
-    K --> L{"Estimator reviews\nassumptions/RFIs"}
-    L -->|edit| K
-    L -->|approve| M["Independent scope audit\n(fresh-context review) — AI-assisted"]
-    M --> N{"Estimator approves\nfinal estimate"}
-    N -->|changes needed| G
+    D -->|confirmed| E["Extract equipment/points\nmulti-step, cited to source\nAI-assisted, sidecar"]
+    E --> F[("Findings staging table\nstatus: generated")]
+    F --> G{"Estimator reviews\neach finding"}
+    G -->|reject| F
+    G -->|accept as-is| H1["status: accepted"]
+    G -->|edit| H2["status: edited\n(original + edit both preserved)"]
+    H1 --> I["Promote via EXISTING\n/api/estimates/[id] route"]
+    H2 --> I
+    I --> J["status: promoted\nreal estimate line item created"]
+    J --> K["Price via existing\ncomputeCosts /\nderiveEstimatorCostBuckets"]
+    K --> L["Draft assumptions,\nexclusions, RFIs — AI-assisted"]
+    L --> M{"Estimator reviews"}
+    M -->|edit| L
+    M -->|approve| N{"Estimator approves\nfinal estimate"}
     N -->|approved| O["Generate proposal\n(existing generateProposal.js)"]
-    O --> P[("Full audit trail:\nsources, findings, approvals,\nagent run IDs preserved")]
 
     classDef human fill:#d1e7dd,stroke:#0f5132
     classDef ai fill:#cfe2ff,stroke:#084298
     classDef existing fill:#f8f9fa,stroke:#6c757d
-    class D,G,L,N human
-    class C,E,K,M ai
-    class A,B,H,I,J,O existing
+    class D,G,M,N human
+    class C,E,L ai
+    class A,B,I,K,O existing
 ```
 
 ---
 
 ## 9. Agent versus Deterministic Software Boundaries
 
+*(Unchanged — this classification does not depend on team size or deployment topology.)*
+
 | Function | Category | Why |
 |---|---|---|
 | Reading project documents | Deterministic (tool) | Pure retrieval/I/O; SharePoint client already exists |
-| Classifying documents (drawing/spec/addenda/quote) | AI-assisted analysis | Requires content understanding, not just filename/metadata |
-| Extracting equipment schedules | AI-assisted analysis | Requires visual/structural understanding of tabular drawing content |
-| Recognizing equipment | AI-assisted analysis | Pattern recognition across drawing symbols/labels |
-| Counting repeated devices | AI-assisted analysis | Should be paired with a deterministic recount/verification pass given error-proneness |
-| Identifying controlled systems | AI-assisted analysis | Domain classification requiring context across sheets |
-| Developing point lists | Agent-orchestrated workflow | Requires synthesizing equipment + sequence-of-operations across multiple documents in one session |
-| Selecting controller assemblies | AI-assisted analysis, constrained | Agent proposes; must resolve through the **existing deterministic** `assemblyResolver.js`, never invent an assembly |
-| Selecting exact part numbers | **Deterministic application logic** | Must be a catalog lookup against `controls_assembly_catalog`/`install_assembly_catalog`, never LLM-generated text |
-| Looking up costs | **Deterministic application logic** | Direct table query — an LLM must never originate a price |
-| Applying labor units | **Deterministic application logic** | Direct table query against approved labor standards |
-| Comparing drawings with specifications | Agent-orchestrated workflow | Needs multi-document retrieval and iterative cross-referencing — the core capability gap this evaluation is about |
-| Detecting conflicting quantities | Agent-orchestrated workflow | Same reasoning as above |
-| Generating assumptions | AI-assisted analysis | Draft only; every assumption must cite its source and enter human review |
-| Drafting RFIs | AI-assisted analysis | Draft only; a human sends |
-| Assigning confidence levels | AI-assisted analysis | Model self-report, informational — used to prioritize human review, never to bypass it |
-| Creating a BOM | **Deterministic application logic** | Assembled from *approved* findings + catalog lookups only — this is where agent output graduates into the system of record |
-| Calculating totals | **Deterministic application logic** | Already exists (`computeCosts`), unchanged |
+| Classifying documents | AI-assisted analysis | Requires content understanding |
+| Extracting equipment schedules | AI-assisted analysis | Requires visual/structural understanding |
+| Recognizing equipment | AI-assisted analysis | Pattern recognition |
+| Counting repeated devices | AI-assisted analysis | Pair with deterministic recount where possible |
+| Identifying controlled systems | AI-assisted analysis | Domain classification across sheets |
+| Developing point lists | Agent-orchestrated workflow | Synthesizes multiple documents in one session |
+| Selecting controller assemblies | AI-assisted analysis, constrained | Must resolve through existing deterministic `assemblyResolver.js` |
+| Selecting exact part numbers | **Deterministic application logic** | Catalog lookup only, never LLM-generated |
+| Looking up costs | **Deterministic application logic** | Direct table query |
+| Applying labor units | **Deterministic application logic** | Direct table query |
+| Comparing drawings with specifications | Agent-orchestrated workflow | Multi-document, iterative |
+| Detecting conflicting quantities | Agent-orchestrated workflow | Same reasoning |
+| Generating assumptions | AI-assisted analysis | Draft only, cites source, human-reviewed |
+| Drafting RFIs | AI-assisted analysis | Draft only, human sends |
+| Assigning confidence levels | AI-assisted analysis | Informational, prioritizes review, never bypasses it |
+| Creating a BOM | **Deterministic application logic** | Assembled from *approved* findings + catalog lookups only |
+| Calculating totals | **Deterministic application logic** | Already exists, unchanged |
 | Applying overhead and profit | **Deterministic application logic** | Already exists, unchanged |
-| Creating scenarios (bid alternates) | Human decision | Existing user-driven feature; no reason to automate the decision to create one |
-| Generating proposal scope narrative | AI-assisted analysis | Draft only, from approved scope; estimator edits before export |
-| Updating vendor prices | Human decision, AI-assisted flagging | AI may flag staleness; only a human enters a new verified price |
-| Sending quote requests | **Human decision** | External communication — never sent without explicit human action |
-| Creating calendar reminders | **Deterministic application logic** | Simple scheduled notification; does not need AI |
-| Producing final bid pricing | **Human decision** | Explicit design requirement — the system must never silently finalize pricing |
+| Creating scenarios (bid alternates) | Human decision | Existing user-driven feature |
+| Generating proposal scope narrative | AI-assisted analysis | Draft only, estimator edits before export |
+| Updating vendor prices | Human decision, AI-assisted flagging | Only a human enters a new verified price |
+| Sending quote requests | **Human decision** | External communication — never automated |
+| Creating calendar reminders | **Deterministic application logic** | Simple scheduled notification |
+| Producing final bid pricing | **Human decision** | The system must never silently finalize pricing |
 
 ---
 
 ## 10. Eve Capability Assessment
 
-Sourced from Vercel's official Eve docs (`vercel.com/docs/eve`, `/eve/concepts`, `/eve/pricing`), the `vercel/eve` GitHub repository, Vercel's launch blog, and one independent third-party review. Each line distinguishes **native Eve capability** from **Vercel platform capability** (i.e., something Eve leans on but doesn't itself provide) and from **custom code still required**.
+*(Unchanged — sourced from Vercel's official Eve docs, the `vercel/eve` GitHub repository, Vercel's launch blog, and one independent third-party review.)*
 
 | Requirement | Assessment |
 |---|---|
 | Long-running document-review tasks | **Native Eve.** Sessions/turns model supports multi-step tool use within one durable session. |
-| Durable execution / retries / state preservation | **Vercel platform (Vercel Workflows), exposed natively by Eve.** Every step is checkpointed to an event log and deterministically replayed; sessions survive cold starts, redeploys, and long pauses. Self-hosted, this becomes a Postgres-backed "world" instead — still native to Eve's design, just a different backing store. |
-| Human approval checkpoints | **Native Eve, well-documented.** A single flag on a tool definition pauses the agent at that action indefinitely at zero compute cost, resuming exactly from the checkpoint after approval. This is the single strongest fit for this project's explicit "never silently finalize pricing" requirement. |
-| Structured outputs | **Native Eve** via typed tool `inputSchema`/Zod (matches this repo's existing Zod-first pattern in `scopeImportSchema.js`). |
-| Tool permissions | **Native Eve, per-tool.** Each tool is its own file with its own execute function and can be scoped narrowly (e.g., a read-only `getApprovedAssembly` tool vs. a write-capable `createTakeoffFinding` tool). |
-| Subagent delegation | **Native Eve.** Subagents run with fresh context and a narrower tool set; the built-in `agent` tool can also delegate to a copy of the current agent. |
-| Sandboxed execution | **Vercel platform (Vercel Sandbox) by default; Docker/microsandbox/bash as self-hosted alternatives.** Isolated microVM per agent for bash/file operations. |
-| File handling / large PDFs / drawing packages | **Custom code likely required.** Eve's sandbox gives file system access, but PDF/drawing parsing, page-splitting, and OCR are not documented as native Eve capabilities — this repo's existing `unpdf`/`tesseract.js`/`mammoth` pipeline (`takeoffServer.js`) would need to be wrapped as Eve tools, not replaced. |
-| OCR / visual drawing analysis | **Model-dependent, not a native Eve feature.** Eve routes to whatever model you configure via AI Gateway or direct provider call; vision/OCR quality depends entirely on the underlying model (e.g., a vision-capable model), not on Eve itself. No Eve-native drawing-analysis capability was found in official sources. |
-| Parallel document review | **Native Eve**, via subagents run in parallel by the parent. |
-| MCP support | **Native Eve.** Connections point at MCP servers or OpenAPI specs; credential handling delegated to Vercel Connect. Pre-built integrations at launch include Slack, GitHub, Snowflake, Salesforce, Notion, Linear — not estimating-specific, so TCC's own tools/MCP servers would still need to be built regardless. |
-| SharePoint / OneDrive integration | **Custom code required.** Not a pre-built Eve/Vercel Connect integration as of this assessment; this repo's existing `src/lib/graph/client.ts` would need to be wrapped as Eve tools or exposed as an MCP server. |
-| Database integration | **Custom code required.** Eve has no native Supabase/Postgres connector; would be implemented as ordinary typed tools calling Supabase, same as today's API routes. |
-| Background jobs / scheduled activity | **Native Eve** via `agent/schedules/*` (cron-style recurring sessions). |
-| Notifications | **Custom code / channel-dependent.** Channels (Slack, HTTP, etc.) exist, but a project-specific notification (e.g., "estimator, review is ready") would be custom tool/channel code. |
-| Auditability | **Partially native.** Agent Runs shows sessions/turns/tool calls/timing/tokens in the Vercel dashboard, but this is operational observability, not the estimating-specific audit trail (findings, sources, approvals) this project needs — that remains custom (Section 14), regardless of framework choice. |
-| Observability / tracing | **Native (Vercel Observability) or portable (OpenTelemetry export)** — self-hosted, you lose the dashboard and must wire OTel to Braintrust/Honeycomb/Datadog/Jaeger yourself. |
-| Evaluation testing | **Native Eve** (`agent/evals/*`, `defineEval`, `eve eval` runnable in CI as a deploy gate) — a genuine, non-trivial built-in that this codebase has zero equivalent of today (Section 7, gap #1). |
-| Version control of instructions/skills | **Native**, by construction — instructions/skills are plain files in the repo, versioned with normal Git. |
-| Multi-user operation | **Native**, sessions are independent per request/user. |
-| Tenant and project isolation | **Custom code required.** Eve has no native concept of TCC's `organization_id` multi-tenant model — tool implementations would need to enforce org scoping themselves, same discipline the app already needs to apply consistently (Section 7, gap #5). |
-| Security | **Shared responsibility.** Credential handling for external services goes through Vercel Connect (keeps secrets out of the model context); tenant-level authorization is still the implementer's job. |
-| Cost control | **Consumption-based, no flat fee.** Billed through the Vercel resources used (Functions, Workflows, Sandbox, AI Gateway/model tokens) — cost scales directly with session volume, tool calls, and model usage; no generous production-grade free tier identified. |
-| Model portability | **Native, strong.** Model strings resolve through AI Gateway (`openai/gpt-5.4-mini` style) on Vercel, or direct provider calls when self-hosted — genuinely provider-agnostic, matching this repo's own existing multi-provider pattern. |
-| Vendor lock-in | **Real but bounded.** Every Vercel-coupled piece (durability, sandbox, model routing, auth) has a documented portable swap (Postgres world, Docker sandbox, direct provider calls, custom auth). Fully self-hosted is technically demonstrated (a community proof-of-concept runs on a DigitalOcean droplet with zero Vercel-proprietary infrastructure) but is **not yet the polished, first-class path** — Vercel's own launch messaging says the framework "deploys to Vercel, with support for other platforms on the way." |
-| Local development | **Native**, `npx eve@latest init` scaffolds a working dev server. |
+| Durable execution / retries / state preservation | **Vercel platform (Vercel Workflows), exposed natively by Eve.** Self-hosted, a Postgres-backed "world" substitutes. |
+| Human approval checkpoints | **Native Eve, well-documented.** A flag on a tool definition pauses the agent at zero compute cost until approved. |
+| Structured outputs | **Native Eve** via typed tool `inputSchema`/Zod (matches this repo's existing pattern). |
+| Tool permissions | **Native Eve, per-tool.** Each tool is its own file, independently scoped. |
+| Subagent delegation | **Native Eve.** Fresh context, narrower tool set per subagent. |
+| Sandboxed execution | **Vercel platform (Vercel Sandbox) by default; Docker/microsandbox/bash self-hosted.** |
+| File handling / large PDFs / drawing packages | **Custom code likely required** — this repo's `unpdf`/`tesseract.js`/`mammoth` pipeline would be wrapped as tools, not replaced. |
+| OCR / visual drawing analysis | **Model-dependent, not native to Eve.** |
+| Parallel document review | **Native Eve**, via parallel subagents. |
+| MCP support | **Native Eve.** Pre-built integrations (Slack, GitHub, Snowflake, Salesforce, Notion, Linear) are not estimating-specific — TCC's own tools still need building. |
+| SharePoint / OneDrive integration | **Custom code required** — wrap `src/lib/graph/client.ts`. |
+| Database integration | **Custom code required** — no native Supabase connector. |
+| Background jobs / scheduled activity | **Native Eve** via `agent/schedules/*`. |
+| Notifications | **Custom / channel-dependent.** |
+| Auditability | **Partially native** (Agent Runs dashboard = operational observability, not the estimating-specific finding history in Section 14). |
+| Observability / tracing | **Native (Vercel) or portable (OpenTelemetry export).** |
+| Evaluation testing | **Native Eve** (`agent/evals/*`, `eve eval`) — a genuine built-in this codebase has no equivalent of. |
+| Version control of instructions/skills | **Native**, plain files versioned with Git. |
+| Multi-user operation | Native, but **not needed for POC 1** — deferred per Section 15.3. |
+| Tenant and project isolation | **Custom code required**, but low-stakes for a single-org, single-user POC. |
+| Security | **Shared responsibility** — Vercel Connect keeps secrets out of model context; scoping is still the implementer's job. |
+| Cost control | **Consumption-based**, no flat fee — scales with session volume, tool calls, model usage. |
+| Model portability | **Native, strong** — model strings resolve via AI Gateway or direct provider calls. |
+| Vendor lock-in | **Real but bounded** — every Vercel-coupled piece has a documented portable swap, though self-hosting is not yet the polished first-class path. |
+| Local development | **Native** — `npx eve@latest init` scaffolds a working dev server in under a minute. |
 | Vercel deployment | **Native, first-class, easiest path.** |
-| Non-Vercel deployment | **Supported but secondary today.** `eve build && eve start` produces a standard Nitro Node server runnable in a container/VM, but you lose the Agent Runs dashboard and must self-manage the "world" (durability backend). |
-| Framework maturity | **Beta, pre-1.0.** v0.24.3, Apache-2.0, released ~one month before this assessment (58 releases, 345 commits, 307 forks, ~3.5k GitHub stars — active but young). Vercel's own docs state "the framework, APIs, documentation, and behavior may change before general availability." |
-| Breaking-change risk | **Real, documented.** An independent reviewer reported mid-session breakage from CANARY `@ai-sdk`/`@vercel/connect` versions and silent Slack-webhook failures with no error logs, and explicitly recommends pinning versions and piloting before committing production workloads. |
+| Non-Vercel deployment | **Supported but secondary** — `eve build && eve start` runs anywhere, loses the Agent Runs dashboard. |
+| Framework maturity | **Beta, pre-1.0.** v0.24.3, released ~one month before this assessment. |
+| Breaking-change risk | **Real, documented** by an independent reviewer (silent webhook failures, canary-dependency breakage). This is precisely the risk the sidecar isolation in Section 11.1 exists to contain. |
 
-**What Eve does not provide that would still need to be built here, regardless of adoption:** the entire estimating-specific data model (Section 14), the SharePoint/Graph tool wrappers, the assembly-catalog and labor-standard lookup tools, the estimate-write/promotion logic, and the tenant-isolation discipline. Eve is an orchestration and durability layer, not a domain solution.
+**What Eve does not provide, regardless of adoption:** the estimating-specific data model (Section 14), the SharePoint/Graph tool wrappers, catalog lookup tools, and the write/promotion logic.
 
 ---
 
 ## 11. Alternative Architecture Comparison
 
-| Option | Dev effort | Ops complexity | Reliability | Maintainability | Flexibility | Security | Auditability | Vendor lock-in | Ongoing cost | Fit for a small controls contractor | Evolves to company-wide platform? |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| **A — Keep current architecture, add targeted AI calls + conventional jobs** | Low-moderate (extends known patterns) | Low (already running) | High for what it does; cannot do multi-step review without hand-built state machines | High — plain TypeScript, no new framework to learn | Low for iterative/multi-step work; fine for single-shot | Same as today | Must be hand-built (no gain from a framework) | None | Lowest — model tokens only | Good near-term; caps out once multi-step document review is genuinely needed | Weak — every new agentic capability is bespoke plumbing |
-| **B — Eve as orchestration layer behind the existing app/DB** | Moderate — new agent project, new tools/skills, existing app untouched at its core | Moderate — new Vercel resources (Workflows, Sandbox), new deploy surface | Framework handles durability/retries; framework itself is young | Moderate — instructions/skills are plain files, but framework churn is a real maintenance cost right now | High — subagents, MCP, approval gates are exactly what's needed | Good — Vercel Connect keeps secrets out of model context; tenant isolation still custom | Approval gates + evals help; estimating-specific audit trail still custom (Section 14) | Real but bounded (Section 10) | Consumption-based, scales with usage; requires monitoring | **Best fit if a pilot succeeds** — narrow blast radius, existing app stays authoritative | Strong — this is exactly the kind of incremental orchestration layer that scales to other TCC workflows later |
-| **C — Eve-centered redesign** | Very high — rebuilds a working, recently-fixed estimating system | High | Unproven at this scale for this domain | Low near-term — throws away tested logic for beta infrastructure | High in theory, irrelevant if it destabilizes what works | No inherent gain over Option B | No inherent gain over Option B | Highest | Highest | **Not recommended** — unjustified risk given a pre-1.0 dependency and a working system | N/A — premature |
-| **D — MCP-centered architecture** (estimating functions exposed as MCP servers, any MCP client as host) | Moderate — building `getApprovedAssembly`, `getLaborStandard`, etc. as MCP tools | Low-moderate | High — MCP servers are simple, stateless-ish services | High | High — reusable by Eve, Claude Code, Claude Desktop, ChatGPT, or any future client | Good — narrow, typed tool surface | Same custom audit-trail need as any option | Low — MCP is an open standard, not vendor-specific | Low | **Strong complementary move regardless of Eve decision** | Excellent — this is genuinely the most portable long-term investment |
-| **E — Custom workflow engine** (TS services + queue + DB state machine + direct model calls) | High — re-implements durability, retries, and pause/resume by hand | Moderate-high — you own the queue/worker infra | High once built and battle-tested, but takes real time to get there | Moderate — no framework magic, but no framework churn either | Moderate | Good — fully custom, fully understood | Custom, same as any option | None | Engineering time is the real cost | Viable but expensive for a small team — this is "build your own Eve" | Moderate — works, but slower to extend than B or D |
+### 11.1 Deciding question for POC 1: Eve embedded in ProjectHub, or an isolated sidecar?
 
-**Assessment:** Option A is the safe default if no agent framework is adopted; it just can't do genuinely multi-step document review. Option D (build estimating functions as MCP servers) is worth doing **independent of the Eve decision**, because it's the cheapest hedge against being wrong about Eve specifically — those same MCP servers work behind Eve, behind Claude Code, or behind nothing at all. Option B is the only sane version of "adopt Eve," and only as a pilot. Option C is not warranted. Option E is a legitimate fallback if the Eve pilot fails or the framework's maturity trajectory disappoints.
+| | **Option 1 — Eve directly in the estimator experiment** | **Option 2 — Isolated sidecar** |
+|---|---|---|
+| What it means concretely | An `agent/` directory added inside (or built alongside, but deployed as part of) the existing `tcc-projecthub` Vercel project | A separate repository/service running its own Eve project, with its own `package.json`, build, and deploy — talking to Supabase and Microsoft Graph over the network, not sharing a process or dependency tree with ProjectHub |
+| Speed to first result | Fast | Equally fast, or faster — `npx eve@latest init` in a clean directory has no existing Next.js/Tailwind/middleware conventions to reconcile with |
+| Risk to shared build/deploy | **Real.** Eve is not a lightweight library import — it compiles its own runtime (`eve build && eve start`) with its own dependency tree (Vercel Workflows, Sandbox, AI Gateway client libraries, etc.). Adding that to the same `package.json`/deploy as auth, projects, and change orders means an Eve dependency conflict or build failure can break the protected zone's build, even if the agent's *logic* only touches estimator tables. | **None.** A build failure, dependency conflict, or runtime crash in the sidecar cannot affect ProjectHub's build or deploy, because they are not the same deployable. |
+| Directness of testing durability/approval gates | Full — same process | **Also full.** Eve's session/durability/approval-gate model behaves identically whether the agent runtime is co-located with ProjectHub or reached over HTTP from it. Nothing about testing "does the approval gate actually pause and resume" requires being in the same repo. |
+| Coupling to Vercel-specific services | Shares ProjectHub's existing Vercel project resources | Can use its own Vercel project (still gets Vercel Workflows/Sandbox/AI Gateway) or be self-hosted entirely separately — strictly more flexible |
+| Effort to remove if the experiment fails | Requires surgically removing agent code from a shared deploy without breaking anything else — harder to do with confidence given zero test coverage | **Delete the repository / stop the service.** Rollback is trivial and provably complete. |
+| Database access model | Naturally tempts reusing the app's existing broad service-role credential (already used by 56/117 routes) since it's "already right there" | Forces a deliberate, narrowly-scoped credential decision (Section 15.1) — the isolation is structural, not just intentional |
+| Extra plumbing required | Less — no new auth/deploy surface | More — a second deploy target, its own env vars, and (for promotion) an authenticated call back into ProjectHub's existing `/api/estimates/[id]` route |
+
+**Recommendation: Option 2, isolated sidecar**, exactly per the user's own stated bias — "favor an isolated sidecar if adding Eve dependencies to the existing ProjectHub application could affect the live build, deployment, or shared runtime." It does: Eve's own documentation describes it as a separately-built, separately-run application, not an importable library. The extra plumbing Option 2 requires is small (one authenticated HTTP call for promotion, one scoped database credential) and is worth paying to get a rollback path that is trivially complete rather than "should be fine if I'm careful."
+
+### 11.2 Full option comparison
+
+| Option | Dev effort | Ops complexity | Reliability | Maintainability | Flexibility | Auditability | Vendor lock-in | Fit given single-user/dual-zone context |
+|---|---|---|---|---|---|---|---|---|
+| **A — Keep current architecture, targeted AI calls + conventional jobs** | Low-moderate | Low | High for single-shot; cannot do multi-step review | High | Low for iterative work | Custom, same as any option | None | Safe fallback if the sidecar pilot fails |
+| **B — Eve as sidecar behind the existing app/DB (= Option 2 above)** | Moderate | Moderate (second deploy) | Framework young; isolation contains the blast radius | Moderate | High — subagents, MCP, approval gates | Finding-state history is the audit trail (Section 14) | Real but bounded, and fully swappable since it's isolated | **Recommended for POC 1** |
+| **C — Eve-centered redesign of the whole estimator** | Very high | High | Unproven at this scale | Low near-term | High in theory | No inherent gain over B | Highest | Not warranted — no need to rebuild a working system to run a POC |
+| **D — MCP-centered architecture** (estimating functions as MCP servers) | Moderate | Low-moderate | High | High | Highest long-term reuse | Same custom need | Lowest — open standard | Worth doing as groundwork regardless of the Eve decision |
+| **E — Custom workflow engine** (TS services + queue + state machine) | High | Moderate-high | High once built | Moderate | Moderate | Custom | None | Legitimate fallback if Eve disappoints |
+
+Option D remains worth building either way: the sidecar's own tools (`getApprovedAssembly`, `getLaborStandard`, `getCurrentMaterialCost`) can be written as MCP servers from day one, which costs nothing extra and means they're reusable from Eve, Claude Code, or any other client if the framework decision changes later.
 
 ---
 
 ## 12. Recommended Target Architecture
 
-Keep the current Next.js/Supabase estimating application as the system of record. Add a separate, narrowly-scoped Eve agent project that:
-
-- Reads project documents (via a thin wrapper over the existing `src/lib/graph/client.ts` capability, exposed as Eve tools or an MCP server per Option D)
-- Looks up approved assemblies, labor standards, and current costs via read-only tools against the existing catalogs
-- Writes only to a new **staging table** (Section 14), never to `estimates.body` directly
-- Requires human approval (Eve's native approval-gate feature) before any staged finding can be promoted into a real estimate line item
-- Runs independently of the main app's request/response cycle — it does not need to be inside the Next.js deploy at all
-
-The existing `estimates` table, `computeCosts`/`deriveEstimatorCostBuckets` pricing engine, `assemblyResolver.js`, and `generateProposal.js` are **not replaced**. The existing single-shot AI Takeoff feature is **not replaced** either — it remains the right tool for "I already have clean scope text, just build me line items."
-
-### Diagram — Recommended Target Architecture
-
 ```mermaid
 flowchart TB
-    subgraph Existing["Existing TCC ProjectHub (unchanged system of record)"]
-        App["Next.js app\n(all current modules)"]
-        EstDB[("estimates\nbody JSONB")]
-        CatDB[("assembly catalogs")]
-        Calc["computeCosts /\nderiveEstimatorCostBuckets"]
-        Resolver["assemblyResolver.js"]
-        Proposal["generateProposal.js"]
-        AITakeoff["AI Takeoff\n(single-shot, unchanged)"]
+    subgraph Protected["PROTECTED ZONE — unchanged"]
+        App["Next.js app: auth, projects,\nchange orders, reports, other Hubs"]
+        AuthDB[("auth.users, profiles,\nprojects, change_orders, ...")]
+        EstAPI["EXISTING /api/estimates/[id]\n(auth + validation already built)"]
     end
 
-    subgraph NewStaging["New: findings staging layer"]
-        Stage[("estimate_takeoff_findings\n(new table, Section 14)")]
-        ReviewUI["Estimator review UI\n(approve/edit/reject)"]
+    subgraph Estimator["EXPERIMENTAL ZONE — same Vercel deploy, estimator-scoped"]
+        EstUI["Estimator UI\n(existing, unchanged for POC 1)"]
+        EstDB[("estimates.body,\nassembly catalogs")]
+        AITakeoff["AI Takeoff\n(existing, unchanged)"]
     end
 
-    subgraph EveProject["New: Eve agent project (pilot)"]
-        Instr["instructions.md"]
-        DocInv["tool: listProjectDocuments\ntool: readProjectDocument"]
-        Extract["skills: drawing review,\nVAV/AHU/plant takeoff, etc."]
-        Sub1["subagent: Drawing Reviewer"]
-        Sub2["subagent: Specification Reviewer"]
-        Sub3["subagent: Scope Auditor"]
-        Approve["approval-gated tool:\ncreateTakeoffFinding"]
+    subgraph Sidecar["ISOLATED SIDECAR — separate repo, separate deploy"]
+        Eve["Eve agent project\n(own package.json, own build)"]
+        ScopedCred["Scoped Supabase credential:\nSELECT on catalogs/docs,\nINSERT/UPDATE on staging table ONLY"]
+        StageDB[("estimator_agent_findings\n(new schema/table, own migration)")]
+        GraphCred["Own Microsoft Graph\nread scope"]
     end
 
-    Graph["Microsoft Graph /\nSharePoint (existing)"]
+    App --> AuthDB
+    App --> EstAPI
+    EstAPI --> EstDB
+    EstUI --> EstDB
+    AITakeoff --> EstDB
 
-    App --> EstDB
-    App --> CatDB
-    App --> Calc
-    App --> Resolver
-    App --> Proposal
-    App --> AITakeoff
+    Eve -->|read-only| ScopedCred
+    ScopedCred -->|SELECT| EstDB
+    Eve -->|write findings| StageDB
+    Eve -->|read documents| GraphCred
+    GraphCred -.->|read-only| Graph["Microsoft Graph /\nSharePoint (existing)"]
 
-    EveProject --> Graph
-    DocInv --> Graph
-    Sub1 --> Extract
-    Sub2 --> Extract
-    Approve -->|human approval\nrequired to proceed| Stage
-    Sub3 -.->|reviews draft findings\nfresh context| Stage
-    Stage --> ReviewUI
-    ReviewUI -->|approve| Resolver
-    Resolver --> EstDB
-    ReviewUI -.->|reject/edit| Stage
+    Estimator2["Timothy reviews findings\n(simple UI or table view)"] --> StageDB
+    Estimator2 -->|accept/edit + promote| EstAPI
+    EstAPI -->|writes real line item| EstDB
+
+    classDef protected fill:#f8d7da,stroke:#842029
+    classDef experimental fill:#d1e7dd,stroke:#0f5132
+    classDef sidecar fill:#cfe2ff,stroke:#084298
+    class App,AuthDB,EstAPI protected
+    class EstUI,EstDB,AITakeoff experimental
+    class Eve,ScopedCred,StageDB,GraphCred sidecar
 ```
+
+**The key structural safeguard:** the sidecar's database credential can `SELECT` from catalogs/documents and `INSERT`/`UPDATE` only its own staging table. It has **no write grant on `estimates` at all.** Promotion — turning an accepted/edited finding into a real estimate line item — happens by calling the **existing, already-authenticated** `PUT /api/estimates/[id]` route, the same one the current UI already uses to save estimates. This means the write path to real estimate data goes through code that already exists, is already authorized, and was not written for this experiment — the sidecar cannot corrupt `estimates.body` through some agent-specific write path because there isn't one.
 
 ---
 
-## 13. Proposed Eve Structure (pilot scope only)
+## 13. Proposed Eve Structure (sidecar, POC 1 scope)
+
+Lives in its **own repository** (e.g. `tcc-estimator-agent`), not nested inside `tcc-projecthub`.
 
 ```text
-estimator-takeoff-agent/
-├── agent.ts                      # model config; start with a vision-capable model
-├── instructions.md                # identity: "You inventory and cross-check controls
-│                                  #  scope from project documents. You never write
-│                                  #  approved estimate data. Every finding must cite
-│                                  #  a source document, sheet, and excerpt."
+tcc-estimator-agent/                # separate repo, separate deploy
+├── agent.ts                        # model config
+├── instructions.md                 # "You inventory and cross-check controls scope
+│                                   #  from project documents. You never write to
+│                                   #  ProjectHub's estimates table directly. Every
+│                                   #  finding must cite a source document, sheet,
+│                                   #  and excerpt."
 ├── tools/
-│   ├── listProjectDocuments.ts    # read-only, wraps Graph client
-│   ├── readProjectDocument.ts     # read-only, wraps Graph client + unpdf/mammoth
-│   ├── searchProjectDocuments.ts  # read-only, keyword/semantic search over inventory
-│   ├── getApprovedAssembly.ts     # read-only, queries controls_assembly_catalog
-│   ├── getLaborStandard.ts        # read-only, queries install_assembly_catalog
-│   ├── getCurrentMaterialCost.ts  # read-only, queries assembly catalogs
-│   └── createTakeoffFinding.ts    # WRITE, approval-gated, writes ONLY to the
-│                                  #  staging table (Section 14) — never to estimates
+│   ├── listProjectDocuments.ts     # read-only, own Graph credential
+│   ├── readProjectDocument.ts      # read-only
+│   ├── searchProjectDocuments.ts   # read-only
+│   ├── getApprovedAssembly.ts      # read-only, scoped Supabase credential
+│   ├── getLaborStandard.ts         # read-only
+│   ├── getCurrentMaterialCost.ts   # read-only
+│   └── createTakeoffFinding.ts     # WRITE, but ONLY to estimator_agent_findings
 ├── skills/
 │   ├── controls-drawing-review.md
 │   ├── vav-controls-takeoff.md
 │   ├── ahu-controls-takeoff.md
 │   ├── chilled-water-plant-takeoff.md
 │   ├── niagara-jace-replacement-estimating.md
-│   ├── federal-controls-spec-review.md
 │   ├── point-list-development.md
 │   └── rfi-development.md
 ├── subagents/
-│   ├── drawing-reviewer/          # own instructions + tools, parallelizable per sheet set
-│   ├── specification-reviewer/    # own instructions + tools, cross-references drawing findings
-│   └── scope-auditor/             # fresh-context adversarial review of the draft estimate
-├── channels/
-│   └── http.ts                    # internal API channel called from the review UI, not public
-├── schedules/                     # none in the pilot — no scheduled activity needed yet
+│   ├── drawing-reviewer/
+│   ├── specification-reviewer/
+│   └── scope-auditor/
+├── .env                            # OWN credentials — see Section 15.1, never shared with ProjectHub's env
 └── evals/
-    └── benchmark-project.eval.ts  # the proof-of-concept scoring harness (Section 16)
+    └── benchmark-project.eval.ts   # Section 16 scoring harness
 ```
 
-**Why three subagents and not more, and why not a "Material Estimator" or "Labor Estimator" subagent:** Material and labor lookups are deterministic table queries — giving them a subagent identity adds context-handoff overhead for zero benefit; they're plain tools instead. Drawing Reviewer and Specification Reviewer earn subagent status because they benefit from a **long, isolated context window** per document set and can run **in parallel** — a real Eve capability. Scope Auditor earns subagent status because it needs a **fresh, unanchored context** reviewing the primary agent's own conclusions adversarially (the same "independent verification" principle used for code review) — reusing the primary agent's own context here would bias the audit. The primary agent itself acts as the "Controls Engineer" role directly, via skills, rather than as a fourth subagent, because it's the natural place for the human-approval gate to attach and delegating it away would just add a hop.
+For POC 1 specifically, the review step does not need a polished UI. A plain internal page (in the sidecar itself, or a minimal read/write table view) that Timothy uses directly to accept/edit/reject and trigger promotion is sufficient — building a ProjectHub-integrated review panel is a Phase 2 concern (Section 17), not a POC 1 requirement, per "the proof of concept does not need enterprise-grade multi-user workflow design at this stage."
+
+Subagent reasoning (unchanged from prior analysis, still applies): Material/labor lookups stay plain tools (deterministic, no benefit from a separate identity). Drawing Reviewer and Specification Reviewer are subagents because they benefit from long, isolated context per document set and can run in parallel. Scope Auditor is a subagent because it needs a fresh, unanchored context to review the primary agent's own conclusions adversarially.
 
 ---
 
 ## 14. Data and Traceability Design
 
-New table, `estimate_takeoff_findings` (illustrative shape, not a migration to run yet):
+Single new table, `estimator_agent_findings`, living in the sidecar's own migration (Section 17), additive-only, no touch to any existing table:
 
 | Column | Purpose |
 |---|---|
 | `id` | PK |
-| `project_id`, `estimate_id` | Links to existing entities |
-| `source_document_id`, `source_revision` | Which document, which version |
-| `sheet_or_page` | Traceability |
-| `source_excerpt` | Quoted/region reference supporting the finding |
+| `project_id`, `estimate_id` | Links to existing entities (read-only references, no FK-enforced coupling required for POC 1) |
+| `source_document_id`, `source_revision`, `sheet_or_page`, `source_excerpt` | Traceability |
 | `finding_type` | equipment / point / scope_gap / conflict / assumption / rfi |
-| `equipment_tag`, `quantity` | The proposed data |
-| `proposed_scope`, `proposed_assembly` | What the agent proposes, referencing the *existing* assembly catalog by ID, never free text |
-| `confidence` | Agent self-report, informational only |
-| `assumptions` | Free text, always paired with a source citation |
-| `status` | `pending \| approved \| rejected \| superseded` |
-| `reviewer_id`, `approved_at` | Who approved it and when |
-| `agent_run_id` | Links to the Eve session/turn that produced it |
-| `model`, `model_version` | Exactly which model produced it |
-| `skill_version` | Which version of the skill/instructions produced it (Git-tracked, per Section 10) |
+| `equipment_tag`, `quantity`, `proposed_assembly` | The proposed data — `proposed_assembly` references the *existing* catalog by ID, never free text |
+| `confidence` | Agent self-report, informational |
+| `original_finding` | Immutable snapshot of exactly what the agent generated |
+| `edited_finding` | Present only if Timothy modified it before accepting — preserves what changed |
+| `status` | **`generated \| accepted \| edited \| rejected \| promoted`** (exact vocabulary requested) |
+| `reviewed_at`, `promoted_at` | Timestamps — reviewer identity is implicitly Timothy for POC 1, a `reviewer_id` column can exist but isn't enforced against a role matrix |
+| `agent_run_id`, `model`, `model_version`, `skill_version` | Full provenance of which run/model/skill produced the finding |
 
-**Promotion flow:** agent writes only to `estimate_takeoff_findings` with `status = pending`. An estimator reviews each finding in a new UI panel (not the existing estimate table — a distinct review queue). Approving a finding triggers **existing** application code — the same `assemblyResolver.js` resolution and item-creation logic the AI Takeoff feature already uses — to create a real line item in `estimates.body`. The finding row is updated to `status = approved`, `reviewer_id`, `approved_at`. **The agent never has write access to the `estimates` table itself** — only to the staging table. This is the concrete mechanism behind "the agent should never directly overwrite approved estimate data."
+**State transitions:** `generated` → (`accepted` | `edited` | `rejected`). `accepted` or `edited` → `promoted` (triggers the existing `/api/estimates/[id]` write, Section 12). `rejected` and `promoted` are terminal. This preserves exactly what was asked: what the AI generated (`original_finding`, immutable), what was changed (`edited_finding`), what was accepted/rejected (`status` + timestamp), the source (`source_document_id`/`sheet_or_page`/`source_excerpt`), and when it was promoted (`promoted_at`).
+
+No approver matrix, no multi-signoff, no segregation-of-duties logic — deferred per Section 15.3, since Timothy is the only reviewer.
 
 ### Diagram — AI Output Approval and Promotion Flow
 
 ```mermaid
 sequenceDiagram
     participant Doc as Project Documents
-    participant Agent as Eve Agent (subagents)
-    participant Stage as estimate_takeoff_findings
-    participant Est as Estimator
-    participant App as Estimating App
+    participant Agent as Sidecar (Eve)
+    participant Stage as estimator_agent_findings
+    participant Tim as Timothy (reviewer)
+    participant API as EXISTING /api/estimates/[id]
     participant DB as estimates.body
 
-    Agent->>Doc: readProjectDocument (tool)
-    Agent->>Agent: analyze, cross-reference\n(drawing reviewer + spec reviewer, in parallel)
-    Agent->>Stage: createTakeoffFinding\n(status=pending, source cited,\nAGENT RUN ID recorded)
-    Note over Agent,Stage: approval-gated tool —\nagent pauses here if configured\nfor human-in-the-loop review
-    Est->>Stage: review finding
-    alt Estimator rejects or edits
-        Est->>Stage: status=rejected / edited
-    else Estimator approves
-        Est->>Stage: status=approved,\nreviewer_id, approved_at set
-        Stage->>App: trigger existing\nassemblyResolver.js + item creation
-        App->>DB: write real estimate line item
-        App->>Stage: status=superseded\n(linked to created item)
+    Agent->>Doc: readProjectDocument (own Graph credential)
+    Agent->>Agent: analyze, cross-reference\n(drawing + spec subagents, parallel)
+    Agent->>Stage: createTakeoffFinding\n(status=generated, source cited,\nagent_run_id recorded)
+    Tim->>Stage: review finding
+    alt reject
+        Tim->>Stage: status=rejected (terminal)
+    else accept as-is
+        Tim->>Stage: status=accepted
+    else edit then accept
+        Tim->>Stage: status=edited\n(edited_finding populated,\noriginal_finding preserved)
     end
+    Tim->>API: promote (authenticated,\nsame route the UI already uses)
+    API->>DB: write real estimate line item
+    API-->>Stage: status=promoted, promoted_at set
 ```
 
 ---
 
 ## 15. Security and Approval Model
 
-- **No agent identity ever holds `estimates` write access.** All agent output lands in the staging table; promotion to `estimates.body` happens through existing, unchanged application code triggered by a human approval action.
-- **Tool credentials** (SharePoint/Graph, LLM provider keys) stay server-side, consistent with the existing `AI_CONNECTIONS_ENCRYPTION_SECRET` pattern already in this codebase; Eve's Vercel Connect (or, self-hosted, an equivalent secret manager) should not introduce a weaker pattern than what already exists.
-- **Tenant isolation must be enforced in every tool implementation**, the same discipline the app's own roadmap doc says is still incomplete for other tables — do not let the agent pilot inherit that gap; scope every tool query to the project's `organization_id` explicitly.
-- **No external communication tool** (sending an RFI, a quote request, an email) should be built without a human-in-the-loop approval gate — matches Section 9's classification of "sending quote requests" as a human decision.
-- **Rate/cost limits** should be configured from day one (Section 10's cost-control note) since nothing in the current codebase limits LLM spend today.
+### 15.1 Safeguards required to protect ProjectHub (non-negotiable)
+
+- **The sidecar is a separate deployable** (Section 11.1) — a build or dependency failure in it cannot break ProjectHub's build.
+- **The sidecar never uses ProjectHub's existing broad service-role key.** Mint a new, narrowly-scoped Postgres credential (or Supabase RLS policy set) that grants `SELECT` on read-needed tables (catalogs, document metadata) and `INSERT`/`UPDATE` on `estimator_agent_findings` only — nothing else. No grant on `projects`, `profiles`, `change_orders`, `auth.*`, or any table outside the estimator domain.
+- **The sidecar never writes to `estimates` directly.** Promotion goes through the existing authenticated `/api/estimates/[id]` route (Section 12) — the only "write path" the sidecar has to real estimate data is a route that already existed, was already authorized, and enforces its own validation.
+- **No changes to shared authentication.** The sidecar authenticates to ProjectHub's API as Timothy (an existing admin session/token), not by touching the auth system itself.
+- **Environment-variable isolation.** The sidecar's `.env` is entirely separate from ProjectHub's `.env.local` — no shared secrets, no risk of the sidecar's config drift affecting ProjectHub's Vercel project.
+- **Database migrations for the experiment are additive-only** — one new table (or a whole new schema, e.g. `agent.*`, for even cleaner rollback via `DROP SCHEMA agent CASCADE`). No `ALTER`/`DROP` on any existing table, ever, without a separate, explicit, reviewed migration.
+- **A dedicated feature branch** (e.g. `experiment/eve-estimator-agent`) for any ProjectHub-side change (even the small promotion-call wiring), merged to `main` only after the protection checks in Section 16.1 pass. `main` auto-deploys to the live site, so nothing experimental lands there by accident.
+
+### 15.2 Safeguards required for trustworthy estimates (matters regardless of team size)
+
+- **Every finding preserves its full provenance** (Section 14) — this is what makes the estimator trustworthy even with an informal single-user review process, because nothing is silently converted into a bid number without a citation trail.
+- **The agent never has direct write access to `estimates`.** This is not a multi-user control — it's the mechanism that guarantees "the system must not silently convert uncertain document interpretations into final pricing," which holds even with exactly one reviewer.
+- **Confidence scores are informational only**, never a gate that bypasses review.
+
+### 15.3 Features explicitly deferred because Timothy is currently the only estimator
+
+- Multi-approver workflows, role matrices, or segregation of duties.
+- A polished, ProjectHub-integrated review UI — a plain table/internal page is sufficient for POC 1.
+- Multi-tenant-safe agent tooling — the sidecar can assume a single organization for now.
+- Formal SOC2-style audit logging beyond the finding-state history in Section 14.
+- Production-grade workload scaling, concurrency handling, or rate limiting beyond a basic cost alert.
+- Full ProjectHub test coverage (Section 16.1 asks for targeted protection checks, not broad coverage).
 
 ---
 
 ## 16. Proof-of-Concept Plan
 
-**Benchmark selection:** Choose one existing estimate with `status IN ('awarded', 'archived')` that has a substantial `body.items` array, a filled-in `customerScope`/assumptions field, and (ideally) a linked project with an intact original SharePoint document folder. Do not pick a synthetic/test estimate (several exist in the data, per the backfill work done earlier this session, e.g. records literally named "test," "test2," "1").
+### 16.1 Mandatory protection tests (protected zone — required before any merge to `main`)
 
-**Method:**
-1. Give the agent only the original project documents (drawings, spec sections, addenda) — not the completed takeoff.
-2. Run the document inventory + drawing/spec review subagents to produce a first-pass equipment inventory with citations.
-3. Generate preliminary scope, BOM, and labor suggestions (staged, never written to the live estimate).
-4. Generate assumptions, conflicts, and RFIs.
-5. Compare every generated finding against the actual completed estimate for that project.
-6. Score using the metrics below — never "the output looked good."
-7. Any systematic failure (a device type consistently missed, a false-positive pattern, a citation that doesn't match the actual sheet) becomes a permanent regression case in `agent/evals/`.
+Not broad ProjectHub test coverage — targeted verification that the experiment cannot have touched the protected zone:
 
-**Success criteria (measured, not impressionistic):**
+- `npm run build` succeeds on the feature branch with no new errors.
+- Manual smoke check: login (both Microsoft SSO and email/password paths), main navigation, `/pm` project access, change-order access, and at least one report page all load without error, for the admin role.
+- Diff review of any new Supabase migration confirms it is additive-only (new table/schema, no `ALTER`/`DROP` on an existing table).
+- Confirm the sidecar's database credential genuinely cannot write to `estimates` or read protected-zone tables — attempt an out-of-scope query against it and confirm it is rejected.
+- Confirm environment variables are not shared between the sidecar and ProjectHub's Vercel project.
 
-| Metric | What it measures |
+### 16.2 Estimator-focused tests (experimental zone — prioritized, not exhaustive)
+
+- Estimate calculation regression (spot-check `computeCosts`/`deriveEstimatorCostBuckets` against known values).
+- AI staging record creation and read.
+- Source traceability field population (every finding actually has a resolvable sheet/page/excerpt).
+- Finding-state transition correctness (no invalid transitions, e.g. `rejected` → `promoted`).
+- Promotion correctly creates a real estimate line item via the existing API route.
+- Duplicate/retried agent runs do not silently duplicate findings (dedup on `agent_run_id` + source + equipment tag).
+- Agent tool permission boundaries hold under a deliberate out-of-scope attempt (see 16.1).
+- Rollback/cleanup: confirm the experiment's data (staging table, sidecar deploy) can be fully removed with zero trace in the protected zone.
+
+Temporary estimator UI instability during this work is acceptable. Any sign of corruption in a non-estimator table is not, and is a stop-and-fix event regardless of POC progress.
+
+### 16.3 Success criteria — the six learning questions (primary rubric for POC 1)
+
+1. **Can the agent accurately identify equipment and controlled systems from real bid documents?**
+2. **Can it provide reliable sheet and page references?**
+3. **Can it detect meaningful conflicts and missing scope?**
+4. **Does Eve manage the multi-step workflow more effectively than ordinary application code would have?**
+5. **Does the output save meaningful takeoff time?**
+6. **Is the framework stable enough to keep using?**
+
+These are the actual go/no-go questions (Section 20). The following measurements support answering them with evidence rather than impression, using one already-completed, awarded/archived estimate as a benchmark (documents only, completed takeoff hidden until scoring):
+
+| Supporting metric | Answers which question |
 |---|---|
-| % of equipment correctly identified (recall) | Coverage — what got missed |
-| % of generated equipment that's a false positive (precision) | Hallucination/over-generation rate |
-| Quantity accuracy (exact match vs. off-by-N) | Count reliability |
-| Material line coverage vs. actual BOM | Completeness of proposed scope |
-| Labor-category coverage | Did it identify programming/startup/commissioning/etc., not just install |
-| Number of material scope omissions | Direct dollar-exposure proxy |
-| Number of false-positive scope additions | Direct dollar-exposure proxy the other direction |
-| RFI usefulness (estimator-rated) | Is the draft actually worth sending, or noise |
-| Source citation accuracy (does the cited sheet/excerpt actually support the finding) | Trust — this is the single most important metric for an estimator to ever trust the tool |
-| % of generated rows requiring correction before approval | Real time-savings proxy |
-| Estimator time spent reviewing vs. building from scratch | The actual business case |
-| Estimated dollar exposure from missed scope on this one project | Ties the whole exercise to real business risk |
+| % equipment correctly identified (recall) / % false positives (precision) | Q1 |
+| Quantity accuracy | Q1 |
+| Source citation accuracy (does the cited sheet/excerpt actually support the finding) | Q2 — the single most important metric for ever trusting the tool |
+| Number of missed vs. fabricated scope items | Q3 |
+| RFI/conflict usefulness (Timothy-rated) | Q3 |
+| Turns/tool-calls/subagent handoffs actually used vs. a hypothetical single-shot attempt | Q4 |
+| Time spent reviewing findings vs. building the takeoff from scratch | Q5 |
+| Breaking changes, silent failures, or version-pinning pain encountered during the POC | Q6 |
 
-If citation accuracy or false-positive scope additions are poor, the pilot has failed regardless of how complete the equipment list looks — an estimator who has to re-verify everything against the drawings anyway has gained nothing.
+Do not use "the output looked good" as a criterion for any of the six.
 
 ---
 
 ## 17. Phased Implementation Roadmap
 
-1. **Phase 0 (no Eve):** Build the MCP-ready read-only tools (`getApprovedAssembly`, `getLaborStandard`, `getCurrentMaterialCost`, `listProjectDocuments`, `readProjectDocument`) as plain TypeScript functions/API routes, independent of any framework decision. This is Option D groundwork and has value regardless of Phase 1's outcome.
-2. **Phase 1 (Eve pilot):** Stand up a minimal Eve project wrapping the Phase 0 tools, add the `estimate_takeoff_findings` staging table, run the Section 16 proof of concept against one benchmark project. Do not connect it to any real, in-progress estimate.
-3. **Phase 2 (gated on Phase 1 metrics):** If citation accuracy and false-positive rate clear a bar the estimating team sets in advance, build the estimator review UI and wire staged-finding approval into real (non-benchmark) estimates, still with all promotion going through existing deterministic code.
-4. **Phase 3:** Add the drawing/spec-comparison and independent scope-audit subagents once the base extraction loop is trusted.
-5. **Phase 4:** Only after sustained production use, consider whether Eve should also handle assumption/RFI drafting and proposal-narrative drafting (already partially covered by the existing single-shot AI Takeoff and `generateProposal.js` — don't duplicate what already works).
+1. **Phase 0 — groundwork (either zone, low risk):** Mint the sidecar's scoped Supabase credential and Graph read scope. Write the `estimator_agent_findings` migration in its own schema. Stand up the sidecar repo with `npx eve@latest init`. None of this touches `main`.
+2. **Phase 1 — POC 1 (sidecar only, feature branch if any ProjectHub-side wiring is needed):** Build the tools/skills/subagents in Section 13, run the Section 16 benchmark against one completed estimate, score against the six questions. The sidecar can read real project documents and the real (read-only) assembly catalogs from day one — no reason to wait, since it cannot write anywhere risky.
+3. **Phase 2 — gated on Phase 1 answers to Q1–Q6:** If the six questions come back positive, build the promotion call from the sidecar's review step into `/api/estimates/[id]`, merge the small feature-branch changes (if any) to `main` after Section 16.1 passes, and start using it on a real, non-benchmark estimate.
+4. **Phase 3:** Add drawing-vs-spec conflict detection and the scope-auditor subagent once the base extraction loop is trusted.
+5. **Phase 4:** Only after sustained use, consider a proper ProjectHub-integrated review UI, multi-tenant-safe tooling, and any of the Section 15.3 deferred items — and only if a second estimator is actually imminent.
 
-Do not schedule a "replace AI Takeoff" or "replace the estimator UI" phase — nothing in this evaluation supports that.
+Do not schedule a "replace AI Takeoff" or "replace the estimator UI" phase — nothing in this evaluation supports that, and both keep working unmodified throughout.
 
 ## 18. Risks and Open Questions
 
-- **Framework risk:** Eve is pre-1.0; a breaking change or an abandoned beta feature could strand pilot work. Mitigate by pinning versions and treating the pilot as disposable/re-buildable.
-- **Cost risk:** No LLM spend controls exist anywhere in this codebase today; a multi-step, multi-document agent session costs meaningfully more per run than the existing single-shot AI Takeoff call. Set explicit budget alerts before any pilot touches real documents.
-- **Open question:** Does the assembly-training feedback UI (`assembly-training-client.tsx`) actually feed corrections back into `assemblyResolver.js`, or only store them in `localStorage`? This affects whether a takeoff agent's assembly-matching quality improves over time automatically. Needs direct verification before Phase 2.
-- **Open question:** What is TCC's actual document format mix (native CAD/PDF drawings vs. scanned/rasterized sheets)? This materially affects which model/vision approach the pilot needs and wasn't determinable from the repository alone.
-- **Open question:** Who reviews staged findings in practice — is there estimator bandwidth for a review queue, or does this just move the bottleneck?
-- **Organizational risk:** This is a small team without dedicated platform engineering. A beta framework's operational quirks (the independent reviewer's silent-webhook-failure report) need someone who will actually notice and debug them.
+- **Framework risk (contained, not eliminated):** Eve is pre-1.0; a breaking change could stall the sidecar. Because the sidecar is isolated, the *contained* consequence is "the POC needs rework," not "ProjectHub breaks."
+- **Cost risk:** no LLM spend controls exist anywhere in this codebase; set a budget alert on the sidecar's model usage even for solo use.
+- **Open question:** does the assembly-training feedback UI actually feed back into `assemblyResolver.js`? Affects whether match quality improves automatically over time — verify before Phase 2.
+- **Open question:** actual document format mix (native CAD/PDF vs. scanned/rasterized) — materially affects the vision/OCR approach and wasn't determinable from the repository alone.
+- **Residual risk even with isolation:** the promotion step (Section 12) does call back into ProjectHub's live API. This is deliberately the *only* touchpoint, and it reuses existing, already-hardened code rather than new agent-specific write logic — but it is still a real integration point and deserves the Section 16.1 checks before Phase 2, not just at POC 1 kickoff.
 
-## 19. Specific Repository Files Likely to Need Modification (if a pilot proceeds)
+## 19. Specific Repository Files Likely to Need Modification
 
-- New: `supabase/migrations/NNN_estimate_takeoff_findings.sql` (staging table, Section 14)
-- New: `estimator-takeoff-agent/` (the Eve project itself, Section 13) — likely a separate deployable, not inside `src/`
-- New: an estimator-facing review UI, plausibly under `src/app/estimating/[id]/review/` or a new tab alongside the existing Review tab in `src/modules/hvac-estimator/components/estimate/EstimateDetail.jsx`
-- Extended, not replaced: `src/lib/graph/client.ts` (wrap existing functions as tools/MCP endpoints)
-- Extended, not replaced: `src/modules/hvac-estimator/ai/assemblyResolver.js` (reused, called from the promotion step)
-- Unaffected: `src/modules/hvac-estimator/components/estimate/estimateCalc.js`, `projectSettings.js`, `AiTakeoffModal.jsx`, `generateProposal.js` — no changes needed for the pilot to function
+**In `tcc-projecthub` (this repo) — kept minimal by design:**
+- None required for Phase 1 (POC 1) if the sidecar reads directly from Supabase/Graph and Timothy reviews findings outside ProjectHub's UI.
+- If Phase 2 proceeds: a small, additive route or reuse of the existing `PUT /api/estimates/[id]` (no modification needed, just called from a new client), and optionally a new estimator-scoped review page under `src/app/estimating/[id]/agent-review/` — net-new, does not modify existing estimator files.
+- Unaffected regardless of phase: `estimateCalc.js`, `projectSettings.js`, `AiTakeoffModal.jsx`, `generateProposal.js`, and everything in the protected zone.
+
+**In the new `tcc-estimator-agent` repo:** everything in Section 13 — entirely new, entirely separate.
 
 ## 20. Final Go/No-Go Decision Criteria
 
-**Go (proceed to Phase 2):** the Section 16 proof of concept clears estimator-set thresholds on source-citation accuracy and false-positive scope additions, AND Eve has not had a breaking-change incident during the pilot window, AND the estimator who reviewed the staged findings reports genuine time savings versus building the takeoff from scratch.
+**Go (proceed to Phase 2):** Q1–Q3 in Section 16.3 come back positive on the benchmark project (equipment identification and citations are trustworthy, conflicts/RFIs are genuinely useful), Q4–Q5 show Eve's orchestration is doing real work and saving real time versus building the takeoff by hand, and Q6 — no breaking change or instability that cost more time than the POC saved.
 
-**No-Go (stop, fall back to Option A/D):** citation accuracy is unreliable (findings that don't actually trace to the cited sheet), OR the false-positive rate would require re-verifying the whole drawing set anyway, OR Eve has a breaking change that costs more engineering time than the pilot saved, OR no one on the team has bandwidth to own the review queue.
+**No-Go (stop, fall back to Option A/D):** citation accuracy is unreliable, the false-positive rate would require re-verifying the whole drawing set anyway, Eve had a breaking change that outweighed the time saved, or the multi-step orchestration didn't meaningfully outperform what a single well-engineered prompt (like the existing AI Takeoff) could already do.
+
+Either outcome, the protected zone was never at risk, because it was never in the sidecar's reach to begin with.
 
 ---
 
-*This document does not constitute an endorsement of adopting any agent framework. It reflects the simplest architecture judged capable of reliably improving completeness and traceability in TCC's controls estimating workflow, given what exists in this repository today.*
+*This document does not constitute an endorsement of adopting any agent framework. It reflects the simplest architecture judged capable of learning, quickly and safely, whether Eve materially improves TCC's controls estimating workflow.*
