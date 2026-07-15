@@ -163,8 +163,7 @@ export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, ite
       </div>
 
       {/* Settings sections */}
-      <div style={{ padding:"14px 20px", display:"flex", gap:12, flexWrap:"wrap", overflowY:"auto",
-        maxHeight:460 }}>
+      <div style={{ padding:"14px 20px", display:"flex", gap:12, flexWrap:"wrap" }}>
 
         {/* Markups */}
         {section("Markups & Rates", T.blue, <>
