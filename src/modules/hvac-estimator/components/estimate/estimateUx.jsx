@@ -1148,6 +1148,8 @@ export function EstimatorActionBar({
   savedAt = null,
   onProposalDetails,
   onAddEquipment,
+  onSystemWizard,
+  onAiParser,
   onUpdateAllPrices,
   updatingPrices = false,
 }) {
@@ -1278,14 +1280,67 @@ export function EstimatorActionBar({
                 {updatingPrices ? "Updating Prices..." : "Update All Prices"}
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => setShowPicker(true)}
-              disabled={!onAddEquipment}
-              className="rounded-full bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+            <div
+              style={{
+                display: "flex",
+                gap: 6,
+                flexWrap: "wrap",
+                alignItems: "center",
+                border: "1px solid " + T.border,
+                borderRadius: 999,
+                padding: "4px 6px 4px 10px",
+              }}
             >
-              + Add Equipment
-            </button>
+              <span style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.1 }}>
+                Add Equipment
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowPicker(true)}
+                disabled={!onAddEquipment}
+                className="rounded-full bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                + Quick Add
+              </button>
+              {onSystemWizard && (
+                <button
+                  type="button"
+                  onClick={onSystemWizard}
+                  style={{
+                    padding: "8px 12px",
+                    border: "1px solid " + T.border2,
+                    borderRadius: 999,
+                    background: T.surface,
+                    color: T.text,
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontFamily: T.mono,
+                    fontWeight: 700,
+                  }}
+                >
+                  Guided Wizard
+                </button>
+              )}
+              {onAiParser && (
+                <button
+                  type="button"
+                  onClick={onAiParser}
+                  style={{
+                    padding: "8px 12px",
+                    border: "1px solid " + T.border2,
+                    borderRadius: 999,
+                    background: T.surface,
+                    color: T.text,
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontFamily: T.mono,
+                    fontWeight: 700,
+                  }}
+                >
+                  Import from AI
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -1424,11 +1479,7 @@ export function EstimatorTabPanels({
   onCreateBidAlternate,
   onOpenBidAlternate,
   onRemoveBidAlternate,
-  showSettings,
-  onToggleSettings,
-  onOpenAiParser,
   onOpenAiSettings,
-  onOpenSystemWizard,
   onUpdateSettings,
   onApplyDefaultInstallType,
   proposalPreview,
@@ -1655,30 +1706,16 @@ export function EstimatorTabPanels({
       description: "Keep estimator configuration and auxiliary tools here instead of the default canvas.",
       children: (
         <div style={{ display: "grid", gap: 12 }}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button type="button" onClick={onToggleSettings} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700 }}>
-              {showSettings ? "Hide Project Settings" : "Show Project Settings"}
-            </button>
-            <button type="button" onClick={onOpenSystemWizard} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700 }}>
-              System Wizard
-            </button>
-          </div>
           <section style={{ border: "1px solid " + T.border, borderRadius: 10, background: T.surface, padding: "14px 16px", display: "grid", gap: 12 }}>
             <div>
               <div style={{ fontSize: 10, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
                 AI Tools
               </div>
               <div style={{ fontSize: 12, color: T.dim, marginTop: 4, maxWidth: 860 }}>
-                Use the AI Parser to extract equipment schedules from uploaded PDFs or spreadsheets. AI Settings controls model behavior and data sources.
+                AI Settings controls model behavior and data sources. To extract equipment schedules from a PDF or spreadsheet, use Import from AI in the Estimate tab.
               </div>
             </div>
             <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-              <SettingsToolCard
-                title="AI Parser"
-                icon="AI"
-                description="Extract schedules from PDFs or spreadsheets."
-                onClick={onOpenAiParser}
-              />
               <SettingsToolCard
                 title="AI Settings"
                 icon="⚙"
@@ -1688,7 +1725,7 @@ export function EstimatorTabPanels({
             </div>
           </section>
           <EstimateMarkupSettingsSection settings={settings} onApply={onUpdateSettings} />
-          {showProjectSettings && showSettings && (
+          {showProjectSettings && (
             <ProjectSettingsPanel
               settings={settings}
               onChange={onUpdateSettings}

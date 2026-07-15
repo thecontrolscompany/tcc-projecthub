@@ -313,7 +313,6 @@ export function EstimateDetail({
   const [editHeader, setEditHeader] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
   const [expandedDdc, setExpandedDdc] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [showProposalDetails, setShowProposalDetails] = useState(false);
   const [showAiParser, setShowAiParser] = useState(false);
   const [activeTab, setActiveTab] = useState("estimate");
@@ -866,16 +865,11 @@ export function EstimateDetail({
             saveChipState={saveChipState}
             savedAt={savedAt}
             onProposalDetails={() => setShowProposalDetails((value) => !value)}
-            onBidAlternate={() => openBidAlternateDialog("installation", "Bid Alternate")}
             onSystemWizard={() => setSubPage({ type: "wizard" })}
             onAiParser={() => setShowAiParser((value) => !value)}
-            onSettings={() => setShowSettings((value) => !value)}
-            onAiSettings={openAiSettings}
             onAddEquipment={(type) => setSubPage({ type })}
             onUpdateAllPrices={handleUpdateAllPrices}
             updatingPrices={updatingPrices}
-            showBidAlternates={showBidAlternates}
-            showProjectSettings={showProjectSettings}
           />
         )}
 
@@ -1439,11 +1433,7 @@ export function EstimateDetail({
         onCreateBidAlternate={() => openBidAlternateDialog("installation", "Bid Alternate")}
         onOpenBidAlternate={openBidAlternate}
         onRemoveBidAlternate={removeBidAlternate}
-        showSettings={showSettings}
-        onToggleSettings={() => setShowSettings((value) => !value)}
-        onOpenAiParser={() => setShowAiParser(true)}
         onOpenAiSettings={openAiSettings}
-        onOpenSystemWizard={() => setSubPage({ type: "wizard" })}
         onUpdateSettings={updateSettings}
         onApplyDefaultInstallType={applyDefaultInstallType}
         proposalPreview={proposalPreview}
