@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { OpportunityHubSubnav } from "@/components/opportunity-hub-subnav";
 import { buildHvacEstimateBody, toPlatformEstimatePayload } from "@/modules/hvac-estimator/platform-adapter";
+import { ESTIMATE_SCOPE_MODES } from "@/modules/hvac-estimator/components/estimate/projectSettings";
 
 type InitialEstimate = {
   organizationId: string | null;
@@ -119,6 +120,7 @@ export function NewEstimateClient({ initialEstimate, accounts: initialAccounts }
         customerAccountId: form.customerAccountId || null,
         customer: form.customer.trim() || null,
         notes: form.notes.trim() || null,
+        estimateScopeMode: form.estimateScopeMode,
       });
 
       const payload = toPlatformEstimatePayload(body, "draft");
@@ -270,6 +272,40 @@ export function NewEstimateClient({ initialEstimate, accounts: initialAccounts }
             placeholder="Scope notes, bid assumptions, or handoff context..."
           />
         </label>
+
+        <div className="mt-4">
+          <span className={labelClassName}>Bid version</span>
+          <div className="mt-1 grid gap-2 sm:grid-cols-2">
+            {ESTIMATE_SCOPE_MODES.map((mode) => {
+              const checked = form.estimateScopeMode === mode.id;
+              return (
+                <label
+                  key={mode.id}
+                  className={`flex cursor-pointer gap-2 rounded-xl border p-3 text-sm ${
+                    checked
+                      ? "border-brand-primary bg-brand-subtle/40"
+                      : "border-border-default bg-surface-overlay"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="estimateScopeMode"
+                    checked={checked}
+                    onChange={() => setField("estimateScopeMode", mode.id)}
+                    className="mt-1"
+                  />
+                  <div>
+                    <div className="font-medium text-text-primary">{mode.label}</div>
+                    <div className="mt-0.5 text-xs text-text-tertiary">{mode.description}</div>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+          <span className="mt-1 block text-xs text-text-tertiary">
+            You can change this later in the estimate's Settings tab.
+          </span>
+        </div>
 
         {error && (
           <div className="mt-4 rounded-xl border border-status-danger/30 bg-status-danger/10 px-3 py-2 text-sm text-status-danger">

@@ -122,7 +122,7 @@ export default async function NewEstimatePage({
     customerAccountId: "",
     customer: "",
     notes: "",
-    estimateScopeMode: "both",
+    estimateScopeMode: "installation",
   };
 
   if (opportunityId) {
