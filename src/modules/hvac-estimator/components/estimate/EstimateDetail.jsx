@@ -19,6 +19,7 @@ import {
   EstimatorActionBar,
   EstimatorTabs,
   EstimatorTabPanels,
+  SaveIconButton,
 } from "./estimateUx.jsx";
 import { ControlsCostBreakdown } from "../../shared/ControlsCostBreakdown.jsx";
 import {
@@ -765,6 +766,9 @@ export function EstimateDetail({
               </div>
 
               <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginLeft:"auto" }}>
+                {!customerMode && (
+                  <SaveIconButton saving={saving} onSave={onSave} saveChipState={saveChipState} savedAt={savedAt} />
+                )}
                 <EstimateStatusBadge status={status} onChange={onStatusChange} />
                 {estimate.version && (
                   <button
@@ -856,10 +860,6 @@ export function EstimateDetail({
           <EstimatorActionBar
             customerMode={customerMode}
             estimate={estimate}
-            saving={saving}
-            onSave={onSave}
-            saveChipState={saveChipState}
-            savedAt={savedAt}
             onProposalDetails={() => setShowProposalDetails((value) => !value)}
             onSystemWizard={() => setSubPage({ type: "wizard" })}
             onAiParser={() => setShowAiParser((value) => !value)}

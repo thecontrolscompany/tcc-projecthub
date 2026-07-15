@@ -1009,25 +1009,11 @@ export function NeedsReviewPanel({ issues, onFixIssue, onJumpIssue }) {
   );
 }
 
-export function EstimatorActionBar({
-  customerMode,
-  estimate,
-  exporting,
-  saving,
-  onSave,
-  saveChipState = "saved",
-  savedAt = null,
-  onProposalDetails,
-  onAddEquipment,
-  onSystemWizard,
-  onAiParser,
-  onUpdateAllPrices,
-  updatingPrices = false,
-}) {
+export function SaveIconButton({ saving, onSave, saveChipState = "saved", savedAt = null }) {
+  if (!onSave) return null;
+
   const savedRecently = saveChipState === "saved" && savedAt ? Date.now() - new Date(savedAt).getTime() < 3000 : false;
   const savedMuted = saveChipState === "saved" && !savedRecently;
-  const [showPicker, setShowPicker] = useState(false);
-  const equipmentCounts = useMemo(() => getEquipmentCounts(estimate), [estimate]);
   const chipStyles =
     saveChipState === "saving"
       ? { border: "1px solid " + T.border2, background: T.panel, color: T.muted }
@@ -1042,6 +1028,56 @@ export function EstimatorActionBar({
       : saveChipState === "unsaved"
         ? "Unsaved changes"
         : "Saved";
+
+  return (
+    <button
+      type="button"
+      onClick={onSave}
+      disabled={saving}
+      title={saveChipState === "unsaved" ? "Unsaved changes — click to save" : chipLabel}
+      aria-label={saveChipState === "unsaved" ? "Unsaved changes — click to save" : chipLabel}
+      aria-live="polite"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 34,
+        height: 34,
+        borderRadius: "50%",
+        fontSize: 14,
+        fontFamily: T.mono,
+        fontWeight: 700,
+        cursor: saving ? "default" : "pointer",
+        transition: "all 180ms ease",
+        ...chipStyles,
+        opacity: saving ? 0.85 : savedMuted ? 0.78 : 1,
+      }}
+    >
+      {saveChipState === "saving" ? (
+        <span
+          aria-hidden="true"
+          className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
+        />
+      ) : (
+        <span aria-hidden="true">💾</span>
+      )}
+    </button>
+  );
+}
+
+export function EstimatorActionBar({
+  customerMode,
+  estimate,
+  exporting,
+  onProposalDetails,
+  onAddEquipment,
+  onSystemWizard,
+  onAiParser,
+  onUpdateAllPrices,
+  updatingPrices = false,
+}) {
+  const [showPicker, setShowPicker] = useState(false);
+  const equipmentCounts = useMemo(() => getEquipmentCounts(estimate), [estimate]);
 
   return (
     <section
@@ -1059,42 +1095,6 @@ export function EstimatorActionBar({
             <div style={{ fontSize: 9, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3, marginRight: 4 }}>
               Workflow Actions
             </div>
-            {onSave && (
-              <button
-                type="button"
-                onClick={onSave}
-                disabled={saving}
-                title={saveChipState === "unsaved" ? "Unsaved changes — click to save" : chipLabel}
-                aria-label={saveChipState === "unsaved" ? "Unsaved changes — click to save" : chipLabel}
-                aria-live="polite"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: 34,
-                  height: 34,
-                  borderRadius: "50%",
-                  fontSize: 14,
-                  fontFamily: T.mono,
-                  fontWeight: 700,
-                  cursor: saving ? "default" : "pointer",
-                  transition: "all 180ms ease",
-                  ...chipStyles,
-                  opacity: saving ? 0.85 : savedMuted ? 0.78 : 1,
-                }}
-              >
-                {saveChipState === "saving" ? (
-                  <span
-                    aria-hidden="true"
-                    className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
-                  />
-                ) : saveChipState === "unsaved" ? (
-                  <span aria-hidden="true">⚠</span>
-                ) : (
-                  <span aria-hidden="true">✓</span>
-                )}
-              </button>
-            )}
             <button
               type="button"
               onClick={onProposalDetails}
