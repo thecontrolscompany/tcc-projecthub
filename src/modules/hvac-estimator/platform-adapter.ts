@@ -89,8 +89,13 @@ export function summarizeHvacEstimate(body: HvacEstimateBody, controlsCatalog: R
     total?: number;
     profit?: number;
   };
-  const totalAmount = costBuckets.totals.turnkeySellPrice ?? costs.total ?? null;
-  const grossMarginAmount = costBuckets.totals.markupTotal ?? costs.profit ?? null;
+  const isTurnkey = normalizeEstimateScopeMode(normalizedSettings.estimateScopeMode) === "both";
+  const totalAmount = isTurnkey
+    ? costBuckets.totals.turnkeySellPrice ?? costs.total ?? null
+    : costBuckets.install.sellPrice ?? costs.total ?? null;
+  const grossMarginAmount = isTurnkey
+    ? costBuckets.totals.markupTotal ?? costs.profit ?? null
+    : costBuckets.install.sellPrice - costBuckets.install.internalCost;
 
   return {
     rawMaterial: raw.mtl,
