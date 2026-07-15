@@ -210,7 +210,7 @@ export function getHealthLevel(bucket) {
   return "critical";
 }
 
-export function buildEstimateHealthRows(sanityCheck) {
+export function buildEstimateHealthRows(sanityCheck, isTurnkey = true) {
   if (!sanityCheck) return [];
 
   return [
@@ -220,18 +220,22 @@ export function buildEstimateHealthRows(sanityCheck) {
       bucket: sanityCheck.install,
       targetLabel: "target 40%",
     },
-    {
-      key: "controlsMaterial",
-      label: "Controls Material",
-      bucket: sanityCheck.controlsMaterial,
-      targetLabel: "target 40%",
-    },
-    {
-      key: "controlsLabor",
-      label: "Controls Engineering Labor",
-      bucket: sanityCheck.controlsLabor,
-      targetLabel: "target 20%",
-    },
+    ...(isTurnkey
+      ? [
+          {
+            key: "controlsMaterial",
+            label: "Controls Material",
+            bucket: sanityCheck.controlsMaterial,
+            targetLabel: "target 40%",
+          },
+          {
+            key: "controlsLabor",
+            label: "Controls Engineering Labor",
+            bucket: sanityCheck.controlsLabor,
+            targetLabel: "target 20%",
+          },
+        ]
+      : []),
   ].map((row) => {
     const level = getHealthLevel(row.bucket);
     return {
@@ -249,6 +253,7 @@ export function buildNeedsReviewIssues({
   controlsCatalog,
   sanityCheck,
   showBidAlternates,
+  isTurnkey = true,
 }) {
   const issues = [];
   const items = Array.isArray(estimate?.items) ? estimate.items : [];
@@ -257,7 +262,7 @@ export function buildNeedsReviewIssues({
   const proposalSettings = estimate?.settings || {};
 
   if (sanityCheck) {
-    for (const row of buildEstimateHealthRows(sanityCheck)) {
+    for (const row of buildEstimateHealthRows(sanityCheck, isTurnkey)) {
       if (row.level === "good") continue;
       const targetRow = row.key === "install" ? "installation" : "controls";
       const why =

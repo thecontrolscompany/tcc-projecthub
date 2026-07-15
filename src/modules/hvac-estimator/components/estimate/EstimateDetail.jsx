@@ -5,7 +5,7 @@ import { generateProposal } from "./export/generateProposal.js";
 import { generateInternalEstimateExport } from "./export/generateInternalEstimateExport.js";
 import { T } from "../../shared/tokens.js";
 import { fmt$, fmtHr } from "../../shared/utils.js";
-import { DEFAULT_SETTINGS, computeCosts, computeControlsCosts, getSanityCheck, getEstimateScopeModeLabel } from "./projectSettings.js";
+import { DEFAULT_SETTINGS, computeCosts, computeControlsCosts, getSanityCheck, getEstimateScopeModeLabel, normalizeEstimateScopeMode } from "./projectSettings.js";
 import { useEstimate } from "../../shared/EstimateContext.jsx";
 import { getCurrentUser } from "../../shared/currentUser.js";
 import { AHU_TYPES } from "../ahu/ahuData.js";
@@ -384,6 +384,7 @@ export function EstimateDetail({
     rawLbrHrs: 0,
     grandTotal: 0,
   };
+  const isTurnkey = normalizeEstimateScopeMode(settings.estimateScopeMode) === "both";
   const sanityCheck = useMemo(
     () => getSanityCheck({
       installTotal: costs.total,
@@ -393,13 +394,14 @@ export function EstimateDetail({
     }),
     [controlsCosts.labor, controlsCosts.material, costs.labor, costs.total]
   );
-  const healthRows = useMemo(() => buildEstimateHealthRows(sanityCheck), [sanityCheck]);
+  const healthRows = useMemo(() => buildEstimateHealthRows(sanityCheck, isTurnkey), [sanityCheck, isTurnkey]);
   const needsReviewIssues = useMemo(() => buildNeedsReviewIssues({
     estimate,
     controlsCatalog,
     sanityCheck,
     showBidAlternates,
-  }), [controlsCatalog, estimate, sanityCheck, showBidAlternates]);
+    isTurnkey,
+  }), [controlsCatalog, estimate, sanityCheck, showBidAlternates, isTurnkey]);
   const reviewSeverityCounts = useMemo(() => {
     const counts = { critical: 0, warning: 0, info: 0 };
     for (const row of healthRows) {
