@@ -225,7 +225,7 @@ function BidAlternateNameModal({ open, defaultName, onClose, onConfirm }) {
               Name this bid alternate
             </h3>
             <p id="bid-alternate-modal-desc" className="mt-2 text-sm text-text-secondary">
-              The dialog is keyboard-friendly and exposes test hooks for automation.
+              You can rename this alternate later from the Outputs tab.
             </p>
           </div>
           <button
