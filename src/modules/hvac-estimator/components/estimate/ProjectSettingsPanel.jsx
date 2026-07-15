@@ -295,8 +295,8 @@ export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, ite
           </div>
         </>)}
 
-        {/* Labor adjustments */}
-        {section("Labor Adjustments", T.steel, <>
+        {/* Labor & material adjustments */}
+        {section("Labor & Material Adjustments", T.steel, <>
           <label style={{ display:"flex", flexDirection:"column", gap:2 }}>
             <span style={{ fontSize:9, color:T.muted, fontFamily:T.mono, textTransform:"uppercase", letterSpacing:1 }}>Vertical Market</span>
             <select value={S.verticalMarket} onChange={e=>onChange({verticalMarket:e.target.value})}
@@ -318,12 +318,12 @@ export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, ite
           {row(pct("overtimePct","Overtime %",0,100),
                pct("shiftPct","Shift Work %",0,100),
                pct("retrofitPct","Retrofit %",0,100))}
-        </>)}
-
-        {/* Material adjustments */}
-        {section("Material Adjustments", T.blue, <>
-          {toggle("fireSeals","Fire Seals","$50 per $1,000 material")}
-          {toggle("miscMaterials","Misc Materials","$20 per $1,000 material")}
+          <div style={{ borderTop:"1px solid "+T.border, paddingTop:8, marginTop:2 }}>
+            <div style={{ fontSize:9, color:T.muted, fontFamily:T.mono, textTransform:"uppercase",
+              letterSpacing:1, marginBottom:8 }}>Material</div>
+            {toggle("fireSeals","Fire Seals","$50 per $1,000 material")}
+            {toggle("miscMaterials","Misc Materials","$20 per $1,000 material")}
+          </div>
         </>)}
 
         {/* Overhead line items */}
