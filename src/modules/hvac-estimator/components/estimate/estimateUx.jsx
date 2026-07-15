@@ -57,135 +57,6 @@ function formatTimestamp(value) {
   return date.toLocaleString();
 }
 
-function TooltipLabel({ label, tooltip }) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span>{label}</span>
-      <span title={tooltip} className="cursor-help text-[10px] leading-none text-text-tertiary">
-        ⓘ
-      </span>
-    </span>
-  );
-}
-
-function SettingsToolCard({ title, description, onClick, icon }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex h-full w-full flex-col rounded-2xl border border-border-default bg-surface-overlay p-4 text-left transition hover:border-brand-primary/40 hover:bg-surface-base"
-    >
-      <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border-default bg-surface-raised text-brand-primary">
-          {icon}
-        </span>
-        <div>
-          <div className="text-sm font-semibold text-text-primary">{title}</div>
-          <div className="mt-0.5 text-xs text-text-tertiary">{description}</div>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-function EstimateMarkupSettingsSection({ settings, onApply }) {
-  const [draft, setDraft] = useState({
-    overheadPct: Number(settings?.overheadPct ?? 10),
-    profitPct: Number(settings?.profitPct ?? 25),
-    bondPct: Number(settings?.bondPct ?? 4),
-    wageRate: Number(settings?.wageRate ?? 42.95),
-  });
-
-  useEffect(() => {
-    setDraft({
-      overheadPct: Number(settings?.overheadPct ?? 10),
-      profitPct: Number(settings?.profitPct ?? 25),
-      bondPct: Number(settings?.bondPct ?? 4),
-      wageRate: Number(settings?.wageRate ?? 42.95),
-    });
-  }, [settings?.bondPct, settings?.overheadPct, settings?.profitPct, settings?.wageRate]);
-
-  const fields = [
-    {
-      key: "overheadPct",
-      label: "Overhead Rate",
-      tooltip: "Applied to labor + material before profit. This increases the bid price by covering overhead burden.",
-      suffix: "%",
-      step: 0.1,
-    },
-    {
-      key: "profitPct",
-      label: "Profit Rate",
-      tooltip: "Applied after overhead. This determines the target profit portion of the bid price.",
-      suffix: "%",
-      step: 0.1,
-    },
-    {
-      key: "bondPct",
-      label: "Bond Rate",
-      tooltip: "Applied to the subtotal after overhead and profit. It adds the optional payment/performance bond amount.",
-      suffix: "%",
-      step: 0.1,
-    },
-    {
-      key: "wageRate",
-      label: "Installation Labor Rate",
-      tooltip: "Converts raw installation labor hours into labor dollars before markup is applied.",
-      suffix: "$/hr",
-      step: 0.01,
-    },
-  ];
-
-  return (
-    <section className="rounded-2xl border border-border-default bg-surface-raised p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-text-tertiary">
-            Estimate Markup Settings
-          </div>
-          <p className="mt-1 text-sm text-text-secondary">
-            Changes apply to this estimate only. Default rates are set in Project Settings.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {fields.map((field) => (
-          <label key={field.key} className="rounded-xl border border-border-default bg-surface-overlay p-4">
-            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-tertiary">
-              <TooltipLabel label={field.label} tooltip={field.tooltip} />
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min={0}
-                step={field.step}
-                value={draft[field.key]}
-                onChange={(event) => {
-                  const next = event.target.value === "" ? 0 : Number(event.target.value);
-                  setDraft((current) => ({ ...current, [field.key]: Number.isFinite(next) ? next : 0 }));
-                }}
-                className="w-full rounded-xl border border-border-default bg-surface-raised px-3 py-2 text-sm font-medium text-text-primary outline-none transition focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/40"
-              />
-              <span className="shrink-0 text-xs font-semibold text-text-tertiary">{field.suffix}</span>
-            </div>
-          </label>
-        ))}
-      </div>
-
-      <div className="mt-4 flex justify-end">
-        <button
-          type="button"
-          onClick={() => onApply?.(draft)}
-          className="rounded-xl bg-brand-primary px-4 py-2.5 text-sm font-semibold text-text-inverse transition hover:bg-brand-hover"
-        >
-          Apply to This Estimate
-        </button>
-      </div>
-    </section>
-  );
-}
-
 function ProposalPreviewPanel({ proposalPreview }) {
   if (proposalPreview?.html) {
     return (
@@ -1479,7 +1350,6 @@ export function EstimatorTabPanels({
   onCreateBidAlternate,
   onOpenBidAlternate,
   onRemoveBidAlternate,
-  onOpenAiSettings,
   onUpdateSettings,
   onApplyDefaultInstallType,
   proposalPreview,
@@ -1706,25 +1576,6 @@ export function EstimatorTabPanels({
       description: "Keep estimator configuration and auxiliary tools here instead of the default canvas.",
       children: (
         <div style={{ display: "grid", gap: 12 }}>
-          <section style={{ border: "1px solid " + T.border, borderRadius: 10, background: T.surface, padding: "14px 16px", display: "grid", gap: 12 }}>
-            <div>
-              <div style={{ fontSize: 10, color: T.muted, fontFamily: T.mono, textTransform: "uppercase", letterSpacing: 1.3 }}>
-                AI Tools
-              </div>
-              <div style={{ fontSize: 12, color: T.dim, marginTop: 4, maxWidth: 860 }}>
-                AI Settings controls model behavior and data sources. To extract equipment schedules from a PDF or spreadsheet, use Import from AI in the Estimate tab.
-              </div>
-            </div>
-            <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-              <SettingsToolCard
-                title="AI Settings"
-                icon="⚙"
-                description="Tune model behavior and data sources."
-                onClick={onOpenAiSettings}
-              />
-            </div>
-          </section>
-          <EstimateMarkupSettingsSection settings={settings} onApply={onUpdateSettings} />
           {showProjectSettings && (
             <ProjectSettingsPanel
               settings={settings}

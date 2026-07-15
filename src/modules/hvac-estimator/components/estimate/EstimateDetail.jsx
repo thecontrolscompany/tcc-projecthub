@@ -624,10 +624,6 @@ export function EstimateDetail({
     return importedCount;
   }, [estimate, onUpdate]);
 
-  const openAiSettings = useCallback(() => {
-    window.location.href = `/estimating/settings?organizationId=${encodeURIComponent(organizationId)}`;
-  }, [organizationId]);
-
   const handleUpdateAllPrices = useCallback(() => {
     const estimateId = platformEstimateId || estimate.id || estimate.body?.estimateId;
     if (!estimateId) return;
@@ -1433,7 +1429,6 @@ export function EstimateDetail({
         onCreateBidAlternate={() => openBidAlternateDialog("installation", "Bid Alternate")}
         onOpenBidAlternate={openBidAlternate}
         onRemoveBidAlternate={removeBidAlternate}
-        onOpenAiSettings={openAiSettings}
         onUpdateSettings={updateSettings}
         onApplyDefaultInstallType={applyDefaultInstallType}
         proposalPreview={proposalPreview}
