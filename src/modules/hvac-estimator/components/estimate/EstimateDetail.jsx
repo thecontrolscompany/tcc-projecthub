@@ -933,8 +933,7 @@ export function EstimateDetail({
           onChangeDrawingBasis={(value) => updateSettings({ drawingBasis: value })}
           onFolderProvisioned={(folder) => {
             onUpdate({
-              ...estimate,
-              body: { ...(estimate.body || {}), sharepointFolder: folder },
+              sharepointFolder: folder,
               updatedAt: new Date().toISOString(),
             });
           }}
