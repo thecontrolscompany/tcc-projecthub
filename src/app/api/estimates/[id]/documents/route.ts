@@ -317,11 +317,25 @@ async function resolveSharePointContext(
     await persistSharePointFolder(estimate, existingFolder, folderItemId || null);
     return { siteId, driveId, folderPath: existingFolder, itemId: folderItemId || null };
   }
+
   const folderName = getEstimateFolderName(estimate);
-  const folderPath = `Bids/${folderName}`;
-  const itemId = await ensureSharePointFolderPath(providerToken, driveId, folderPath);
-  await persistSharePointFolder(estimate, folderPath, itemId || null);
-  return { siteId, driveId, folderPath, itemId };
+  const bidFolderPath = `Bids/${folderName}`;
+  const bidEstimateRoot = `${bidFolderPath}/02 Estimate`;
+
+  await ensureSharePointFolderPath(providerToken, driveId, bidFolderPath);
+  for (const subfolder of PROJECT_SUBFOLDERS) {
+    try {
+      await createSharePointFolder(providerToken, driveId, bidFolderPath, subfolder);
+    } catch (error) {
+      if (!(error instanceof Error) || !error.message.includes("409")) {
+        throw error;
+      }
+    }
+  }
+
+  const itemId = await ensureSharePointFolderPath(providerToken, driveId, bidEstimateRoot);
+  await persistSharePointFolder(estimate, bidEstimateRoot, itemId || null);
+  return { siteId, driveId, folderPath: bidEstimateRoot, itemId };
 }
 
 async function uploadFile(
