@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import {
   canReadEstimates,
@@ -249,6 +250,30 @@ async function ensureSharePointFolderPath(
   return itemId;
 }
 
+async function persistSharePointFolder(
+  estimate: { id: string; body: Record<string, unknown> },
+  folderPath: string,
+  itemId: string | null,
+) {
+  const body = estimate.body as Record<string, unknown>;
+  if (body.sharepointFolder === folderPath && body.sharepointItemId === itemId) {
+    return;
+  }
+
+  const adminClient = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  await adminClient
+    .from("estimates")
+    .update({
+      body: { ...body, sharepointFolder: folderPath, sharepointItemId: itemId },
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", estimate.id);
+}
+
 async function resolveSharePointContext(
   supabase: Awaited<ReturnType<typeof createClient>>,
   providerToken: string,
@@ -278,6 +303,7 @@ async function resolveSharePointContext(
     }
 
     const itemId = await ensureSharePointFolderPath(providerToken, driveId, estimateRoot);
+    await persistSharePointFolder(estimate, estimateRoot, itemId || null);
     return { siteId, driveId, folderPath: estimateRoot, itemId };
   }
 
@@ -288,11 +314,13 @@ async function resolveSharePointContext(
 
   if (existingFolder) {
     const folderItemId = existingItemId || (await ensureSharePointFolderPath(providerToken, driveId, existingFolder));
+    await persistSharePointFolder(estimate, existingFolder, folderItemId || null);
     return { siteId, driveId, folderPath: existingFolder, itemId: folderItemId || null };
   }
   const folderName = getEstimateFolderName(estimate);
   const folderPath = `Bids/${folderName}`;
   const itemId = await ensureSharePointFolderPath(providerToken, driveId, folderPath);
+  await persistSharePointFolder(estimate, folderPath, itemId || null);
   return { siteId, driveId, folderPath, itemId };
 }
 
