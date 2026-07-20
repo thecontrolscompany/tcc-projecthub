@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import { AI_PROVIDERS } from "../../ai/providerRegistry.js";
 
 const DIRECT_UPLOAD_LIMIT = 4 * 1024 * 1024; // 4 MB — stay under Vercel's 4.5 MB payload cap
@@ -112,6 +113,14 @@ export function AiTakeoffModal({ open, onClose, estimate, estimateId, organizati
   }, [open]);
 
   if (!open) return null;
+
+  async function reconnectMicrosoft() {
+    const supabase = createSupabaseClient();
+    await supabase.auth.signInWithOAuth({
+      provider: "azure",
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}` },
+    });
+  }
 
   async function runParser(event) {
     event.preventDefault();
@@ -316,7 +325,22 @@ export function AiTakeoffModal({ open, onClose, estimate, estimateId, organizati
                 </button>
               </div>
 
-              {message && <div className="rounded-2xl border border-rose-200 bg-rose-100 px-4 py-3 text-sm font-medium text-rose-900">{message}</div>}
+              {message && (
+                <div className="rounded-2xl border border-rose-200 bg-rose-100 px-4 py-3 text-sm font-medium text-rose-900">
+                  {message}
+                  {/Microsoft access token/i.test(message) && (
+                    <div className="mt-2">
+                      <button
+                        type="button"
+                        onClick={() => void reconnectMicrosoft()}
+                        className="rounded-xl border border-rose-300 bg-white px-3 py-2 text-xs font-semibold text-rose-900 transition hover:bg-rose-50"
+                      >
+                        Reconnect Microsoft
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </form>
 
