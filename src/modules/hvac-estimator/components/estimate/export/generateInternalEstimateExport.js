@@ -499,13 +499,5 @@ export function generateInternalEstimateExport(estimate, costs, currentUser) {
 
   const blob = new Blob([html], { type: "text/html" });
   const fileName = `${sanitizeFileName(estimate.name)}-internal-estimate.html`;
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
   return { blob, fileName };
 }

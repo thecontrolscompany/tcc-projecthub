@@ -540,16 +540,19 @@ export function EstimateDetail({
 
   async function uploadGeneratedToSharePoint(blob, fileName, documentRole) {
     const estimateId = platformEstimateId || estimate.id || estimate.body?.estimateId;
-    if (!estimateId) return;
+    if (!estimateId) return { ok: false, error: "No estimate ID available." };
     try {
       const prepRes = await fetch(`/api/estimates/${estimateId}/documents`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "prepare", documentRole, fileName }),
       });
-      if (!prepRes.ok) return;
+      if (!prepRes.ok) {
+        const body = await prepRes.json().catch(() => null);
+        return { ok: false, error: body?.error || `Could not start the SharePoint upload (${prepRes.status}).` };
+      }
       const prep = await prepRes.json().catch(() => null);
-      if (!prep?.uploadUrl) return;
+      if (!prep?.uploadUrl) return { ok: false, error: "SharePoint did not return an upload URL." };
 
       const buffer = await blob.arrayBuffer();
       const upRes = await fetch(prep.uploadUrl, {
@@ -561,10 +564,12 @@ export function EstimateDetail({
         },
         body: buffer,
       });
-      if (![200, 201, 202].includes(upRes.status)) return;
+      if (![200, 201, 202].includes(upRes.status)) {
+        return { ok: false, error: `SharePoint upload failed (${upRes.status}).` };
+      }
       const upData = await upRes.json().catch(() => null);
 
-      await fetch(`/api/estimates/${estimateId}/documents`, {
+      const commitRes = await fetch(`/api/estimates/${estimateId}/documents`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -579,8 +584,12 @@ export function EstimateDetail({
           storagePath: prep.storagePath,
         }),
       });
-    } catch {
-      // SharePoint upload is best-effort; don't block the download
+      if (!commitRes.ok) {
+        return { ok: false, error: "Uploaded to SharePoint, but failed to record it on the estimate." };
+      }
+      return { ok: true, webUrl: upData?.webUrl || null };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : "SharePoint upload failed." };
     }
   }
 
@@ -595,7 +604,12 @@ export function EstimateDetail({
           fileName: result.fileName || "",
           generatedAt: new Date().toISOString(),
         });
-        void uploadGeneratedToSharePoint(result.blob, result.fileName, "proposal_pdf");
+        const upload = await uploadGeneratedToSharePoint(result.blob, result.fileName, "proposal_pdf");
+        if (upload.ok) {
+          alert(`Proposal saved to SharePoint: ${result.fileName}`);
+        } else {
+          alert(`Proposal generated, but the SharePoint save failed: ${upload.error}`);
+        }
       }
     } catch (err) {
       console.error("Proposal export failed:", err);
@@ -606,14 +620,22 @@ export function EstimateDetail({
   }, [controlsCatalog, costs.bond, estimate, grandTotal]);
 
   const exportInternal = useCallback(async () => {
+    setExporting(true);
     try {
       const result = generateInternalEstimateExport(estimate, costs, getCurrentUser());
       if (result?.blob) {
-        void uploadGeneratedToSharePoint(result.blob, result.fileName, "supporting_scope");
+        const upload = await uploadGeneratedToSharePoint(result.blob, result.fileName, "supporting_scope");
+        if (upload.ok) {
+          alert(`Internal report saved to SharePoint: ${result.fileName}`);
+        } else {
+          alert(`Internal report generated, but the SharePoint save failed: ${upload.error}`);
+        }
       }
     } catch (err) {
       console.error("Internal export failed:", err);
       alert("Internal export failed: " + err.message);
+    } finally {
+      setExporting(false);
     }
   }, [estimate, costs]);
 

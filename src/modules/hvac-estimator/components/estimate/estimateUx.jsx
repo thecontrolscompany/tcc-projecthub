@@ -1456,8 +1456,8 @@ export function EstimatorTabPanels({
             <button type="button" onClick={onOpenProposalDetails} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700 }}>
               Proposal Details
             </button>
-            <button type="button" onClick={onExportInternal} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700 }}>
-              Internal Report
+            <button type="button" onClick={onExportInternal} disabled={exporting} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.surface, color: T.text, cursor: exporting ? "default" : "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700, opacity: exporting ? 0.8 : 1 }}>
+              {exporting ? "Saving..." : "Internal Report"}
             </button>
             {!customerMode && (
               <button type="button" onClick={onExportProposal} disabled={exporting} style={{ padding: "8px 12px", border: "1px solid " + T.border2, borderRadius: 999, background: T.green, color: "#fff", cursor: exporting ? "default" : "pointer", fontSize: 12, fontFamily: T.mono, fontWeight: 700, opacity: exporting ? 0.8 : 1 }}>

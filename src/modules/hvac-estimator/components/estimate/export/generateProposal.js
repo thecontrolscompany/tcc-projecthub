@@ -750,11 +750,5 @@ export async function generateProposal(estimate, itemsWithComps, grandTotal, bon
   const blob = new Blob([html], { type: "text/html" });
   const safeName = sanitizeFileName(estimate.name);
   const fileName = `HVAC_Control_Installation_Proposal_${safeName}_${isoDateStr()}.html`;
-  const url = URL.createObjectURL(blob);
-  const link = Object.assign(document.createElement("a"), { href: url, download: fileName });
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
   return { blob, fileName, html };
 }
