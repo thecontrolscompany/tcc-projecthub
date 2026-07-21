@@ -354,6 +354,13 @@ export function AiTakeoffModal({ open, onClose, estimate, estimateId, organizati
               </div>
             </div>
 
+            {result?.source?.visionPages?.length > 0 && (
+              <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-900">
+                <span className="font-semibold">Vision-assisted extraction used</span> for schedule sheets that don&apos;t
+                carry readable table data as plain text: {result.source.visionPages.join(", ")}.
+              </div>
+            )}
+
             {result && (
               <div className="mt-4 flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
                 <button

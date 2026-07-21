@@ -110,6 +110,244 @@ async function callAnthropic({ apiKey, model, prompt, organizationId }) {
     .join("\n");
 }
 
+const SCHEDULE_KEYWORD = /SCHEDULE/i;
+const MAX_SCHEDULE_PAGES = 12;
+const SCHEDULE_RENDER_CONCURRENCY = 3;
+const TITLE_BLOCK_WINDOW_CHARS = 300;
+
+const SCHEDULE_TRANSCRIBE_SYSTEM_PROMPT =
+  "You are transcribing a construction drawing schedule sheet for an HVAC controls estimator. " +
+  "Transcribe every row of every schedule/table on this sheet as plain text. For each table, include its title, " +
+  "then list every row with its tag/mark, description or type, quantity (if shown), and any CFM/size/model data present. " +
+  "Preserve tags and quantities exactly as shown. Note if the sheet is explicitly marked EXISTING equipment vs NEW equipment. " +
+  "Ignore title blocks, revision stamps, firm logos, and general boilerplate notes unrelated to equipment/device counts. " +
+  "Do not add commentary, explanation, or JSON — plain transcribed text only.";
+
+let pdfjsOfficialBuildReady = null;
+function ensurePdfjsOfficialBuild() {
+  if (!pdfjsOfficialBuildReady) {
+    pdfjsOfficialBuildReady = import("unpdf").then(({ definePDFJSModule }) =>
+      definePDFJSModule(() => import("pdfjs-dist/legacy/build/pdf.mjs")),
+    );
+  }
+  return pdfjsOfficialBuildReady;
+}
+
+function looksLikeScheduleSheet(pageText) {
+  const text = String(pageText || "");
+  const head = text.slice(0, TITLE_BLOCK_WINDOW_CHARS);
+  const tail = text.slice(-TITLE_BLOCK_WINDOW_CHARS);
+  return SCHEDULE_KEYWORD.test(head) || SCHEDULE_KEYWORD.test(tail);
+}
+
+function extractSheetTitle(pageText) {
+  const lines = String(pageText || "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const tailLines = lines.slice(-6);
+  const scheduleLine = tailLines.find((line) => SCHEDULE_KEYWORD.test(line));
+  return scheduleLine || tailLines[tailLines.length - 1] || "";
+}
+
+// Renders PDF pages that look like schedule-table sheets so they can be read via vision.
+// Pure text extraction reliably loses schedule TABLE data on CAD-exported drawing sets
+// (only the table titles survive) even though it works fine for narrative/notes text.
+export async function extractScheduleSheetCandidates(buffer) {
+  const { getDocumentProxy, extractText, renderPageAsImage } = await import("unpdf");
+  await ensurePdfjsOfficialBuild();
+
+  const doc = await getDocumentProxy(new Uint8Array(buffer));
+  const { text } = await extractText(doc);
+  const pages = Array.isArray(text) ? text : [text];
+
+  const candidates = [];
+  pages.forEach((pageText, index) => {
+    if (looksLikeScheduleSheet(pageText)) {
+      candidates.push({ pageNumber: index + 1, title: extractSheetTitle(pageText) });
+    }
+  });
+
+  const capped = candidates.slice(0, MAX_SCHEDULE_PAGES);
+  const skippedCount = candidates.length - capped.length;
+
+  const rendered = [];
+  for (let i = 0; i < capped.length; i += SCHEDULE_RENDER_CONCURRENCY) {
+    const batch = capped.slice(i, i + SCHEDULE_RENDER_CONCURRENCY);
+    const batchResults = await Promise.all(
+      batch.map(async (candidate) => {
+        try {
+          const imageDataUrl = await renderPageAsImage(doc, candidate.pageNumber, {
+            scale: 2,
+            toDataURL: true,
+            canvasImport: () => import("@napi-rs/canvas"),
+          });
+          return { ...candidate, imageDataUrl };
+        } catch (error) {
+          console.error(`Unable to render page ${candidate.pageNumber} as image:`, error);
+          return null;
+        }
+      }),
+    );
+    rendered.push(...batchResults.filter(Boolean));
+  }
+
+  return { pages: rendered, skippedCount };
+}
+
+async function callOpenAiVision({ endpoint, apiKey, model, provider, organizationId, imageDataUrl, pageLabel }) {
+  const baseUrl = trimTrailingSlash(endpoint) || (provider === "xai" ? XAI_DEFAULT : OPENAI_DEFAULT);
+  const url = provider === "azure_openai"
+    ? `${baseUrl}/openai/deployments/${encodeURIComponent(model)}/chat/completions?api-version=${AZURE_API_VERSION}`
+    : `${baseUrl}/v1/chat/completions`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: provider === "azure_openai"
+      ? { "content-type": "application/json", "api-key": apiKey }
+      : { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model,
+      temperature: 0,
+      messages: [
+        { role: "system", content: SCHEDULE_TRANSCRIBE_SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: `Sheet: ${pageLabel || "unknown"}. Transcribe all schedule tables on this drawing sheet.` },
+            { type: "image_url", image_url: { url: imageDataUrl } },
+          ],
+        },
+      ],
+      user: organizationId,
+    }),
+  });
+
+  const json = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(json?.error?.message || json?.error || `AI vision request failed (${response.status}).`);
+  }
+  return json?.choices?.[0]?.message?.content || "";
+}
+
+async function callAnthropicVision({ apiKey, model, imageDataUrl, pageLabel }) {
+  const match = /^data:(image\/\w+);base64,(.+)$/.exec(imageDataUrl);
+  if (!match) throw new Error("Invalid rendered page image data.");
+  const [, mediaType, base64Data] = match;
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 4096,
+      temperature: 0,
+      system: SCHEDULE_TRANSCRIBE_SYSTEM_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: `Sheet: ${pageLabel || "unknown"}. Transcribe all schedule tables on this drawing sheet.` },
+            { type: "image", source: { type: "base64", media_type: mediaType, data: base64Data } },
+          ],
+        },
+      ],
+    }),
+  });
+
+  const json = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(json?.error?.message || json?.error?.type || `Anthropic vision request failed (${response.status}).`);
+  }
+  const content = Array.isArray(json?.content) ? json.content : [];
+  return content
+    .map((entry) => (entry && entry.type === "text" ? entry.text : ""))
+    .filter(Boolean)
+    .join("\n");
+}
+
+async function callGeminiVision({ apiKey, model, imageDataUrl, pageLabel }) {
+  const match = /^data:(image\/\w+);base64,(.+)$/.exec(imageDataUrl);
+  if (!match) throw new Error("Invalid rendered page image data.");
+  const [, mimeType, base64Data] = match;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: `${SCHEDULE_TRANSCRIBE_SYSTEM_PROMPT}\n\nSheet: ${pageLabel || "unknown"}. Transcribe all schedule tables on this drawing sheet.` },
+            { inline_data: { mime_type: mimeType, data: base64Data } },
+          ],
+        },
+      ],
+      generationConfig: { temperature: 0 },
+    }),
+  });
+
+  const json = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(json?.error?.message || json?.error?.status || `Gemini vision request failed (${response.status}).`);
+  }
+  return (json?.candidates || [])
+    .flatMap((candidate) => candidate?.content?.parts || [])
+    .map((part) => part?.text || "")
+    .filter(Boolean)
+    .join("\n");
+}
+
+async function transcribeScheduleImage({ provider, apiKey, model, endpoint, organizationId, imageDataUrl, pageLabel }) {
+  if (provider === "anthropic") {
+    return callAnthropicVision({ apiKey, model, imageDataUrl, pageLabel });
+  }
+  if (provider === "gemini") {
+    return callGeminiVision({ apiKey, model, imageDataUrl, pageLabel });
+  }
+  if (provider === "openai" || provider === "xai" || provider === "azure_openai") {
+    return callOpenAiVision({ endpoint, apiKey, model, provider, organizationId, imageDataUrl, pageLabel });
+  }
+  throw new Error(`Unsupported provider for vision transcription: ${provider}`);
+}
+
+// Transcribes each rendered schedule-sheet image via the same AI connection already
+// selected for the takeoff. Individual page failures are skipped, not fatal — the rest
+// of the pipeline still benefits from whichever pages succeeded.
+export async function transcribeScheduleImages({ provider, apiKey, model, endpoint, organizationId, pages }) {
+  const results = [];
+  for (let i = 0; i < pages.length; i += SCHEDULE_RENDER_CONCURRENCY) {
+    const batch = pages.slice(i, i + SCHEDULE_RENDER_CONCURRENCY);
+    const batchResults = await Promise.all(
+      batch.map(async (page) => {
+        try {
+          const text = await transcribeScheduleImage({
+            provider,
+            apiKey,
+            model,
+            endpoint,
+            organizationId,
+            imageDataUrl: page.imageDataUrl,
+            pageLabel: page.title || `Page ${page.pageNumber}`,
+          });
+          return { pageNumber: page.pageNumber, title: page.title, text };
+        } catch (error) {
+          console.error(`Vision transcription failed for page ${page.pageNumber}:`, error);
+          return null;
+        }
+      }),
+    );
+    results.push(...batchResults.filter(Boolean));
+  }
+  return results;
+}
+
 async function callGemini({ apiKey, model, prompt, organizationId }) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
   const response = await fetch(url, {

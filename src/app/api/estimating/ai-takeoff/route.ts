@@ -3,7 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import { canReadEstimates } from "@/lib/estimates/api";
 import { decryptAiApiKey } from "@/modules/hvac-estimator/ai/connectionCrypto";
-import { buildScopeTakeoffPrompt, extractUploadedFileText, runScopeTakeoffWithProvider } from "@/modules/hvac-estimator/ai/takeoffServer";
+import {
+  buildScopeTakeoffPrompt,
+  extractScheduleSheetCandidates,
+  extractUploadedFileText,
+  runScopeTakeoffWithProvider,
+  transcribeScheduleImages,
+} from "@/modules/hvac-estimator/ai/takeoffServer";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import {
   getSharePointSiteId,
@@ -14,6 +20,45 @@ import {
 } from "@/lib/graph/client";
 
 const AI_PARSER_TEMP_FOLDER = "AI Parser Temp";
+
+export const maxDuration = 60;
+
+type AiConnectionCtx = {
+  provider: string;
+  apiKey: string;
+  model: string;
+  endpoint: string | null;
+  organizationId: string;
+};
+
+async function extractPdfTextWithSchedules(name: string, buffer: Buffer, connectionCtx: AiConnectionCtx) {
+  const file = new File([new Uint8Array(buffer)], name);
+  const text = await extractUploadedFileText(file);
+
+  if (!/\.pdf$/i.test(name)) {
+    return { text, visionPages: [] };
+  }
+
+  try {
+    const { pages: candidates } = await extractScheduleSheetCandidates(buffer);
+    if (candidates.length === 0) return { text, visionPages: [] };
+
+    const transcribed = await transcribeScheduleImages({ ...connectionCtx, pages: candidates });
+    if (transcribed.length === 0) return { text, visionPages: [] };
+
+    const scheduleBlock = transcribed
+      .map((page) => `--- SCHEDULE TABLE (vision-extracted, sheet ${page.title || `page ${page.pageNumber}`}) ---\n${page.text}`)
+      .join("\n\n");
+
+    return {
+      text: `${text}\n\n${scheduleBlock}`,
+      visionPages: transcribed.map((page) => page.title || `Page ${page.pageNumber}`),
+    };
+  } catch (error) {
+    console.error(`Schedule-sheet vision extraction failed for ${name}:`, error);
+    return { text, visionPages: [] };
+  }
+}
 
 function badRequest(message: string) {
   return NextResponse.json({ error: message }, { status: 400 });
@@ -180,30 +225,42 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "The saved Azure OpenAI connection is missing an endpoint." }, { status: 400 });
     }
 
-    let uploadedFiles: { name: string; text: string }[] = [];
+    const decryptedKey = decryptAiApiKey(connection.encrypted_api_key);
+    const connectionCtx = {
+      provider: connection.provider,
+      apiKey: decryptedKey,
+      model: connection.model,
+      endpoint: connection.endpoint,
+      organizationId,
+    };
+
+    let processedFiles: { name: string; text: string; visionPages: string[] }[] = [];
 
     if (tempItems.length > 0) {
       const providerToken = await getProviderToken(auth.supabase);
-      uploadedFiles = await Promise.all(
+      processedFiles = await Promise.all(
         tempItems.map(async (item) => {
           const contentRes = await fetchSharePointItemContent(providerToken, item.driveId, item.itemId);
           if (!contentRes.ok) throw new Error(`Unable to download staged file: ${item.name}`);
           const buffer = Buffer.from(await contentRes.arrayBuffer());
-          const file = new File([buffer], item.name);
-          const text = await extractUploadedFileText(file);
+          const { text, visionPages } = await extractPdfTextWithSchedules(item.name, buffer, connectionCtx);
           // Clean up temp file — non-fatal if it fails
           deleteSharePointItem(providerToken, item.driveId, item.itemId).catch(() => {});
-          return { name: item.name, text };
+          return { name: item.name, text, visionPages };
         }),
       );
     } else {
-      uploadedFiles = await Promise.all(
-        directFiles.map(async (file) => ({
-          name: file.name,
-          text: await extractUploadedFileText(file),
-        })),
+      processedFiles = await Promise.all(
+        directFiles.map(async (file) => {
+          const buffer = Buffer.from(await file.arrayBuffer());
+          const { text, visionPages } = await extractPdfTextWithSchedules(file.name, buffer, connectionCtx);
+          return { name: file.name, text, visionPages };
+        }),
       );
     }
+
+    const uploadedFiles = processedFiles.map(({ name, text }) => ({ name, text }));
+    const visionPages = processedFiles.flatMap((file) => file.visionPages);
 
     const prompt = await buildScopeTakeoffPrompt({
       estimate,
@@ -211,7 +268,6 @@ export async function POST(request: Request) {
       uploadedFiles,
     });
 
-    const decryptedKey = decryptAiApiKey(connection.encrypted_api_key);
     const { validated: scopeImport, rawText } = await runScopeTakeoffWithProvider({
       provider: connection.provider,
       apiKey: decryptedKey,
@@ -234,6 +290,7 @@ export async function POST(request: Request) {
         provider: connection.provider,
         connectionId: connection.id,
         files: uploadedFiles.map((file) => file.name),
+        visionPages,
       },
       rawText,
     });
