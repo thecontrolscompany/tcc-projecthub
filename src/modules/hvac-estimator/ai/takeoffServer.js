@@ -111,7 +111,7 @@ async function callAnthropic({ apiKey, model, prompt, organizationId }) {
 }
 
 const SCHEDULE_KEYWORD = /SCHEDULE/i;
-const MAX_SCHEDULE_PAGES = 12;
+const MAX_SCHEDULE_PAGES = 18;
 const SCHEDULE_RENDER_CONCURRENCY = 3;
 const TITLE_BLOCK_WINDOW_CHARS = 300;
 
@@ -133,11 +133,14 @@ function ensurePdfjsOfficialBuild() {
   return pdfjsOfficialBuildReady;
 }
 
+// Sheet titles in this drawing set's title block land in the last handful of extracted
+// lines on the page. Matching "SCHEDULE" anywhere on the page (including body notes like
+// "REFER TO FIXTURE SCHEDULE") produces heavy false-positive noise that starves the page
+// cap before it ever reaches the real schedule sheets — tail-only was validated against a
+// real 61-page set to cleanly isolate the actual schedule sheets.
 function looksLikeScheduleSheet(pageText) {
-  const text = String(pageText || "");
-  const head = text.slice(0, TITLE_BLOCK_WINDOW_CHARS);
-  const tail = text.slice(-TITLE_BLOCK_WINDOW_CHARS);
-  return SCHEDULE_KEYWORD.test(head) || SCHEDULE_KEYWORD.test(tail);
+  const tail = String(pageText || "").slice(-TITLE_BLOCK_WINDOW_CHARS);
+  return SCHEDULE_KEYWORD.test(tail);
 }
 
 function extractSheetTitle(pageText) {
@@ -147,7 +150,13 @@ function extractSheetTitle(pageText) {
     .filter(Boolean);
   const tailLines = lines.slice(-6);
   const scheduleLine = tailLines.find((line) => SCHEDULE_KEYWORD.test(line));
-  return scheduleLine || tailLines[tailLines.length - 1] || "";
+  if (scheduleLine) return scheduleLine;
+
+  // The title itself can sit further back if the sheet has trailing table/legend rows
+  // after it (e.g. a schedule table with many rows followed by the revision block) —
+  // search the whole page for the last line mentioning SCHEDULE before falling back.
+  const anyScheduleLine = [...lines].reverse().find((line) => SCHEDULE_KEYWORD.test(line));
+  return anyScheduleLine || tailLines[tailLines.length - 1] || "";
 }
 
 // Renders PDF pages that look like schedule-table sheets so they can be read via vision.
