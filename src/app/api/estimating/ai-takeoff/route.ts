@@ -21,7 +21,9 @@ import {
 
 const AI_PARSER_TEMP_FOLDER = "AI Parser Temp";
 
-export const maxDuration = 60;
+// Rendering + vision-transcribing multiple schedule pages plus the final takeoff call
+// can comfortably exceed the 60s used elsewhere in the app for lighter AI batch routes.
+export const maxDuration = 300;
 
 type AiConnectionCtx = {
   provider: string;
