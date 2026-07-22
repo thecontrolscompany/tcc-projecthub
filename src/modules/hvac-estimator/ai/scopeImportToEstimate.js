@@ -24,6 +24,7 @@ function getVisibleCompsForType(type, cfg) {
     case "vrf": return getVisibleVrfComponents(cfg);
     case "network": return NETWORK_COMPS;
     case "exhaust-fan": return EXHAUST_FAN_COMPS;
+    case "plant": return PLANT_COMPS[cfg?.plantType] || [];
     default: return [];
   }
 }
@@ -236,6 +237,8 @@ function inferImportedType(system) {
   const name = normalizeLookup(asString(system.name));
   const haystack = `${rawType} ${name}`;
 
+  if (haystack.includes("energy recovery") || /\berv\b/.test(haystack) || haystack.includes("heat recovery ventilator") || /\bhrv\b/.test(haystack)) return "ahu";
+  if (haystack.includes("niagara") || haystack.includes("tridium") || haystack.includes("front end") || haystack.includes("head end") || haystack.includes("workstation") || haystack.includes("supervisor")) return "network";
   if (haystack.includes("ahu") || haystack.includes("air handling")) return "ahu";
   if (haystack.includes("vav") || haystack.includes("terminal box") || haystack.includes("variable volume") || haystack.includes("variable air volume") || haystack.includes("air terminal unit")) return "vav";
   if (haystack.includes("rtu") || haystack.includes("roof top") || haystack.includes("packaged rooftop")) return "rtu";
@@ -335,6 +338,38 @@ function buildImportedPointCustomEntries(point, selectedAssemblyIds = new Set(),
   return entries;
 }
 
+function coalesceCustomEntries(entries) {
+  const coalesced = [];
+  const entryByKey = new Map();
+
+  for (const entry of entries) {
+    const resolvedAssemblyId = entry.emtAID ? String(entry.emtAID) : "";
+    const label = asString(entry.label);
+    const key = resolvedAssemblyId
+      ? `assembly:${resolvedAssemblyId}`
+      : label
+        ? `label:${label}`
+        : "";
+
+    const existing = key ? entryByKey.get(key) : null;
+    if (!existing) {
+      const record = { ...entry };
+      coalesced.push(record);
+      if (key) entryByKey.set(key, record);
+      continue;
+    }
+
+    existing.qty += entry.qty;
+    const existingNotes = asString(existing.notes);
+    const entryNotes = asString(entry.notes);
+    if (entryNotes && entryNotes !== existingNotes) {
+      existing.notes = existingNotes ? `${existingNotes} · ${entryNotes}` : entryNotes;
+    }
+  }
+
+  return coalesced;
+}
+
 function buildImportedEstimateItem(system, index, installType) {
   const type = inferImportedType(system);
   const plantType = type === "plant" ? getPlantTypeFromImportedSystem(system) : "";
@@ -353,33 +388,55 @@ function buildImportedEstimateItem(system, index, installType) {
       ? getImportedPlantSelections(plantType)
       : getDefaultSelectedForType(type, cfg);
 
-  // Build reverse map: assembly catalog ID (emtAID/plnAID) → component id.
+  // Build reverse map: assembly catalog ID (emtAID/plnAID) → component ids.
   // Resolved assemblies whose catalog ID matches a standard component for this
   // equipment type land in selected[] instead of custom[].
-  const assemblyToCompId = new Map();
+  const assemblyToCompIds = new Map();
+  const addCompForAssembly = (assemblyId, compId) => {
+    if (!assemblyId) return;
+    const key = String(assemblyId);
+    const list = assemblyToCompIds.get(key) || [];
+    if (!list.includes(compId)) list.push(compId);
+    assemblyToCompIds.set(key, list);
+  };
+
   for (const comp of getVisibleCompsForType(type, cfg)) {
-    if (comp.emtAID && !assemblyToCompId.has(String(comp.emtAID))) {
-      assemblyToCompId.set(String(comp.emtAID), comp.id);
-    }
-    if (comp.plnAID && !assemblyToCompId.has(String(comp.plnAID))) {
-      assemblyToCompId.set(String(comp.plnAID), comp.id);
-    }
+    addCompForAssembly(comp.emtAID, comp.id);
+    addCompForAssembly(comp.plnAID, comp.id);
   }
 
   const selectedIds = new Set(baseSelected.map((s) => String(s.id)));
   const additionalSelected = [];
   const customEntries = [];
+  // Only imported selections are qty merge targets; pre-seeded defaults remain
+  // untouched if they share an assembly with an imported point.
+  const selectedByCompId = new Map();
+  const lastCompForAssembly = new Map();
 
   for (const point of points) {
     for (const entry of buildImportedPointCustomEntries(point, selectedIds, systemQty)) {
       const resolvedAssemblyId = entry.emtAID ? String(entry.emtAID) : "";
-      const compId = resolvedAssemblyId ? assemblyToCompId.get(resolvedAssemblyId) : null;
-      if (compId && !selectedIds.has(compId)) {
-        additionalSelected.push({ id: compId, qty: entry.qty });
-        selectedIds.add(compId);
-      } else {
-        customEntries.push(entry);
+      const candidates = resolvedAssemblyId ? assemblyToCompIds.get(resolvedAssemblyId) || [] : [];
+      const freeCompId = candidates.find((compId) => !selectedIds.has(compId));
+
+      if (freeCompId) {
+        const record = { id: freeCompId, qty: entry.qty };
+        additionalSelected.push(record);
+        selectedIds.add(freeCompId);
+        selectedByCompId.set(freeCompId, record);
+        lastCompForAssembly.set(resolvedAssemblyId, freeCompId);
+        continue;
       }
+
+      const mergeCompId = lastCompForAssembly.get(resolvedAssemblyId)
+        || candidates.find((compId) => selectedByCompId.has(compId));
+      const mergeTarget = mergeCompId ? selectedByCompId.get(mergeCompId) : null;
+      if (mergeTarget) {
+        mergeTarget.qty += entry.qty;
+        continue;
+      }
+
+      customEntries.push(entry);
     }
   }
 
@@ -391,7 +448,7 @@ function buildImportedEstimateItem(system, index, installType) {
     qty: systemQty,
     installType,
     selected: [...baseSelected, ...additionalSelected],
-    custom: customEntries,
+    custom: coalesceCustomEntries(customEntries),
     priceSnap: {},
     cfg: {
       ...cfg,
