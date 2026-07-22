@@ -1,5 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import { useIsMobile } from "../../shared/useIsMobile.js";
 import { generateProposal } from "./export/generateProposal.js";
 import { generateInternalEstimateExport } from "./export/generateInternalEstimateExport.js";
@@ -537,6 +538,15 @@ export function EstimateDetail({
   }, [alternates, setSubPage, subPage, updateAlternates]);
 
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
+
+  async function reconnectMicrosoft() {
+    const supabase = createSupabaseClient();
+    await supabase.auth.signInWithOAuth({
+      provider: "azure",
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}` },
+    });
+  }
 
   async function uploadGeneratedToSharePoint(blob, fileName, documentRole) {
     const estimateId = platformEstimateId || estimate.id || estimate.body?.estimateId;
@@ -595,6 +605,7 @@ export function EstimateDetail({
 
   const exportProposal = useCallback(async () => {
     setExporting(true);
+    setExportError("");
     try {
       const itemsWithComps = buildItemsWithComps(estimate);
       const result = await generateProposal(estimate, itemsWithComps, grandTotal, costs.bond, controlsCatalog);
@@ -606,14 +617,15 @@ export function EstimateDetail({
         });
         const upload = await uploadGeneratedToSharePoint(result.blob, result.fileName, "proposal_pdf");
         if (upload.ok) {
+          setExportError("");
           alert(`Proposal saved to SharePoint: ${result.fileName}`);
         } else {
-          alert(`Proposal generated, but the SharePoint save failed: ${upload.error}`);
+          setExportError(`Proposal generated, but the SharePoint save failed: ${upload.error}`);
         }
       }
     } catch (err) {
       console.error("Proposal export failed:", err);
-      alert("Export failed: " + err.message);
+      setExportError("Export failed: " + err.message);
     } finally {
       setExporting(false);
     }
@@ -621,19 +633,21 @@ export function EstimateDetail({
 
   const exportInternal = useCallback(async () => {
     setExporting(true);
+    setExportError("");
     try {
       const result = generateInternalEstimateExport(estimate, costs, getCurrentUser());
       if (result?.blob) {
         const upload = await uploadGeneratedToSharePoint(result.blob, result.fileName, "supporting_scope");
         if (upload.ok) {
+          setExportError("");
           alert(`Internal report saved to SharePoint: ${result.fileName}`);
         } else {
-          alert(`Internal report generated, but the SharePoint save failed: ${upload.error}`);
+          setExportError(`Internal report generated, but the SharePoint save failed: ${upload.error}`);
         }
       }
     } catch (err) {
       console.error("Internal export failed:", err);
-      alert("Internal export failed: " + err.message);
+      setExportError("Internal export failed: " + err.message);
     } finally {
       setExporting(false);
     }
@@ -1440,6 +1454,9 @@ export function EstimateDetail({
         showProjectSettings={showProjectSettings}
         alternatesWithCosts={alternatesWithCosts}
         exporting={exporting}
+        exportError={exportError}
+        onDismissExportError={() => setExportError("")}
+        onReconnectMicrosoft={() => void reconnectMicrosoft()}
         onOpenProposalDetails={() => setShowProposalDetails(true)}
         onExportInternal={exportInternal}
         onExportProposal={exportProposal}

@@ -1290,6 +1290,9 @@ export function EstimatorTabPanels({
   showProjectSettings,
   alternatesWithCosts,
   exporting,
+  exportError,
+  onDismissExportError,
+  onReconnectMicrosoft,
   onOpenProposalDetails,
   onExportInternal,
   onExportProposal,
@@ -1465,6 +1468,21 @@ export function EstimatorTabPanels({
               </button>
             )}
           </div>
+          {exportError && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 14px", border: "1px solid #fda4af", borderRadius: 10, background: "#fff1f2", color: "#881337", fontSize: 12, fontFamily: T.mono }}>
+              <span>{exportError}</span>
+              <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                {/Microsoft access token/i.test(exportError) && (
+                  <button type="button" onClick={onReconnectMicrosoft} style={{ padding: "6px 10px", border: "1px solid #fda4af", borderRadius: 8, background: "#fff", color: "#881337", cursor: "pointer", fontSize: 11, fontFamily: T.mono, fontWeight: 700 }}>
+                    Reconnect Microsoft
+                  </button>
+                )}
+                <button type="button" onClick={onDismissExportError} style={{ padding: "6px 10px", border: "1px solid transparent", borderRadius: 8, background: "transparent", color: "#881337", cursor: "pointer", fontSize: 11, fontFamily: T.mono, fontWeight: 700 }}>
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
           {!customerMode && showBidAlternates && (
             <div style={{ border: "1px solid " + T.border, borderRadius: 10, background: T.surface, overflow: "hidden" }}>
               <div style={{ padding: "10px 14px", borderBottom: "1px solid " + T.border }}>
