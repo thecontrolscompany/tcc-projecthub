@@ -238,13 +238,21 @@ ${items.map((item) => `
       </ul>`;
 }
 
+// The AI takeoff writes some notes/assumptions as internal commentary about its own
+// extraction process (e.g. "no catalog assembly exists for X"), which reads fine in the
+// estimator but shouldn't leak into a customer-facing document.
+const INTERNAL_JARGON_PATTERN = /\bassembl(?:y|ies)\b|\bcatalog\b/i;
+function isCustomerFacing(text) {
+  return !INTERNAL_JARGON_PATTERN.test(String(text || ""));
+}
+
 function renderImportedScopeList(scopeImport) {
   if (!scopeImport || typeof scopeImport !== "object") return "";
 
   const systems = Array.isArray(scopeImport.systems) ? scopeImport.systems : [];
-  const assumptions = Array.isArray(scopeImport.assumptions) ? scopeImport.assumptions : [];
-  const exclusions = Array.isArray(scopeImport.exclusions) ? scopeImport.exclusions : [];
-  const notes = Array.isArray(scopeImport.notes) ? scopeImport.notes : [];
+  const assumptions = (Array.isArray(scopeImport.assumptions) ? scopeImport.assumptions : []).filter(isCustomerFacing);
+  const exclusions = (Array.isArray(scopeImport.exclusions) ? scopeImport.exclusions : []).filter(isCustomerFacing);
+  const notes = (Array.isArray(scopeImport.notes) ? scopeImport.notes : []).filter(isCustomerFacing);
 
   const systemItems = systems.map((system, index) => {
     if (!system || typeof system !== "object") return "";
@@ -269,7 +277,8 @@ function renderImportedScopeList(scopeImport) {
       // customer-facing scope, so it doesn't belong in the generated proposal.
       if (pointName.toLowerCase() === "home run conduit allowance") return [];
       const pointQty = Number(point.qty || 1);
-      const pointNotes = String(point.notes || "").trim();
+      const rawPointNotes = String(point.notes || "").trim();
+      const pointNotes = isCustomerFacing(rawPointNotes) ? rawPointNotes : "";
       const qtyPrefix = Number.isFinite(pointQty) && pointQty > 1 ? `Qty ${pointQty} ` : "";
       const notesSuffix = pointNotes ? ` (${pointNotes})` : "";
       return [`            <li>${esc(`${qtyPrefix}${pointName}${notesSuffix}`)}</li>`];
