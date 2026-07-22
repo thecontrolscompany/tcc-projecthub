@@ -94,7 +94,7 @@ export async function GET(request: Request) {
       });
     }
 
-    const [projectsResult, billingResult, updatesResult, assignmentsResult, changeOrdersResult, photosResult, packetsResult] = await Promise.all([
+    const [projectsResult, billingResult, updatesResult, assignmentsResult, changeOrdersResult, photosResult, packetsResult, walkthroughsResult] = await Promise.all([
       adminClient
         .from("projects")
         .select("id, name, estimated_income, job_number, site_address, general_contractor, start_date, scheduled_completion, scope_description, customer_poc, customer:customers(name)")
@@ -165,6 +165,12 @@ export async function GET(request: Request) {
         .in("project_id", projectIds)
         .eq("report_type", "mobile_arena_schedule_review")
         .order("packet_date", { ascending: false }),
+      adminClient
+        .from("project_walkthroughs")
+        .select("id, project_id, share_url, title, duration, cover_image_url, recorded_date")
+        .in("project_id", projectIds)
+        .order("recorded_date", { ascending: false })
+        .order("created_at", { ascending: false }),
     ]);
 
     const readError =
@@ -174,7 +180,8 @@ export async function GET(request: Request) {
       assignmentsResult.error ||
       changeOrdersResult.error ||
       photosResult.error ||
-      packetsResult.error;
+      packetsResult.error ||
+      walkthroughsResult.error;
 
     if (readError) {
       return NextResponse.json({ error: readError.message }, { status: 500 });
@@ -191,6 +198,7 @@ export async function GET(request: Request) {
         return acc;
       }, {}),
       scheduleReviewPackets: packetsResult.data ?? [],
+      walkthroughs: walkthroughsResult.data ?? [],
     });
   }
 

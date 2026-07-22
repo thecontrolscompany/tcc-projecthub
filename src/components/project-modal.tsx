@@ -10,6 +10,7 @@ import { CustomerContactsSection } from "@/components/project-modal/customer-con
 import { ChangeOrdersSection } from "@/components/project-modal/change-orders-section";
 import { EstimatorAndPocSection } from "@/components/project-modal/poc-setup-section";
 import { WeeklyUpdatesSection } from "@/components/project-modal/weekly-updates-section";
+import { WalkthroughsSection } from "@/components/project-modal/walkthroughs-section";
 import { ProjectBillingSection } from "@/components/project-modal/project-billing-section";
 import { ProjectBudgetSection } from "@/components/project-modal/project-budget-section";
 
@@ -186,7 +187,7 @@ export function ProjectModal({
 }) {
   const customerOptions = useMemo(() => customers, [customers]);
   const [showImportDialog, setShowImportDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "weekly-updates" | "billing" | "budget" | "change-orders" | "materials">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "weekly-updates" | "billing" | "budget" | "change-orders" | "materials" | "walkthroughs">("overview");
   const [formTab, setFormTab] = useState<"details" | "team" | "compliance" | "history">("details");
 
   // Track unsaved changes
@@ -253,6 +254,7 @@ export function ProjectModal({
                   { id: "budget", label: "Budget" },
                   { id: "change-orders", label: "Change Orders" },
                   { id: "materials", label: "Materials" },
+                  { id: "walkthroughs", label: "Walkthroughs" },
                 ] as const
               ).map((tab) => (
                 <button
@@ -654,6 +656,12 @@ export function ProjectModal({
         {editingProject && activeTab === "materials" && (
           <div className="px-6 py-6">
             <BomTab projectId={editingProject.id} />
+          </div>
+        )}
+
+        {editingProject && activeTab === "walkthroughs" && (
+          <div className="px-6 py-6">
+            <WalkthroughsSection projectId={editingProject.id} />
           </div>
         )}
         </div>{/* end scrollable content */}

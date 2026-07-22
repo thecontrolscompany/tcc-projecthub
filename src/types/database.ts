@@ -229,6 +229,18 @@ export interface WeeklyUpdate {
   pm?: Profile;
 }
 
+export interface ProjectWalkthrough {
+  id: string;
+  project_id: string;
+  share_url: string;
+  media_id: string | null;
+  title: string | null;
+  duration: string | null;
+  cover_image_url: string | null;
+  recorded_date: string | null; // ISO date string
+  created_at: string;
+}
+
 export type WeeklyUpdateEdit = {
   id: string;
   weekly_update_id: string;

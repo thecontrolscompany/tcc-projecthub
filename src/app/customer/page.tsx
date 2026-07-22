@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, startOfWeek } from "date-fns";
 import {
   Bar,
   BarChart,
@@ -65,6 +65,17 @@ interface CustomerProject {
   change_orders: CustomerChangeOrder[];
   photo_count: number;
   schedule_review_packets: Array<{ id: string; packet_date: string; title: string }>;
+  walkthroughs: CustomerWalkthrough[];
+}
+
+interface CustomerWalkthrough {
+  id: string;
+  project_id: string;
+  share_url: string;
+  title: string | null;
+  duration: string | null;
+  cover_image_url: string | null;
+  recorded_date: string | null;
 }
 
 type ProjectTeamMember = {
@@ -187,6 +198,7 @@ export default function CustomerPage() {
       const changeOrders = (json?.changeOrders ?? []) as CustomerChangeOrder[];
       const photosByProject = (json?.photosByProject ?? {}) as Record<string, number>;
       const schedulePackets = (json?.scheduleReviewPackets ?? []) as Array<{ id: string; project_id: string; packet_date: string; title: string }>;
+      const walkthroughs = (json?.walkthroughs ?? []) as CustomerWalkthrough[];
 
       if (!projectData?.length) {
         setProjects([]);
@@ -214,6 +226,7 @@ export default function CustomerPage() {
           change_orders: changeOrders.filter((co) => co.project_id === project.id),
           photo_count: photosByProject[project.id] ?? 0,
           schedule_review_packets: schedulePackets.filter((p) => p.project_id === project.id),
+          walkthroughs: walkthroughs.filter((w) => w.project_id === project.id),
         };
       });
 
@@ -671,6 +684,81 @@ function ProjectList({
   );
 }
 
+function groupWalkthroughsByWeek(walkthroughs: CustomerWalkthrough[]) {
+  const buckets = new Map<string, { weekStart: Date | null; items: CustomerWalkthrough[] }>();
+
+  for (const walkthrough of walkthroughs) {
+    const date = walkthrough.recorded_date ? new Date(walkthrough.recorded_date + "T00:00:00") : null;
+    const weekStart = date && !Number.isNaN(date.getTime()) ? startOfWeek(date, { weekStartsOn: 1 }) : null;
+    const key = weekStart ? weekStart.toISOString() : "undated";
+    if (!buckets.has(key)) buckets.set(key, { weekStart, items: [] });
+    buckets.get(key)!.items.push(walkthrough);
+  }
+
+  return Array.from(buckets.values()).sort((a, b) => {
+    if (!a.weekStart) return 1;
+    if (!b.weekStart) return -1;
+    return b.weekStart.getTime() - a.weekStart.getTime();
+  });
+}
+
+function WalkthroughCard({ walkthrough }: { walkthrough: CustomerWalkthrough }) {
+  const [imgError, setImgError] = useState(false);
+  const showImage = walkthrough.cover_image_url && !imgError;
+
+  return (
+    <a
+      href={walkthrough.share_url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group block overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:shadow-md"
+      style={{ borderColor: BORDER }}
+    >
+      <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
+        {showImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={walkthrough.cover_image_url as string}
+            alt={walkthrough.title ?? "Site walkthrough"}
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div
+            className="flex h-full w-full flex-col items-center justify-center gap-1 text-white"
+            style={{ backgroundColor: HEADER_BG }}
+          >
+            <span className="text-2xl font-bold tracking-tight">360°</span>
+            <span className="text-xs font-medium uppercase tracking-[0.18em] opacity-80">Walkthrough</span>
+          </div>
+        )}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/45 text-white shadow-lg backdrop-blur-sm transition group-hover:bg-black/60">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="ml-1 h-7 w-7" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </span>
+        </div>
+        {walkthrough.duration && (
+          <span className="absolute bottom-2 right-2 rounded-md bg-black/65 px-2 py-0.5 text-xs font-semibold text-white">
+            {walkthrough.duration}
+          </span>
+        )}
+      </div>
+      <div className="space-y-1 px-4 py-3">
+        <p className="line-clamp-2 text-sm font-semibold" style={{ color: CHARCOAL }}>
+          {walkthrough.title ?? "Site walkthrough"}
+        </p>
+        {walkthrough.recorded_date && (
+          <p className="text-xs text-slate-500">
+            {format(new Date(walkthrough.recorded_date + "T00:00:00"), "MMMM d, yyyy")}
+          </p>
+        )}
+      </div>
+    </a>
+  );
+}
+
 function ProjectDetail({
   project,
   userId,
@@ -682,8 +770,8 @@ function ProjectDetail({
   onBack: () => void;
   initialTab?: string;
 }) {
-  const validTabs = ["updates", "billing", "bom", "schedule-reviews"] as const;
-  const [view, setView] = useState<"updates" | "billing" | "bom" | "schedule-reviews">(
+  const validTabs = ["updates", "billing", "bom", "schedule-reviews", "walkthroughs"] as const;
+  const [view, setView] = useState<"updates" | "billing" | "bom" | "schedule-reviews" | "walkthroughs">(
     validTabs.includes(initialTab as typeof validTabs[number]) ? (initialTab as typeof validTabs[number]) : "updates"
   );
   const [showFeedback, setShowFeedback] = useState(false);
@@ -1168,6 +1256,19 @@ function ProjectDetail({
             Schedule Reviews
           </button>
         )}
+        {project.walkthroughs.length > 0 && (
+          <button
+            onClick={() => setView("walkthroughs")}
+            className="rounded-full px-4 py-2 text-sm font-semibold transition"
+            style={
+              view === "walkthroughs"
+                ? { backgroundColor: HEADER_BG, color: "#ffffff" }
+                : { backgroundColor: "#ffffff", color: "#475569", border: `1px solid ${BORDER}` }
+            }
+          >
+            Walkthroughs
+          </button>
+        )}
       </div>
 
       <section className={view === "updates" ? "block print:block" : "hidden print:block"}>
@@ -1282,6 +1383,35 @@ function ProjectDetail({
                     View Report →
                   </span>
                 </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {project.walkthroughs.length > 0 && (
+        <section className={view === "walkthroughs" ? "block" : "hidden"}>
+          <div className="customer-print-card rounded-3xl border bg-white shadow-sm" style={{ borderColor: BORDER }}>
+            <div className="px-6 pt-5 pb-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: HEADER_BG }}>
+                Site Walkthroughs
+              </p>
+              <p className="mt-0.5 text-sm text-slate-500">
+                Immersive 360° video walkthroughs of the jobsite. Click any walkthrough to open the interactive player.
+              </p>
+            </div>
+            <div className="space-y-6 p-6">
+              {groupWalkthroughsByWeek(project.walkthroughs).map((group) => (
+                <div key={group.weekStart ? group.weekStart.toISOString() : "undated"} className="space-y-3">
+                  <p className="text-sm font-semibold" style={{ color: HEADER_BG }}>
+                    {group.weekStart ? `Week of ${format(group.weekStart, "MMMM d, yyyy")}` : "Undated"}
+                  </p>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {group.items.map((walkthrough) => (
+                      <WalkthroughCard key={walkthrough.id} walkthrough={walkthrough} />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
