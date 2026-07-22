@@ -38,12 +38,13 @@ const ASSEMBLY_ALIASES = [
   { id: "60163", aliases: ["temp sensor room net stat", "room temp sensor", "zone temp sensor", "stat sensor"] },
   // Temperature sensors — VAV/FCU discharge air (60093 EMT / 60037 Plenum)
   { id: "60093", aliases: ["discharge air temp", "discharge air temperature sensor", "da temp sensor", "vav discharge air temp", "fcu discharge air temp", "vav da temp", "supply air temp sensor unit"] },
+  // Humidity + temp — keep ahead of duct-temp aliases so temp/RH phrases win.
+  { id: "60064", aliases: ["humtemp duct", "hum temp duct", "duct temp humidity", "duct humidity temp", "ra temp rh", "ra temp humidity", "ra duct temp humidity", "temp rh duct", "duct temp rh sensor", "humidity duct"] },
   // Temperature sensors — duct (AHU/RTU applications; NOT for VAV/FCU discharge air)
-  { id: "60073", aliases: ["duct temp", "temp sensor duct", "duct temperature sensor", "leaving air temp", "sa duct temp", "oa duct temp", "ma temp", "mixed air temp", "preheat leaving air temp", "cooling leaving air temp", "reheat leaving air temp", "duct temperature"] },
+  { id: "60073", aliases: ["duct temp", "temp sensor duct", "duct temperature sensor", "leaving air temp", "sa duct temp", "oa duct temp", "preheat leaving air temp", "cooling leaving air temp", "reheat leaving air temp", "duct temperature"] },
+  { id: "60075", aliases: ["avg temp sensor", "averaging temp sensor", "averaging element", "mixed air temp", "ma temp", "return air temp sensor"] },
   { id: "60078", aliases: ["well temp sensor", "welltmpsensor", "temp sensor immersion", "immersion temperature sensor", "immersion temp", "hwr immersion temp", "chwr immersion temp", "hot water immersion", "chilled water immersion"] },
   { id: "60076", aliases: ["well temp sensor short", "immersion temp short run"] },
-  // Humidity + temp
-  { id: "60064", aliases: ["humtemp duct", "hum temp duct", "duct temp humidity", "duct humidity temp", "ra temp rh", "ra duct temp humidity", "temp rh duct", "duct temp rh sensor", "humidity duct"] },
   { id: "60065", aliases: ["humtemp room", "hum temp room", "room temp humidity", "space temp rh"] },
   // Pressure — air
   { id: "60059", aliases: ["dp switch air", "air dp switch", "differential pressure switch", "filter dp switch", "dp switch filter", "filter differential pressure switch"] },
@@ -185,7 +186,9 @@ function resolveExactAssembly(assemblyRef, assemblyName, sourceText) {
 
   const exactTokenMatch = ASSEMBLY_ENTRIES.find((entry) => {
     const candidateText = normalizeAssemblyText(`${entry.name || ""} ${entry.desc || ""}`);
-    return Boolean(candidateText) && (candidateText.includes(name) || name.includes(candidateText) || candidateText.includes(source) || source.includes(candidateText));
+    const matchesName = Boolean(name) && (candidateText.includes(name) || name.includes(candidateText));
+    const matchesSource = Boolean(source) && (candidateText.includes(source) || source.includes(candidateText));
+    return Boolean(candidateText) && (matchesName || matchesSource);
   });
   if (exactTokenMatch) return exactTokenMatch;
 

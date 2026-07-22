@@ -40,6 +40,7 @@ export const PLANT_COMPS = {
   "cooling-tower": [
     { id:"ct-fan-ss",    emtAID:"60131", plnAID:"60131", name:"CT Fan Start/Stop",         cat:"Controls", controlsId: null,    def:true,  desc:"Cooling tower fan start/stop/status" },
     { id:"ct-byp-vlv",   emtAID:"60115", plnAID:"60115", name:"Bypass Valve",              cat:"Actuators", controlsId: "CTL-DEV-ACT-VALVE-MOD",   def:true,  desc:"Condenser water bypass valve + wiring" },
+    { id:"ct-ctrl-vlv",  emtAID:"60077", plnAID:"60077", name:"Control Valve Actuator",    cat:"Actuators", controlsId: "CTL-DEV-ACT-VALVE-MOD",   def:false, desc:"Generic modulating control valve actuator" },
     { id:"ct-sup-t",     emtAID:"60076", plnAID:"60076", name:"CW Supply Temp",            cat:"Temperature", controlsId: "CTL-DEV-TEMP-PIPE", def:true,  desc:"Condenser water supply temp" },
     { id:"ct-ret-t",     emtAID:"60076", plnAID:"60076", name:"CW Return Temp",            cat:"Temperature", controlsId: "CTL-DEV-TEMP-PIPE", def:true,  desc:"Condenser water return temp" },
     { id:"ct-vfd",       emtAID:"60129", plnAID:"60129", name:"CT Fan VFD",                cat:"Drives", controlsId: "CTL-DEV-VFD-INTERFACE",      def:false, desc:"Variable frequency drive on CT fan" },
@@ -104,4 +105,3 @@ export const PLANT_COMPS = {
     { id:"pcw-homerun",  emtAID:"60012", plnAID:"60012", name:"Home Run Conduit",          cat:"Wiring", controlsId: null,      def:true,  desc:"Conduit run to central plant panel", wire:"—" },
   ],
 };
-

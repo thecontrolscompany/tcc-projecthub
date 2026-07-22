@@ -297,7 +297,7 @@ export const toggleAhuComponentSelection = (selected, componentId, options = {})
 
 export const AHU_COMPS = [
   withLegacyArrays(
-    { id: "oa-temp", emtAID: "60075", plnAID: "60075", name: "OA Temp Sensor", cat: "Temperature", controlsId: "CTL-DEV-TEMP-DUCT", unitMtl: 95, unitLbr: 1.0,
+    { id: "oa-temp", emtAID: "60073", plnAID: "60073", name: "OA Temp Sensor", cat: "Temperature", controlsId: "CTL-DEV-TEMP-DUCT", unitMtl: 95, unitLbr: 1.0,
       showWhen: () => true, defaultWhen: () => true, desc: "Outside air temp at intake" },
     A, A
   ),
@@ -309,7 +309,7 @@ export const AHU_COMPS = [
     M, M
   ),
   withLegacyArrays(
-    { id: "sa-temp", emtAID: "60075", plnAID: "60075", name: "SA Temp Sensor", cat: "Temperature", controlsId: "CTL-DEV-TEMP-DUCT", unitMtl: 85, unitLbr: 0.75,
+    { id: "sa-temp", emtAID: "60073", plnAID: "60073", name: "SA Temp Sensor", cat: "Temperature", controlsId: "CTL-DEV-TEMP-DUCT", unitMtl: 85, unitLbr: 0.75,
       showWhen: () => true, defaultWhen: () => true, desc: "Supply air temp in discharge duct" },
     A, A
   ),
@@ -367,12 +367,12 @@ export const AHU_COMPS = [
     A, []
   ),
   withLegacyArrays(
-    { id: "oa-rh", emtAID: "60066", plnAID: "60066", name: "OA Humidity", cat: "Humidity", controlsId: "CTL-DEV-HUMID-DUCT", unitMtl: 195, unitLbr: 1.0,
+    { id: "oa-rh", emtAID: "60064", plnAID: "60064", name: "OA Humidity", cat: "Humidity", controlsId: "CTL-DEV-HUMID-DUCT", unitMtl: 195, unitLbr: 1.0,
       showWhen: () => true, desc: "Outside air relative humidity" },
     A, []
   ),
   withLegacyArrays(
-    { id: "sa-rh", emtAID: "60066", plnAID: "60066", name: "SA Humidity", cat: "Humidity", controlsId: "CTL-DEV-HUMID-DUCT", unitMtl: 185, unitLbr: 1.0,
+    { id: "sa-rh", emtAID: "60064", plnAID: "60064", name: "SA Humidity", cat: "Humidity", controlsId: "CTL-DEV-HUMID-DUCT", unitMtl: 185, unitLbr: 1.0,
       showWhen: () => true,
       defaultWhen: cfg => {
         const next = normalizeAhuCfg(cfg);
@@ -382,7 +382,7 @@ export const AHU_COMPS = [
     A, ["mixed", "doas"]
   ),
   withLegacyArrays(
-    { id: "ra-rh", emtAID: "60066", plnAID: "60066", name: "RA Humidity", cat: "Humidity", controlsId: "CTL-DEV-HUMID-DUCT", unitMtl: 185, unitLbr: 1.0,
+    { id: "ra-rh", emtAID: "60064", plnAID: "60064", name: "RA Humidity", cat: "Humidity", controlsId: "CTL-DEV-HUMID-DUCT", unitMtl: 185, unitLbr: 1.0,
       showWhen: cfg => normalizeAhuCfg(cfg).ahuType !== "doas",
       defaultWhen: cfg => normalizeAhuCfg(cfg).ahuType === "mixed",
       desc: "Return air humidity sensor" },
@@ -661,4 +661,3 @@ export const AHU_COMPS = [
     [], []
   ),
 ];
-
