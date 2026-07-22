@@ -265,6 +265,9 @@ function renderImportedScopeList(scopeImport) {
       if (!point || typeof point !== "object") return [];
       const pointName = String(point.name || "").trim();
       if (!pointName) return [];
+      // Internal estimating allowance derived from system count -- not confirmed
+      // customer-facing scope, so it doesn't belong in the generated proposal.
+      if (pointName.toLowerCase() === "home run conduit allowance") return [];
       const pointQty = Number(point.qty || 1);
       const pointNotes = String(point.notes || "").trim();
       const qtyPrefix = Number.isFinite(pointQty) && pointQty > 1 ? `Qty ${pointQty} ` : "";
@@ -702,7 +705,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
   const exclusionHtml = renderBulletBlock(getExclusionItems(settings));
 
   const tokens = {
-    PAGE_HEADER_PROJECT: `${projectName} | HVAC Controls Estimate`,
+    PAGE_HEADER_PROJECT: `${projectName} | HVAC Controls Installation Proposal`,
     PROJECT_NAME: `${projectName}${versionSuffix}`,
     CUSTOMER_NAME: getProposalCustomerName(estimate),
     CUSTOMER_CONTACT: getCustomerContact(estimate, settings) || "-",
