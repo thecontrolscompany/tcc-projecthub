@@ -11,9 +11,10 @@ import { PLANT_COMPS } from "../plant/plantData.js";
 import { NETWORK_COMPS } from "../network/networkData.js";
 import { EXHAUST_FAN_COMPS } from "../exhaustFan/exhaustFanData.js";
 import { getAllEquipmentComponents } from "../../shared/componentCatalog.js";
-import { calcAssembly } from "../../shared/assemblyData.js";
+import { ASSEMBLIES, calcAssembly } from "../../shared/assemblyData.js";
 
 const CUSTOM_COMPS = getAllEquipmentComponents();
+const warnedMissingAssemblyCosts = new Set();
 let controlsDefaultOverrides = {};
 
 export const COMPS_MAP = {
@@ -89,6 +90,15 @@ function getCompCost(item, comp) {
   const snap = item.priceSnap?.[comp.id] || (aid && aid !== "undefined" ? item.priceSnap?.[aid] : null);
   if (snap) return snap;
   if (!aid || aid === "undefined") return { mtl: comp.unitMtl || 0, lbr: comp.unitLbr || 0 };
+  if (!ASSEMBLIES[aid]) {
+    const hasFallbackCost = comp.unitMtl != null || comp.unitLbr != null;
+    const warningKey = `${comp.id}:${aid}`;
+    if (!hasFallbackCost && !warnedMissingAssemblyCosts.has(warningKey)) {
+      warnedMissingAssemblyCosts.add(warningKey);
+      console.warn(`[estimateCalc] Component "${comp.id}" references missing assembly "${aid}" and has no unitMtl/unitLbr fallback.`);
+    }
+    return { mtl: comp.unitMtl || 0, lbr: comp.unitLbr || 0 };
+  }
   return calcAssembly(aid);
 }
 
