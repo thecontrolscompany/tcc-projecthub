@@ -3,6 +3,9 @@ export const NETWORK_COMPS = [
   { id:"net-panel-emt", emtAID:"60004", plnAID:"60004", name:"Network Panel (EMT)",      cat:"Controls", controlsId: null,  def:true,  desc:"BACnet network panel — EMT complete" },
   { id:"net-panel-pln", emtAID:"60003", plnAID:"60003", name:"Network Panel (Plenum)",   cat:"Controls", controlsId: null,  def:false, desc:"BACnet network panel — Plenum complete" },
   { id:"net-panel-only",emtAID:"60002", plnAID:"60002", name:"Network Panel (Panel Only)",cat:"Controls", controlsId: null, def:false, desc:"Panel enclosure only — no wiring" },
+  { id:"net-panel-large",emtAID:"60095", plnAID:"60095", name:"Large Network Panel",       cat:"Controls", controlsId: null, def:false, desc:"Large controller and transformer enclosure" },
+  { id:"net-integration",emtAID:"60122", plnAID:"60122", name:"Third-Party Integration Point",cat:"Controls", controlsId: null, def:false, desc:"Third-party system integration or status point" },
+  { id:"net-seq",      emtAID:"60118", plnAID:"60118", name:"Sequence (No Home Run)",     cat:"Wiring", controlsId: null,    def:false, desc:"Sequence and conduit allowance without a home run" },
   // Ethernet
   { id:"net-cat6",      emtAID:"852",   plnAID:"854",   name:"CAT6 Cable",               cat:"Wiring", controlsId: null,    def:true,  desc:"CAT6 ethernet cable per foot" },
   { id:"net-cat6a",     emtAID:"853",   plnAID:"855",   name:"CAT6a Cable",              cat:"Wiring", controlsId: null,    def:false, desc:"CAT6a ethernet cable per foot" },

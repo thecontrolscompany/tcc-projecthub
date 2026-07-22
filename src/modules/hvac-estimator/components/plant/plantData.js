@@ -43,6 +43,9 @@ export const PLANT_COMPS = {
     { id:"ct-sup-t",     emtAID:"60076", plnAID:"60076", name:"CW Supply Temp",            cat:"Temperature", controlsId: "CTL-DEV-TEMP-PIPE", def:true,  desc:"Condenser water supply temp" },
     { id:"ct-ret-t",     emtAID:"60076", plnAID:"60076", name:"CW Return Temp",            cat:"Temperature", controlsId: "CTL-DEV-TEMP-PIPE", def:true,  desc:"Condenser water return temp" },
     { id:"ct-vfd",       emtAID:"60129", plnAID:"60129", name:"CT Fan VFD",                cat:"Drives", controlsId: "CTL-DEV-VFD-INTERFACE",      def:false, desc:"Variable frequency drive on CT fan" },
+    { id:"ct-ddc",       emtAID:"60087", plnAID:"60087", name:"DDC Control Panel",         cat:"Controls", controlsId: null,    def:false, desc:"Cooling tower DDC control panel" },
+    { id:"ct-dp",        emtAID:"60100", plnAID:"60100", name:"CW Diff. Pressure",         cat:"Pressure", controlsId: null,    def:false, desc:"Condenser water differential pressure" },
+    { id:"ct-integration",emtAID:"60122", plnAID:"60122", name:"Third-Party Integration Point",cat:"Controls", controlsId: null, def:false, desc:"Cooling tower integration and status point" },
     { id:"ct-pwr-trunk", emtAID:"60135", plnAID:"60052", name:"24V Power Trunk",           cat:"Controls", controlsId: null,    def:true,  desc:"24VAC transformer + power trunk to DDC controllers", wire:"—" },
     { id:"ct-homerun",   emtAID:"60012", plnAID:"60012", name:"Home Run Conduit",          cat:"Wiring", controlsId: null,      def:true,  desc:"Conduit run to central plant panel", wire:"—" },
   ],
@@ -101,5 +104,4 @@ export const PLANT_COMPS = {
     { id:"pcw-homerun",  emtAID:"60012", plnAID:"60012", name:"Home Run Conduit",          cat:"Wiring", controlsId: null,      def:true,  desc:"Conduit run to central plant panel", wire:"—" },
   ],
 };
-
 

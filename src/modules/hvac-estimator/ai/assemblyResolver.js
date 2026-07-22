@@ -56,6 +56,8 @@ const ASSEMBLY_ALIASES = [
   { id: "60152", aliases: ["insertion flow meter", "flow meter", "water flow meter"] },
   // Valve actuators — reheat coil (VAV/FCU, 60081 EMT / 60033 Plenum)
   { id: "60081", aliases: ["reheat valve", "heating coil control valve", "vav reheat valve", "hot water reheat valve", "hw reheat valve", "proportional reheat valve", "modulating reheat valve", "hw heating coil valve", "reheat valve actuator", "fcu heating valve"] },
+  // Valve actuators — cooling tower bypass
+  { id: "60115", aliases: ["cooling tower bypass valve", "ct bypass valve", "tower bypass valve", "cooling tower bypass"] },
   // Valve actuators — generic (AHU coils, bypass, PICV, plant-level)
   { id: "60077", aliases: ["valve actuator", "valveactuator", "control valve actuator", "bypass control valve", "picv control", "2 way valve", "2way valve", "hot water valve", "cooling valve", "heating valve", "preheat valve", "chw valve", "hw bypass valve", "ahu heating valve", "ahu cooling valve"] },
   { id: "60079", aliases: ["zone valve actuator", "zone valve act", "zone valve actuator and valve"] },
@@ -100,7 +102,7 @@ function tokenize(value) {
     .filter((token) => token && token.length > 1 && !["and", "for", "with", "the", "of", "to", "or"].includes(token));
 }
 
-function scoreCandidate(candidate, sourceTokens, sourceText) {
+function scoreCandidate(candidate, sourceTokens, sourceText, contextTokens = []) {
   const candidateText = normalizeAssemblyText(`${candidate.name || ""} ${candidate.desc || ""}`);
   if (!candidateText) return 0;
 
@@ -113,6 +115,11 @@ function scoreCandidate(candidate, sourceTokens, sourceText) {
   for (const token of sourceTokens) {
     if (!candidateTokenSet.has(token)) continue;
     score += DEFAULT_WEIGHTS.get(token) || 1;
+  }
+  const sourceTokenSet = new Set(sourceTokens);
+  for (const token of contextTokens) {
+    if (sourceTokenSet.has(token) || !candidateTokenSet.has(token)) continue;
+    score += (DEFAULT_WEIGHTS.get(token) || 1) * 0.5;
   }
 
   if (candidateTokens.includes("controller") && candidateTokens.includes("xfmr")) {
@@ -150,7 +157,7 @@ function resolveAliasAssembly(sourceText) {
   return null;
 }
 
-function resolveControllerPanel(sourceTokens, sourceText) {
+function resolveControllerPanel(sourceTokens) {
   if (!sourceTokens.includes("controller") && !sourceTokens.includes("panel") && !sourceTokens.includes("xfmr") && !sourceTokens.includes("transformer")) {
     return null;
   }
@@ -185,10 +192,12 @@ function resolveExactAssembly(assemblyRef, assemblyName, sourceText) {
   return null;
 }
 
-export function resolveAssemblyCatalogMatch({ assemblyRef = "", assemblyName = "", sourceText = "" } = {}) {
+export function resolveAssemblyCatalogMatch({ assemblyRef = "", assemblyName = "", sourceText = "", contextText = "" } = {}) {
   const normalizedSource = normalizeAssemblyText([assemblyRef, assemblyName, sourceText].filter(Boolean).join(" "));
   const sourceTokens = tokenize(normalizedSource);
-  if (!sourceTokens.length && !normalizedSource) return null;
+  const normalizedContext = normalizeAssemblyText(contextText);
+  const contextTokens = tokenize(normalizedContext);
+  if (!sourceTokens.length && !normalizedSource && !contextTokens.length) return null;
 
   const exact = resolveExactAssembly(assemblyRef, assemblyName, sourceText);
   if (exact) {
@@ -199,12 +208,13 @@ export function resolveAssemblyCatalogMatch({ assemblyRef = "", assemblyName = "
     };
   }
 
-  const alias = resolveAliasAssembly(normalizedSource);
+  const alias = resolveAliasAssembly(normalizedSource)
+    || resolveAliasAssembly([normalizedSource, normalizedContext].filter(Boolean).join(" "));
   if (alias) {
     return alias;
   }
 
-  const controllerPanel = resolveControllerPanel(sourceTokens, normalizedSource);
+  const controllerPanel = resolveControllerPanel(sourceTokens);
   if (controllerPanel) {
     return {
       id: String(controllerPanel.id),
@@ -215,7 +225,7 @@ export function resolveAssemblyCatalogMatch({ assemblyRef = "", assemblyName = "
 
   let best = null;
   for (const candidate of ASSEMBLY_ENTRIES) {
-    const score = scoreCandidate(candidate, sourceTokens, normalizedSource);
+    const score = scoreCandidate(candidate, sourceTokens, normalizedSource, contextTokens);
     if (!best || score > best.score) {
       best = { candidate, score };
     }

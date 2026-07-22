@@ -133,6 +133,7 @@ export const toggleUhComponentSelection = (selected, componentId, options = {}) 
 export const UH_COMPS = [
   // Controls
   { id:"uh-ctrl",     emtAID:"60087", plnAID:"60087", name:"DDC Control Panel",      cat:"Controls", controlsId: null,    def:true,  defaultWhen: () => true, desc:"Field DDC panel - BACnet" },
+  { id:"uh-integration", emtAID:"60122", plnAID:"60122", name:"Unit Integration/Status", cat:"Controls", controlsId: null, def:false, desc:"Third-party unit integration and status monitoring" },
   // Heating
   { id:"uh-hw-vlv",   groupId:"uh-heating-type", emtAID:"60077", plnAID:"60077", name:"HW Valve Actuator",      cat:"Actuators", controlsId: "CTL-DEV-ACT-VALVE-MOD",   def:true,  showWhen: cfg => normalizeUhCfg(cfg).heatingType === "hw-valve", defaultWhen: cfg => normalizeUhCfg(cfg).heatingType === "hw-valve", desc:"Hot water valve actuator" },
   { id:"uh-htg2",     groupId:"uh-heating-type", emtAID:"60109", plnAID:"60109", name:"Electric Heat 2-Stage",  cat:"Actuators", controlsId: "CTL-DEV-STAGE-RELAY",   def:false, showWhen: cfg => normalizeUhCfg(cfg).heatingType === "electric-2stage", defaultWhen: cfg => normalizeUhCfg(cfg).heatingType === "electric-2stage", desc:"2-stage electric heat relay" },
@@ -146,4 +147,3 @@ export const UH_COMPS = [
   { id:"uh-pwr-trunk", emtAID:"60135", plnAID:"60052", name:"24V Power Trunk",       cat:"Controls", controlsId: null,    def:false, desc:"24VAC transformer + power trunk to DDC controllers", wire:"-" },
   { id:"uh-homerun",   emtAID:"60016", plnAID:"60016", name:"Home Run Conduit",       cat:"Wiring", controlsId: null,      def:true,  defaultWhen: () => true, desc:"EMT home run to main panel", wire:"-" },
 ];
-

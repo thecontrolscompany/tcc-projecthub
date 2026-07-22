@@ -297,6 +297,7 @@ function buildImportedPointCustomEntries(point, selectedAssemblyIds = new Set(),
       assemblyRef: asString(assemblyRecord.assemblyRef),
       assemblyName: asString(assemblyRecord.assemblyName),
       sourceText: asString(assemblyRecord.notes),
+      contextText: asString(point.name),
     });
     const sourceAssemblyName = asString(assemblyRecord.assemblyName) || asString(assemblyRecord.assemblyRef) || "Imported Assembly";
     const assemblyName = resolved?.name || sourceAssemblyName;

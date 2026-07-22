@@ -92,8 +92,10 @@ export const DX_COMPS = [
   { id:"dx-float",      emtAID:"60058", plnAID:"60026", name:"Condensate Float Safety",  cat:"Safety", controlsId: "CTL-DEV-CONDENSATE",      def:true,  desc:"Overflow shutdown safety switch" },
   { id:"dx-filter",     emtAID:"60059", plnAID:"60059", name:"Filter DP Switch",         cat:"Pressure", controlsId: "CTL-DEV-PRESS-FILTER",    def:false, desc:"Differential pressure across filter" },
   { id:"dx-smoke",      emtAID:"60122", plnAID:"60122", name:"Smoke Shutdown",           cat:"Safety", controlsId: "CTL-DEV-SMOKE",      def:false, desc:"Duct smoke shutdown interlock" },
+  { id:"dx-vfd",        emtAID:"60129", plnAID:"60129", name:"Unit Fan VFD",             cat:"Drives", controlsId: "CTL-DEV-VFD-INTERFACE", def:false, desc:"Variable frequency drive for unit fan speed control" },
+  { id:"dx-damper",     emtAID:"60069", plnAID:"60069", name:"Damper Actuator",          cat:"Actuators", controlsId: null,    def:false, desc:"Damper actuator for unit airflow control" },
+  { id:"dx-interlock",  emtAID:"60123", plnAID:"60123", name:"Hardwire Interlock",       cat:"Controls", controlsId: null,    def:false, desc:"Hardwired equipment interlock" },
   { id:"dx-pwr-trunk",  emtAID:"60135", plnAID:"60052", name:"24V Power Trunk",          cat:"Controls", controlsId: null,    def:false, desc:"24VAC transformer and power trunk", wire:"-" },
   { id:"dx-homerun",    emtAID:"60016", plnAID:"60016", name:"Home Run Conduit",         cat:"Wiring", controlsId: null,      def:true,  desc:"EMT home run to panel", wire:"-" },
 ];
-
 
