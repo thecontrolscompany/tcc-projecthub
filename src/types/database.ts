@@ -229,10 +229,20 @@ export interface WeeklyUpdate {
   pm?: Profile;
 }
 
+export type WalkthroughWaypoint = {
+  t: number;
+  x: number;
+  y: number;
+};
+
 export interface ProjectWalkthrough {
   id: string;
   project_id: string;
-  share_url: string;
+  share_url: string | null;
+  player_type: "insta360" | "psv";
+  video_url: string | null;
+  plan_url: string | null;
+  waypoints: WalkthroughWaypoint[] | null;
   media_id: string | null;
   title: string | null;
   duration: string | null;

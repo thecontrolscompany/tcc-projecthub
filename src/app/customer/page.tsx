@@ -71,7 +71,9 @@ interface CustomerProject {
 interface CustomerWalkthrough {
   id: string;
   project_id: string;
-  share_url: string;
+  player_type: "insta360" | "psv";
+  share_url: string | null;
+  video_url: string | null;
   title: string | null;
   duration: string | null;
   cover_image_url: string | null;
@@ -705,12 +707,16 @@ function groupWalkthroughsByWeek(walkthroughs: CustomerWalkthrough[]) {
 function WalkthroughCard({ walkthrough }: { walkthrough: CustomerWalkthrough }) {
   const [imgError, setImgError] = useState(false);
   const showImage = walkthrough.cover_image_url && !imgError;
+  const isPsv = walkthrough.player_type === "psv";
+  const href = isPsv
+    ? `/psv-walkthrough-viewer.html?data=${encodeURIComponent(`/api/walkthroughs/${walkthrough.id}/data`)}&embed=1`
+    : walkthrough.share_url ?? "#";
 
   return (
     <a
-      href={walkthrough.share_url}
+      href={href}
       target="_blank"
-      rel="noopener noreferrer"
+      rel="noopener"
       className="group block overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:shadow-md"
       style={{ borderColor: BORDER }}
     >
@@ -742,6 +748,11 @@ function WalkthroughCard({ walkthrough }: { walkthrough: CustomerWalkthrough }) 
         {walkthrough.duration && (
           <span className="absolute bottom-2 right-2 rounded-md bg-black/65 px-2 py-0.5 text-xs font-semibold text-white">
             {walkthrough.duration}
+          </span>
+        )}
+        {isPsv && (
+          <span className="absolute left-2 top-2 rounded-full bg-teal-700/90 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm">
+            360° + live position
           </span>
         )}
       </div>

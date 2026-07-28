@@ -38,6 +38,30 @@ Scope:
 
 Effort: days. Recommended first step; answers ~80% of "where am I looking?".
 
+### Stitched per-floor plan bases (built 2026-07-27)
+
+The floor-plan images to use as the marker/tracking base for Mobile Arena already exist —
+built by stitching GMC's quadrant piping sheets into one plan per level. Each source PDF is
+four sheets (Quad A/B/C/D) on the GMC template, laid out `D|A` over `C|B` with the arena bowl
+as the center void. Assembly method: each sheet carries green dashed **match lines** at the
+quadrant seams (detectable by color) — right quads' left seam at x≈281, left quads' right seam
+at x≈2829, top quads' bottom seam at y≈2373, bottom quads' top seam at y≈284 (at native
+3456×2592 render); crop each sheet to its own side of the seams, drop the title block (x≥3204),
+tile, then strip the green seam cross and white out the duplicated "Mechanical Plan Notes"
+blocks. Chosen over these sheets' bare architectural overlay because these **carry the
+equipment labels and pipe callouts**, which the plain floor overlay lacks.
+
+Output (single-page, ~200 dpi, equipment labels intact), in
+`OneDrive - The Controls Company, LLC/Projects/Mobile Arena/test/`:
+- `Catwalk Piping Plan - STITCHED.pdf`
+- `Event Piping Plan - STITCHED.pdf`
+- `Concourse Piping Plan - STITCHED.pdf`
+- `Suite Piping Plan - STITCHED.pdf`
+
+These are the plans to calibrate the ARKit tracking path against (2-point calibration maps the
+track's meters onto the plan). Note the `test/` folder is a scratch/working location and gets
+reorganized — promote these to a stable path before wiring them into `project_floor_plans`.
+
 ## Phase 2 — Moving dot synced to playback (high effort, re-hosts off Insta360)
 
 The dot moves along a path on the plan as the video plays (see the interactive concept
@@ -148,3 +172,42 @@ trimmed share):
 
 Ship Phase 1 if/when this becomes a priority; treat Phase 2 as a separate decision gated on
 willingness to re-host and to do the per-video click-along.
+
+## Phase 2 chosen path — hybrid self-hosted PSV player (PoC built 2026-07-27)
+
+Decision: **hybrid**. Keep most clips on Insta360 (free hosting, plain cards). Selectively
+**convert** high-value clips to a self-hosted equirectangular MP4 played in
+**Photo Sphere Viewer (PSV)** with a **live minimap dot** synced to playback. This resolves the
+Insta360 CSP blocker (we own the player, so we can read `currentTime`) while preserving interactive
+360 look-around — strictly better than pre-rendering the dot into a flat video.
+
+### PoC status — all working, verified locally in Chrome
+Authoring + viewer tools live in OneDrive `Projects/Mobile Arena/Walkthrough Tracking/`:
+- `clickalong.html` — pan/zoom plan; drop timed waypoints two ways: real-time stopwatch, or type the
+  paused video's timecode (m:ss) then click. Exports `<area>_waypoints.json` (`{area, image_name,
+  points:[{t,x,y}], ...}`). Also renders a standalone pulsing-dot MP4 (WebCodecs+mp4-muxer, or the
+  `render_dot.py` / `Make dot video.bat` fallback) for Insta360 clips that can't sync.
+- `psv-walkthrough-viewer.html` — PSV (three.js + video adapter + video plugin, CDN) with a
+  draggable/zoomable minimap; dot follows `videoPlugin.getTime()`. **Auto-loads** from
+  `?data=<jsonUrl>&embed=1` (JSON may carry `video_url`/`plan_url`/`points`); `embed=1` hides the
+  authoring toolbar. Verified with the real Mobile Arena exterior clip (VID_027, 8:44) + its
+  Exterior waypoints on the stitched Event plan.
+- Stitched per-floor plans (Catwalk/Event/Concourse/Suite) are the minimap bases — see the
+  "Stitched per-floor plan bases" section above.
+
+### Portal integration — `codex/task-127-psv-hybrid-walkthroughs.md`
+Adds `player_type` ('insta360'|'psv'), `video_url`, `plan_url`, `waypoints jsonb` to
+`project_walkthroughs`; admin UI to create a psv row; a `/api/walkthroughs/[id]/data` endpoint that
+feeds the viewer; and a customer card that opens `/psv-walkthrough-viewer.html?data=…&embed=1` (the
+viewer is already copied to `public/`). Customer uploads nothing.
+
+- **Hosting:** Cloudflare R2 (no egress fees) for the MP4 + plan image; R2 CORS required because the
+  cross-origin video becomes a WebGL texture. Export from Insta360 Studio as **H.264** (not H.265 —
+  browsers can't decode HEVC in `<video>`).
+- **Cross-origin verification (2026-07-27):** PSV v5's video adapter creates the video element with
+  `crossOrigin = "anonymous"` whenever viewer `withCredentials` is false. The deployed viewer sets
+  that option explicitly and also loads the R2 plan image anonymously. ProjectHub currently sends
+  no Content-Security-Policy header, so no app CSP allowlist change is needed; R2's CORS and range
+  response headers remain mandatory.
+- **Cost model:** convert only select clips, so storage/bandwidth stays bounded; everything else
+  keeps Insta360's free hosting.

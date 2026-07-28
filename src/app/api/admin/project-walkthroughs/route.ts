@@ -3,9 +3,23 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
+import type { WalkthroughWaypoint } from "@/types/database";
 
 function canManage(role: string | undefined) {
   return Boolean(role && ["admin", "ops_manager"].includes(role));
+}
+
+function isWalkthroughWaypoint(point: unknown): point is WalkthroughWaypoint {
+  if (typeof point !== "object" || point === null) return false;
+  const candidate = point as Partial<WalkthroughWaypoint>;
+  return (
+    typeof candidate.t === "number" &&
+    Number.isFinite(candidate.t) &&
+    typeof candidate.x === "number" &&
+    Number.isFinite(candidate.x) &&
+    typeof candidate.y === "number" &&
+    Number.isFinite(candidate.y)
+  );
 }
 
 function isInsta360ShareUrl(value: string) {
@@ -131,11 +145,62 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => null);
   const projectId = typeof body?.projectId === "string" ? body.projectId : "";
+  const playerType = body?.playerType === "psv" ? "psv" : "insta360";
   const shareUrl = typeof body?.shareUrl === "string" ? body.shareUrl.trim() : "";
-  const recordedDate = typeof body?.recordedDate === "string" && body.recordedDate ? body.recordedDate : null;
+  const videoUrl = typeof body?.videoUrl === "string" ? body.videoUrl.trim() : "";
+  const planUrl = typeof body?.planUrl === "string" ? body.planUrl.trim() : "";
+  const title = typeof body?.title === "string" ? body.title.trim() : "";
+  const area = typeof body?.area === "string" ? body.area.trim() : "";
+  const recordedDate =
+    typeof body?.recordedDate === "string" && body.recordedDate
+      ? body.recordedDate
+      : new Date().toISOString().slice(0, 10);
 
-  if (!projectId || !shareUrl) {
-    return NextResponse.json({ error: "Missing project ID or share URL." }, { status: 400 });
+  if (!projectId) {
+    return NextResponse.json({ error: "Missing project ID." }, { status: 400 });
+  }
+
+  if (playerType === "psv") {
+    const waypoints = Array.isArray(body?.waypoints)
+      ? body.waypoints
+          .filter(isWalkthroughWaypoint)
+          .map((point: WalkthroughWaypoint) => ({
+            t: point.t,
+            x: point.x,
+            y: point.y,
+          }))
+      : [];
+
+    if (!videoUrl || waypoints.length === 0) {
+      return NextResponse.json(
+        { error: "A video URL and at least one waypoint are required for a self-hosted walkthrough." },
+        { status: 400 }
+      );
+    }
+
+    const { data, error } = await auth.adminClient
+      .from("project_walkthroughs")
+      .insert({
+        project_id: projectId,
+        player_type: "psv",
+        share_url: null,
+        video_url: videoUrl,
+        plan_url: planUrl || null,
+        waypoints,
+        title: title || area || "360 Walkthrough",
+        recorded_date: recordedDate,
+      })
+      .select("*")
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true, walkthrough: data });
+  }
+
+  if (!shareUrl) {
+    return NextResponse.json({ error: "Missing Insta360 share URL." }, { status: 400 });
   }
   if (!isInsta360ShareUrl(shareUrl)) {
     return NextResponse.json({ error: "Enter a valid Insta360 cloud share URL." }, { status: 400 });
@@ -147,12 +212,13 @@ export async function POST(request: Request) {
     .from("project_walkthroughs")
     .insert({
       project_id: projectId,
+      player_type: "insta360",
       share_url: shareUrl,
       media_id: parseMediaId(shareUrl),
       title: meta.title ?? shareUrl,
       duration: meta.duration,
       cover_image_url: meta.coverImageUrl,
-      recorded_date: recordedDate ?? new Date().toISOString().slice(0, 10),
+      recorded_date: recordedDate,
     })
     .select("*")
     .single();

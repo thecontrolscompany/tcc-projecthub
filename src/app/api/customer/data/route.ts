@@ -167,7 +167,7 @@ export async function GET(request: Request) {
         .order("packet_date", { ascending: false }),
       adminClient
         .from("project_walkthroughs")
-        .select("id, project_id, share_url, title, duration, cover_image_url, recorded_date")
+        .select("id, project_id, player_type, share_url, video_url, title, duration, cover_image_url, recorded_date")
         .in("project_id", projectIds)
         .order("recorded_date", { ascending: false })
         .order("created_at", { ascending: false }),

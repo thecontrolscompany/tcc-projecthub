@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>360 Walkthrough + Live Position Dot</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5/index.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/video-plugin@5/index.min.css">
+<style>
+  :root{--bg:#0f172a;--panel:#1e293b;--panel2:#334155;--line:#475569;--text:#e2e8f0;--muted:#94a3b8;--accent:#38bdf8;--accent2:#0ea5e9;--dot:#2563eb}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,sans-serif;overflow:hidden}
+  #psv{position:absolute;inset:0}
+  #bar{position:absolute;top:0;left:0;right:0;z-index:20;display:flex;gap:8px;align-items:center;padding:8px 10px;background:linear-gradient(#0f172aee,#0f172a00)}
+  button,label.btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer}
+  button.primary{background:var(--accent2);border-color:var(--accent2);color:#04222f}
+  button:hover,label.btn:hover{border-color:var(--accent)}
+  #bar .sp{flex:1}
+  #status{font-size:12px;color:var(--muted)}
+  #mini{position:absolute;right:16px;bottom:58px;z-index:20;width:460px;max-width:calc(100vw - 32px);background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 8px 30px #0008}
+  #miniHead{display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:12px;border-bottom:1px solid var(--line)}
+  #miniHead b{color:var(--text);flex:1} #miniHead span{color:var(--muted);font-variant-numeric:tabular-nums}
+  .mbtn{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:5px;font-size:13px;line-height:1;padding:3px 8px;cursor:pointer}
+  .mbtn:hover{border-color:var(--accent)}
+  .mbtn.active{border-color:var(--accent);color:var(--accent)}
+  #miniCanvas{cursor:grab;touch-action:none}
+  #miniWrap{position:relative;background:#fff}
+  #miniCanvas{display:block;width:100%}
+  .ctl{display:flex;align-items:center;gap:6px;padding:6px 10px;font-size:12px;color:var(--muted);border-top:1px solid var(--line)}
+  .ctl input[type=range]{flex:1}
+  #hint{position:absolute;top:52px;left:50%;transform:translateX(-50%);z-index:20;font-size:12px;color:var(--muted);background:#0f172acc;border:1px solid var(--line);border-radius:20px;padding:4px 12px}
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
+    "@photo-sphere-viewer/core": "https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/core@5/index.module.js",
+    "@photo-sphere-viewer/equirectangular-video-adapter": "https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/equirectangular-video-adapter@5/index.module.js",
+    "@photo-sphere-viewer/video-plugin": "https://cdn.jsdelivr.net/npm/@photo-sphere-viewer/video-plugin@5/index.module.js"
+  }
+}
+</script>
+</head>
+<body>
+<div id="psv"></div>
+
+<div id="bar">
+  <label class="btn">📹 Load 360 (video/image)<input id="fileSrc" type="file" accept="video/*,image/*" hidden></label>
+  <label class="btn">📍 Load waypoints JSON<input id="fileWp" type="file" accept="application/json,.json" hidden></label>
+  <label class="btn">🗺 Load plan image<input id="filePlan" type="file" accept="image/*" hidden></label>
+  <button id="simBtn" title="Simulate playback (image mode)">▶ Simulate</button>
+  <button id="fsBtn" title="Fullscreen (keeps the map visible)">⛶ Fullscreen</button>
+  <div class="sp"></div>
+  <div id="status">Loading Photo Sphere Viewer…</div>
+</div>
+<div id="hint">Drag inside the sphere to look around. The dot on the minimap follows playback time.</div>
+
+<div id="mini">
+  <div id="miniHead"><b id="miniTitle">Position</b><span id="miniTime">0:00</span><button id="miniFollow" class="mbtn" title="Follow the dot (auto-pan). Drag to explore, double-click to reset, wheel to zoom.">⌖ Follow</button><button id="miniSize" class="mbtn" title="Resize map panel">⤢</button></div>
+  <div id="miniWrap"><canvas id="miniCanvas"></canvas></div>
+  <div class="ctl">nudge <input id="nudge" type="range" min="-5" max="5" step="0.1" value="0"><span id="nudgeVal">0.0s</span></div>
+</div>
+
+<script type="module">
+import { Viewer } from '@photo-sphere-viewer/core';
+import { EquirectangularVideoAdapter } from '@photo-sphere-viewer/equirectangular-video-adapter';
+import { VideoPlugin } from '@photo-sphere-viewer/video-plugin';
+window.__psvReady = true;
+
+const el=id=>document.getElementById(id);
+const statusEl=el('status');
+const setStatus=t=>statusEl.textContent=t;
+setStatus('Load a 360 source to begin.');
+
+let viewer=null, planImg=null, wp=null, videoPlugin=null;
+let simPlaying=false, simBase=0, simClock=0, isVideo=false;
+
+/* ---------- 360 viewer ---------- */
+function initViewer(source, video){
+  isVideo=video;
+  if(viewer){ try{viewer.destroy();}catch(e){} viewer=null; } videoPlugin=null;
+  try{
+    // R2 media is public/signed without cookies. PSV maps false to
+    // video.crossOrigin="anonymous" before creating the WebGL VideoTexture.
+    const cfg={ container: el('psv'), navbar:['zoom','move'], withCredentials:false };
+    if(video){
+      cfg.adapter=[EquirectangularVideoAdapter,{ muted:false }];
+      cfg.panorama={ source };
+      cfg.plugins=[[VideoPlugin,{}]];
+      cfg.navbar=['video','zoom','move','caption'];
+    } else {
+      cfg.panorama=source;    // core's default equirectangular image adapter
+    }
+    viewer=new Viewer(cfg);
+    viewer.addEventListener('ready',()=>{ if(video){ try{videoPlugin=viewer.getPlugin('video');}catch(e){} } setStatus(video?'360 video loaded — press play (bottom bar). Dot follows playback.':'Panorama loaded (image mode — use ▶ Simulate to move the dot).'); },{once:true});
+    viewer.addEventListener('panorama-error',e=>setStatus('Viewer error: '+((e&&e.message)||'could not load source')));
+  }catch(err){ setStatus('Viewer init failed: '+err.message); console.error(err); }
+}
+
+/* ---------- playback time ---------- */
+function currentTime(){
+  if(isVideo && videoPlugin){ try{ return videoPlugin.getTime(); }catch(e){} }
+  if(simPlaying) simClock=(performance.now()-simBase)/1000;
+  return simClock;
+}
+function totalTime(){
+  if(isVideo && videoPlugin){ try{ const d=videoPlugin.getDuration(); if(d) return d; }catch(e){} }
+  if(wp && wp.points.length) return wp.points[wp.points.length-1].t;
+  return 0;
+}
+
+/* ---------- minimap ---------- */
+const mc=el('miniCanvas'), mctx=mc.getContext('2d');
+let miniW=460; const MINI_SIZES=[360,460,600,760];
+function layoutMini(){
+  if(!planImg) return;
+  const w=Math.min(miniW, window.innerWidth-32);
+  el('mini').style.width=w+'px';
+  const h=Math.round(w*planImg.naturalHeight/planImg.naturalWidth);
+  mc.width=w*devicePixelRatio; mc.height=h*devicePixelRatio; mc.style.height=h+'px';
+  mctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
+el('miniSize').onclick=()=>{ const i=MINI_SIZES.indexOf(miniW); miniW=MINI_SIZES[(i+1)%MINI_SIZES.length]; layoutMini(); };
+function posAt(t){
+  if(!wp||!wp.points.length) return null;
+  const off=parseFloat(el('nudge').value)||0; const tt=t-off; const p=wp.points;
+  if(tt<=p[0].t) return p[0];
+  if(tt>=p[p.length-1].t) return p[p.length-1];
+  for(let i=0;i<p.length-1;i++){ const a=p[i],b=p[i+1];
+    if(tt>=a.t&&tt<=b.t){ const f=(tt-a.t)/((b.t-a.t)||1); return {x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f}; } }
+  return p[p.length-1];
+}
+const fmt=s=>{ s=Math.max(0,s||0); const m=Math.floor(s/60); return m+':'+String(Math.floor(s-m*60)).padStart(2,'0'); };
+let mscale=1, mox=0, moy=0, follow=true;   // map zoom + pan; follow keeps the dot centered
+function clampPan(w,h){ mox=Math.min(0,Math.max(w-w*mscale,mox)); moy=Math.min(0,Math.max(h-h*mscale,moy)); }
+function drawMini(){
+  requestAnimationFrame(drawMini);
+  if(!planImg) return;
+  const w=mc.width/devicePixelRatio, h=mc.height/devicePixelRatio;
+  const t=currentTime(); el('miniTime').textContent=fmt(t)+' / '+fmt(totalTime());
+  const pos=posAt(t);
+  if(follow && pos && mscale>1){ mox=w/2 - pos.x*w*mscale; moy=h/2 - pos.y*h*mscale; }
+  clampPan(w,h);
+  el('miniFollow').classList.toggle('active',follow);
+  mctx.clearRect(0,0,w,h); mctx.drawImage(planImg, mox, moy, w*mscale, h*mscale);
+  const MX=px=>px*w*mscale+mox, MY=py=>py*h*mscale+moy;
+  if(wp&&wp.points.length>1){ mctx.strokeStyle='rgba(37,99,235,.35)'; mctx.lineWidth=1.5; mctx.beginPath();
+    wp.points.forEach((p,i)=>{const x=MX(p.x),y=MY(p.y);i?mctx.lineTo(x,y):mctx.moveTo(x,y);}); mctx.stroke(); }
+  if(!pos) return;
+  const cx=MX(pos.x), cy=MY(pos.y), ph=(t*0.9)%1, r=6+ph*16;
+  mctx.strokeStyle='rgba(37,99,235,'+((1-ph)*0.6).toFixed(3)+')'; mctx.lineWidth=3; mctx.beginPath(); mctx.arc(cx,cy,r,0,7); mctx.stroke();
+  mctx.fillStyle='rgba(37,99,235,.25)'; mctx.beginPath(); mctx.arc(cx,cy,11,0,7); mctx.fill();
+  mctx.fillStyle='#2563eb'; mctx.beginPath(); mctx.arc(cx,cy,6,0,7); mctx.fill();
+  mctx.lineWidth=2; mctx.strokeStyle='#fff'; mctx.stroke();
+}
+requestAnimationFrame(drawMini);
+
+/* ---------- minimap pan / zoom ---------- */
+mc.addEventListener('wheel',e=>{ if(!planImg) return; e.preventDefault();
+  const w=mc.width/devicePixelRatio, h=mc.height/devicePixelRatio;
+  const r=mc.getBoundingClientRect(); const cx=e.clientX-r.left, cy=e.clientY-r.top;
+  const bx=(cx-mox)/mscale, by=(cy-moy)/mscale;
+  const f=e.deltaY<0?1.15:1/1.15; mscale=Math.min(10,Math.max(1,mscale*f));
+  mox=cx-bx*mscale; moy=cy-by*mscale; clampPan(w,h);
+},{passive:false});
+let mdown=null;
+mc.addEventListener('pointerdown',e=>{ mdown={x:e.clientX,y:e.clientY,mox,moy}; mc.setPointerCapture(e.pointerId); mc.style.cursor='grabbing'; });
+mc.addEventListener('pointermove',e=>{ if(!mdown) return; follow=false;
+  mox=mdown.mox+(e.clientX-mdown.x); moy=mdown.moy+(e.clientY-mdown.y);
+  const w=mc.width/devicePixelRatio, h=mc.height/devicePixelRatio; clampPan(w,h); });
+mc.addEventListener('pointerup',()=>{ mdown=null; mc.style.cursor='grab'; });
+mc.addEventListener('dblclick',()=>{ mscale=1; mox=0; moy=0; follow=true; });
+el('miniFollow').onclick=()=>{ follow=!follow; if(follow && mscale<=1) mscale=3; };
+
+/* ---------- loading ---------- */
+el('fileSrc').onchange=e=>{ const f=e.target.files[0]; if(!f) return;
+  const url=URL.createObjectURL(f); const video=f.type.startsWith('video');
+  setStatus('Loading '+(video?'video':'image')+'…'); initViewer(url, video); };
+el('filePlan').onchange=e=>{ const f=e.target.files[0]; if(!f) return; loadPlan(URL.createObjectURL(f)); };
+function loadPlan(url){ const im=new Image(); im.crossOrigin='anonymous'; im.onload=()=>{planImg=im;layoutMini();}; im.onerror=()=>setStatus('Could not load plan image.'); im.src=url; }
+function applyWaypoints(d, planBase){
+  wp=d; wp.points=(wp.points||[]).map(p=>({t:+p.t,x:+p.x,y:+p.y})).sort((a,b)=>a.t-b.t);
+  const off=wp.time_offset_sec||0; el('nudge').value=off; el('nudgeVal').textContent=(+off).toFixed(1)+'s';
+  el('miniTitle').textContent=wp.area||'Position';
+  if(!planImg && planBase && wp.image_name){ loadPlan(planBase+encodeURIComponent(wp.image_name)); }
+}
+el('fileWp').onchange=e=>{ const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader(); rd.onload=()=>{ try{
+    applyWaypoints(JSON.parse(rd.result), 'plans/');
+    setStatus('Waypoints loaded ('+wp.points.length+' points). '+(planImg?'':'Now load the plan image.'));
+  }catch(err){ setStatus('Bad JSON: '+err.message); } }; rd.readAsText(f); };
+
+el('nudge').oninput=()=>el('nudgeVal').textContent=(+el('nudge').value).toFixed(1)+'s';
+el('simBtn').onclick=()=>{ if(!isVideo){ simPlaying=!simPlaying; simBase=performance.now()-simClock*1000;
+  el('simBtn').textContent=simPlaying?'❚❚ Pause':'▶ Simulate'; } };
+window.addEventListener('resize',layoutMini);
+
+// page-level fullscreen so the overlay bar + minimap stay visible (PSV's own fullscreen only expands the sphere)
+el('fsBtn').onclick=()=>{ if(document.fullscreenElement){ document.exitFullscreen(); } else { document.documentElement.requestFullscreen().catch(e=>setStatus('Fullscreen blocked: '+e.message)); } };
+document.addEventListener('fullscreenchange',()=>{
+  el('fsBtn').textContent=document.fullscreenElement?'⤢ Exit full':'⛶ Fullscreen';
+  layoutMini();
+  if(viewer){ try{ viewer.autoSize ? viewer.autoSize() : window.dispatchEvent(new Event('resize')); }catch(e){ window.dispatchEvent(new Event('resize')); } }
+});
+
+// expose a couple hooks for testing
+window.__psv={ get viewer(){return viewer;}, currentTime, posAt, get wp(){return wp;}, get planImg(){return planImg;} };
+window.__test={
+  loadSrc:(url,isVid)=>{ setStatus('Loading '+(isVid?'video':'image')+'…'); initViewer(url,isVid); },
+  loadPlanUrl:loadPlan,
+  loadWpObj:(o)=>{ wp=o; wp.points=(wp.points||[]).map(p=>({t:+p.t,x:+p.x,y:+p.y})).sort((a,b)=>a.t-b.t);
+    el('miniTitle').textContent=wp.area||'Position'; },
+  play:()=>{ if(videoPlugin) videoPlugin.play(); }
+};
+
+/* ---------- portal auto-load (no upload needed) ----------
+   Link forms the portal can use:
+     psv_viewer.html?data=<jsonUrl>&embed=1            (JSON carries video_url + plan_url + points)
+     psv_viewer.html?video=<url>&plan=<url>&data=<jsonUrl>&embed=1
+   embed=1 (or customer=1) hides the upload toolbar for the customer view. */
+(async function autoload(){
+  const q=new URLSearchParams(location.search);
+  const embed = q.get('embed')==='1' || q.get('customer')==='1';
+  if(embed){ el('bar').style.display='none'; const h=el('hint'); if(h) h.style.display='none'; }
+  let srcUrl  = q.get('video') || q.get('src');
+  let planUrl = q.get('plan');
+  const dataUrl = q.get('data') || q.get('waypoints');
+  if(!srcUrl && !dataUrl) return;   // no params → stay in manual authoring mode
+  try{
+    let d=null;
+    if(dataUrl){ const res=await fetch(dataUrl); if(!res.ok) throw new Error('waypoints HTTP '+res.status); d=await res.json(); }
+    srcUrl  = srcUrl  || (d && d.video_url);
+    planUrl = planUrl || (d && d.plan_url);
+    if(planUrl) loadPlan(planUrl);
+    if(d) applyWaypoints(d, planUrl ? null : 'plans/');
+    if(srcUrl){ const isVid=/\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(srcUrl); setStatus('Loading…'); initViewer(srcUrl, isVid); }
+    else setStatus('No video URL provided in link or JSON.');
+  }catch(err){ setStatus('Auto-load failed: '+err.message); console.error(err); }
+})();
+</script>
+<script>
+  // if the module failed to import (e.g. offline), surface it
+  setTimeout(()=>{ if(!window.__psvReady){ document.getElementById('status').textContent='Photo Sphere Viewer failed to load (needs internet for the CDN).'; } }, 4000);
+</script>
+</body>
+</html>
