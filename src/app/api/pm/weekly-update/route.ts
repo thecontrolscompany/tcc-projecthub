@@ -150,12 +150,10 @@ async function applyProjectSideEffects(
     pocUpdates,
     billingPeriodId,
     pctComplete,
-    status,
   }: {
     pocUpdates: Array<{ id: string; pct_complete: number }>;
     billingPeriodId: string | null;
     pctComplete: number;
-    status: WeeklyUpdateStatus;
   }
 ) {
   if (pocUpdates.length > 0) {
@@ -174,7 +172,11 @@ async function applyProjectSideEffects(
     }
   }
 
-  if (billingPeriodId && status === "submitted") {
+  // The billing period holds the single % the admin portal reads. It is updated
+  // whenever a billingPeriodId is explicitly attached — on submit, and now also
+  // when a PM clicks "Save POC Changes" so the weighted POC total reaches the
+  // portal without waiting for a full weekly-report submit.
+  if (billingPeriodId) {
     const { error } = await admin
       .from("billing_periods")
       .update({ pct_complete: pctComplete })
@@ -306,7 +308,6 @@ export async function POST(request: Request) {
       pocUpdates: normalized.value.pocUpdates,
       billingPeriodId: normalized.value.billingPeriodId,
       pctComplete: normalized.value.pctComplete,
-      status: normalized.value.status,
     });
 
     return NextResponse.json({ update: data });
@@ -409,7 +410,6 @@ export async function PATCH(request: Request) {
       pocUpdates: normalized.value.pocUpdates,
       billingPeriodId: normalized.value.billingPeriodId,
       pctComplete: normalized.value.pctComplete,
-      status: normalized.value.status,
     });
 
     return NextResponse.json({ update: data, editLogged });

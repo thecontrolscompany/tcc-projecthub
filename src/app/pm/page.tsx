@@ -930,6 +930,7 @@ function UpdateForm({
             id: item.id,
             pct_complete: Math.min(Math.max((pocPcts[item.id] ?? item.pct_complete * 100) / 100, 0), 1),
           })),
+          billingPeriodId: currentPeriod?.id ?? null,
         }),
       });
 
