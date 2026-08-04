@@ -248,9 +248,12 @@ function inferImportedType(system) {
   if (haystack.includes("niagara") || haystack.includes("tridium") || haystack.includes("front end") || haystack.includes("head end") || haystack.includes("workstation") || haystack.includes("supervisor")) return "network";
   if (haystack.includes("ahu") || haystack.includes("air handling")) return "ahu";
   if (haystack.includes("vav") || haystack.includes("terminal box") || haystack.includes("variable volume") || haystack.includes("variable air volume") || haystack.includes("air terminal unit")) return "vav";
+  // VRF must be checked before rtu/dx: a VRF system is heat-pump based, so a
+  // spelled-out name ("Variable Refrigerant Flow ... Heat Pump") would otherwise
+  // fall into the "heat pump"/"split system" dx branch below.
+  if (haystack.includes("vrf") || haystack.includes("variable refrigerant")) return "vrf";
   if (haystack.includes("rtu") || haystack.includes("roof top") || haystack.includes("packaged rooftop")) return "rtu";
   if (haystack.includes("dx") || haystack.includes("heat pump") || haystack.includes("split system")) return "dx";
-  if (haystack.includes("vrf")) return "vrf";
   if (haystack.includes("fcu") || haystack.includes("fan coil")) return "fcu";
   if (haystack.includes("unit heater") || haystack.includes("uh")) return "uh";
   if (haystack.includes("exhaust fan") || haystack.includes("exhaust") || haystack === "ef") return "exhaust-fan";
