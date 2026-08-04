@@ -60,8 +60,15 @@ function asNumber(value, fallback = 1) {
 function normalizeImportedPointQty(pointQty, systemQty) {
   const qty = Math.max(1, asNumber(pointQty, 1));
   const equipmentQty = Math.max(1, asNumber(systemQty, 1));
-  if (equipmentQty > 1 && qty > 1 && qty % equipmentQty === 0) {
-    return Math.max(1, qty / equipmentQty);
+  // Point counts in a scope are usually expressed as building-wide totals
+  // ("(280) thermostats") while the estimator applies them per equipment unit
+  // and then multiplies by the system qty. When the point count spans all the
+  // units (qty >= equipmentQty), convert it to a per-unit quantity so it is not
+  // double-counted. Rounding (not just exact division) handles real scopes
+  // where the totals don't divide evenly — e.g. 280 units across 270 rooms,
+  // which previously stayed at 280 per room and exploded to 280 x 270.
+  if (equipmentQty > 1 && qty >= equipmentQty) {
+    return Math.max(1, Math.round(qty / equipmentQty));
   }
   return qty;
 }
