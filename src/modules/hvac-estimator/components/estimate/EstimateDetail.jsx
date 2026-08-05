@@ -308,6 +308,7 @@ export function EstimateDetail({
   showBidAlternates = true,
   platformEstimateId = null,
   initialProposalTab = null,
+  initialAutoProvision = false,
 }) {
   const { subPage, setSubPage, applyDefaultInstallType, refreshAllPrices, controlsCatalog } = useEstimate();
   const [updatingPrices, setUpdatingPrices] = useState(false);
@@ -937,6 +938,7 @@ export function EstimateDetail({
         <ProposalDetailsModal
           open={showProposalDetails}
           initialTab={initialProposalTab === "documents" ? "documents" : "details"}
+          initialAutoProvision={initialAutoProvision}
           settings={settings}
           onChange={updateSettings}
           onClose={() => setShowProposalDetails(false)}

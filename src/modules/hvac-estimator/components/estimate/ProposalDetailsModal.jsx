@@ -7,6 +7,7 @@ import { ProposalScopePanel } from "./ProposalScopePanel.jsx";
 export function ProposalDetailsModal({
   open,
   initialTab = "details",
+  initialAutoProvision = false,
   settings,
   onChange,
   onClose,
@@ -110,6 +111,7 @@ export function ProposalDetailsModal({
                 drawingBasis={drawingBasis}
                 onChangeDrawingBasis={onChangeDrawingBasis}
                 onFolderProvisioned={onFolderProvisioned}
+                autoProvision={initialAutoProvision}
               />
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">

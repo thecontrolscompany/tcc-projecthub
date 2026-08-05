@@ -257,6 +257,7 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const initialProposalTab = searchParams.get("panel") === "documents" ? "documents" : null;
+  const initialAutoProvision = searchParams.get("autoProvision") === "1";
 
   useEffect(() => {
     if (initialProposalTab) {
@@ -515,6 +516,7 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
           deleting={deleting}
           platformEstimateId={estimate.id}
           initialProposalTab={initialProposalTab}
+          initialAutoProvision={initialAutoProvision}
           status={status}
           onStatusChange={handleStatusChange}
           saveChipState={saveChipState}
@@ -550,6 +552,7 @@ function LegacyEstimatorWorkspace({
   deleting,
   platformEstimateId,
   initialProposalTab,
+  initialAutoProvision,
 }: {
   estimate: EstimateBody;
   onUpdate: (patch: Partial<EstimateBody>) => void;
@@ -560,6 +563,7 @@ function LegacyEstimatorWorkspace({
   deleting: boolean;
   platformEstimateId: string;
   initialProposalTab?: string | null;
+  initialAutoProvision?: boolean;
   status?: EstimateStatus;
   onStatusChange?: (nextStatus: EstimateStatus) => void;
   saveChipState?: "saved" | "saving" | "unsaved";
@@ -642,6 +646,7 @@ function LegacyEstimatorWorkspace({
       showBidAlternates={true}
       platformEstimateId={platformEstimateId}
       initialProposalTab={initialProposalTab}
+      initialAutoProvision={initialAutoProvision}
     />
   );
 }

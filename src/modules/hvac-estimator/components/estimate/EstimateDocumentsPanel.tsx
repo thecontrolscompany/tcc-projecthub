@@ -39,6 +39,7 @@ type Props = {
   onChangeDrawingBasis: (value: string) => void;
   onFolderProvisioned?: (folder: string) => void;
   embedded?: boolean;
+  autoProvision?: boolean;
 };
 
 const ROLE_OPTIONS: Array<{ value: EstimateDocument["document_role"]; label: string; folder: string }> = [
@@ -82,6 +83,7 @@ export function EstimateDocumentsPanel({
   onChangeDrawingBasis,
   onFolderProvisioned,
   embedded = false,
+  autoProvision = false,
 }: Props) {
   const [documents, setDocuments] = useState<EstimateDocument[]>([]);
   const [loading, setLoading] = useState(false);
@@ -144,20 +146,37 @@ export function EstimateDocumentsPanel({
         setMessage("SharePoint folder provisioned successfully.");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to provision SharePoint folder.");
+      const errorMessage = err instanceof Error ? err.message : "Unable to provision SharePoint folder.";
+      if (/Microsoft access token/i.test(errorMessage)) {
+        // Expired/missing provider token — skip the manual "Reconnect Microsoft" click and
+        // send the user straight into the OAuth flow, resuming provisioning automatically on return.
+        setMessage("Reconnecting to Microsoft…");
+        setProvisioning(false);
+        await reconnectMicrosoft({ auto: true });
+        return;
+      }
+      setError(errorMessage);
     } finally {
       setProvisioning(false);
     }
   }
 
-  async function reconnectMicrosoft() {
+  async function reconnectMicrosoft(options?: { auto?: boolean }) {
     const supabase = createSupabaseClient();
-    const next = `${window.location.pathname}?panel=documents`;
+    const next = `${window.location.pathname}?panel=documents${options?.auto ? "&autoProvision=1" : ""}`;
     await supabase.auth.signInWithOAuth({
       provider: "azure",
       options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
   }
+
+  useEffect(() => {
+    if (autoProvision && !sharepointFolder && !provisioning) {
+      void provisionFolder();
+    }
+    // Only run once on mount in response to the autoProvision resume flag.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleDragEnter(e: React.DragEvent) {
     e.preventDefault();
@@ -522,7 +541,7 @@ export function EstimateDocumentsPanel({
                   </button>
                   <button
                     type="button"
-                    onClick={() => void reconnectMicrosoft()}
+                    onClick={() => void reconnectMicrosoft({ auto: true })}
                     className="rounded-xl border border-border-default bg-surface-base px-3 py-2 text-xs font-semibold text-text-secondary transition hover:bg-surface-overlay"
                   >
                     Reconnect Microsoft
