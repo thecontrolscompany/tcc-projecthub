@@ -555,9 +555,7 @@ export function buildWeeklyReportEmail({
   const reportActivityBullets =
     activityBullets.length > 0
       ? activityBullets
-      : update.labor_hours_detail?.length
-        ? activityBulletsFromCrewLog(crewLog)
-        : [];
+      : activityBulletsFromCrewLog(crewLog);
   const pocSnapshot = Array.isArray(update.poc_snapshot) ? update.poc_snapshot : [];
   const totalWeight = pocSnapshot.reduce((sum, item) => sum + (Number(item.weight) || 0), 0);
 
@@ -823,7 +821,7 @@ export function buildWeeklyReportEmail({
     `Customer: ${customerName ?? "The Controls Company"}`,
     `Week ending: ${weekLabel}`,
     `Complete: ${percentLabel}`,
-    update.activity_updates ? `Activity Updates: ${update.activity_updates}` : null,
+    reportActivityBullets.length > 0 ? `Activity Updates: ${reportActivityBullets.join("; ")}` : null,
     update.material_delivered ? `Material Delivered: ${update.material_delivered}` : null,
     update.equipment_set ? `Equipment Set: ${update.equipment_set}` : null,
     update.safety_incidents ? `Safety Incidents: ${update.safety_incidents}` : null,
@@ -901,7 +899,7 @@ async function loadEmailReportData(
     const itemIds = rawItemRows.map((item) => item.id);
     const { data: rawReceipts } = itemIds.length > 0
       ? await admin
-          .from("bom_receipts")
+          .from("material_receipts")
           .select("bom_item_id, qty_received")
           .in("bom_item_id", itemIds)
       : { data: [] };

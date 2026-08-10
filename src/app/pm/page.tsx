@@ -357,6 +357,7 @@ function UpdateForm({
   const [placeholders, setPlaceholders] = useState<LastUpdatePlaceholders>(EMPTY_PLACEHOLDERS);
   const [draftUpdateId, setDraftUpdateId] = useState<string | null>(null);
   const [submittedUpdateId, setSubmittedUpdateId] = useState<string | null>(null);
+  const [loadedUpdateUpdatedAt, setLoadedUpdateUpdatedAt] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editHistory, setEditHistory] = useState<WeeklyUpdateEdit[]>([]);
   const [editNote, setEditNote] = useState("");
@@ -437,6 +438,7 @@ function UpdateForm({
   }
 
   function populateFromUpdate(update: WeeklyUpdate) {
+    setLoadedUpdateUpdatedAt(update.updated_at);
     setWeekOf(update.week_of);
     setNotes(update.notes ?? "");
     setBlockers(update.blockers ?? "");
@@ -477,6 +479,7 @@ function UpdateForm({
     setIsManualOverride(false);
     setDraftUpdateId(null);
     setSubmittedUpdateId(null);
+    setLoadedUpdateUpdatedAt(null);
     setIsEditing(false);
     setEditHistory([]);
     setEditNote("");
@@ -541,7 +544,10 @@ function UpdateForm({
       setPocPcts(initPcts);
 
       const latestUpdate = updatesData[0] ?? null;
-      const currentWeekUpdate = updatesData.find((update) => update.week_of === thisSaturday) ?? null;
+      const currentWeekUpdate =
+        updatesData.find((update) => update.week_of === thisSaturday && update.status === "draft")
+        ?? updatesData.find((update) => update.week_of === thisSaturday && update.status === "submitted")
+        ?? null;
 
       if (currentWeekUpdate) {
         seedFromLatest(latestUpdate);
@@ -712,7 +718,10 @@ function UpdateForm({
     setLaborHasMapping(null);
   }
 
-  async function saveWeeklyUpdate(nextStatus: "draft" | "submitted", options?: { stayOnForm?: boolean }) {
+  async function saveWeeklyUpdate(
+    nextStatus: "draft" | "submitted",
+    options?: { stayOnForm?: boolean; sendAfterSave?: boolean }
+  ): Promise<string | null> {
     const activeUpdateId = draftUpdateId ?? submittedUpdateId;
     const isSubmittedEdit = Boolean(submittedUpdateId && isEditing);
 
@@ -737,6 +746,7 @@ function UpdateForm({
         credentials: "include",
         body: JSON.stringify({
           updateId: activeUpdateId,
+          expectedUpdatedAt: activeUpdateId ? loadedUpdateUpdatedAt : null,
           projectId: project.id,
           weekOf,
           status: nextStatus,
@@ -777,10 +787,10 @@ function UpdateForm({
 
       if (nextStatus === "draft") {
         setStatusMessage("Draft saved.");
-        return;
+        return savedUpdateId;
       }
 
-      if (savedUpdateId) {
+      if (savedUpdateId && options?.sendAfterSave) {
         await handleSendLiveReportEmail(savedUpdateId);
       }
 
@@ -789,15 +799,25 @@ function UpdateForm({
         setIsEditing(false);
         setStatusMessage(
           json?.editLogged
-            ? "Edit saved, logged, and emailed to customers."
-            : "Weekly update submitted and emailed to customers."
+            ? options?.sendAfterSave
+              ? "Edit saved, logged, and emailed to customers."
+              : "Edit saved and logged. Review the updated report, then use Approve & Send when it is ready."
+            : options?.sendAfterSave
+              ? "Weekly update submitted and emailed to customers."
+              : "Weekly update submitted. Review it, then use Approve & Send when it is ready."
         );
-        return;
+        return savedUpdateId;
       }
 
-      setStatusMessage("Weekly update submitted and emailed to customers.");
+      setStatusMessage(
+        options?.sendAfterSave
+          ? "Weekly update submitted and emailed to customers."
+          : "Weekly update submitted."
+      );
+      return savedUpdateId;
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Save failed. Please try again.");
+      return null;
     } finally {
       setSaving(false);
     }
@@ -900,12 +920,19 @@ function UpdateForm({
     event.preventDefault();
     setDeliveryError(null);
     setDeliveryMessage(null);
+    const savedDraftId = await saveWeeklyUpdate("draft", { stayOnForm: true });
+    if (!savedDraftId) return;
+    await loadDeliveryPreview(savedDraftId);
     setShowSubmitConfirm(true);
   }
 
   async function handleConfirmSubmitAndSend() {
     setShowSubmitConfirm(false);
-    await saveWeeklyUpdate("submitted", { stayOnForm: true });
+    if (submittedUpdateId && !isEditing) {
+      await handleSendLiveReportEmail(submittedUpdateId);
+      return;
+    }
+    await saveWeeklyUpdate("submitted", { stayOnForm: true, sendAfterSave: true });
   }
 
   async function handleSavePocChanges() {
@@ -922,10 +949,20 @@ function UpdateForm({
         credentials: "include",
         body: JSON.stringify({
           updateId: activeUpdateId,
+          expectedUpdatedAt: activeUpdateId ? loadedUpdateUpdatedAt : null,
           projectId: project.id,
           weekOf,
-          status: "draft",
+          status: submittedUpdateId ? "submitted" : "draft",
           pctComplete: pctDecimal,
+          pocSnapshot: pocItems.length > 0
+            ? pocItems.map((item) => ({
+                id: item.id,
+                category: item.category,
+                weight: item.weight,
+                pct_complete: Math.min(Math.max((pocPcts[item.id] ?? item.pct_complete * 100) / 100, 0), 1),
+              }))
+            : null,
+          pocOnly: true,
           pocUpdates: pocItems.map((item) => ({
             id: item.id,
             pct_complete: Math.min(Math.max((pocPcts[item.id] ?? item.pct_complete * 100) / 100, 0), 1),
@@ -2038,7 +2075,7 @@ function UpdateForm({
                         </thead>
                         <tbody>
                           {laborDetail.map((worker, index) => (
-                            <tr key={`${worker.display_name}-${index}`} className="border-b border-border-default last:border-0">
+                            <tr key={index} className="border-b border-border-default last:border-0">
                               <td className="px-3 py-2">
                                 <input
                                   type="text"

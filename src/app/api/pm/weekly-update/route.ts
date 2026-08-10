@@ -31,6 +31,8 @@ type UpdatePayload = {
   laborHoursSource?: "qb_time" | "manual" | null;
   laborHoursPulledAt?: string | null;
   laborHoursDetail?: LaborHoursWorker[] | null;
+  expectedUpdatedAt?: string | null;
+  pocOnly?: boolean;
 };
 
 type NormalizedPayload = {
@@ -58,6 +60,7 @@ type NormalizedPayload = {
   laborHoursSource: "qb_time" | "manual" | null;
   laborHoursPulledAt: string | null;
   laborHoursDetail: LaborHoursWorker[] | null;
+  pocOnly: boolean;
 };
 
 function adminClient() {
@@ -140,6 +143,7 @@ function normalizePayload(body: UpdatePayload): { value: NormalizedPayload } | {
         body.laborHoursSource === "qb_time" || body.laborHoursSource === "manual" ? body.laborHoursSource : null,
       laborHoursPulledAt: typeof body.laborHoursPulledAt === "string" ? body.laborHoursPulledAt : null,
       laborHoursDetail: Array.isArray(body.laborHoursDetail) ? body.laborHoursDetail : null,
+      pocOnly: body.pocOnly === true,
     },
   };
 }
@@ -213,6 +217,7 @@ function toRow(payload: NormalizedPayload, profileId: string) {
     labor_hours_pulled_at: payload.laborHoursPulledAt ?? null,
     labor_hours_detail: payload.laborHoursDetail ?? null,
     submitted_at: payload.status === "submitted" ? new Date().toISOString() : null,
+    updated_at: new Date().toISOString(),
   };
 }
 
@@ -223,7 +228,7 @@ async function loadExistingWeekRow(projectId: string, weekOf: string) {
     .select("*")
     .eq("project_id", projectId)
     .eq("week_of", weekOf)
-    .order("submitted_at", { ascending: false });
+    .order("updated_at", { ascending: false });
 
   if (error) {
     return { error };
@@ -281,15 +286,9 @@ export async function POST(request: Request) {
     }
 
     if (existing?.status === "draft") {
-      return PATCH(
-        new Request(request.url, {
-          method: "PATCH",
-          headers: request.headers,
-          body: JSON.stringify({
-            ...body,
-            updateId: existing.id,
-          }),
-        })
+      return NextResponse.json(
+        { error: "Another editor created or saved this week's draft. Your screen was not overwritten; reload to review the newer version." },
+        { status: 409 }
       );
     }
 
@@ -297,7 +296,7 @@ export async function POST(request: Request) {
     const { data, error } = await authz.admin
       .from("weekly_updates")
       .insert(row)
-      .select("id, status, week_of")
+      .select("id, status, week_of, updated_at")
       .single();
 
     if (error) {
@@ -340,8 +339,15 @@ export async function PATCH(request: Request) {
   }
 
   const updateId = typeof body.updateId === "string" ? body.updateId : "";
+  const expectedUpdatedAt = typeof body.expectedUpdatedAt === "string" ? body.expectedUpdatedAt : "";
   if (!updateId) {
     return badRequest("Missing updateId.");
+  }
+  if (!expectedUpdatedAt) {
+    return NextResponse.json(
+      { error: "This draft needs to be reloaded before it can be saved safely." },
+      { status: 409 }
+    );
   }
 
   const normalized = normalizePayload(body);
@@ -356,7 +362,7 @@ export async function PATCH(request: Request) {
 
   const { data: existing, error: existingError } = await authz.admin
     .from("weekly_updates")
-    .select("id, status")
+    .select("id, status, submitted_at, updated_at")
     .eq("id", updateId)
     .single();
 
@@ -367,6 +373,71 @@ export async function PATCH(request: Request) {
   let editLogged = false;
 
   try {
+    const nextUpdatedAt = new Date().toISOString();
+
+    if (normalized.value.pocOnly) {
+      const { data, error } = await authz.admin
+        .from("weekly_updates")
+        .update({
+          pct_complete: normalized.value.pctComplete,
+          poc_snapshot: normalized.value.pocSnapshot,
+          updated_at: nextUpdatedAt,
+        })
+        .eq("id", updateId)
+        .eq("updated_at", expectedUpdatedAt)
+        .select("id, status, week_of, updated_at")
+        .maybeSingle();
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+      if (!data) {
+        return NextResponse.json(
+          { error: "Someone else saved a newer version of this report. Your screen was not overwritten; reload and reconcile your changes." },
+          { status: 409 }
+        );
+      }
+
+      await applyProjectSideEffects(authz.admin, {
+        pocUpdates: normalized.value.pocUpdates,
+        billingPeriodId: normalized.value.billingPeriodId,
+        pctComplete: normalized.value.pctComplete,
+      });
+
+      return NextResponse.json({ update: data, editLogged: false });
+    }
+
+    const nextRow = {
+      ...toRow(normalized.value, user.id),
+      updated_at: nextUpdatedAt,
+      submitted_at:
+        normalized.value.status === "submitted"
+          ? existing.status === "submitted"
+            ? existing.submitted_at
+            : new Date().toISOString()
+          : existing.status === "submitted"
+            ? existing.submitted_at
+            : null,
+    };
+
+    const { data, error } = await authz.admin
+      .from("weekly_updates")
+      .update(nextRow)
+      .eq("id", updateId)
+      .eq("updated_at", expectedUpdatedAt)
+      .select("id, status, week_of, updated_at")
+      .maybeSingle();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    if (!data) {
+      return NextResponse.json(
+        { error: "Someone else saved a newer version of this report. Your screen was not overwritten; reload and reconcile your changes." },
+        { status: 409 }
+      );
+    }
+
     if (existing.status === "submitted") {
       const { error: editError } = await authz.admin
         .from("weekly_update_edits")
@@ -383,27 +454,6 @@ export async function PATCH(request: Request) {
       }
 
       editLogged = true;
-    }
-
-    const nextRow = {
-      ...toRow(normalized.value, user.id),
-      submitted_at:
-        normalized.value.status === "submitted"
-          ? new Date().toISOString()
-          : existing.status === "submitted"
-            ? new Date().toISOString()
-            : null,
-    };
-
-    const { data, error } = await authz.admin
-      .from("weekly_updates")
-      .update(nextRow)
-      .eq("id", updateId)
-      .select("id, status, week_of")
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     await applyProjectSideEffects(authz.admin, {

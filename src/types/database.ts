@@ -223,7 +223,8 @@ export interface WeeklyUpdate {
   other_remarks: string | null;
   imported_from?: string | null;
   include_bom_report?: boolean;
-  submitted_at: string;
+  submitted_at: string | null;
+  updated_at: string;
   // joined
   project?: Project;
   pm?: Profile;

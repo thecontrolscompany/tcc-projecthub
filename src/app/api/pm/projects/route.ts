@@ -53,9 +53,10 @@ export async function GET(request: Request) {
     const [updatesResult, pocResult, contactsResult, allPeriodsResult] = await Promise.all([
       adminClient
         .from("weekly_updates")
-        .select("id, project_id, pm_id, week_of, pct_complete, notes, blockers, activity_updates, poc_snapshot, crew_log, labor_hours_pulled, labor_hours_override, labor_hours_source, labor_hours_pulled_at, labor_hours_detail, material_delivered, equipment_set, safety_incidents, inspections_tests, delays_impacts, other_remarks, imported_from, status, submitted_at")
+        .select("id, project_id, pm_id, week_of, pct_complete, notes, blockers, activity_updates, poc_snapshot, crew_log, labor_hours_pulled, labor_hours_override, labor_hours_source, labor_hours_pulled_at, labor_hours_detail, material_delivered, equipment_set, safety_incidents, inspections_tests, delays_impacts, other_remarks, imported_from, status, submitted_at, updated_at")
         .eq("project_id", projectId)
-        .order("week_of", { ascending: false }),
+        .order("week_of", { ascending: false })
+        .order("updated_at", { ascending: false }),
       adminClient
         .from("poc_line_items")
         .select("*")
@@ -110,9 +111,6 @@ export async function GET(request: Request) {
       allPeriods,
     });
   }
-
-  const currentMonth = new Date();
-  const currentMonthStr = `${currentMonth.getUTCFullYear()}-${String(currentMonth.getUTCMonth() + 1).padStart(2, "0")}-01`;
 
   const linkedPmDirectoryIds = await linkAndGetPmDirectoryIds(adminClient, user);
   const assignmentQuery = adminClient

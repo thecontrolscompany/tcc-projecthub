@@ -77,6 +77,7 @@
 - [ ] **SharePoint inline previews** — surface document previews and version history on pursuit/project detail pages; sync folder changes back via Graph webhooks
 - [ ] **Visio diagram library** — store and preview `.vsdx` wiring diagrams in the knowledge base; tag by equipment type; "Open in Visio" deep link for editors
 - [ ] **Inbound photo intake** — field staff text or email photos to a project-specific address; photos land in the correct SharePoint folder and appear in the PM portal
+- [ ] **Customer photo uploads** — allow authorized customer contacts to upload project-condition photos from the customer portal without requiring Microsoft SSO; validate project access server-side and store files in the project SharePoint folder through application credentials. Spec: `codex/roadmap-customer-photo-uploads.md`
 
 ### Finance and Analytics
 - [ ] **Advanced analytics / FP&A layer** — variance analysis (actual vs budget, billed vs earned, labor burn vs baseline); scenario modeling (best/expected/worst revenue outlook); rolling forecasts; planning audit history; budget owner input workflow. Benchmarked against Cube.
