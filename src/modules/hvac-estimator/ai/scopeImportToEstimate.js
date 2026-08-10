@@ -393,7 +393,10 @@ function buildImportedEstimateItem(system, index, installType) {
   const systemQty = Math.max(1, asNumber(system.qty, 1));
   const hasAiPoints = points.length > 0;
 
-  const baseSelected = hasAiPoints
+  // "custom" equipment has no catalog-defined default — its fallback selection
+  // is just a starting placeholder for manually-added rows, so it should never
+  // be forced onto an AI-imported row that already has its own parsed points.
+  const defaultSelected = type === "custom" && hasAiPoints
     ? []
     : type === "plant"
       ? getImportedPlantSelections(plantType)
@@ -416,11 +419,9 @@ function buildImportedEstimateItem(system, index, installType) {
     addCompForAssembly(comp.plnAID, comp.id);
   }
 
-  const selectedIds = new Set(baseSelected.map((s) => String(s.id)));
+  const selectedIds = new Set();
   const additionalSelected = [];
   const customEntries = [];
-  // Only imported selections are qty merge targets; pre-seeded defaults remain
-  // untouched if they share an assembly with an imported point.
   const selectedByCompId = new Map();
   const lastCompForAssembly = new Map();
 
@@ -451,6 +452,13 @@ function buildImportedEstimateItem(system, index, installType) {
     }
   }
 
+  // Required catalog defaults (def:true) still land on the item even when the
+  // AI parsed explicit points, as long as no AI point already resolved to that
+  // same component — otherwise defaults were silently dropped whenever a scope
+  // document called out even one unrelated point (e.g. an interlock-only note
+  // for an exhaust fan would drop the default Start/Stop/Status assembly).
+  const missingDefaults = defaultSelected.filter((entry) => !selectedIds.has(String(entry.id)));
+
   return {
     id: crypto.randomUUID(),
     type,
@@ -458,7 +466,7 @@ function buildImportedEstimateItem(system, index, installType) {
     location: asString(system.location).trim(),
     qty: systemQty,
     installType,
-    selected: [...baseSelected, ...additionalSelected],
+    selected: [...missingDefaults, ...additionalSelected],
     custom: coalesceCustomEntries(customEntries),
     priceSnap: {},
     cfg: {
