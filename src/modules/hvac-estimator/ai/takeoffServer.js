@@ -1,5 +1,5 @@
 import { extractProposalFromDocx, extractProposalFromPdf, extractTextFromImage } from "@/lib/opportunity-document-ingestion";
-import { scopeImportSchema, normalizeScopeImport } from "./scopeImportSchema.js";
+import { normalizeScopeImport } from "./scopeImportSchema.js";
 
 const OPENAI_DEFAULT = "https://api.openai.com";
 const XAI_DEFAULT = "https://api.x.ai";
@@ -429,6 +429,13 @@ export async function buildScopeTakeoffPrompt({
   scopeText,
   uploadedFiles,
 }) {
+  const hasPastedScope = Boolean(String(scopeText || "").trim());
+  const hasUploadedFiles = uploadedFiles.length > 0;
+  const expectedSourceType = hasPastedScope && hasUploadedFiles
+    ? "mixed"
+    : hasUploadedFiles
+      ? "uploaded_scope"
+      : "pasted_scope";
   const fileBlock = uploadedFiles.length
     ? uploadedFiles.map((entry) => `FILE: ${entry.name}\n${entry.text || "[No extractable text was available for this file.]"}\n`).join("\n")
     : "";
@@ -437,8 +444,8 @@ export async function buildScopeTakeoffPrompt({
     projectName: "KAFB Jones and Arnold Hall",
     customerName: "Johnson Controls",
     baseScopeName: "Jones Hall",
-    sourceType: "mixed",
-    sourceFiles: ["scope-of-work.pdf"],
+    sourceType: expectedSourceType,
+    sourceFiles: uploadedFiles.map((entry) => entry.name),
     systems: [
       {
         name: "Air Handling Unit (AHU-1)",
@@ -640,6 +647,7 @@ export async function buildScopeTakeoffPrompt({
     "- In the Network / BAS Backbone system, add a point named 'Home Run Conduit Allowance' with assemblyName 'Home Run Conduit' and qty equal to the total system count (minimum 10). This represents EMT conduit runs from field devices back to panels.",
     "- In the same system, add a point named 'Inter-Panel Cabling' with assemblyName 'Control/Status' and qty equal to the number of systems that have their own dedicated control panel (AHUs, large FCUs, plant systems).",
     "The baseScopeName should be the actual project scope label from the proposal, not a generic placeholder like 'Scope'.",
+    `Set sourceType to exactly "${expectedSourceType}" for these inputs. Do not use labels such as "plain_text" or "document".`,
     "Return ONLY a single JSON object that matches this schema exactly:",
     JSON.stringify(schemaExample, null, 2),
     "",
@@ -697,6 +705,6 @@ export async function runScopeTakeoffWithProvider({
   }
 
   const parsed = extractJsonFromText(rawText);
-  const validated = normalizeScopeImport(scopeImportSchema.parse(parsed));
+  const validated = normalizeScopeImport(parsed);
   return { rawText, validated };
 }

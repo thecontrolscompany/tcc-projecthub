@@ -10,6 +10,32 @@ const coercedStringArray = z.union([
   z.string().transform((s) => (s ? [s] : [])),
 ]).default([]);
 
+const SOURCE_TYPE_ALIASES = new Map([
+  ["paste", "pasted_scope"],
+  ["pasted", "pasted_scope"],
+  ["plain_text", "pasted_scope"],
+  ["plaintext", "pasted_scope"],
+  ["scope_text", "pasted_scope"],
+  ["text", "pasted_scope"],
+  ["upload", "uploaded_scope"],
+  ["uploaded", "uploaded_scope"],
+  ["document", "uploaded_scope"],
+  ["documents", "uploaded_scope"],
+  ["file", "uploaded_scope"],
+  ["files", "uploaded_scope"],
+  ["drawing", "drawings"],
+  ["plans", "drawings"],
+  ["combined", "mixed"],
+  ["both", "mixed"],
+]);
+
+const scopeSourceTypeSchema = z.preprocess((value) => {
+  if (typeof value !== "string") return value;
+
+  const normalized = value.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  return SOURCE_TYPE_ALIASES.get(normalized) || normalized;
+}, z.enum(["pasted_scope", "uploaded_scope", "drawings", "mixed"]).default("pasted_scope"));
+
 export const scopeImportAssemblySchema = z.object({
   assemblyRef: z.string().min(1),
   assemblyName: z.string().optional().default(""),
@@ -38,7 +64,7 @@ export const scopeImportSchema = z.object({
   projectName: z.string().min(1).default(""),
   customerName: z.string().optional().default(""),
   baseScopeName: z.string().optional().default(""),
-  sourceType: z.enum(["pasted_scope", "uploaded_scope", "drawings", "mixed"]).default("pasted_scope"),
+  sourceType: scopeSourceTypeSchema,
   sourceFiles: coercedStringArray,
   systems: z.array(scopeImportSystemSchema).default([]),
   assumptions: coercedStringArray,
