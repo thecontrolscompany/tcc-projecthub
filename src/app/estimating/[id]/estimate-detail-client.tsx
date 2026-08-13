@@ -256,8 +256,11 @@ export function EstimateDetailClient({ estimate, installCatalog, controlsCatalog
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const initialProposalTab = searchParams.get("panel") === "documents" ? "documents" : null;
-  const initialAutoProvision = searchParams.get("autoProvision") === "1";
+  // Captured once on mount: the cleanup effect below strips these from the URL via
+  // router.replace, which would otherwise re-derive `initialProposalTab` as null on the
+  // next render (useSearchParams is live) and reset the proposal modal back to "details".
+  const [initialProposalTab] = useState(() => (searchParams.get("panel") === "documents" ? "documents" : null));
+  const [initialAutoProvision] = useState(() => searchParams.get("autoProvision") === "1");
 
   useEffect(() => {
     if (initialProposalTab) {
