@@ -149,6 +149,7 @@ function getSelectedControlsEntries(estimate = {}) {
       const controlsCustomPart = getControlsCustomPart(item, comp.id);
       entries.push({
         itemId: item.id,
+        tag: item.tag || "",
         itemQty,
         compId: comp.id,
         compQty,
@@ -269,7 +270,13 @@ export function calcDdcInfrastructure(selected = [], controlsCatalog = {}, setti
     if (!entry?.controlsId) continue;
     if (isZeroedControlsCustomPart(entry.controlsCustomPart)) continue;
     const qty = Math.max(1, Number(entry.itemQty) || 1);
-    equipmentInstanceCounts.set(entry.itemId, Math.max(equipmentInstanceCounts.get(entry.itemId) || 0, qty));
+    // Dotted tags (e.g. "RTU-1.COND") denote a field device belonging to a parent
+    // piece of equipment ("RTU-1") rather than a standalone unit — group them
+    // together so "per Unit" graphics aren't counted once per sub-tag.
+    const tag = String(entry.tag || "").trim();
+    const dotIndex = tag.indexOf(".");
+    const groupKey = dotIndex > 0 ? tag.slice(0, dotIndex) : entry.itemId;
+    equipmentInstanceCounts.set(groupKey, Math.max(equipmentInstanceCounts.get(groupKey) || 0, qty));
   }
   const equipmentCount = Array.from(equipmentInstanceCounts.values()).reduce((sum, qty) => sum + qty, 0);
   const graphicsCount = equipmentCount;
@@ -299,7 +306,9 @@ export function calcDdcInfrastructure(selected = [], controlsCatalog = {}, setti
 
   if (controllerCount > 0) {
     const controllerRows = [
-      { catalogId: "CTL-NET-SUP", qty: 1 },
+      // Existing Head-End: customer already has a supervisory controller/front-end,
+      // so the new field controller(s) join their network instead of a new one.
+      ...(settings?.existingHeadEnd ? [] : [{ catalogId: "CTL-NET-SUP", qty: 1 }]),
       { catalogId: "CTL-LIC-DEVICE", qty: controllerCount },
       { catalogId: "CTL-ENG-PROGRAM", qty: controllerCount },
       { catalogId: "CTL-ENG-COMMISSION", qty: controllerCount },

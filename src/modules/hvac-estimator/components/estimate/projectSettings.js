@@ -22,6 +22,7 @@ export const DEFAULT_SETTINGS = {
   useCustomerScope: false,
   customerScope: "",
   customerScopeImport: null,
+  existingHeadEnd: false,  // Turnkey only: customer already has a BAS front-end/supervisory controller — omit the new Supervisory Controller from DDC Infrastructure
 
   // ── Project info ────────────────────────────────────────────────────────────
   address:        "",
