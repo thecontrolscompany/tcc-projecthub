@@ -138,6 +138,14 @@ export function NewEstimateClient({ initialEstimate, accounts: initialAccounts }
 
       const estimateId = typeof json?.estimate?.id === "string" ? json.estimate.id : "";
       if (estimateId) {
+        const sharepointFolder = json?.estimate?.body?.sharepointFolder;
+        if (typeof sharepointFolder !== "string" || !sharepointFolder.trim()) {
+          void fetch(`/api/estimates/${estimateId}/provision-folder`, {
+            method: "POST",
+            keepalive: true,
+          }).catch(() => undefined);
+        }
+
         router.replace(`/estimating/${estimateId}`);
       } else {
         router.push("/estimating");
@@ -303,7 +311,7 @@ export function NewEstimateClient({ initialEstimate, accounts: initialAccounts }
             })}
           </div>
           <span className="mt-1 block text-xs text-text-tertiary">
-            You can change this later in the estimate's Settings tab.
+            You can change this later in the estimate&apos;s Settings tab.
           </span>
         </div>
 

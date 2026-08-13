@@ -21,9 +21,12 @@ export function ProposalDetailsModal({
   const [activeTab, setActiveTab] = useState("details");
 
   useEffect(() => {
-    if (!open) return undefined;
-
+    if (!open) return;
     setActiveTab(initialTab === "documents" ? "documents" : "details");
+  }, [open, initialTab]);
+
+  useEffect(() => {
+    if (!open) return undefined;
 
     const onKeyDown = (event) => {
       if (event.key === "Escape") {
@@ -33,7 +36,7 @@ export function ProposalDetailsModal({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose, initialTab]);
+  }, [open, onClose]);
 
   if (!open) return null;
   if (typeof document === "undefined") return null;
