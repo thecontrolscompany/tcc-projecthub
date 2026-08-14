@@ -282,6 +282,9 @@ export function calcDdcInfrastructure(selected = [], controlsCatalog = {}, setti
   const graphicsCount = equipmentCount;
   const rows = [];
 
+  // Controller hardware furnished by others (e.g. the GC): keep the mount/wire/program
+  // labor TCC still performs, but zero the material cost since TCC isn't buying it.
+  const controllerFurnishedByOthers = !!settings?.ddcControllerFurnishedByOthers;
   for (const size of [64, 32, 16, 8]) {
     const qty = controllerSizes.filter((tier) => tier === size).length;
     if (!qty) continue;
@@ -289,7 +292,7 @@ export function calcDdcInfrastructure(selected = [], controlsCatalog = {}, setti
     rows.push({
       ...meta,
       qty,
-      mtlTotal: qty * meta.mtlUnit,
+      mtlTotal: controllerFurnishedByOthers ? 0 : qty * meta.mtlUnit,
       hrsTotal: qty * meta.hrsUnit,
     });
   }

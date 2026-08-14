@@ -188,8 +188,10 @@ export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, ite
           <div style={{ fontSize:10, color:T.dim, lineHeight:1.5 }}>
             Turnkey automatically computes Controls Material and Controls Engineering Labor from the same equipment selection using the controls catalog - no separate draft needed.
           </div>
-          {normalizeEstimateScopeMode(S.estimateScopeMode) === "both" &&
-            toggle("existingHeadEnd", "Existing Head-End", "Customer already has a BAS front-end/supervisory controller — omit the new Supervisory Controller from DDC Infrastructure")}
+          {normalizeEstimateScopeMode(S.estimateScopeMode) === "both" && (<>
+            {toggle("existingHeadEnd", "Existing Head-End", "Customer already has a BAS front-end/supervisory controller — omit the new Supervisory Controller from DDC Infrastructure")}
+            {toggle("ddcControllerFurnishedByOthers", "Controller Furnished by Others", "GC/customer is supplying the DDC field controller hardware — zero its material cost but keep TCC's mount/wire/program labor")}
+          </>)}
         </>)}
 
         {/* Markups */}
