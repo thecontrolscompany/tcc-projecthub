@@ -434,7 +434,7 @@ function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBo
 
   baseRows.push(`
           <tr>
-            <td><strong>${esc(baseLabel)}</strong></td>
+            <td>${esc(baseLabel)}</td>
             <td class="cell-number">${fmtMoney(installationTotal)}</td>
           </tr>`);
 
