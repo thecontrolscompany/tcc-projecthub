@@ -508,7 +508,7 @@ ${alternateRows.join("\n")}
 `;
 }
 
-function renderAlternateScopeSections(alternates, scopeMode) {
+function renderAlternateScopeSections(alternates, scopeMode, controlsCatalog) {
   if (!alternates.length) return "";
 
   const blocks = alternates.map((alternate) => {
@@ -709,7 +709,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
     controlsLabor,
     alternates,
   });
-  const alternateScopeHtml = renderAlternateScopeSections(alternates, scopeMode);
+  const alternateScopeHtml = renderAlternateScopeSections(alternates, scopeMode, controlsCatalog);
   const clarificationHtml = renderBulletBlock(getClarificationItems(settings));
   const exclusionHtml = renderBulletBlock(getExclusionItems(settings));
 
