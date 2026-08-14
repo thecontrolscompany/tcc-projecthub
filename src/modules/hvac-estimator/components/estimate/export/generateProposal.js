@@ -427,13 +427,14 @@ function normalizeAlternates(estimate) {
     .filter(Boolean);
 }
 
-function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBond, controlsMaterial = 0, controlsLabor = 0, alternates = [] }) {
+function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBond, controlsMaterial = 0, controlsLabor = 0, alternates = [], baseLabel = "Installation subtotal" }) {
   const isTurnkey = scopeMode === "both";
+  const hasAlternates = alternates.length > 0;
   const baseRows = [];
 
   baseRows.push(`
           <tr>
-            <td><strong>Installation subtotal</strong></td>
+            <td><strong>${esc(baseLabel)}</strong></td>
             <td class="cell-number">${fmtMoney(installationTotal)}</td>
           </tr>`);
 
@@ -478,15 +479,31 @@ function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBo
     ];
   });
 
-  const totalPrice = [
-    totalAmount || 0,
-    totalBond || 0,
-    controlsMaterial || 0,
-    controlsLabor || 0,
-    ...alternates.map((alternate) => Number(alternate.total || 0) + Number(alternate.bond || 0)),
-  ].reduce((sum, value) => sum + value, 0);
-
-  const totalLabel = isTurnkey ? "TOTAL TURNKEY PRICE" : "TOTAL INSTALL ONLY PRICE";
+  // Bid alternates are mutually exclusive selections, not additive scope -
+  // a single combined total across the base bid and every alternate would be
+  // meaningless (you never buy Option 1 AND Option 2). Only roll everything
+  // into one total when there are no alternates to choose between.
+  const totalRow = hasAlternates
+    ? `
+          <tr>
+            <td colspan="2" style="font-style:italic; color:var(--muted); font-size:12px;">
+              Options above are mutually exclusive selections. Bonds are optional add-ons priced separately per option.
+            </td>
+          </tr>`
+    : (() => {
+        const totalPrice = [
+          totalAmount || 0,
+          totalBond || 0,
+          controlsMaterial || 0,
+          controlsLabor || 0,
+        ].reduce((sum, value) => sum + value, 0);
+        const totalLabel = isTurnkey ? "TOTAL TURNKEY PRICE" : "TOTAL INSTALL ONLY PRICE";
+        return `
+          <tr class="row-total">
+            <td><strong>${totalLabel}</strong></td>
+            <td class="cell-number"><strong>${fmtMoney(totalPrice)}</strong></td>
+          </tr>`;
+      })();
 
   return `
       <table>
@@ -499,10 +516,7 @@ function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBo
         <tbody>
 ${baseRows.join("\n")}
 ${alternateRows.join("\n")}
-          <tr class="row-total">
-            <td><strong>${totalLabel}</strong></td>
-            <td class="cell-number"><strong>${fmtMoney(totalPrice)}</strong></td>
-          </tr>
+${totalRow}
         </tbody>
       </table>
 `;
@@ -708,6 +722,7 @@ export function buildProposalHtmlFromTemplate(template, estimate, itemsWithComps
     controlsMaterial,
     controlsLabor,
     alternates,
+    baseLabel: alternates.length > 0 ? "Option 1 (Base Bid)" : "Installation subtotal",
   });
   const alternateScopeHtml = renderAlternateScopeSections(alternates, scopeMode, controlsCatalog);
   const clarificationHtml = renderBulletBlock(getClarificationItems(settings));
