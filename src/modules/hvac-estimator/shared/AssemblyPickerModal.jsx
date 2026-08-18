@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { T } from "./tokens.js";
 import { fmt$, fmtHr, uid } from "./utils.js";
 import { calcAssembly } from "./assemblyData.js";
@@ -48,7 +49,9 @@ export function AssemblyPickerModal({
     color: T.text, outline: "none", boxSizing: "border-box",
   };
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div style={{ position:"fixed", inset:0, background:"rgba(15,23,42,0.4)", zIndex:500,
       display:"flex", alignItems:"center", justifyContent:"center" }}>
       <div style={{ background:T.surface, border:"1px solid "+T.border, borderRadius:10,
@@ -202,6 +205,7 @@ export function AssemblyPickerModal({
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
