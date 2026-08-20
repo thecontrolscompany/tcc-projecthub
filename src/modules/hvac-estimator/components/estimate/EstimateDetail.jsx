@@ -512,10 +512,17 @@ export function EstimateDetail({
     const trimmedName = String(name || "").trim();
     if (!trimmedName || !options) return;
 
+    // Numeric/markup settings (rates, OH%, etc.) are sensible to inherit from the
+    // parent estimate, but a written scope narrative describes the *base* bid's
+    // full project scope - carrying it into an alternate verbatim would make an
+    // add/deduct option's proposal section claim the whole job as its own scope.
+    // Alternates start with the auto-generated equipment-based scope instead,
+    // unless someone deliberately opts back in and writes alternate-specific text.
+    const { useCustomerScope, customerScope, customerScopeImport, ...inheritedSettings } = estimate.settings || {};
     const next = {
       id: crypto.randomUUID(),
       name: trimmedName,
-      settings: { ...(estimate.settings || {}), estimateScopeMode: options.scopeMode },
+      settings: { ...inheritedSettings, estimateScopeMode: options.scopeMode },
       items: options.seedWithCurrentItems ? cloneItems(estimate.items || []) : [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
