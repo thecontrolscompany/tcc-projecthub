@@ -432,33 +432,21 @@ function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBo
   const hasAlternates = alternates.length > 0;
   const baseRows = [];
 
+  // A single "Price" line, not a cost-bucket breakout: this is a customer-facing
+  // proposal, and the split between installation / controls material / controls
+  // labor is internal cost structure that shouldn't be exposed line-by-line.
+  // Bid alternates still get their own per-option labels below, since those are
+  // mutually-exclusive choices the reader needs to tell apart, not a cost split.
+  const combinedPrice = installationTotal + (isTurnkey ? controlsMaterial + controlsLabor : 0);
   baseRows.push(`
           <tr>
-            <td>${esc(baseLabel)}</td>
-            <td class="cell-number">${fmtMoney(installationTotal)}</td>
+            <td>${esc(hasAlternates ? baseLabel : "Price")}</td>
+            <td class="cell-number">${fmtMoney(combinedPrice)}</td>
           </tr>`);
-
-  if (isTurnkey) {
-    baseRows.push(`
-          <tr>
-            <td><strong>Controls material</strong></td>
-            <td class="cell-number">${fmtMoney(controlsMaterial)}</td>
-          </tr>`);
-    baseRows.push(`
-          <tr>
-            <td><strong>Controls engineering labor</strong></td>
-            <td class="cell-number">${fmtMoney(controlsLabor)}</td>
-          </tr>`);
-    baseRows.push(`
-          <tr>
-            <td><strong>Turnkey subtotal</strong></td>
-            <td class="cell-number">${fmtMoney(installationTotal + controlsMaterial + controlsLabor)}</td>
-          </tr>`);
-  }
 
   baseRows.push(`
           <tr class="row-bond">
-            <td><strong>Optional performance and payment bond${isTurnkey ? " (installation portion)" : ""}</strong></td>
+            <td><strong>Optional performance and payment bond</strong></td>
             <td class="cell-number">add ${fmtMoney(totalBond || 0)}</td>
           </tr>`);
 
