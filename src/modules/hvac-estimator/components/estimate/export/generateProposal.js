@@ -450,21 +450,18 @@ function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBo
             <td class="cell-number">add ${fmtMoney(totalBond || 0)}</td>
           </tr>`);
 
-  const alternateRows = alternates.flatMap((alternate) => {
+  // Alternates fold their bond into the single displayed price rather than
+  // breaking it out - these option amounts are small enough that a separate
+  // bond line isn't worth the clutter, and if a customer waives bond on an
+  // option that's just extra margin, not a price change worth itemizing.
+  const alternateRows = alternates.map((alternate) => {
     const alternateTotal = Number(alternate.total || 0);
     const alternateBond = Number(alternate.bond || 0);
-    return [
-      `
+    return `
           <tr>
             <td>${esc(alternate.label)}</td>
-            <td class="cell-number">${fmtMoney(alternateTotal)}</td>
-          </tr>`,
-      `
-          <tr class="row-bond">
-            <td><strong>Optional performance and payment bond</strong></td>
-            <td class="cell-number">add ${fmtMoney(alternateBond)}</td>
-          </tr>`,
-    ];
+            <td class="cell-number">${fmtMoney(alternateTotal + alternateBond)}</td>
+          </tr>`;
   });
 
   // Bid alternates are mutually exclusive selections, not additive scope -
@@ -475,7 +472,7 @@ function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBo
     ? `
           <tr>
             <td colspan="2" style="font-style:italic; color:var(--muted); font-size:12px;">
-              Options above are mutually exclusive selections. Bonds are optional add-ons priced separately per option.
+              Options above are mutually exclusive selections.
             </td>
           </tr>`
     : (() => {
