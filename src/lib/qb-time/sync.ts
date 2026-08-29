@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { getValidQuickBooksTimeToken } from "./tokens";
 
 const DEFAULT_BASE_URL = "https://rest.tsheets.com/api/v1";
 
@@ -86,12 +87,36 @@ function adminClient() {
   );
 }
 
-function getAccessToken() {
-  const token = process.env.QUICKBOOKS_TIME_ACCESS_TOKEN?.trim();
-  if (!token) {
-    throw new Error("QuickBooks Time access token is not configured.");
+async function getAccessToken() {
+  const legacyToken = process.env.QUICKBOOKS_TIME_ACCESS_TOKEN?.trim();
+  const oauthConfigured = Boolean(
+    process.env.QUICKBOOKS_TIME_CLIENT_ID?.trim() &&
+    process.env.QUICKBOOKS_TIME_CLIENT_SECRET?.trim()
+  );
+
+  if (oauthConfigured) {
+    try {
+      return await getValidQuickBooksTimeToken();
+    } catch (error) {
+      if (!legacyToken) {
+        throw error;
+      }
+      console.warn(
+        "[QB Time] OAuth token is not available yet; falling back to the legacy static token."
+      );
+    }
   }
-  return token;
+
+  if (legacyToken) {
+    console.warn(
+      "[QB Time] Using legacy static access token. Migrate to OAuth token storage for automatic refresh."
+    );
+    return legacyToken;
+  }
+
+  throw new Error(
+    "QuickBooks Time is not connected. Connect it from the TimeHub overview page."
+  );
 }
 
 function getDateDaysAgo(days: number) {
@@ -127,20 +152,29 @@ function getQuickBooksRecord(value: unknown) {
 
 export function getQuickBooksTimeConfig(): QuickBooksTimeConfig {
   const baseUrl = process.env.QUICKBOOKS_TIME_API_BASE_URL?.trim() || DEFAULT_BASE_URL;
-  const accessToken = process.env.QUICKBOOKS_TIME_ACCESS_TOKEN?.trim();
+
+  // Check both legacy static token and new OAuth-based token management
+  const legacyTokenPresent = Boolean(process.env.QUICKBOOKS_TIME_ACCESS_TOKEN?.trim());
+  const oauthConfigured = Boolean(
+    process.env.QUICKBOOKS_TIME_CLIENT_ID?.trim() &&
+    process.env.QUICKBOOKS_TIME_CLIENT_SECRET?.trim()
+  );
+
+  const enabled = legacyTokenPresent || oauthConfigured;
 
   return {
-    enabled: Boolean(accessToken),
+    enabled,
     baseUrl,
-    accessTokenPresent: Boolean(accessToken),
+    accessTokenPresent: legacyTokenPresent,
   };
 }
 
 async function fetchQuickBooksTime<T>(
   path: string,
-  query: Record<string, string | number | undefined> = {}
+  query: Record<string, string | number | undefined> = {},
+  accessToken?: string
 ): Promise<T> {
-  const token = getAccessToken();
+  const token = accessToken ?? await getAccessToken();
   const config = getQuickBooksTimeConfig();
   const url = new URL(`${config.baseUrl}${path}`);
 
@@ -168,7 +202,8 @@ async function fetchQuickBooksTime<T>(
 
 async function fetchQuickBooksTimePaginated(
   path: string,
-  query: Record<string, string | number | undefined> = {}
+  query: Record<string, string | number | undefined> = {},
+  accessToken?: string
 ) {
   let page = 1;
   const all: unknown[] = [];
@@ -178,7 +213,7 @@ async function fetchQuickBooksTimePaginated(
       ...query,
       page,
       limit: 199,
-    });
+    }, accessToken);
 
     all.push(...extractCollection(payload));
 
@@ -216,10 +251,13 @@ export async function importQuickBooksTimeData(days = 30): Promise<QuickBooksTim
   }
 
   try {
+    // Resolve/refresh once per import. QB Time rotates refresh tokens, so the
+    // three parallel collection requests must not race to refresh the same token.
+    const accessToken = await getAccessToken();
     const [users, jobcodes, timesheets] = await Promise.all([
-      fetchQuickBooksTimePaginated("/users"),
-      fetchQuickBooksTimePaginated("/jobcodes"),
-      fetchQuickBooksTimePaginated("/timesheets", { start_date: startDate }),
+      fetchQuickBooksTimePaginated("/users", {}, accessToken),
+      fetchQuickBooksTimePaginated("/jobcodes", {}, accessToken),
+      fetchQuickBooksTimePaginated("/timesheets", { start_date: startDate }, accessToken),
     ]);
 
     const userRows = users

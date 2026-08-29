@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import { getQuickBooksTimeConfig, importQuickBooksTimeData } from "@/lib/qb-time/sync";
+import { getQuickBooksTimeConnectionStatus } from "@/lib/qb-time/tokens";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -19,9 +20,13 @@ export async function POST(request: NextRequest) {
   }
 
   const config = getQuickBooksTimeConfig();
-  if (!config.enabled) {
+  const connectionStatus = config.accessTokenPresent
+    ? { connected: true }
+    : await getQuickBooksTimeConnectionStatus().catch(() => ({ connected: false }));
+
+  if (!config.accessTokenPresent && !connectionStatus.connected) {
     return NextResponse.json(
-      { error: "QUICKBOOKS_TIME_ACCESS_TOKEN is not configured." },
+      { error: "QuickBooks Time is not connected. Use the Connect QB Time button on the TimeHub overview page." },
       { status: 503 }
     );
   }

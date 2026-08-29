@@ -6,6 +6,7 @@ import { TimeModuleError } from "@/components/time/time-module";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 import { getShellIdentity } from "@/lib/auth/get-shell-identity";
 import { roleHome } from "@/lib/auth/role-routes";
+import { getQuickBooksTimeConnectionStatus } from "@/lib/qb-time/tokens";
 import { createClient } from "@/lib/supabase/server";
 import {
   getCurrentWeekBounds,
@@ -18,7 +19,11 @@ import {
 export default async function TimeReconciliationRoute({
   searchParams,
 }: {
-  searchParams?: Promise<{ tab?: string }>;
+  searchParams?: Promise<{
+    tab?: string;
+    qb_time_oauth?: string;
+    qb_time_oauth_message?: string;
+  }>;
 }) {
   const identity = await getShellIdentity("admin");
   const supabase = await createClient();
@@ -38,14 +43,27 @@ export default async function TimeReconciliationRoute({
       : resolvedSearchParams.tab === "employees"
         ? "employees"
         : "overview";
+  const qbTimeOAuthState = resolvedSearchParams.qb_time_oauth === "success"
+    ? "success"
+    : resolvedSearchParams.qb_time_oauth === "error"
+      ? "error"
+      : null;
+  const qbTimeOAuthMessage = resolvedSearchParams.qb_time_oauth_message ?? null;
 
   try {
     const { weekStart } = getCurrentWeekBounds();
-    const [moduleSnapshot, employeeSnapshot, projectSnapshot, weeklySummary] = await Promise.all([
+    const [moduleSnapshot, employeeSnapshot, projectSnapshot, weeklySummary, qbTimeConnectionStatus] = await Promise.all([
       getTimeModuleSnapshot(),
       getTimeReconcileSnapshot(),
       getProjectReconcileSnapshot(),
       getWeeklyTimeSummary(supabase, weekStart).catch(() => null),
+      getQuickBooksTimeConnectionStatus().catch(() => ({
+        connected: false,
+        realmId: null,
+        accessTokenExpiresAt: null,
+        refreshTokenExpiresAt: null,
+        refreshTokenExpiringSoon: false,
+      })),
     ]);
 
     return (
@@ -56,6 +74,9 @@ export default async function TimeReconciliationRoute({
         weeklySummary={weeklySummary}
         isAdmin={resolvedProfile?.role === "admin"}
         activeTab={activeTab}
+        qbTimeConnectionStatus={qbTimeConnectionStatus}
+        qbTimeOAuthState={qbTimeOAuthState}
+        qbTimeOAuthMessage={qbTimeOAuthMessage}
       />
     );
   } catch (error) {

@@ -16,6 +16,7 @@ import type {
 } from "@/lib/time/data";
 import { TimeReconcileUsersPanel } from "@/components/time/time-reconcile-page";
 import { TimeReconcileProjectsPanel } from "@/components/time/time-reconcile-projects-page";
+import type { QuickBooksTimeConnectionStatus } from "@/lib/qb-time/tokens";
 
 type ReconciliationTab = "overview" | "employees" | "projects";
 
@@ -26,6 +27,9 @@ export function TimeReconciliationPage({
   weeklySummary,
   isAdmin,
   activeTab,
+  qbTimeConnectionStatus,
+  qbTimeOAuthState,
+  qbTimeOAuthMessage,
 }: {
   moduleSnapshot: TimeModuleSnapshot;
   employeeSnapshot: TimeReconcileSnapshot;
@@ -33,6 +37,9 @@ export function TimeReconciliationPage({
   weeklySummary?: WeeklyTimeSummary | null;
   isAdmin?: boolean;
   activeTab: ReconciliationTab;
+  qbTimeConnectionStatus: QuickBooksTimeConnectionStatus;
+  qbTimeOAuthState: "success" | "error" | null;
+  qbTimeOAuthMessage: string | null;
 }) {
   return (
     <div className="space-y-6">
@@ -63,6 +70,9 @@ export function TimeReconciliationPage({
           snapshot={moduleSnapshot}
           weeklySummary={weeklySummary ?? null}
           isAdmin={isAdmin ?? false}
+          qbTimeConnectionStatus={qbTimeConnectionStatus}
+          qbTimeOAuthState={qbTimeOAuthState}
+          qbTimeOAuthMessage={qbTimeOAuthMessage}
         />
       ) : activeTab === "projects" ? (
         <>
@@ -83,10 +93,16 @@ function TimeReconciliationOverview({
   snapshot,
   weeklySummary,
   isAdmin,
+  qbTimeConnectionStatus,
+  qbTimeOAuthState,
+  qbTimeOAuthMessage,
 }: {
   snapshot: TimeModuleSnapshot;
   weeklySummary: WeeklyTimeSummary | null;
   isAdmin: boolean;
+  qbTimeConnectionStatus: QuickBooksTimeConnectionStatus;
+  qbTimeOAuthState: "success" | "error" | null;
+  qbTimeOAuthMessage: string | null;
 }) {
   const activeUsers = snapshot.users.filter((user) => user.active).length;
   const activeProjects = snapshot.projects.filter((project) => project.active).length;
@@ -121,6 +137,26 @@ function TimeReconciliationOverview({
 
   return (
     <>
+      {qbTimeOAuthState && (
+        <section
+          className={`rounded-3xl border p-5 ${
+            qbTimeOAuthState === "success"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+              : "border-rose-200 bg-rose-50 text-rose-900"
+          }`}
+        >
+          <p className="text-xs font-semibold uppercase tracking-[0.24em]">
+            {qbTimeOAuthState === "success" ? "Connected" : "Connection failed"}
+          </p>
+          <p className="mt-2 text-sm leading-6">
+            {qbTimeOAuthMessage ??
+              (qbTimeOAuthState === "success"
+                ? "QuickBooks Time is now connected and token refresh is active."
+                : "QuickBooks Time connection was not completed.")}
+          </p>
+        </section>
+      )}
+
       <div className="grid gap-4 md:grid-cols-4">
         <MetricCard label="QB users" value={String(snapshot.users.length)} />
         <MetricCard label="Active users" value={String(activeUsers)} />
@@ -143,16 +179,50 @@ function TimeReconciliationOverview({
               <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
                 Automatic sync runs nightly at 8:00 AM UTC and pulls the last 30 days of QuickBooks Time data.
               </p>
-              <p className="mt-2 text-xs text-text-tertiary">Use the manual sync when you need fresh data before the nightly run.</p>
+              <p className="mt-2 text-xs text-text-tertiary">
+                Use the manual sync when you need fresh data before the nightly run.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${
+                    qbTimeConnectionStatus.connected
+                      ? qbTimeConnectionStatus.refreshTokenExpiringSoon
+                        ? "bg-amber-100 text-amber-800"
+                        : "bg-emerald-100 text-emerald-800"
+                      : "bg-slate-100 text-slate-700"
+                  }`}
+                >
+                  {qbTimeConnectionStatus.connected
+                    ? qbTimeConnectionStatus.refreshTokenExpiringSoon
+                      ? "Reconnect Soon"
+                      : "Connected"
+                    : "Not Connected"}
+                </span>
+                <span className="text-xs text-text-tertiary">
+                  {qbTimeConnectionStatus.connected
+                    ? qbTimeConnectionStatus.refreshTokenExpiringSoon
+                      ? "The refresh token is nearing expiry."
+                      : "OAuth refresh is active."
+                    : "Connect QuickBooks Time to enable automatic refresh."}
+                </span>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={() => void handleSync()}
-              disabled={syncing}
-              className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse transition hover:bg-brand-primary-hover disabled:opacity-50"
-            >
-              {syncing ? "Syncing..." : "Sync Now"}
-            </button>
+            <div className="flex flex-col gap-2">
+              <a
+                href="/api/qb-time/connect"
+                className="rounded-xl bg-brand-primary px-4 py-2 text-sm font-medium text-text-inverse transition hover:bg-brand-primary-hover"
+              >
+                {qbTimeConnectionStatus.connected ? "Reconnect QB Time" : "Connect QB Time"}
+              </a>
+              <button
+                type="button"
+                onClick={() => void handleSync()}
+                disabled={syncing}
+                className="rounded-xl border border-border-default bg-surface-overlay px-4 py-2 text-sm font-medium text-text-primary transition hover:bg-surface-raised disabled:opacity-50"
+              >
+                {syncing ? "Syncing..." : "Sync Now"}
+              </button>
+            </div>
           </div>
 
           {syncResult && (
