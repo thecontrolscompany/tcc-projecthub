@@ -56,7 +56,7 @@ export default async function TimeReconciliationRoute({
       getTimeModuleSnapshot(),
       getTimeReconcileSnapshot(),
       getProjectReconcileSnapshot(),
-      getWeeklyTimeSummary(supabase, weekStart).catch(() => null),
+      getWeeklyTimeSummary(weekStart).catch(() => null),
       getQuickBooksTimeConnectionStatus().catch(() => ({
         connected: false,
         realmId: null,

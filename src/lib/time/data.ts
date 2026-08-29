@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { UserRole } from "@/types/database";
 
 export interface TimeModuleRunSummary {
@@ -759,9 +758,11 @@ export function getCurrentWeekBounds(now = new Date()) {
 }
 
 export async function getWeeklyTimeSummary(
-  supabase: SupabaseClient,
   weekStart: Date
 ): Promise<WeeklyTimeSummary | null> {
+  // This is an admin/ops dashboard aggregate. Query with the server-only
+  // client so table RLS does not silently turn a valid import into zero hours.
+  const supabase = createPortalTimeClient();
   const normalizedWeekStart = new Date(weekStart);
   normalizedWeekStart.setHours(0, 0, 0, 0);
   const weekEnd = new Date(normalizedWeekStart);
