@@ -390,8 +390,14 @@ export function calcItem(item, controlsCatalog = {}) {
 }
 
 export function calcEstimate(estimate, controlsCatalog = {}) {
-  const ddcInfrastructure = calcDdcInfrastructure(getSelectedControlsEntries(estimate), controlsCatalog, estimate?.settings || {});
-  return (estimate.items || []).reduce((acc, item) => {
+  const settings = estimate?.settings || {};
+  const ddcInfrastructure = calcDdcInfrastructure(getSelectedControlsEntries(estimate), controlsCatalog, settings);
+  // Controls engineering furnished by others: the GC/customer's controls
+  // contractor self-performs the entire controls scope (mounting/wiring the
+  // field controller and devices, programming, commissioning, submittals) -
+  // zero all controls labor, but keep controls material (panel, license, etc).
+  const controlsEngineeringByOthers = !!settings.controlsEngineeringByOthers;
+  const totals = (estimate.items || []).reduce((acc, item) => {
     const c = calcItem(item, controlsCatalog);
     return {
       mtl: acc.mtl + c.totalMtl,
@@ -407,6 +413,7 @@ export function calcEstimate(estimate, controlsCatalog = {}) {
     controlsLbrHrs: ddcInfrastructure.rawLbrHrs,
     ddcInfrastructure,
   });
+  return controlsEngineeringByOthers ? { ...totals, controlsLbrHrs: 0 } : totals;
 }
 
 // Install and controls are parallel cost pools, not nested buckets.

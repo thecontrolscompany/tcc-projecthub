@@ -191,6 +191,7 @@ export function ProjectSettingsPanel({ settings, onChange, costs, rawLbrHrs, ite
           {normalizeEstimateScopeMode(S.estimateScopeMode) === "both" && (<>
             {toggle("existingHeadEnd", "Existing Head-End", "Customer already has a BAS front-end/supervisory controller — omit the new Supervisory Controller from DDC Infrastructure")}
             {toggle("ddcControllerFurnishedByOthers", "Controller Furnished by Others", "GC/customer is supplying the DDC field controller hardware — zero its material cost but keep TCC's mount/wire/program labor")}
+            {toggle("controlsEngineeringByOthers", "Controls Engineering by Others", "GC/customer's controls contractor self-performs the entire controls scope — zero all controls labor, keep controls material")}
           </>)}
         </>)}
 

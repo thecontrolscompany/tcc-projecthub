@@ -18,12 +18,14 @@ export const DEFAULT_SETTINGS = {
   defaultInstallType: "EMT",
   estimateScopeMode: "installation",
   proposalScopeMode: "brief",
+  proposalPricingRows: [],
   baseScopeName:    "Scope",
   useCustomerScope: false,
   customerScope: "",
   customerScopeImport: null,
   existingHeadEnd: false,  // Turnkey only: customer already has a BAS front-end/supervisory controller — omit the new Supervisory Controller from DDC Infrastructure
   ddcControllerFurnishedByOthers: false,  // Turnkey only: field/DDC controller hardware furnished by others — zero its material cost, keep the mount/wire/program labor
+  controlsEngineeringByOthers: false,  // Turnkey only: GC/customer's controls contractor self-performs the entire controls scope (mounting/wiring, programming, commissioning, submittals) — zero all controls labor, keep controls material
 
   // ── Project info ────────────────────────────────────────────────────────────
   address:        "",
