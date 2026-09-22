@@ -439,7 +439,7 @@ function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBo
   // mutually-exclusive choices the reader needs to tell apart, not a cost split.
   const combinedPrice = installationTotal + (isTurnkey ? controlsMaterial + controlsLabor : 0);
   baseRows.push(`
-          <tr>
+          <tr class="row-base">
             <td>${esc(hasAlternates ? baseLabel : "Price")}</td>
             <td class="cell-number">${fmtMoney(combinedPrice)}</td>
           </tr>`);
@@ -458,11 +458,20 @@ function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBo
     const alternateTotal = Number(alternate.total || 0);
     const alternateBond = Number(alternate.bond || 0);
     return `
-          <tr>
+          <tr class="row-alternate">
             <td>${esc(alternate.label)}</td>
             <td class="cell-number">${fmtMoney(alternateTotal + alternateBond)}</td>
           </tr>`;
   });
+
+  // A divider row makes the required base bid visually distinct from the
+  // optional add alternates that follow it in the same pricing table.
+  const alternateDividerRow = hasAlternates
+    ? `
+          <tr class="row-section-divider">
+            <td colspan="2">Add Alternates — Optional Scope</td>
+          </tr>`
+    : "";
 
   // Bid alternates are mutually exclusive selections, not additive scope -
   // a single combined total across the base bid and every alternate would be
@@ -500,6 +509,7 @@ function renderPricingTable({ scopeMode, installationTotal, totalAmount, totalBo
         </thead>
         <tbody>
 ${baseRows.join("\n")}
+${alternateDividerRow}
 ${alternateRows.join("\n")}
 ${totalRow}
         </tbody>
