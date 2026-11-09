@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { resolveUserRole } from "@/lib/auth/resolve-user-role";
+import { reconcilePocProgress } from "@/lib/poc/calculations";
 import { normalizeWeekEndingSaturday } from "@/lib/utils/week-ending";
 import type { CrewLogEntry, LaborHoursWorker, PocSnapshotEntry, WeeklyUpdate, WeeklyUpdateStatus } from "@/types/database";
 
@@ -110,6 +111,21 @@ function normalizePayload(body: UpdatePayload): { value: NormalizedPayload } | {
   if (!status) return { error: "Missing status." };
   if (pctComplete === null) return { error: "Missing pctComplete." };
 
+  const rawPocUpdates = Array.isArray(body.pocUpdates) ? body.pocUpdates : [];
+  const pocUpdates: Array<{ id: string; pct_complete: number }> = [];
+  for (const item of rawPocUpdates) {
+    if (
+      !item ||
+      typeof item.id !== "string" ||
+      !item.id ||
+      typeof item.pct_complete !== "number" ||
+      !Number.isFinite(item.pct_complete)
+    ) {
+      return { error: "Invalid POC line item update." };
+    }
+    pocUpdates.push({ id: item.id, pct_complete: item.pct_complete });
+  }
+
   return {
     value: {
       projectId,
@@ -127,7 +143,7 @@ function normalizePayload(body: UpdatePayload): { value: NormalizedPayload } | {
       inspectionsTests: typeof body.inspectionsTests === "string" ? body.inspectionsTests : null,
       delaysImpacts: typeof body.delaysImpacts === "string" ? body.delaysImpacts : null,
       otherRemarks: typeof body.otherRemarks === "string" ? body.otherRemarks : null,
-      pocUpdates: Array.isArray(body.pocUpdates) ? body.pocUpdates : [],
+      pocUpdates,
       billingPeriodId: typeof body.billingPeriodId === "string" ? body.billingPeriodId : null,
       editNote: typeof body.editNote === "string" ? body.editNote : null,
       includeBomReport: body.includeBomReport === true,
@@ -148,16 +164,63 @@ function normalizePayload(body: UpdatePayload): { value: NormalizedPayload } | {
   };
 }
 
+async function prepareAuthoritativePoc(
+  admin: ReturnType<typeof adminClient>,
+  projectId: string,
+  submittedPctComplete: number,
+  pocUpdates: Array<{ id: string; pct_complete: number }>,
+  billingPeriodId: string | null
+) {
+  const [pocResult, billingPeriodResult] = await Promise.all([
+    admin
+      .from("poc_line_items")
+      .select("id, category, weight, pct_complete")
+      .eq("project_id", projectId)
+      .order("sort_order", { ascending: true }),
+    billingPeriodId
+      ? admin
+          .from("billing_periods")
+          .select("id")
+          .eq("id", billingPeriodId)
+          .eq("project_id", projectId)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+
+  if (pocResult.error) {
+    throw new Error(pocResult.error.message);
+  }
+  if (billingPeriodResult.error) {
+    throw new Error(billingPeriodResult.error.message);
+  }
+  if (billingPeriodId && !billingPeriodResult.data) {
+    throw new Error("The billing period does not belong to this project.");
+  }
+
+  const pocItems = pocResult.data ?? [];
+  const reconciled = reconcilePocProgress(pocItems, pocUpdates);
+  if (pocItems.length > 0 && reconciled.pctComplete === null) {
+    throw new Error("The project's POC line-item weights cannot produce an overall completion value.");
+  }
+
+  return {
+    pctComplete: reconciled.pctComplete ?? submittedPctComplete,
+    pocSnapshot: reconciled.snapshot,
+  };
+}
+
 async function applyProjectSideEffects(
   admin: ReturnType<typeof adminClient>,
   {
     pocUpdates,
     billingPeriodId,
     pctComplete,
+    projectId,
   }: {
     pocUpdates: Array<{ id: string; pct_complete: number }>;
     billingPeriodId: string | null;
     pctComplete: number;
+    projectId: string;
   }
 ) {
   if (pocUpdates.length > 0) {
@@ -167,12 +230,18 @@ async function applyProjectSideEffects(
           .from("poc_line_items")
           .update({ pct_complete: Math.min(Math.max(item.pct_complete, 0), 1) })
           .eq("id", item.id)
+          .eq("project_id", projectId)
+          .select("id")
+          .maybeSingle()
       )
     );
 
     const pocError = results.find((result) => result.error)?.error;
     if (pocError) {
       throw new Error(pocError.message);
+    }
+    if (results.some((result) => !result.data)) {
+      throw new Error("A POC line item does not belong to this project.");
     }
   }
 
@@ -181,13 +250,19 @@ async function applyProjectSideEffects(
   // when a PM clicks "Save POC Changes" so the weighted POC total reaches the
   // portal without waiting for a full weekly-report submit.
   if (billingPeriodId) {
-    const { error } = await admin
+    const { data, error } = await admin
       .from("billing_periods")
       .update({ pct_complete: pctComplete })
-      .eq("id", billingPeriodId);
+      .eq("id", billingPeriodId)
+      .eq("project_id", projectId)
+      .select("id")
+      .maybeSingle();
 
     if (error) {
       throw new Error(error.message);
+    }
+    if (!data) {
+      throw new Error("The billing period does not belong to this project.");
     }
   }
 }
@@ -292,7 +367,19 @@ export async function POST(request: Request) {
       );
     }
 
-    const row = toRow(normalized.value, user.id);
+    const authoritativePoc = await prepareAuthoritativePoc(
+      authz.admin,
+      normalized.value.projectId,
+      normalized.value.pctComplete,
+      normalized.value.pocUpdates,
+      normalized.value.billingPeriodId
+    );
+    const authoritativePayload = {
+      ...normalized.value,
+      pctComplete: authoritativePoc.pctComplete,
+      pocSnapshot: authoritativePoc.pocSnapshot,
+    };
+    const row = toRow(authoritativePayload, user.id);
     const { data, error } = await authz.admin
       .from("weekly_updates")
       .insert(row)
@@ -306,7 +393,8 @@ export async function POST(request: Request) {
     await applyProjectSideEffects(authz.admin, {
       pocUpdates: normalized.value.pocUpdates,
       billingPeriodId: normalized.value.billingPeriodId,
-      pctComplete: normalized.value.pctComplete,
+      pctComplete: authoritativePoc.pctComplete,
+      projectId: normalized.value.projectId,
     });
 
     return NextResponse.json({ update: data });
@@ -364,6 +452,7 @@ export async function PATCH(request: Request) {
     .from("weekly_updates")
     .select("id, status, submitted_at, updated_at")
     .eq("id", updateId)
+    .eq("project_id", normalized.value.projectId)
     .single();
 
   if (existingError) {
@@ -374,16 +463,29 @@ export async function PATCH(request: Request) {
 
   try {
     const nextUpdatedAt = new Date().toISOString();
+    const authoritativePoc = await prepareAuthoritativePoc(
+      authz.admin,
+      normalized.value.projectId,
+      normalized.value.pctComplete,
+      normalized.value.pocUpdates,
+      normalized.value.billingPeriodId
+    );
+    const authoritativePayload = {
+      ...normalized.value,
+      pctComplete: authoritativePoc.pctComplete,
+      pocSnapshot: authoritativePoc.pocSnapshot,
+    };
 
     if (normalized.value.pocOnly) {
       const { data, error } = await authz.admin
         .from("weekly_updates")
         .update({
-          pct_complete: normalized.value.pctComplete,
-          poc_snapshot: normalized.value.pocSnapshot,
+          pct_complete: authoritativePoc.pctComplete,
+          poc_snapshot: authoritativePoc.pocSnapshot,
           updated_at: nextUpdatedAt,
         })
         .eq("id", updateId)
+        .eq("project_id", normalized.value.projectId)
         .eq("updated_at", expectedUpdatedAt)
         .select("id, status, week_of, updated_at")
         .maybeSingle();
@@ -401,14 +503,15 @@ export async function PATCH(request: Request) {
       await applyProjectSideEffects(authz.admin, {
         pocUpdates: normalized.value.pocUpdates,
         billingPeriodId: normalized.value.billingPeriodId,
-        pctComplete: normalized.value.pctComplete,
+        pctComplete: authoritativePoc.pctComplete,
+        projectId: normalized.value.projectId,
       });
 
       return NextResponse.json({ update: data, editLogged: false });
     }
 
     const nextRow = {
-      ...toRow(normalized.value, user.id),
+      ...toRow(authoritativePayload, user.id),
       updated_at: nextUpdatedAt,
       submitted_at:
         normalized.value.status === "submitted"
@@ -424,6 +527,7 @@ export async function PATCH(request: Request) {
       .from("weekly_updates")
       .update(nextRow)
       .eq("id", updateId)
+      .eq("project_id", normalized.value.projectId)
       .eq("updated_at", expectedUpdatedAt)
       .select("id, status, week_of, updated_at")
       .maybeSingle();
@@ -459,7 +563,8 @@ export async function PATCH(request: Request) {
     await applyProjectSideEffects(authz.admin, {
       pocUpdates: normalized.value.pocUpdates,
       billingPeriodId: normalized.value.billingPeriodId,
-      pctComplete: normalized.value.pctComplete,
+      pctComplete: authoritativePoc.pctComplete,
+      projectId: normalized.value.projectId,
     });
 
     return NextResponse.json({ update: data, editLogged });

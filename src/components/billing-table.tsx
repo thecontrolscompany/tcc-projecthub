@@ -11,7 +11,7 @@ import {
 } from "@tanstack/react-table";
 import { useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { calcToBill } from "@/lib/billing/calculations";
+import { calcBacklog, calcPrevBilledPct, calcToBill } from "@/lib/billing/calculations";
 import type { BillingRow } from "@/types/database";
 import { fmtCurrency as fmt } from "@/lib/utils/format";
 
@@ -50,8 +50,8 @@ export function BillingTable({ rows, onRowsChange }: BillingTableProps) {
         }
 
         next.to_bill = calcToBill(next.estimated_income, next.pct_complete, next.prev_billed);
-        next.backlog = Math.max(next.estimated_income - next.prev_billed, 0);
-        next.prev_billed_pct = next.estimated_income > 0 ? next.prev_billed / next.estimated_income : 0;
+        next.backlog = calcBacklog(next.estimated_income, next.prev_billed);
+        next.prev_billed_pct = calcPrevBilledPct(next.estimated_income, next.prev_billed);
         return next;
       });
 

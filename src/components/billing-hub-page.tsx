@@ -5,8 +5,8 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { format, startOfMonth, subMonths, addMonths } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
-import { calcToBill, generatePmEmailDrafts, rollForwardRows } from "@/lib/billing/calculations";
-import type { BillingRow, BillingPeriod } from "@/types/database";
+import { calcBacklog, calcToBill, generatePmEmailDrafts } from "@/lib/billing/calculations";
+import type { BillingRow } from "@/types/database";
 import { safeJson } from "@/lib/utils/safe-json";
 
 type Tab = "overview" | "billing" | "projects" | "backfill" | "weekly-updates" | "feedback";
@@ -314,7 +314,7 @@ export function BillingHubPage() {
         pm_email: pmEmail,
         pm_name: pmName,
         estimated_income: estimatedIncome,
-        backlog: Math.max(estimatedIncome - prevBilled, 0),
+        backlog: calcBacklog(estimatedIncome, prevBilled),
         prior_pct: period.prior_pct ?? 0,
         pct_complete: period.pct_complete ?? 0,
         prev_billed: prevBilled,
@@ -337,49 +337,70 @@ export function BillingHubPage() {
 
     try {
       const monthStr = format(periodMonth, "yyyy-MM-dd");
-      const { data: currentPeriods } = await supabase
-        .from("billing_periods")
-        .select("*, project:projects(is_active)")
-        .eq("period_month", monthStr);
-
-      const activePeriods = (currentPeriods ?? []).filter((period) => {
-        const project = Array.isArray(period.project) ? period.project[0] : period.project;
-        return project?.is_active !== false;
+      let response = await fetch("/api/admin/billing-roll-forward", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ periodMonth: monthStr }),
       });
+      let json = await safeJson(response);
 
-      if (!activePeriods.length) {
-        setActionStatus("No billing periods found for this month.");
+      if (response.status === 409 && json.requiresBlankActualConfirmation) {
+        const warnings = Array.isArray(json.blankActualWarnings) ? json.blankActualWarnings : [];
+        const warningLines = warnings
+          .slice(0, 10)
+          .map((warning: { projectName?: string; projectedAmount?: number }) =>
+            `• ${warning.projectName ?? "Unknown project"}: ${new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: "USD",
+            }).format(Number(warning.projectedAmount ?? 0))} projected`
+          )
+          .join("\n");
+        const remaining = warnings.length > 10 ? `\n…and ${warnings.length - 10} more.` : "";
+        const proceed = confirm(
+          `The following projects have projected billing but no recorded actual billing:\n\n${warningLines}${remaining}\n\n` +
+          "Rolling forward now treats blank actual billing as $0 and will not later overwrite the new month. Continue?"
+        );
+        if (!proceed) {
+          setActionStatus("Roll-forward cancelled so actual billing can be reviewed.");
+          return;
+        }
+
+        response = await fetch("/api/admin/billing-roll-forward", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ periodMonth: monthStr, allowBlankActuals: true }),
+        });
+        json = await safeJson(response);
+      }
+
+      if (!response.ok) {
+        setActionStatus(`Error: ${json.error ?? "Unable to roll forward."}`);
         return;
       }
 
-      const nextRows = rollForwardRows(activePeriods as BillingPeriod[]);
-      const { error } = await supabase.from("billing_periods").upsert(
-        nextRows.map((r) => ({
-          period_month: r.period_month,
-          project_id: r.project_id,
-          estimated_income_snapshot: r.estimated_income_snapshot,
-          prior_pct: r.prior_pct,
-          pct_complete: r.pct_complete,
-          prev_billed: r.prev_billed,
-          actual_billed: r.actual_billed,
-          synced_from_onedrive: false,
-        })),
-        { onConflict: "project_id,period_month" }
+      const nextLabel = format(addMonths(periodMonth, 1), "MMMM yyyy");
+      const mismatchCount = Array.isArray(json.mismatches) ? json.mismatches.length : 0;
+      const mismatchProjects = mismatchCount > 0
+        ? json.mismatches
+            .map((mismatch: { projectName?: string }) => mismatch.projectName)
+            .filter(Boolean)
+            .join(", ")
+        : "";
+      setActionStatus(
+        `Rolled forward to ${nextLabel}: ${json.created ?? 0} created, ${json.skipped ?? 0} already existed.${
+          mismatchCount > 0
+            ? ` Review ${mismatchCount} skipped row${mismatchCount === 1 ? "" : "s"} with differing values: ${mismatchProjects}.`
+            : ""
+        }`
       );
-
-      if (error) {
-        setActionStatus(`Error: ${error.message}`);
-      } else {
-        setActionStatus(`Rolled forward to ${format(addMonths(periodMonth, 1), "MMMM yyyy")}`);
-        setPeriodMonth(addMonths(periodMonth, 1));
-      }
+      setPeriodMonth(addMonths(periodMonth, 1));
     } catch {
-      setActionStatus("Unable to roll forward with local placeholder data.");
+      setActionStatus("Unable to roll forward billing periods.");
     }
   }
 
   async function handleSyncPoc() {
-    setActionStatus("Syncing POC sheets via OneDrive... (requires Graph API setup)");
+    setActionStatus("Calculating weighted POC totals...");
 
     try {
       const res = await fetch("/api/sync-poc", {

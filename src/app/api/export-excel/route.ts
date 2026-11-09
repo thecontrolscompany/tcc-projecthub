@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import ExcelJS from "exceljs";
 import { format } from "date-fns";
 import { uploadToOneDrive } from "@/lib/graph/client";
+import { resolveUserRole } from "@/lib/auth/resolve-user-role";
 
 /**
  * GET /api/export-excel?month=2026-03-01
@@ -21,12 +22,21 @@ export async function GET(request: Request) {
   }
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session) {
+  if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+
+  const profile = await resolveUserRole(user);
+  if (!profile || !["admin", "ops_manager"].includes(profile.role)) {
+    return NextResponse.json({ error: "Admin or operations manager access required" }, { status: 403 });
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
   const { data: rows } = await supabase
     .from("billing_rows")
@@ -128,7 +138,7 @@ export async function GET(request: Request) {
   const fileName = `TCC_Billing_${format(new Date(month), "yyyy-MM")}.xlsx`;
 
   // Optionally upload to OneDrive if provider token available
-  const providerToken = session.provider_token;
+  const providerToken = session?.provider_token;
   if (providerToken) {
     await uploadToOneDrive(
       providerToken,

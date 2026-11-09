@@ -103,7 +103,7 @@ export async function GET(request: Request) {
         .order("name"),
       adminClient
         .from("billing_periods")
-        .select("*")
+        .select("id, period_month, project_id, pct_complete, actual_billed")
         .in("project_id", projectIds)
         .order("period_month", { ascending: false }),
       adminClient

@@ -1,4 +1,4 @@
-import { addMonths, format, startOfMonth } from "date-fns";
+import { addMonths, format, parseISO, startOfMonth } from "date-fns";
 import type { BillingPeriod, BillingRow } from "@/types/database";
 
 /**
@@ -15,9 +15,12 @@ export function calcToBill(
 
 /**
  * Backlog = Estimated Income - Previously Billed
+ *
+ * The tracker intentionally permits a negative backlog when cumulative billing
+ * is greater than the current contract value (for example, pending change orders).
  */
 export function calcBacklog(estimatedIncome: number, prevBilled: number): number {
-  return Math.max(estimatedIncome - prevBilled, 0);
+  return estimatedIncome - prevBilled;
 }
 
 /**
@@ -68,31 +71,30 @@ export function computeBillingRow(
  * Rules (from legacy Module2):
  * - period_month → next month
  * - prior_pct    → current pct_complete
- * - pct_complete → same as prior_pct (carries forward, PM updates it)
- * - prev_billed  → prev_billed + (actual_billed ?? to_bill)
+ * - pct_complete → carries forward until the PM/POC workflow updates it
+ * - prev_billed  → prev_billed + actual_billed (blank actual means 0)
  * - estimated_income_snapshot → carries forward unchanged
  */
 export function rollForwardRows(
   currentPeriod: BillingPeriod[]
 ): Omit<BillingPeriod, "id" | "updated_at">[] {
+  const currentMonth = currentPeriod[0]?.period_month
+    ? parseISO(currentPeriod[0].period_month)
+    : new Date();
   const nextMonth = format(
-    startOfMonth(addMonths(new Date(currentPeriod[0]?.period_month ?? new Date()), 1)),
+    startOfMonth(addMonths(currentMonth, 1)),
     "yyyy-MM-dd"
   );
 
   return currentPeriod.map((row) => {
-    const billedThisPeriod = row.actual_billed ?? calcToBill(
-      row.estimated_income_snapshot,
-      row.pct_complete,
-      row.prev_billed
-    );
+    const billedThisPeriod = row.actual_billed ?? 0;
 
     return {
       period_month: nextMonth,
       project_id: row.project_id,
       estimated_income_snapshot: row.estimated_income_snapshot,
       prior_pct: row.pct_complete,
-      pct_complete: row.pct_complete, // PM will update
+      pct_complete: row.pct_complete,
       prev_billed: row.prev_billed + billedThisPeriod,
       actual_billed: null,
       invoice_number: null,
@@ -101,6 +103,15 @@ export function rollForwardRows(
       to_bill: 0, // recalculated after PM updates pct
     };
   });
+}
+
+/** Keeps roll-forward insert-only by excluding project/month rows that exist. */
+export function filterNewBillingPeriods<T extends { project_id: string }>(
+  rows: T[],
+  existingProjectIds: Iterable<string>
+): T[] {
+  const existing = new Set(existingProjectIds);
+  return rows.filter((row) => !existing.has(row.project_id));
 }
 
 /**
